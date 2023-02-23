@@ -1,5 +1,4 @@
-(* Copy of fusion.ml with some parts commented out so that it compiles
-   with ocamlc. *)
+(* Slight modification of fusion.ml to dump proofs. *)
 
 (* ========================================================================= *)
 (* Complete HOL kernel of types, terms and theorems.                         *)
@@ -10,9 +9,6 @@
 (*              (c) Copyright, John Harrison 1998-2007                       *)
 (* ========================================================================= *)
 
-(*
-needs "lib.ml";;
-*)
 open Lib
 
 module type Hol_kernel =
@@ -93,7 +89,7 @@ module type Hol_kernel =
       val hyp : thm -> term list
       val concl : thm -> term
       val index_of : thm -> int
-      (*
+      (*DONTREMOVE
       val REFL : term -> thm
       val TRANS : thm -> thm -> thm
       val MK_COMB : thm * thm -> thm
@@ -104,7 +100,7 @@ module type Hol_kernel =
       val DEDUCT_ANTISYM_RULE : thm -> thm -> thm
       val INST_TYPE : (hol_type * hol_type) list -> thm -> thm
       val INST : (term * term) list -> thm -> thm
-       *)
+      DONTREMOVE*)
       val axioms : unit -> thm list
       val new_axiom : term -> thm
       val definitions : unit -> thm list
@@ -116,10 +112,15 @@ module type Hol_kernel =
       val proof_at: int -> proof
       val iter_proofs : (int -> proof -> unit) -> unit
 
+      val the_proofs : proof array
+      val the_proofs_idx : int ref
+
       val the_type_constants : (string * int) list ref
       val the_term_constants : (string * hol_type) list ref
       val the_axioms : thm list ref
       val the_definitions : thm list ref
+
+      val dump_proofs : unit -> unit
 end;;
 
 (* ------------------------------------------------------------------------- *)
@@ -163,17 +164,17 @@ module Hol : Hol_kernel = struct
   let dummy_term = Var("",Tyvar"")
   let dummy_proof = Proof(Sequent([],dummy_term,-1),Prefl dummy_term)
 
-  let the_proofs_max = 100000000 (* 10^8 *)
+  let the_proofs_max = 1000000000 (* 10^9 *)
   let the_proofs = Array.make the_proofs_max dummy_proof
 
   let the_proofs_idx = ref (-1)
 
-  let nb_proofs() = !the_proofs_idx
+  let nb_proofs() = !the_proofs_idx + 1
 
   let next_proof_idx() =
-    let idx = !the_proofs_idx + 1 in
-    assert (idx < the_proofs_max);
-    the_proofs_idx := idx; idx;;
+    let k = !the_proofs_idx + 1 in
+    assert (k < the_proofs_max);
+    the_proofs_idx := k; k;;
 
   let new_proof idx thm content =
     (Array.set the_proofs idx (Proof(thm,content)); thm)
@@ -182,12 +183,6 @@ module Hol : Hol_kernel = struct
 
   let iter_proofs f =
     for k = 0 to !the_proofs_idx do f k (proof_at k) done
-
-  let dump_proofs() =
-    let oc = open_out "proofs.dump" in
-    iter_proofs (fun _ p -> Marshal.to_channel oc p []);
-    close_out oc
-  ;;
 
 (* ------------------------------------------------------------------------- *)
 (* List of current type constants with their arities.                        *)
@@ -261,7 +256,7 @@ module Hol : Hol_kernel = struct
 
   let rec tyvars =
       function
-          (Tyapp(_,args)) -> itlist ((o) Lib.union tyvars) args []
+          (Tyapp(_,args)) -> itlist ((o) union tyvars) args []
         | (Tyvar v as tv) -> [tv]
 
 (* ------------------------------------------------------------------------- *)
@@ -578,8 +573,7 @@ module Hol : Hol_kernel = struct
   let concl (Sequent(asl,c,_)) = c
 
   let index_of(Sequent(_,_,k)) = k
-
-(*
+(*DONTREMOVE
 (* ------------------------------------------------------------------------- *)
 (* Basic equality properties; TRANS is derivable but included for efficiency *)
 (* ------------------------------------------------------------------------- *)
@@ -675,8 +669,7 @@ module Hol : Hol_kernel = struct
     let inst_fun = vsubst theta in
     let th = Sequent(term_image inst_fun asl,inst_fun c,idx) in
     new_proof idx th (Pinst(p,theta))
-*)
-
+DONTREMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of axioms.                                                       *)
 (* ------------------------------------------------------------------------- *)
@@ -761,6 +754,24 @@ module Hol : Hol_kernel = struct
     let _ = new_axiom rtm in
     (new_proof aidx ath (Pdeft(p,atm,absname,absty)),
      new_proof ridx rth (Pdeft(p,rtm,repname,repty)))
+
+(* ------------------------------------------------------------------------- *)
+(* Function to dump proofs.                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+  let dump_proofs() =
+    let t = Sys.time() in
+    let oc = open_out "proofs.dump" in
+    let dump x = Marshal.to_channel oc x [] in
+    dump (nb_proofs());
+    dump (types());
+    dump (constants());
+    dump (axioms());
+    dump (definitions());
+    iter_proofs (fun _ -> dump);
+    close_out oc;
+    Printf.printf "%fs\n%!" (Sys.time() -. t)
+  ;;
 
 end;;
 

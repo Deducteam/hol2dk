@@ -1,5 +1,4 @@
-(* Copy of lib.ml with some parts commented out so that it compiles
-   with ocamlc. *)
+(* Slight modification of lib.ml. *)
 
 (* ========================================================================= *)
 (* Convenient library functions.                                             *)
@@ -19,8 +18,7 @@ let fail() = failwith "";;
 let curry f x y = f(x,y);;
 
 let uncurry f(x,y) = f x y;;
-
-(*
+(*DONTREMOVE
 let I x = x;;
 
 let K x y = x;;
@@ -28,14 +26,11 @@ let K x y = x;;
 let C f x y = f y x;;
 
 let W f x = f x x;;
-*)
-
+DONTREMOVE*)
 let (o) = fun f g x -> f(g x);;
-
-(*
+(*DONTREMOVE
 let (F_F) = fun f g (x,y) -> (f x,g y);;
-*)
-
+DONTREMOVE*)
 let (|>) = fun x f -> f x;;
 
 (* ------------------------------------------------------------------------- *)
@@ -387,8 +382,7 @@ let gcd =
 (* ------------------------------------------------------------------------- *)
 (* Some useful functions on "num" type.                                      *)
 (* ------------------------------------------------------------------------- *)
-
-(*
+(*DONTREMOVE
 let num_0 = Int 0
 and num_1 = Int 1
 and num_2 = Int 2
@@ -411,8 +405,7 @@ let gcd_num n1 n2 =
 let lcm_num x y =
   if x =/ num_0 && y =/ num_0 then num_0
   else abs_num((x */ y) // gcd_num x y);;
-*)
-
+DONTREMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* All pairs arising from applying a function over two lists.                *)
 (* ------------------------------------------------------------------------- *)
@@ -780,13 +773,11 @@ let rec choose t =
 (* ------------------------------------------------------------------------- *)
 
 let pp_print_fpf fmt (f:('a,'b)func) = Format.pp_print_string fmt "<func>";;
-
-(*
+(*DONTREMOVE
 let print_fpf = pp_print_fpf Format.std_formatter;;
 
 #install_printer pp_print_fpf;;
-*)
-
+DONTREMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Set operations parametrized by equality (from Steven Obua).               *)
 (* ------------------------------------------------------------------------- *)
@@ -811,8 +802,7 @@ let subtract' eq l1 l2 = filter (fun x -> not (mem' eq x l2)) l1;;
 (* Accepts decimal, hex or binary numeral, using C notation 0x... for hex    *)
 (* and analogous 0b... for binary.                                           *)
 (* ------------------------------------------------------------------------- *)
-
-(*
+(*DONTREMOVE
 let num_of_string =
   let values =
    ["0",0; "1",1; "2",2; "3",3; "4",4;
@@ -835,8 +825,7 @@ let num_of_string =
       | "0"::"x"::hexdigits -> num_of_stringlist sixteen (rev hexdigits)
       | "0"::"b"::bindigits -> num_of_stringlist two (rev bindigits)
       | decdigits -> num_of_stringlist ten (rev decdigits);;
-*)
-
+DONTREMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Convenient conversion between files and (lists of) strings.               *)
 (* ------------------------------------------------------------------------- *)
