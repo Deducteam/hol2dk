@@ -12,7 +12,7 @@ jobs:
         camlp5-version: [8.00.05]
         dedukti-version: [2.7]
         lambdapi-version: [2.3.0]
-        dune-version: [2.7.1]
+        dune-version: [3.6.2]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
