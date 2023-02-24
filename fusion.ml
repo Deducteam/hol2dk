@@ -88,8 +88,7 @@ module type Hol_kernel =
       val dest_thm : thm -> term list * term
       val hyp : thm -> term list
       val concl : thm -> term
-      val index_of : thm -> int
-      (*DONTREMOVE
+      (*REMOVE
       val REFL : term -> thm
       val TRANS : thm -> thm -> thm
       val MK_COMB : thm * thm -> thm
@@ -100,7 +99,7 @@ module type Hol_kernel =
       val DEDUCT_ANTISYM_RULE : thm -> thm -> thm
       val INST_TYPE : (hol_type * hol_type) list -> thm -> thm
       val INST : (term * term) list -> thm -> thm
-      DONTREMOVE*)
+      REMOVE*)
       val axioms : unit -> thm list
       val new_axiom : term -> thm
       val definitions : unit -> thm list
@@ -108,19 +107,13 @@ module type Hol_kernel =
       val new_basic_type_definition :
               string -> string * string -> thm -> thm * thm
 
-      val nb_proofs : unit -> int
-      val proof_at: int -> proof
-      val iter_proofs : (int -> proof -> unit) -> unit
+      val dump_signature : unit -> unit
 
-      val the_proofs : proof array
-      val the_proofs_idx : int ref
-
-      val the_type_constants : (string * int) list ref
-      val the_term_constants : (string * hol_type) list ref
-      val the_axioms : thm list ref
-      val the_definitions : thm list ref
-
-      val dump_proofs : unit -> unit
+      (*REMOVE*)val dummy_proof : proof
+      (*REMOVE*)val the_type_constants : (string * int) list ref
+      (*REMOVE*)val the_term_constants : (string * hol_type) list ref
+      (*REMOVE*)val the_axioms : thm list ref
+      (*REMOVE*)val the_definitions : thm list ref
 end;;
 
 (* ------------------------------------------------------------------------- *)
@@ -161,28 +154,24 @@ module Hol : Hol_kernel = struct
 
   type proof = Proof of (thm * proof_content)
 
-  let dummy_term = Var("",Tyvar"")
-  let dummy_proof = Proof(Sequent([],dummy_term,-1),Prefl dummy_term)
-
-  let the_proofs_max = 1000000000 (* 10^9 *)
-  let the_proofs = Array.make the_proofs_max dummy_proof
+  let dummy_proof =
+    let dummy_term = Var("",Tyvar"") in
+    Proof(Sequent([],dummy_term,-1),Prefl dummy_term)
 
   let the_proofs_idx = ref (-1)
 
   let nb_proofs() = !the_proofs_idx + 1
 
   let next_proof_idx() =
-    let k = !the_proofs_idx + 1 in
-    assert (k < the_proofs_max);
-    the_proofs_idx := k; k;;
+    let k = !the_proofs_idx + 1 in the_proofs_idx := k; k;;
 
-  let new_proof idx thm content =
-    (Array.set the_proofs idx (Proof(thm,content)); thm)
-
-  let proof_at k = Array.get the_proofs k
-
-  let iter_proofs f =
-    for k = 0 to !the_proofs_idx do f k (proof_at k) done
+  (* WARNING: [new_proof idx1] should be called before [new_proof
+     idx2] if idx1 < idx2. *)
+  let new_proof =
+    let oc = open_out "proofs.dump" in
+    let dump x = Marshal.to_channel oc x [] in
+    fun idx thm content -> dump (Proof(thm,content)); thm
+  ;;
 
 (* ------------------------------------------------------------------------- *)
 (* List of current type constants with their arities.                        *)
@@ -573,7 +562,7 @@ module Hol : Hol_kernel = struct
   let concl (Sequent(asl,c,_)) = c
 
   let index_of(Sequent(_,_,k)) = k
-(*DONTREMOVE
+(*REMOVE
 (* ------------------------------------------------------------------------- *)
 (* Basic equality properties; TRANS is derivable but included for efficiency *)
 (* ------------------------------------------------------------------------- *)
@@ -669,7 +658,7 @@ module Hol : Hol_kernel = struct
     let inst_fun = vsubst theta in
     let th = Sequent(term_image inst_fun asl,inst_fun c,idx) in
     new_proof idx th (Pinst(p,theta))
-DONTREMOVE*)
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of axioms.                                                       *)
 (* ------------------------------------------------------------------------- *)
@@ -756,21 +745,19 @@ DONTREMOVE*)
      new_proof ridx rth (Pdeft(p,rtm,repname,repty)))
 
 (* ------------------------------------------------------------------------- *)
-(* Function to dump proofs.                                                  *)
+(* Function to dump types, constants and axioms.                             *)
 (* ------------------------------------------------------------------------- *)
 
-  let dump_proofs() =
-    let t = Sys.time() in
-    let oc = open_out "proofs.dump" in
+  let dump_signature() =
+    let oc = open_out "signature.dump" in
     let dump x = Marshal.to_channel oc x [] in
-    dump (nb_proofs());
     dump (types());
     dump (constants());
     dump (axioms());
     dump (definitions());
-    iter_proofs (fun _ -> dump);
+    dump (nb_proofs());
     close_out oc;
-    Printf.printf "%fs\n%!" (Sys.time() -. t)
+    Printf.printf "%d proof steps\n%!" (nb_proofs())
   ;;
 
 end;;

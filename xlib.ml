@@ -1,6 +1,12 @@
 open Xprelude
 open Fusion
 
+let the_proofs : proof array ref = ref [||]
+let proof_at k = Array.get (!the_proofs) k
+let the_proofs_idx : int ref = ref (-1)
+let nb_proofs() = !the_proofs_idx + 1
+let iter_proofs f = for k = 0 to !the_proofs_idx do f k (proof_at k) done
+
 (****************************************************************************)
 (* Ranges of proof indexes. *)
 (****************************************************************************)
@@ -255,7 +261,7 @@ let renaming_map = List.fold_left add_var [];;
 let el b =
   mk_comb(mk_const("@",[b,aty]),mk_abs(mk_var("_",b),mk_const("T",[])))
 *)
-if not(!el_added) then (new_constant("el",aty); el_added := true);;
+(*if not(!el_added) then (new_constant("el",aty); el_added := true);;*)
 
 let mk_el b = mk_const("el",[b,aty]);;
 

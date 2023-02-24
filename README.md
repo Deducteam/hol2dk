@@ -140,7 +140,7 @@ On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - ocaml proof checking: 12.5s
 - ocaml proof checking and recording: 13.2s
 - proof dumping: 1.4s 157 Mo
-- dk file generation: 48s 153 Mo
+- dk file generation: 45s 153 Mo
 - checking time with dk check: 26s
 - checking time with kocheck -j 7: 22s
 - lp file generation: 29s 107 Mo

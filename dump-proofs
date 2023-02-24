@@ -27,6 +27,6 @@ print_endline "------------------------------------------------------------";;
 print_endline "#use \"$1\";;";;
 #use "$1";;
 print_endline "------------------------------------------------------------";;
-print_endline "dump_proofs();;";;
-dump_proofs();;
+print_endline "dump_signature();;";;
+dump_signature();;
 EOF

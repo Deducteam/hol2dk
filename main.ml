@@ -4,17 +4,22 @@ open Fusion
 open Xlib
 
 let usage() =
-  Printf.printf "usage: %s proofs.dump file.[dk|lp]\n%!" Sys.argv.(0)
+  Printf.printf "usage: %s signature.dump proofs.dump file.[dk|lp]\n%!"
+    Sys.argv.(0)
 
 let main() =
+
+  (* check number of arguments *)
   let n = Array.length Sys.argv - 1 in
-  if n > 2 then
+  if n <> 3 then
     begin
       Printf.eprintf "wrong number of arguments\n%!";
       usage();
       exit 1
     end;
-  let filename = Sys.argv.(2) in
+
+  (* get filename and check file extension *)
+  let filename = Sys.argv.(3) in
   let ext = Filename.extension filename in
   let dk =
     match ext with
@@ -26,24 +31,31 @@ let main() =
        exit 1
   in
   let basename = Filename.chop_extension filename in
+
+  (* read signature *)
   let dump_file = Sys.argv.(1) in
   let ic = open_in_bin dump_file in
   let read() = Marshal.from_channel ic in
-  let _nb_proofs = read() in
   the_type_constants := read();
-  the_term_constants := read();
-  new_constant("el",aty);
+  the_term_constants := ("el",aty)::read();
   the_axioms := read();
   the_definitions := read();
-  (*update_map_const_typ_vars_pos();*)
+  let nb_proofs = read() in
+  Printf.printf "%d proof steps\n%!" nb_proofs;
+  the_proofs := Array.make nb_proofs dummy_proof;
+
+  (* read proofs *)
+  let dump_file = Sys.argv.(2) in
+  let ic = open_in_bin dump_file in
+  let read() = Marshal.from_channel ic in
   let proofs_in_range theorem =
     fun oc r ->
     try
       the_proofs_idx := -1;
       while true do
-        let k = !the_proofs_idx + 1 in
         let p = read() in
-        Array.set the_proofs k p;
+        let k = !the_proofs_idx + 1 in
+        Array.set (!the_proofs) k p;
         theorem oc k p;
         the_proofs_idx := k
       done

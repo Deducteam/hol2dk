@@ -454,7 +454,6 @@ let export_to_lp_file proofs_in_range basename r =
   reset_map_typ();
   reset_map_term();
   update_map_const_typ_vars_pos();
-  print_time();
   (* generate axioms and theorems *)
   let filename = basename ^ "_proofs.lp" in
   log "generate %s ...\n%!" filename;
@@ -513,8 +512,7 @@ rule El (fun $a $b) ↪ El $a → El $b;
 %a
 /* type abbreviations */
 %a" (list decl_typ) (types()) decl_map_typ !map_typ;
-  close_out oc;
-  print_time()
+  close_out oc
 ;;
 
 (****************************************************************************)
@@ -573,7 +571,6 @@ decl_axioms (axioms()) (list decl_def) (definitions())
 (* [export_to_lp_file_no_abbrev f r] creates a file of name [f.lp] and
    outputs to this file the proofs in range [r]. *)
 let export_to_lp_file_no_abbrev basename r =
-  print_time();
   use_abbrev := false;
   update_map_const_typ_vars_pos();
   let filename = basename ^ ".lp" in
@@ -582,8 +579,7 @@ let export_to_lp_file_no_abbrev basename r =
   theory oc;
   out oc "/* theorems */\n";
   proofs_in_range oc r;
-  close_out oc;
-  print_time()
+  close_out oc
 ;;
 
 (****************************************************************************)
@@ -596,7 +592,6 @@ let export_to_lp_file_no_abbrev basename r =
    moment as checking the generated lp files take more times because
    of the way loading is currently done in Lambdapi. *)
 let export_to_lp_dir dirname r =
-  print_time();
   use_abbrev := false;
   update_map_const_typ_vars_pos();
   if not (Sys.is_directory dirname) then
@@ -641,10 +636,8 @@ done\n" n;
     theorem oc k p;
     close_out oc
   in
-  begin match r with
+  match r with
   | All -> iter_proofs theorem_file
   | Upto x -> for k=0 to x do theorem_file k (proof_at k) done
   | Only _ | Inter _ -> invalid_arg "export_to_lp_dir"
-  end;
-  print_time()
 ;;

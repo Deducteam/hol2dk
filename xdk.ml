@@ -569,7 +569,6 @@ let export_to_dk_file proofs_in_range f r =
   reset_map_typ();
   reset_map_term();
   update_map_const_typ_vars_pos();
-  print_time();
   (* generate axioms and theorems *)
   let filename = f ^ "_proofs.dk" in
   log "generate %s ...\n%!" filename;
@@ -620,8 +619,7 @@ proofs_in_range r;
   let files = f ^ "_types.dk " ^ f ^ "_terms.dk " ^ f ^ "_proofs.dk" in
   let k = Sys.command ("cat " ^ files ^ " > " ^ filename) in
   if k <> 0 then exit k;
-  ignore(Sys.command ("rm -f " ^ files));
-  print_time()
+  ignore(Sys.command ("rm -f " ^ files))
 ;;
 
 (****************************************************************************)
@@ -679,7 +677,6 @@ decl_axioms (axioms()) (list decl_def) (definitions())
 (* [export_to_dk_file_no_abbrev f r] creates a file of name [f.dk] and
    outputs to this file the proofs in range [r]. *)
 let export_to_dk_file_no_abbrev f r =
-  print_time();
   use_abbrev := false;
   (*stage := No_abbrev;*)
   update_map_const_typ_vars_pos();
@@ -689,6 +686,5 @@ let export_to_dk_file_no_abbrev f r =
   theory oc;
   out oc "(; theorems ;)\n";
   proofs_in_range oc r;
-  close_out oc;
-  print_time()
+  close_out oc
 ;;
