@@ -28,10 +28,15 @@ jobs:
         run: |
           eval `opam env`
           dune build -p hol2dk @install
-      - name: Install hol-light dependencies, dedukti and lambdapi
+      - name: Install hol-light dependencies, dedukti
         run: |
           sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
-          opam install camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} lambdapi.${{ matrix.lambdapi-version }}
+          opam install camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
+      - name: Install lambdapi
+        run: |
+          git clone --depth 1 -b master https://github.com/Deducteam/lambdapi
+          opam pin lambdapi lambdapi
+          opam install lambdapi
       - name: Get hol-light and patch it
         run: |
           git clone --depth 1 -b master https://github.com/jrh13/hol-light
