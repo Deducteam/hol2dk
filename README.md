@@ -22,29 +22,27 @@ Dedukti proofs.
 Installing HOL-Light
 --------------------
 
-If you don't have HOL-Light already installed, you can install it in
-the current directory using the following script:
-
-```
-git clone --depth 1 -b master https://github.com/jrh13/hol-light
-make -C hol-light
-```
-
 **Requirements:**
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml 4.14.1
+- camlp5.8.00.03
 - ocamlfind
 - num
-- camlp5.8.00.03
+
+Find other potential working ocaml-camlp5 pairs on
+https://github.com/jrh13/hol-light/pull/71 .
+
+If you don't have HOL-Light already installed, you can install it in
+the current directory using the following commands:
 
 ```
 sudo apt-get install -y libipc-system-simple-perl libstring-shellquote
 -perl
 opam install ocamlfind num camlp5
+git clone --depth 1 -b master https://github.com/jrh13/hol-light
+make -C hol-light
 ```
-
-To see other potential working ocaml-camlp5 pairs, see https://github.com/jrh13/hol-light/pull/71 .
 
 Patching HOL-Light
 ------------------
@@ -53,49 +51,80 @@ Patching HOL-Light
 ./patch-hol-light $hol-light-dir
 ```
 
-This script slightly modifies the file fusion.ml to dump proofs in the
-file `proofs.dump`.
+This script slightly modifies the kernel of HOL-Light, the file
+`fusion.ml`, to dump proofs.
 
-Usage
------
+Dumping HOL-Light proofs
+------------------------
 
 ```
 cd $hol-light-dir
-$hol2dk-dir/dump-proofs file.ml # a prefix of hol.ml
-
-cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/proofs.dump file.dk
-dune exec -- hol2dk $hol-light-dir/proofs.dump file.lp
+$hol2dk-dir/dump-proofs file.ml
 ```
 
-Checking the generated dk/lp files
-----------------------------------
+generates two files: `proofs.dump` and `signature.dump`.
+
+`file.ml` should at least include `hol.ml` until the line `loads
+"fusion.ml";;`.
+
+Compiling hol2dk
+----------------
 
 **Requirements:**
-- dedukti 2.7
-- lambdapi 2.3
+- ocaml >= 4.14.1
+- dune >= 3.7
 
 ```
-opem install dedukti lambdapi
+dune build
 ```
 
-To check the generated dk file with [dkcheck](https://github.com/Deducteam/Dedukti/), write:
+Generating dk/lp files from dump files
+--------------------------------------
+
 ```
-dk check myfile.dk
+cd $hol2dk-dir
+dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump file.dk
+```
+
+generates `file.dk` from the given dumped files.
+
+```
+cd $hol2dk-dir
+dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump file.lp
+```
+
+generates the files `file_types.lp`, `file_terms.lp` and
+`file_proofs.lp` from the dumped files.
+
+Checking the generated dk file
+------------------------------
+
+**Requirement:** dedukti 2.7, lambdapi 2.3 or [kocheck](https://github.com/01mf02/kontroli-rs)
+
+To check the generated dk file with dkcheck, do:
+```
+dk check file.dk
 ```
 
 To check the generated dk file with the current version of
-[kocheck](https://github.com/01mf02/kontroli-rs), you first need to
-slightly change the generated file:
+[kocheck](https://github.com/01mf02/kontroli-rs), you need to slightly
+change the generated file:
 
 ```
-sed -e 's/^injective /def /g' myfile.dk > myfile2.dk
-kocheck -j 7 myfile2.dk
+sed -e 's/^injective /def /g' file.dk > file-for-kocheck.dk
+kocheck -j 7 file-for-kocheck.dk
 ```
 
-To check the generated lp file with [lambdapi](https://github.com/Deducteam/lambdapi), write:
+Checking the generated lp files
+-------------------------------
+
+**Requirement:** lambdapi 2.3
+
+To check the generated lp files with
+[lambdapi](https://github.com/Deducteam/lambdapi), do:
+
 ```
-lambdapi check --map-dir hol-light:. myfile.lp
+lambdapi check --map-dir hol-light:. file_proofs.lp
 ```
 
 or create a file `lambdapi.pkg`:
@@ -104,14 +133,15 @@ package_name = hol-light
 root_path = hol-light
 ```
 
-and simply write:
+and simply do:
 
 ```
-lambdapi check myfile.lp
+lambdapi check file_proofs.lp
 ```
 
-Remark: In case hol-light and dkcheck/lambdapi do not use the same ocaml
-versions, it is convenient to use different switches in each directory:
+**Remark:** In case hol-light and dkcheck/lambdapi do not use the same
+ocaml versions, it is convenient to use different switches in each
+directory:
 
 Xterm 1 (for HOL-Light):
 ```
@@ -146,8 +176,8 @@ On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - lp file generation: 29s 107 Mo
 - checking time with lambdapi: 2m49s
 
-Implementation
---------------
+Thanks
+------
 
 HOL-Light proof recording follows
 [ProofTrace](https://github.com/fblanqui/hol-light/tree/master/ProofTrace)
