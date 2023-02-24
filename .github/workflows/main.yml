@@ -56,4 +56,4 @@ jobs:
         run: |
           eval `opam env`
           _build/default/main.exe hol-light/signature.dump hol-light/proofs.dump xci.lp
-          lambdapi check --map-dir=hol-light:. xci_proofs.lp
+          lambdapi check --lib-root=. --map-dir=hol-light:. xci_proofs.lp
