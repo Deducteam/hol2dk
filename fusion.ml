@@ -162,15 +162,15 @@ module Hol : Hol_kernel = struct
 
   let nb_proofs() = !the_proofs_idx + 1
 
-  let next_proof_idx() =
-    let k = !the_proofs_idx + 1 in the_proofs_idx := k; k;;
-
-  (* WARNING: [new_proof idx1] should be called before [new_proof
-     idx2] if idx1 < idx2. *)
-  let new_proof =
+  let new_theorem =
     let oc = open_out "proofs.dump" in
     let dump x = Marshal.to_channel oc x [] in
-    fun idx thm content -> dump (Proof(thm,content)); thm
+    fun hyps concl proof_content ->
+    let k = !the_proofs_idx + 1 in
+    the_proofs_idx := k;
+    let thm = Sequent(hyps, concl, k) in
+    dump (Proof(thm,proof_content));
+    thm
   ;;
 
 (* ------------------------------------------------------------------------- *)
@@ -567,18 +567,13 @@ module Hol : Hol_kernel = struct
 (* Basic equality properties; TRANS is derivable but included for efficiency *)
 (* ------------------------------------------------------------------------- *)
 
-  let REFL tm =
-    let idx = next_proof_idx() in
-    let th = Sequent([],safe_mk_eq tm tm,idx) in
-    new_proof idx th (Prefl tm)
+  let REFL tm = new_theorem [] (safe_mk_eq tm tm) (Prefl tm)
 
   let TRANS (Sequent(asl1,c1,p1)) (Sequent(asl2,c2,p2)) =
     match (c1,c2) with
       Comb((Comb(Const("=",_),_) as eql),m1),Comb(Comb(Const("=",_),m2),r)
         when alphaorder m1 m2 = 0 ->
-          let idx = next_proof_idx() in
-          let th = Sequent(term_union asl1 asl2,Comb(eql,r),idx) in
-          new_proof idx th (Ptrans(p1, p2))
+          new_theorem (term_union asl1 asl2) (Comb(eql,r)) (Ptrans(p1,p2))
     | _ -> failwith "TRANS"
 
 (* ------------------------------------------------------------------------- *)
@@ -589,21 +584,16 @@ module Hol : Hol_kernel = struct
      match (c1,c2) with
        Comb(Comb(Const("=",_),l1),r1),Comb(Comb(Const("=",_),l2),r2) ->
         (match type_of r1 with
-           Tyapp("fun",[ty;_]) when Stdlib.compare ty (type_of r2) = 0 ->
-             let idx = next_proof_idx() in
-             let th = Sequent(term_union asl1 asl2,
-                              safe_mk_eq (Comb(l1,l2)) (Comb(r1,r2)),
-                              idx) in
-             new_proof idx th (Pmkcomb(p1, p2))
+           Tyapp("fun",[ty;_]) when Stdlib.compare ty (type_of r2) = 0
+             -> new_theorem (term_union asl1 asl2)
+                  (safe_mk_eq (Comb(l1,l2)) (Comb(r1,r2))) (Pmkcomb(p1,p2))
          | _ -> failwith "MK_COMB: types do not agree")
      | _ -> failwith "MK_COMB: not both equations"
 
   let ABS v (Sequent(asl,c,p)) =
     match (v,c) with
-      Var(_,_),Comb(Comb(Const("=",_),l),r) when not(exists (vfree_in v) asl) ->
-        let idx = next_proof_idx() in
-        let th = Sequent(asl,safe_mk_eq (Abs(v,l)) (Abs(v,r)),idx) in
-        new_proof idx th (Pabs(p, v))
+      Var(_,_),Comb(Comb(Const("=",_),l),r) when not(exists (vfree_in v) asl)
+        -> new_theorem asl (safe_mk_eq (Abs(v,l)) (Abs(v,r))) (Pabs(p, v))
     | _ -> failwith "ABS";;
 
 (* ------------------------------------------------------------------------- *)
@@ -612,10 +602,8 @@ module Hol : Hol_kernel = struct
 
   let BETA tm =
     match tm with
-      Comb(Abs(v,bod),arg) when Stdlib.compare arg v = 0 ->
-        let idx = next_proof_idx() in
-        let th = Sequent([],safe_mk_eq tm bod,idx) in
-        new_proof idx th (Pbeta tm)
+      Comb(Abs(v,bod),arg) when Stdlib.compare arg v = 0
+        -> new_theorem [] (safe_mk_eq tm bod) (Pbeta tm)
     | _ -> failwith "BETA: not a trivial beta-redex"
 
 (* ------------------------------------------------------------------------- *)
@@ -624,40 +612,30 @@ module Hol : Hol_kernel = struct
 
   let ASSUME tm =
     if Stdlib.compare (type_of tm) bool_ty = 0 then
-      let idx = next_proof_idx() in
-      let th = Sequent([tm],tm,idx) in
-      new_proof idx th (Passume tm)
+      new_theorem [tm] tm (Passume tm)
     else failwith "ASSUME: not a proposition"
 
   let EQ_MP (Sequent(asl1,eq,p1)) (Sequent(asl2,c,p2)) =
     match eq with
-      Comb(Comb(Const("=",_),l),r) when alphaorder l c = 0 ->
-        let idx = next_proof_idx() in
-        let th = Sequent(term_union asl1 asl2,r,idx) in
-        new_proof idx th (Peqmp(p1, p2))
+      Comb(Comb(Const("=",_),l),r) when alphaorder l c = 0
+        -> new_theorem (term_union asl1 asl2) r (Peqmp(p1, p2))
     | _ -> failwith "EQ_MP"
 
   let DEDUCT_ANTISYM_RULE (Sequent(asl1,c1,p1)) (Sequent(asl2,c2,p2)) =
     let asl1' = term_remove c2 asl1 and asl2' = term_remove c1 asl2 in
-    let idx = next_proof_idx() in
-    let th = Sequent(term_union asl1' asl2',safe_mk_eq c1 c2,idx) in
-    new_proof idx th (Pdeduct(p1, p2))
+    new_theorem (term_union asl1' asl2') (safe_mk_eq c1 c2) (Pdeduct(p1, p2))
 
 (* ------------------------------------------------------------------------- *)
 (* Type and term instantiation.                                              *)
 (* ------------------------------------------------------------------------- *)
 
   let INST_TYPE theta (Sequent(asl,c,p)) =
-    let idx = next_proof_idx() in
     let inst_fn = inst theta in
-    let th = Sequent(term_image inst_fn asl,inst_fn c,idx) in
-    new_proof idx th (Pinstt(p,theta))
+    new_theorem (term_image inst_fn asl) (inst_fn c) (Pinstt(p,theta))
 
   let INST theta (Sequent(asl,c,p)) =
-    let idx = next_proof_idx() in
     let inst_fun = vsubst theta in
-    let th = Sequent(term_image inst_fun asl,inst_fun c,idx) in
-    new_proof idx th (Pinst(p,theta))
+    new_theorem (term_image inst_fun asl) (inst_fun c) (Pinst(p,theta))
 REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of axioms.                                                       *)
@@ -669,10 +647,8 @@ REMOVE*)
 
   let new_axiom tm =
     if Stdlib.compare (type_of tm) bool_ty = 0 then
-      let idx = next_proof_idx() in
-      let th = Sequent([],tm,idx) in
-       (the_axioms := th::(!the_axioms);
-        new_proof idx th (Paxiom tm))
+      let th = new_theorem [] tm (Paxiom tm) in
+      (the_axioms := th::(!the_axioms); th)
     else failwith "new_axiom: Not a proposition"
 
 (* ------------------------------------------------------------------------- *)
@@ -692,11 +668,9 @@ REMOVE*)
         else if not (subset (type_vars_in_term r) (tyvars ty))
         then failwith "new_definition: Type variables not reflected in constant"
         else let c = new_constant(cname,ty); Const(cname,ty) in
-             let idx = next_proof_idx() in
              let dtm = safe_mk_eq c r in
-             let dth = Sequent([],dtm,idx) in
-             (the_definitions := dth::(!the_definitions);
-              new_proof idx dth (Pdef(dtm,cname,ty)))
+             let dth = new_theorem [] dtm (Pdef(dtm,cname,ty)) in
+             (the_definitions := dth::(!the_definitions); dth)
     | _ -> failwith "new_basic_definition"
 
 (* ------------------------------------------------------------------------- *)
@@ -732,17 +706,14 @@ REMOVE*)
     let abs = (new_constant(absname,absty); Const(absname,absty))
     and rep = (new_constant(repname,repty); Const(repname,repty)) in
     let a = Var("a",aty) and r = Var("r",rty) in
-    let aidx = next_proof_idx() in
     let atm = safe_mk_eq (Comb(abs,mk_comb(rep,a))) a in
-    let ath = Sequent([],atm,aidx) in
-    let ridx = next_proof_idx() in
+    let ath = new_theorem [] atm (Pdeft(p,atm,absname,absty)) in
     let rtm = safe_mk_eq (Comb(pred,r))
                            (safe_mk_eq (mk_comb(rep,mk_comb(abs,r))) r) in
-    let rth = Sequent([],rtm,ridx) in
+    let rth = new_theorem [] rtm (Pdeft(p,rtm,repname,repty)) in
     let _ = new_axiom atm in
     let _ = new_axiom rtm in
-    (new_proof aidx ath (Pdeft(p,atm,absname,absty)),
-     new_proof ridx rth (Pdeft(p,rtm,repname,repty)))
+    (ath,rth)
 
 (* ------------------------------------------------------------------------- *)
 (* Function to dump types, constants and axioms.                             *)
