@@ -50,10 +50,10 @@ jobs:
       - name: Generate and check dk output
         run: |
           eval `opam env`
-          _build/defauult/main.exe hol-light/signature.dump hol-light/proofs.dump xci.dk
+          _build/default/main.exe hol-light/signature.dump hol-light/proofs.dump xci.dk
           dk check xci.dk
       - name: Generate and check lp output
         run: |
           eval `opam env`
-          _build/defauult/main.exe hol-light/signature.dump hol-light/proofs.dump xci.lp
+          _build/default/main.exe hol-light/signature.dump hol-light/proofs.dump xci.lp
           lambdapi check --map-dir=hol-light:. xci_proofs.lp
