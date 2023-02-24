@@ -40,11 +40,13 @@ jobs:
       - name: Get hol-light and patch it
         run: |
           git clone --depth 1 https://github.com/jrh13/hol-light
-          eval `opam env`          
+          eval `opam env`
           make -C hol-light
           ./patch-hol-light hol-light
       - name: Dump proofs
-        run: cd hol-light; ../dump-proofs ../xci.ml
+        run: |
+          eval `opam env`
+          cd hol-light; ../dump-proofs ../xci.ml
       - name: Generate and check dk output
         run: |
           eval `opam env`
