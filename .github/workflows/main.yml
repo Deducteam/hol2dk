@@ -1,0 +1,59 @@
+on:
+  pull_request:
+    types: [opened, synchronize, edited, reopened]
+  push:
+  workflow_dispatch:
+jobs:
+  hol-light-to-dedukti:
+    strategy:
+      fail-fast: false
+      matrix:
+        ocaml-version: [4.14.1]
+        camlp5-version: [8.00.05]
+        dedukti-version: [2.7]
+        lambdapi-version: [2.3.0]
+        dune-version: [3.7.0]
+    runs-on: ubuntu-latest
+    steps:
+    # actions/checkout must be done BEFORE avsm/setup-ocaml
+      - name: Checkout hol2dk
+        uses: actions/checkout@v3
+      - name: Install opam
+        uses: avsm/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-version }}
+      - name: Install dune
+        run: opam install dune.${{ matrix.dune-version }}
+      - name: Compile hol2dk
+        run: |
+          eval `opam env`
+          dune build -p hol2dk @install
+      - name: Install hol-light dependencies, dedukti
+        run: |
+          sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
+          opam install camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
+      - name: Install lambdapi
+        run: |
+          git clone --depth 1 -b opam https://github.com/fblanqui/lambdapi
+          opam pin lambdapi lambdapi
+          opam install lambdapi
+      - name: Get hol-light and patch it
+        run: |
+          git clone --depth 1 https://github.com/jrh13/hol-light
+          eval `opam env`
+          make -C hol-light
+          ./patch-hol-light hol-light
+      - name: Dump proofs
+        run: |
+          eval `opam env`
+          cd hol-light; ../dump-proofs ../xci.ml
+      - name: Generate and check dk output
+        run: |
+          eval `opam env`
+          _build/default/main.exe hol-light/signature.dump hol-light/proofs.dump xci.dk
+          dk check xci.dk
+      - name: Generate and check lp output
+        run: |
+          eval `opam env`
+          _build/default/main.exe hol-light/signature.dump hol-light/proofs.dump xci.lp
+          lambdapi check --lib-root=. --map-dir=hol-light:. xci_proofs.lp
