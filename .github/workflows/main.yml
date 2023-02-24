@@ -34,7 +34,7 @@ jobs:
           opam install camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
       - name: Install lambdapi
         run: |
-          git clone --depth 1 -b opam https://github.com/Deducteam/lambdapi
+          git clone --depth 1 -b opam https://github.com/fblanqui/lambdapi
           opam pin lambdapi lambdapi
           opam install lambdapi
       - name: Get hol-light and patch it
