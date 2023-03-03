@@ -18,3 +18,14 @@ else
     echo "patch $dir/fusion.ml"
     sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' -e 's/val dummy_proof : proof//' fusion.ml > $dir/fusion.ml
 fi
+
+if test -f $dir/bool-bak.ml
+then
+    echo "$dir/bool-bak.ml already exists"
+    exit 1
+else
+    echo "cp $dir/bool.ml $dir/bool-bak.ml"
+    cp $dir/bool.ml $dir/bool-bak.ml
+    echo "patch $dir/bool.ml"
+    sed -e 's/.*REMOVE.*//' bool.ml > $dir/bool.ml
+fi

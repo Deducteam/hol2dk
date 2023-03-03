@@ -82,7 +82,7 @@ let decl_map_typ oc m =
 
 let raw_var oc t =
   match t with
-  | Var(n,_) -> out oc "%a" name n
+  | Var(n,_) -> name oc n
   | _ -> assert false
 ;;
 
@@ -240,6 +240,7 @@ let decl_map_term oc m =
 
 (* In a theorem, the hypotheses [t1;..;tn] are given the names
    ["h1";..;"hn"]. *)
+let hyp_var ts oc t = out oc "h%d" (try 1 + index t ts with _ -> 0);;
 
 (* Printing on the output channel [oc] of the subproof [p2] given:
 - tvs: list of type variables of the theorem
@@ -275,11 +276,10 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
       (fun su tv -> (bool_ty,tv)::su)
       ty_su tvbs2
   in
-  let hyp oc t = out oc "h%d" (try 1 + index t ts1 with _ -> 0) in
   match ty_su with
   | [] ->
      out oc "(thm_%d%a%a)" i2
-       (list_prefix " " term) vs2 (list_prefix " " hyp) ts2
+       (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
   | _ ->
      (* vs2 is now the application of ty_su on vs2 *)
      let vs2 = List.map (inst ty_su) vs2 in
@@ -288,7 +288,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
      (* bs is the list of types obtained by applying ty_su on tvs2 *)
      let bs = List.map (type_subst ty_su) tvs2 in
      out oc "(@thm_%d%a%a%a)" i2 (list_prefix " " typ) bs
-       (list_prefix " " term) vs2 (list_prefix " " hyp) ts2
+       (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
 ;;
 
 (* [proof tvs rmap oc p] prints on [oc] the proof [p] for a theorem
@@ -299,28 +299,19 @@ let proof tvs rmap =
     let Proof(thm,content) = p in
     let ts = hyp thm in
     let sub = subproof tvs rmap [] [] ts in
+    let sub_at oc k = sub k oc (proof_at k) in
     match content with
-    | Prefl(t) ->
-       out oc "REFL %a" term t
-    | Ptrans(k1,k2) ->
-       let p1 = proof_at k1 and p2 = proof_at k2 in
-       out oc "TRANS %a %a" (sub k1) p1 (sub k2) p2
-    | Pmkcomb(k1,k2) ->
-       let p1 = proof_at k1 and p2 = proof_at k2 in
-       out oc "MK_COMB %a %a" (sub k1) p1 (sub k2) p2
+    | Prefl(t) -> out oc "REFL %a" term t
+    | Ptrans(k1,k2) -> out oc "TRANS %a %a" sub_at k1 sub_at k2
+    | Pmkcomb(k1,k2) -> out oc "MK_COMB %a %a" sub_at k1 sub_at k2
     | Pabs(k,t) ->
        let rmap' = add_var rmap t in
        out oc "fun_ext (λ %a, %a)" (decl_var rmap') t
          (subproof tvs rmap' [] [] ts k) (proof_at k)
-    | Pbeta(Comb(Abs(x,t),y)) when x = y ->
-       out oc "REFL %a" term t
-    | Pbeta(t) ->
-       out oc "REFL %a" term t
-    | Passume(t) ->
-       out oc "h%d" (1 + index t (hyp thm))
-    | Peqmp(k1,k2) ->
-       let p1 = proof_at k1 and p2 = proof_at k2 in
-       out oc "EQ_MP %a %a" (sub k1) p1 (sub k2) p2
+    | Pbeta(Comb(Abs(x,t),y)) when x = y -> out oc "REFL %a" term t
+    | Pbeta(t) -> out oc "REFL %a" term t
+    | Passume(t) -> hyp_var (hyp thm) oc t
+    | Peqmp(k1,k2) -> out oc "EQ_MP %a %a" sub_at k1 sub_at k2
     | Pdeduct(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let Proof(th1,_) = p1 and Proof(th2,_) = p2 in
@@ -330,21 +321,38 @@ let proof tvs rmap =
          n term t1 (subproof tvs rmap [] [] (ts @ [t1]) k2) p2
          n term t2 (subproof tvs rmap [] [] (ts @ [t2]) k1) p1
     | Pinst(k,[]) -> proof oc (proof_at k)
-    | Pinst(k,s) ->
-       out oc "%a" (subproof tvs rmap [] s ts k) (proof_at k)
+    | Pinst(k,s) -> out oc "%a" (subproof tvs rmap [] s ts k) (proof_at k)
     | Pinstt(k,[]) -> proof oc (proof_at k)
-    | Pinstt(k,s) ->
-       out oc "%a" (subproof tvs rmap s [] ts k) (proof_at k)
+    | Pinstt(k,s) -> out oc "%a" (subproof tvs rmap s [] ts k) (proof_at k)
     | Paxiom(t) ->
        out oc "axiom_%d%a"
          (pos_first (fun th -> concl th = t) (axioms()))
          (list_prefix " " term) (frees t)
-    | Pdef(_,n,_) ->
-       out oc "%a_def" name n
+    | Pdef(_,n,_) -> out oc "%a_def" name n
     | Pdeft(_,t,_,_) ->
        out oc "axiom_%d%a"
          (pos_first (fun th -> concl th = t) (axioms()))
          (list_prefix " " term) (frees t)
+    | Ptruth -> out oc "top"
+    | Pconj(k1,k2) -> out oc "∧ᵢ %a %a" sub_at k1 sub_at k2
+    | Pconjunct1 k -> out oc "∧ₑ₁ %a" sub_at k
+    | Pconjunct2 k -> out oc "∧ₑ₂ %a" sub_at k
+    | Pmp(k1,k2) -> out oc "%a %a" sub_at k1 sub_at k2
+    | Pdisch(t,k) ->
+       out oc "λ %a : Prf %a, %a" (hyp_var ts) t term t sub_at k
+    | Pspec(t,k) -> out oc "%a %a" sub_at k term t
+    | Pgen(x,k) ->
+       let rmap' = add_var rmap x in
+       out oc "λ %a, %a"
+         (decl_var rmap') x (subproof tvs rmap' [] [] ts k) (proof_at k)
+    | Pexists(p,t,k) -> out oc "∃ᵢ %a %a %a" term p term t sub_at k
+    | Pdisj1(p,k) -> out oc "∨ᵢ₁ %a %a" sub_at k term p
+    | Pdisj2(p,k) -> out oc "∨ᵢ₂ %a %a" term p sub_at k
+    | Pdisj_cases(k1,k2,k3) ->
+       let Proof(th1,_) = proof_at k1 in
+       let l,r = binop_args (concl th1) in
+       out oc "∨ₑ %a (λ h0 : Prf %a, %a) (λ h0 : Prf %a, %a)"
+         sub_at k1 term l sub_at k2 term r sub_at k3
   in proof
 ;;
 
@@ -447,24 +455,8 @@ print thm_%d;\n" x*)
 (* Lambdapi file generation with type and term abbreviations. *)
 (****************************************************************************)
 
-(* [export_to_lp_file proofs_in_range f r] creates the files
-   "f_types.lp", "f_terms.lp" and "f_theorems.lp" using
-   [proofs_in_range] to print the theorems in range [r]. *)
-let export_to_lp_file proofs_in_range basename r =
-  reset_map_typ();
-  reset_map_term();
-  update_map_const_typ_vars_pos();
-  (* generate axioms and theorems *)
-  let filename = basename ^ "_proofs.lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  out oc
-"require open hol-light.%s_types hol-light.%s_terms;\n
-injective symbol Prf : El bool → TYPE;\n
-/* axioms */
-%a
-/* rules */
-symbol fun_ext [a b] [f g : El (fun a b)] :
+let rules =
+"symbol fun_ext [a b] [f g : El (fun a b)] :
   (Π x, Prf (= (f x) (g x))) → Prf (= f g);
 symbol prop_ext [p q] : (Prf p → Prf q) → (Prf q → Prf p) → Prf (= p q);
 symbol REFL [a] (t:El a) : Prf (= t t);
@@ -481,11 +473,44 @@ end;*/
     @EQ_MP (= x y) (= x z)
       (@MK_COMB a bool (@= a x) (@= a x) y z (@REFL (fun a bool) (@= a x)) yz)
       xy;\n
+
+/* natural deduction rules */
+rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
+rule Prf (∀ $p) ↪ Π x, Prf ($p x);
+symbol top : Prf T;
+symbol ∧ᵢ [p q] : Prf p → Prf q → Prf (∧ p q);
+symbol ∧ₑ₁ [p q] : Prf (∧ p q) → Prf p;
+symbol ∧ₑ₂ [p q] : Prf (∧ p q) → Prf q;
+symbol ∃ᵢ [a] p (t : El a) : Prf (p t) → Prf (∃ p);
+symbol ∃ₑ [a] p : Prf (∃ p) → Π r, (Π x:El a, Prf (p x) → Prf r) → Prf r;
+symbol ∨ᵢ₁ [p] : Prf p → Π q, Prf (∨ p q);
+symbol ∨ᵢ₂ p [q] : Prf q → Prf (∨ p q);
+symbol ∨ₑ [p q] :
+  Prf (∨ p q) → Π [r], (Prf p → Prf r) → (Prf q → Prf r) → Prf r;
+";;
+
+(* [export_to_lp_file f r] creates the files "f_types.lp",
+   "f_terms.lp" and "f.lp" for the theorems in range [r]. *)
+let export_to_lp_file basename r =
+  reset_map_typ();
+  reset_map_term();
+  update_map_const_typ_vars_pos();
+  (* generate axioms and theorems *)
+  let filename = basename ^ ".lp" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  out oc
+"require open hol-light.%s_types hol-light.%s_terms;\n
+injective symbol Prf : El bool → TYPE;\n
+/* axioms */
+%a
+/* rules */
+%s
 /* definitional axioms */
 %a
 /* theorems */
 %a" basename basename
-decl_axioms (axioms()) (list decl_def) (definitions()) proofs_in_range r;
+decl_axioms (axioms()) rules (list decl_def) (definitions()) proofs_in_range r;
   close_out oc;
   (* generate constants and term abbreviations *)
   let filename = basename ^ "_terms.lp" in
@@ -508,7 +533,7 @@ rule El (fun $a $b) ↪ El $a → El $b;
   let oc = open_out filename in
   out oc
 "constant symbol Set : TYPE;\n
-/* types */
+/* type constructors */
 %a
 /* type abbreviations */
 %a" (list decl_typ) (types()) decl_map_typ !map_typ;
@@ -538,25 +563,8 @@ injective symbol Prf : El bool → TYPE;
 /* HOL-Light axioms and rules */
 injective symbol el a : El a;
 constant symbol = [a] : El a → El a → El bool;
-symbol fun_ext [a b] [f g : El (fun a b)] :
-  (Π x, Prf (= (f x) (g x))) → Prf (= f g);
-symbol prop_ext [p q] : (Prf p → Prf q) → (Prf q → Prf p) → Prf (= p q);
-symbol REFL [a] (t:El a) : Prf (= t t);
-symbol MK_COMB [a b] [s t : El (fun a b)] [u v : El a] :
-  Prf (= s t) → Prf (= u v) → Prf (= (s u) (t v));
-symbol EQ_MP [p q : El bool] : Prf (= p q) → Prf p → Prf q;
-symbol TRANS [a] [x y z : El a] :
-  Prf (= x y) → Prf (= y z) → Prf (= x z) ≔
-  λ xy: Prf (@= a x y), λ yz: Prf (@= a y z),
-    @EQ_MP (@= a x y) (@= a x z)
-      (@MK_COMB a bool (@= a x) (@= a x) y z (@REFL (fun a bool) (@= a x)) yz)
-      xy;
-/*begin
-  assume a x y z xy yz; apply EQ_MP _ xy; apply MK_COMB (REFL (= x)) yz;
-  flag \"print_implicits\" on; flag \"print_domains\" on; proofterm;
-  end;*/
-
-/* types */
+%s
+/* type constructors */
 %a
 /* constants */
 %a
@@ -564,7 +572,7 @@ symbol TRANS [a] [x y z : El a] :
 %a
 /* definitions */
 %a\n"
-(list decl_typ) types (list decl_sym) constants
+rules (list decl_typ) types (list decl_sym) constants
 decl_axioms (axioms()) (list decl_def) (definitions())
 ;;
 

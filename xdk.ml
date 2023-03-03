@@ -283,9 +283,9 @@ let decl_map_term oc m =
 
 (* In a theorem, the hypotheses [t1;..;tn] are given the names
    ["h1";..;"hn"]. *)
+let hyp_var ts oc t = out oc "h%d" (try 1 + index t ts with _ -> 0);;
 
-(* Printing on the output channel [oc] of the subproof [p2] of index
-   [i2] given:
+(* Printing on [oc] of the subproof [p2] of index [i2] given:
 - tvs: list of type variables of the theorem
 - rmap: renaming map for term variables
 - ty_su: type substitution that needs to be applied
@@ -320,15 +320,19 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
       (fun su tv -> (bool_ty,tv)::su)
       ty_su tvbs2
   in
-  (* vs2 is now the application of ty_su on vs2 *)
-  let vs2 = List.map (inst ty_su) vs2 in
-  (* ts2 is now the application of ty_su on ts2 *)
-  let ts2 = List.map (inst ty_su) ts2 in
-  (* bs is the list of types obtained by applying ty_su on tvs2 *)
-  let bs = List.map (type_subst ty_su) tvs2 in
-  let hyp oc t = out oc "h%d" (try 1 + index t ts1 with _ -> 0) in
-  out oc "(thm_%d%a%a%a)" i2 (list_prefix " " typ) bs
-    (list_prefix " " term) vs2 (list_prefix " " hyp) ts2
+  match ty_su with
+  | [] ->
+     out oc "(thm_%d%a%a%a)" i2 (list_prefix " " typ) tvs2
+       (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
+  | _ ->
+     (* vs2 is now the application of ty_su on vs2 *)
+     let vs2 = List.map (inst ty_su) vs2 in
+     (* ts2 is now the application of ty_su on ts2 *)
+     let ts2 = List.map (inst ty_su) ts2 in
+     (* bs is the list of types obtained by applying ty_su on tvs2 *)
+     let bs = List.map (type_subst ty_su) tvs2 in
+     out oc "(thm_%d%a%a%a)" i2 (list_prefix " " typ) bs
+       (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
 ;;
 
 (* [proof tvs rmap oc p] prints on [oc] the proof [p] for a theorem
@@ -340,6 +344,7 @@ let proof tvs rmap =
     let Proof(thm,content) = p in
     let ts = hyp thm in
     let sub = subproof tvs rmap [] [] ts in
+    let sub_at oc k = sub k oc (proof_at k) in
     match content with
     | Prefl(t) ->
        out oc "REFL %a %a" typ (get_eq_typ p) term t
@@ -368,7 +373,7 @@ let proof tvs rmap =
     | Pbeta(t) ->
        out oc "REFL %a %a" typ (type_of t) term t
     | Passume(t) ->
-       out oc "h%d" (1 + index t (hyp thm))
+       hyp_var (hyp thm) oc t
     | Peqmp(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let p,q = get_eq_args p1 in
@@ -411,6 +416,46 @@ let proof tvs rmap =
        out oc "axiom_%d%a%a" k
          (list_prefix " " typ) (type_vars_in_term t)
          (list_prefix " " term) (frees t)
+    | Ptruth -> out oc "top"
+    | Pconj(k1,k2) ->
+       let p1 = proof_at k1 and p2 = proof_at k2 in
+       let Proof(th1,_) = p1 and Proof(th2,_) = p2 in
+       out oc "and_intro %a %a %a %a"
+         term (concl th1) (sub k1) p1 term (concl th2) (sub k2) p2
+    | Pconjunct1 k ->
+       let p = proof_at k in
+       let Proof(th,_) = p in
+       let l,r = binop_args (concl th) in
+       out oc "and_elim1 %a %a %a" term l term r (sub k) p
+    | Pconjunct2 k ->
+       let p = proof_at k in
+       let Proof(th,_) = p in
+       let l,r = binop_args (concl th) in
+       out oc "and_elim2 %a %a %a" term l term r (sub k) p
+    | Pmp(k1,k2) -> out oc "%a %a" sub_at k1 sub_at k2
+    | Pdisch(t,k) -> out oc "%a : Prf %a => %a" (hyp_var ts) t term t sub_at k
+    | Pspec(t,k) -> out oc "%a %a" sub_at k term t
+    | Pgen(x,k) ->
+       let rmap' = add_var rmap x in
+       out oc "%a => %a"
+         (decl_var tvs rmap') x (subproof tvs rmap' [] [] ts k) (proof_at k)
+    | Pexists(p,t,k) ->
+       out oc "ex_intro %a %a %a %a" typ (type_of t) term p term t sub_at k
+    | Pdisj1(p,k) ->
+       let Proof(th,_) = proof_at k in
+       out oc "or_intro1 %a %a %a" term (concl th) sub_at k term p
+    | Pdisj2(p,k) ->
+       let Proof(th,_) = proof_at k in
+       out oc "or_intro2 %a %a %a" term p term (concl th) sub_at k
+    | Pdisj_cases(k1,k2,k3) ->
+       let p1 = proof_at k1 in
+       let Proof(th1,_) = p1 in
+       let p2 = proof_at k2 in
+       let Proof(th2,_) = p2 in
+       let l,r = binop_args (concl th1) in
+       out oc "or_elim %a %a %a %a (h0 : Prf %a => %a) (h0 : Prf %a => %a)"
+         term l term r (sub k1) p1 term (concl th2)
+         term l (sub k2) p2 term r sub_at k3
   in proof
 ;;
 
@@ -532,13 +577,13 @@ let qualify_terms s =
   Str.global_replace re r (qualify_types s)
 ;;*)
 
-let decl_Prf() = (*qualify_terms*) "injective Prf : El bool -> Type.";;
+let decl_Prf = (*qualify_terms*) "injective Prf : El bool -> Type.";;
 
-let decl_El() = (*qualify_types*)
+let decl_El = (*qualify_types*)
 "injective El : Set -> Type.
 [a, b] El (fun a b) --> El a -> El b.";;
 
-let decl_rules() = (*qualify_terms*)
+let decl_rules = (*qualify_terms*)
 "def fun_ext : a : Set -> b : Set -> f : El (fun a b) -> g : El (fun a b) ->
   (x : El a -> Prf (eq b (f x) (g x))) -> Prf (eq (fun a b) f g).
 def prop_ext : p : El bool -> q : El bool ->
@@ -554,17 +599,31 @@ thm TRANS : a : Set -> x : El a -> y : El a -> z : El a ->
   xy: Prf (eq a x y) => yz: Prf (eq a y z) =>
   EQ_MP (eq a x y) (eq a x z)
     (MK_COMB a bool (eq a x) (eq a x) y z
-      (REFL (fun a bool) (eq a x)) yz) xy."
-;;
+      (REFL (fun a bool) (eq a x)) yz) xy.
+
+(; natural deduction rules ;)
+[p, q] Prf (imp p q) --> Prf p -> Prf q.
+[a, p] Prf (all a p) --> x : El a -> Prf (p x).
+def top : Prf T.
+def and_intro : p : El bool -> Prf p -> q : El bool -> Prf q -> Prf (and p q).
+def and_elim1 : p : El bool -> q : El bool -> Prf (and p q) -> Prf p.
+def and_elim2 : p : El bool -> q : El bool -> Prf (and p q) -> Prf q.
+def ex_intro :
+  a : Set -> p : (El a -> El bool) -> t : El a -> Prf (p t) -> Prf (ex a p).
+def ex_elim : a : Set -> p : (El a -> El bool) -> Prf (ex a p)
+  -> r : El bool -> (x : El a -> Prf (p x) -> Prf r) -> Prf r.
+def or_intro1 : p : El bool -> Prf p -> q : El bool -> Prf (or p q).
+def or_intro2 : p : El bool -> q : El bool -> Prf q -> Prf (or p q).
+def or_elim : p : El bool -> q : El bool -> Prf (or p q)
+  -> r : El bool -> (Prf p -> Prf r) -> (Prf q -> Prf r) -> Prf r.";;
 
 (****************************************************************************)
 (* Dedukti file generation with type and term abbreviations. *)
 (****************************************************************************)
 
-(* [export_to_dk_file proofs_in_range f r] creates the files
-   "f_types.dk", "f_terms.dk" and "f_theorems.dk" using
-   [proofs_in_range] for the theorems in range [r]. *)
-let export_to_dk_file proofs_in_range f r =
+(* [export_to_dk_file f r] creates the file "f.dk" for the theorems in
+   range [r]. *)
+let export_to_dk_file f r =
   (*basename := f;*)
   reset_map_typ();
   reset_map_term();
@@ -575,7 +634,7 @@ let export_to_dk_file proofs_in_range f r =
   let oc = open_out filename in
   (*stage := Proofs;*)
   out oc
-"(;#REQUIRE %s_types.
+"\n(;#REQUIRE %s_types.
 #REQUIRE %s_terms.;)\n
 %s\n
 (; axioms ;)
@@ -585,8 +644,8 @@ let export_to_dk_file proofs_in_range f r =
 (; definitional axioms ;)
 %a
 (; theorems ;)
-%a" f f (decl_Prf())
-decl_axioms (axioms()) (decl_rules()) (list decl_def) (definitions())
+%a" f f decl_Prf
+decl_axioms (axioms()) decl_rules (list decl_def) (definitions())
 proofs_in_range r;
   close_out oc;
   (* generate constants and term abbreviations *)
@@ -595,12 +654,12 @@ proofs_in_range r;
   let oc = open_out filename in
   (*stage := Terms;*)
   out oc
-"(;#REQUIRE %s_types.;)\n
+"\n(;#REQUIRE %s_types.;)\n
 %s\n
 (; constants ;)
 %a
 (; term abbreviations ;)
-%a" f (decl_El()) (list decl_sym) (constants()) decl_map_term !map_term;
+%a" f decl_El (list decl_sym) (constants()) decl_map_term !map_term;
   close_out oc;
   (* generate types and type abbreviations *)
   let filename = f ^ "_types.dk" in
@@ -609,16 +668,18 @@ proofs_in_range r;
   (*stage := Types;*)
   out oc
 "Set : Type.\n
-(; types ;)
+(; type constructors ;)
 %a
 (; type abbreviations ;)
 %a" (list decl_typ) (types()) decl_map_typ !map_typ;
   close_out oc;
+  (* generate final file *)
   let filename = f ^ ".dk" in
-  log "generate %s ...\n%!" filename;
+  log "generate %s by concatenating the previous files ...\n%!" filename;
   let files = f ^ "_types.dk " ^ f ^ "_terms.dk " ^ f ^ "_proofs.dk" in
   let k = Sys.command ("cat " ^ files ^ " > " ^ filename) in
   if k <> 0 then exit k;
+  log "remove %s ...\n%!" files;
   ignore(Sys.command ("rm -f " ^ files))
 ;;
 
@@ -645,24 +706,8 @@ injective Prf : El bool -> Type.
 (; HOL-Light axioms and rules ;)
 el : a : Set -> El a.
 eq : a : Set -> El a -> El a -> El bool.
-def fun_ext : a : Set -> b : Set -> f : El (fun a b) -> g : El (fun a b) ->
-  (x : El a -> Prf (eq b (f x) (g x))) -> Prf (eq (fun a b) f g).
-def prop_ext : p : El bool -> q : El bool ->
-  (Prf p -> Prf q) -> (Prf q -> Prf p) -> Prf (eq bool p q).
-def REFL : a : Set -> t : El a -> Prf (eq a t t).
-def MK_COMB : a : Set -> b : Set -> s : El (fun a b) -> t : El (fun a b) ->
-  u : El a -> v : El a -> Prf(eq (fun a b) s t) -> Prf(eq a u v) ->
-  Prf (eq b (s u) (t v)).
-def EQ_MP : p : El bool -> q : El bool -> Prf(eq bool p q) -> Prf p -> Prf q.
-thm TRANS : a : Set -> x : El a -> y : El a -> z : El a ->
-  Prf (eq a x y) -> Prf (eq a y z) -> Prf (eq a x z) :=
-  a: Set => x: El a => y: El a => z: El a =>
-  xy: Prf (eq a x y) => yz: Prf (eq a y z) =>
-  EQ_MP (eq a x y) (eq a x z)
-    (MK_COMB a bool (eq a x) (eq a x) y z
-       (REFL (fun a bool) (eq a x)) yz) xy.
-
-(; types ;)
+%s
+(; type constructors ;)
 %a
 (; constants ;)
 %a
@@ -670,7 +715,7 @@ thm TRANS : a : Set -> x : El a -> y : El a -> z : El a ->
 %a
 (; definitions ;)
 %a\n"
-(list decl_typ) types (list decl_sym) constants
+decl_rules (list decl_typ) types (list decl_sym) constants
 decl_axioms (axioms()) (list decl_def) (definitions())
 ;;
 

@@ -93,8 +93,8 @@ cd $hol2dk-dir
 dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump file.lp
 ```
 
-generates the files `file_types.lp`, `file_terms.lp` and
-`file_proofs.lp` from the dumped files.
+generates the files `file_types.lp`, `file_terms.lp` and `file.lp`
+from the dumped files.
 
 Checking the generated dk file
 ------------------------------
@@ -124,7 +124,7 @@ To check the generated lp files with
 [lambdapi](https://github.com/Deducteam/lambdapi), do:
 
 ```
-lambdapi check --map-dir hol-light:. file_proofs.lp
+lambdapi check --map-dir hol-light:. file.lp
 ```
 
 or create a file `lambdapi.pkg`:
@@ -136,7 +136,7 @@ root_path = hol-light
 and simply do:
 
 ```
-lambdapi check file_proofs.lp
+lambdapi check file.lp
 ```
 
 **Remark:** In case hol-light and dkcheck/lambdapi do not use the same
@@ -167,8 +167,32 @@ for checking hol.ml:
 - proof dumping: 2m30s 5.5Go
 
 On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
+- proof checking and dumping: 12.8s 101 Mo
+- number of proof steps: 408777
+- dk file generation: 22s 99 Mo
+- checking time with dk check: 14s
+- checking time with kocheck -j 7: 23s
+- lp file generation: 14s 69 Mo
+- checking time with lambdapi: 2m
+
+Exporting Q0 proofs
+-------------------
+
+Hol2dk instruments basic HOL-Light tactics corresponding to
+introduction and elimination rules of connectives to get smaller
+proofs and proofs closer to natural deduction proofs. It is however
+possible to generate full Q0 proofs by patching HOL-Light files as
+follows:
+
+```
+cd $hol-light-dir
+sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml
+```
+
+On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - ocaml proof checking: 12.5s
 - ocaml proof checking and recording: 13.2s
+- number of proof steps: 564351
 - proof dumping: 1.4s 157 Mo
 - dk file generation: 45s 153 Mo
 - checking time with dk check: 26s

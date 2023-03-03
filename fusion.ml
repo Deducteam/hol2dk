@@ -25,8 +25,8 @@ module type Hol_kernel =
 
       type thm
 
-      type proof_content = private
-        Prefl of term
+      type proof_content =
+      | Prefl of term
       | Ptrans of int * int
       | Pmkcomb of int * int
       | Pabs of int * term
@@ -39,6 +39,18 @@ module type Hol_kernel =
       | Paxiom of term
       | Pdef of term * string * hol_type
       | Pdeft of int * term * string * hol_type
+      | Ptruth
+      | Pconj of int * int
+      | Pconjunct1 of int
+      | Pconjunct2 of int
+      | Pmp of int * int
+      | Pdisch of term * int
+      | Pspec of term * int
+      | Pgen of term * int
+      | Pexists of term * term * int
+      | Pdisj1 of term * int
+      | Pdisj2 of term * int
+      | Pdisj_cases of int * int * int
 
       type proof = private Proof of (thm * proof_content)
 
@@ -88,6 +100,7 @@ module type Hol_kernel =
       val dest_thm : thm -> term list * term
       val hyp : thm -> term list
       val concl : thm -> term
+      val index_of : thm -> int
       (*REMOVE
       val REFL : term -> thm
       val TRANS : thm -> thm -> thm
@@ -99,7 +112,25 @@ module type Hol_kernel =
       val DEDUCT_ANTISYM_RULE : thm -> thm -> thm
       val INST_TYPE : (hol_type * hol_type) list -> thm -> thm
       val INST : (term * term) list -> thm -> thm
+
+      (*START_ND*)
+      val TRUTH : thm
+      val CONJ : thm -> thm -> thm
+      val CONJUNCT1 : thm -> thm
+      val CONJUNCT2 : thm -> thm
+      val MP : thm -> thm -> thm
+      val DISCH : term -> thm -> thm
+      val SPEC : term -> thm -> thm
+      val GEN : term -> thm -> thm
+      val EXISTS : term * term -> thm -> thm
+      val DISJ1 : thm -> term -> thm
+      val DISJ2 : term -> thm -> thm
+      val DISJ_CASES : thm -> thm -> thm -> thm
+      (*END_ND*)
       REMOVE*)
+
+      val new_theorem : term list -> term -> proof_content -> thm
+
       val axioms : unit -> thm list
       val new_axiom : term -> thm
       val definitions : unit -> thm list
@@ -138,7 +169,7 @@ module Hol : Hol_kernel = struct
 (*---------------------------------------------------------------------------*)
 
   type proof_content =
-    Prefl of term
+  | Prefl of term
   | Ptrans of int * int
   | Pmkcomb of int * int
   | Pabs of int * term
@@ -151,6 +182,18 @@ module Hol : Hol_kernel = struct
   | Paxiom of term
   | Pdef of term * string * hol_type
   | Pdeft of int * term * string * hol_type
+  | Ptruth
+  | Pconj of int * int
+  | Pconjunct1 of int
+  | Pconjunct2 of int
+  | Pmp of int * int
+  | Pdisch of term * int
+  | Pspec of term * int
+  | Pgen of term * int
+  | Pexists of term * term * int
+  | Pdisj1 of term * int
+  | Pdisj2 of term * int
+  | Pdisj_cases of int * int * int
 
   type proof = Proof of (thm * proof_content)
 
@@ -569,31 +612,31 @@ module Hol : Hol_kernel = struct
 
   let REFL tm = new_theorem [] (safe_mk_eq tm tm) (Prefl tm)
 
-  let TRANS (Sequent(asl1,c1,p1)) (Sequent(asl2,c2,p2)) =
+  let TRANS (Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
     match (c1,c2) with
       Comb((Comb(Const("=",_),_) as eql),m1),Comb(Comb(Const("=",_),m2),r)
         when alphaorder m1 m2 = 0 ->
-          new_theorem (term_union asl1 asl2) (Comb(eql,r)) (Ptrans(p1,p2))
+          new_theorem (term_union asl1 asl2) (Comb(eql,r)) (Ptrans(k1,k2))
     | _ -> failwith "TRANS"
 
 (* ------------------------------------------------------------------------- *)
 (* Congruence properties of equality.                                        *)
 (* ------------------------------------------------------------------------- *)
 
-  let MK_COMB(Sequent(asl1,c1,p1),Sequent(asl2,c2,p2)) =
+  let MK_COMB(Sequent(asl1,c1,k1),Sequent(asl2,c2,k2)) =
      match (c1,c2) with
        Comb(Comb(Const("=",_),l1),r1),Comb(Comb(Const("=",_),l2),r2) ->
         (match type_of r1 with
            Tyapp("fun",[ty;_]) when Stdlib.compare ty (type_of r2) = 0
              -> new_theorem (term_union asl1 asl2)
-                  (safe_mk_eq (Comb(l1,l2)) (Comb(r1,r2))) (Pmkcomb(p1,p2))
+                  (safe_mk_eq (Comb(l1,l2)) (Comb(r1,r2))) (Pmkcomb(k1,k2))
          | _ -> failwith "MK_COMB: types do not agree")
      | _ -> failwith "MK_COMB: not both equations"
 
   let ABS v (Sequent(asl,c,p)) =
     match (v,c) with
       Var(_,_),Comb(Comb(Const("=",_),l),r) when not(exists (vfree_in v) asl)
-        -> new_theorem asl (safe_mk_eq (Abs(v,l)) (Abs(v,r))) (Pabs(p, v))
+        -> new_theorem asl (safe_mk_eq (Abs(v,l)) (Abs(v,r))) (Pabs(p,v))
     | _ -> failwith "ABS";;
 
 (* ------------------------------------------------------------------------- *)
@@ -615,27 +658,118 @@ module Hol : Hol_kernel = struct
       new_theorem [tm] tm (Passume tm)
     else failwith "ASSUME: not a proposition"
 
-  let EQ_MP (Sequent(asl1,eq,p1)) (Sequent(asl2,c,p2)) =
+  let EQ_MP (Sequent(asl1,eq,k1)) (Sequent(asl2,c,k2)) =
     match eq with
       Comb(Comb(Const("=",_),l),r) when alphaorder l c = 0
-        -> new_theorem (term_union asl1 asl2) r (Peqmp(p1, p2))
+        -> new_theorem (term_union asl1 asl2) r (Peqmp(k1,k2))
     | _ -> failwith "EQ_MP"
 
-  let DEDUCT_ANTISYM_RULE (Sequent(asl1,c1,p1)) (Sequent(asl2,c2,p2)) =
+  let DEDUCT_ANTISYM_RULE (Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
     let asl1' = term_remove c2 asl1 and asl2' = term_remove c1 asl2 in
-    new_theorem (term_union asl1' asl2') (safe_mk_eq c1 c2) (Pdeduct(p1, p2))
+    new_theorem (term_union asl1' asl2') (safe_mk_eq c1 c2) (Pdeduct(k1,k2))
 
 (* ------------------------------------------------------------------------- *)
 (* Type and term instantiation.                                              *)
 (* ------------------------------------------------------------------------- *)
 
-  let INST_TYPE theta (Sequent(asl,c,p)) =
+  let INST_TYPE theta (Sequent(asl,c,k)) =
     let inst_fn = inst theta in
-    new_theorem (term_image inst_fn asl) (inst_fn c) (Pinstt(p,theta))
+    new_theorem (term_image inst_fn asl) (inst_fn c) (Pinstt(k,theta))
 
-  let INST theta (Sequent(asl,c,p)) =
+  let INST theta (Sequent(asl,c,k)) =
     let inst_fun = vsubst theta in
-    new_theorem (term_image inst_fun asl) (inst_fun c) (Pinst(p,theta))
+    new_theorem (term_image inst_fun asl) (inst_fun c) (Pinst(k,theta))
+
+(* ------------------------------------------------------------------------- *)
+(* Natural deduction rules.                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+  let arrow b1 b2 = Tyapp("fun",[b1;b2]);;
+  let conj_ty = arrow bool_ty (arrow bool_ty bool_ty);;
+  let all_ty b = arrow (arrow b bool_ty) bool_ty;;
+
+  let cst_imp = Const("==>",conj_ty);;
+  let cst_conj = Const("/\\",conj_ty);;
+  let cst_all b = Const("!",all_ty b);;
+  let cst_ex b = Const("?",all_ty b);;
+  let cst_disj = Const("\\/",conj_ty);;
+
+  let head_args =
+    let rec aux acc t =
+      match t with
+      | Comb(t1,t2) -> aux (t2::acc) t1
+      | _ -> t, acc
+    in aux []
+  ;;
+
+  let TRUTH = new_theorem [] (Const("T",bool_ty)) Ptruth;;
+
+  let CONJ (Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
+    let c = Comb(Comb(cst_conj,c1),c2) in
+    new_theorem (term_union asl1 asl2) c (Pconj(k1,k2))
+  ;;
+
+  let CONJUNCT1 (Sequent(asl,c,k)) =
+    match head_args c with
+    | Const("/\\",_), [c1;_] -> new_theorem asl c1 (Pconjunct1 k)
+    | _ -> failwith "CONJ_ELIM1"
+  ;;
+
+  let CONJUNCT2 (Sequent(asl,c,k)) =
+    match head_args c with
+    | Const("/\\",_), [_;c2] -> new_theorem asl c2 (Pconjunct2 k)
+    | _ -> failwith "CONJ_ELIM2"
+  ;;
+
+  let MP (Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
+    match head_args c1 with
+    | Const("==>",_), [_;c] ->
+      new_theorem (term_union asl1 asl2) c (Pmp(k1,k2))
+    | _ -> failwith "MP"
+  ;;
+
+  let DISCH a (Sequent(asl,c,k)) =
+    let asl = List.filter (fun h -> alphaorder a h <> 0) asl in
+    new_theorem asl (Comb(Comb(cst_imp,a),c)) (Pdisch(a,k))
+  ;;
+
+  let SPEC t (Sequent(asl,c,k)) =
+    match c with
+    | Comb(Const("!",_),p) -> new_theorem asl (Comb(p,t)) (Pspec(t,k))
+    | _ -> failwith "SPEC"
+  ;;
+
+  let GEN x (Sequent(asl,c,k)) =
+    match x with
+    | Var(_,b) when not(exists (vfree_in x) asl) ->
+      new_theorem asl (Comb(cst_all b,Abs(x,c))) (Pgen(x,k))
+    | _ -> failwith "GEN"
+  ;;
+
+  let EXISTS (e,t) (Sequent(asl,c,k)) =
+    match e with
+    | Comb(Const("?",_),(Abs(Var(_,b),_) as p)) ->
+      new_theorem asl (Comb(cst_ex b,p)) (Pexists(p,t,k))
+    | _ -> failwith "GEN"
+  ;;
+
+  let DISJ1 (Sequent(asl,c,k)) p =
+    new_theorem asl (Comb(Comb(cst_disj,c),p)) (Pdisj1(p,k));;
+
+  let DISJ2 p (Sequent(asl,c,k)) =
+    new_theorem asl (Comb(Comb(cst_disj,p),c)) (Pdisj2(p,k));;
+
+  let DISJ_CASES
+    (Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) (Sequent(asl3,c3,k3)) =
+    let l,r =
+      match c1 with
+      | Comb(Comb(_,l),r) -> l,r
+      | _ -> failwith "DISJ_CASES"
+    in
+    let asl2 = term_remove l asl2 and asl3 = term_remove r asl3 in
+    new_theorem (term_union asl1 (term_union asl2 asl3)) c2
+      (Pdisj_cases(k1,k2,k3))
+  ;;
 REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of axioms.                                                       *)
