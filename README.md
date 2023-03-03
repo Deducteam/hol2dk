@@ -168,6 +168,7 @@ for checking hol.ml:
 
 On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - proof checking and dumping: 12.8s 101 Mo
+- number of proof steps: 408777
 - dk file generation: 22s 99 Mo
 - checking time with dk check: 14s
 - checking time with kocheck -j 7: 23s
@@ -189,9 +190,9 @@ sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml
 ```
 
 On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
-- number of proof steps: 564351
 - ocaml proof checking: 12.5s
 - ocaml proof checking and recording: 13.2s
+- number of proof steps: 564351
 - proof dumping: 1.4s 157 Mo
 - dk file generation: 45s 153 Mo
 - checking time with dk check: 26s
