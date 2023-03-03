@@ -14,5 +14,12 @@ then
     mv $dir/fusion-bak.ml $dir/fusion.ml
 else
     echo "$dir/fusion-bak.ml does not exist"
-    exit 1
+fi
+
+if test -f $dir/bool-bak.ml
+then
+    echo "restore bool.ml"
+    mv $dir/bool-bak.ml $dir/bool.ml
+else
+    echo "$dir/bool-bak.ml does not exist"
 fi

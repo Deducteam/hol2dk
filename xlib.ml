@@ -182,6 +182,8 @@ module OrdTrm = struct type t = term let compare = compare end;;
 module MapTrm = Map.Make(OrdTrm);;
 module SetTrm = Set.Make(OrdTrm);;
 
+let ormap oc m = MapTrm.iter (fun t n -> out oc "(%a,%s)" oterm t n) m;;
+
 (* [head_args t] returns the pair [h,ts] such that [t] is of the t is
    the Comb application of [h] to [ts]. *)
 let head_args =
@@ -190,6 +192,14 @@ let head_args =
     | Comb(t1,t2) -> aux (t2::acc) t1
     | _ -> t, acc
   in aux []
+;;
+
+(* [binop_args t] returns the terms [u,v] assuming that [t] is of the
+   form [Comb(Comb(_,u),v)]. *)
+let binop_args t =
+  match t with
+  | Comb(Comb(_,u),v) -> u,v
+  | _ -> assert false
 ;;
 
 (* [index t ts] returns the position (counting from 0) of the first
@@ -310,7 +320,7 @@ let canonical_term =
 let get_eq_typ p =
   let Proof(th,_) = p in
   match concl th with
-  | Comb(Comb(Const("=",b),_),_) -> get_domain b
+  | Comb(Comb(Const((*"="*)_,b),_),_) -> get_domain b
   | _ -> assert false
 ;;
 
@@ -319,7 +329,7 @@ let get_eq_typ p =
 let get_eq_args p =
   let Proof(th,_) = p in
   match concl th with
-  | Comb(Comb(Const("=",_),t),u) -> t,u
+  | Comb(Comb((*Const("=",_)*)_,t),u) -> t,u
   | _ -> assert false
 ;;
 
@@ -329,17 +339,23 @@ let get_eq_args p =
 let get_eq_typ_args p =
   let Proof(th,_) = p in
   match concl th with
-  | Comb(Comb(Const("=",b),t),u) -> get_domain b,t,u
+  | Comb(Comb(Const((*"="*)_,b),t),u) -> get_domain b,t,u
   | _ -> assert false
 ;;
 
 (* [deps p] returns the list of proof indexes the proof [p] depends on. *)
-let deps p =
-  let Proof(_,content) = p in
+let deps (Proof(_,content)) =
   match content with
-  | Ptrans(p1,p2) | Pmkcomb(p1,p2) | Peqmp(p1,p2) | Pdeduct(p1,p2) -> [p1;p2]
-  | Pabs(p1,_) | Pinst(p1,_) | Pinstt(p1,_)| Pdeft(p1,_,_,_) -> [p1]
-  | _ -> []
+  | Pdisj_cases(k1,k2,k3) -> [k1;k2;k3]
+  | Ptrans(k1,k2) | Pmkcomb(k1,k2) | Peqmp(k1,k2) | Pdeduct(k1,k2)
+  | Pconj(k1,k2) | Pmp(k1,k2)
+    -> [k1;k2]
+  | Pabs(k,_) | Pinst(k,_) | Pinstt(k,_)| Pdeft(k,_,_,_)
+  | Pconjunct1 k | Pconjunct2 k | Pdisch(_,k) | Pspec(_,k) | Pgen(_,k)
+  | Pexists(_,_,k) | Pdisj1(_,k) | Pdisj2(_,k)
+    -> [k]
+  | Prefl _ | Pbeta _ | Passume _ | Paxiom _ | Pdef _ | Ptruth
+    -> []
 ;;
 
 (* Print some statistics on how many times a proof is used. *)

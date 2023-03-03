@@ -30,3 +30,8 @@ print_endline "------------------------------------------------------------";;
 print_endline "dump_signature();;";;
 dump_signature();;
 EOF
+
+exit=$?
+if test $exit -ne 0; then exit $exit; fi
+mv -f signature.dump ${f}_sig.dump
+mv -f proofs.dump ${f}_proofs.dump

@@ -4,19 +4,22 @@ open Fusion
 open Xlib
 
 let usage() =
-  Printf.printf "usage: %s signature.dump proofs.dump file.[dk|lp]\n%!"
+  Printf.printf "usage: %s signature.dump proofs.dump file.[dk|lp] [number]\n%!"
     Sys.argv.(0)
 
 let main() =
 
   (* check number of arguments *)
   let n = Array.length Sys.argv - 1 in
-  if n <> 3 then
+  if n < 3 || n > 4 then
     begin
       Printf.eprintf "wrong number of arguments\n%!";
       usage();
       exit 1
     end;
+
+  (* check range *)
+  let range = if n = 4 then Only (int_of_string Sys.argv.(4)) else All in
 
   (* get filename and check file extension *)
   let filename = Sys.argv.(3) in
@@ -45,23 +48,20 @@ let main() =
   the_proofs := Array.make nb_proofs dummy_proof;
 
   (* read proofs *)
-  let dump_file = Sys.argv.(2) in
-  let ic = open_in_bin dump_file in
-  let read() = Marshal.from_channel ic in
-  let proofs_in_range theorem =
-    fun oc r ->
+  begin
+    let dump_file = Sys.argv.(2) in
+    let ic = open_in_bin dump_file in
+    the_proofs_idx := -1;
     try
-      the_proofs_idx := -1;
       while true do
-        let p = read() in
         let k = !the_proofs_idx + 1 in
-        Array.set (!the_proofs) k p;
-        theorem oc k p;
+        Array.set (!the_proofs) k (Marshal.from_channel ic);
         the_proofs_idx := k
       done
     with End_of_file -> close_in ic
-  in
-  if dk then Xdk.export_to_dk_file (proofs_in_range Xdk.theorem) basename All
-  else Xlp.export_to_lp_file (proofs_in_range Xlp.theorem) basename All
+  end;
+
+  (* generate output *)
+  (if dk then Xdk.export_to_dk_file else Xlp.export_to_lp_file) basename range
 
 let _ = main()
