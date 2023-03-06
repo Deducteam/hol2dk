@@ -88,6 +88,9 @@ cd $hol2dk-dir
 dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump
 ```
 
+Remark: each time hol2dk is run, an empty file `proofs.dump` is
+generated. You can safely remove it.
+
 Generating dk/lp files from dump files
 --------------------------------------
 

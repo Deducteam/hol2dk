@@ -16,7 +16,7 @@ else
     echo "cp $dir/fusion.ml $dir/fusion-bak.ml"
     cp $dir/fusion.ml $dir/fusion-bak.ml
     echo "patch $dir/fusion.ml"
-    sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' -e 's/val dummy_proof : proof//' fusion.ml > $dir/fusion.ml
+    sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' fusion.ml > $dir/fusion.ml
 fi
 
 if test -f $dir/bool-bak.ml
