@@ -175,9 +175,8 @@ Results
 Impact of proof recording on hol-light:
 
 for checking hol.ml:
-- without proof recording: 1m18s
--    with proof recording: 1m32s (+18%)
-- proof dumping: 2m30s 5.5Go
+- without proof dumping: 1m20s
+-    with proof dumping: 3.8 Go 1m51s (+39%)
 
 On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - proof checking and dumping: 12.8s 101 Mo
@@ -190,6 +189,8 @@ On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 
 Getting information on HOL-Light files and theorems
 ---------------------------------------------------
+
+In `$hol-light-dir`, run `ocaml` and type:
 
 ```
 #use "topfind";;
@@ -249,7 +250,7 @@ cd $hol-light-dir
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml
 ```
 
-On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
+Results on `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - ocaml proof checking: 12.5s
 - ocaml proof checking and recording: 13.2s
 - number of proof steps: 564351
