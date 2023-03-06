@@ -46,7 +46,7 @@ let main() =
       done
     with End_of_file -> close_in ic
   end;
-  log "compute statistics ...";
+  log "compute statistics ...\n";
   print_proof_stats();
   if n = 2 then exit 0;
 
