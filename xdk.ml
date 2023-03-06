@@ -60,6 +60,10 @@ let rec raw_typ oc b =
   | Tyapp(n,bs) -> out oc "(%a%a)" typ_name n (list_prefix " " raw_typ) bs
 ;;
 
+(* [unabbrev_typ tvs oc b] prints on [oc] the type [b]. Type variables
+   not in [tvs] are replaced by [bool]. We need to do this because 1)
+   types msut be explicit in Dedukti and 2) a proof of a statement may
+   have more type variables than the statement itself. *)
 let unabbrev_typ tvs =
   let rec typ oc b =
     match b with
@@ -95,9 +99,9 @@ let abbrev_typ =
      | _ -> out oc "(%a%d%a)" typ_name "type" k (list_prefix " " raw_typ) tvs
 ;;
 
-let typ tvs oc b =
-  if !use_abbrev then abbrev_typ oc (missing_as_bool tvs b)
-  else unabbrev_typ tvs oc b;;
+let typ =
+  if !use_abbrev then fun tvs oc b -> abbrev_typ oc (missing_as_bool tvs b)
+  else unabbrev_typ;;
 
 (* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
 let decl_map_typ oc m =
@@ -122,6 +126,12 @@ let raw_var oc t =
   | _ -> assert false
 ;;
 
+(* [var rmap oc t] prints on [oc] the variable [t] using the name
+   given by [rmap]. Fails if [t] is not a variable or if [t] is not in
+   [rmap]. Variables need to be renamed in Dedukti or Lambdapi
+   because, in HOL-Light, a variable is identified by both its name
+   AND its type, that is, two distinct variables can have the same
+   name but distinct types. *)
 let var rmap oc t =
   try name oc (List.assoc t rmap)
   with Not_found -> assert false
@@ -255,9 +265,10 @@ let rename tvs =
   in rename
 ;;
 
-let term tvs rmap oc t =
-  if !use_abbrev then abbrev_term tvs oc (rename tvs rmap t)
-  else unabbrev_term tvs rmap oc t
+let term =
+  if !use_abbrev then
+    fun tvs rmap oc t -> abbrev_term tvs oc (rename tvs rmap t)
+  else unabbrev_term
 ;;
 
 (* [decl_map_term oc m] outputs on [oc] the term abbreviations defined
