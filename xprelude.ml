@@ -2,6 +2,10 @@
 (* Definitions shared between all files for Dedukti/Lambdapi export. *)
 (****************************************************************************)
 
+(*REMOVE
+unset_jrh_lexer;;
+REMOVE*)
+
 (* We use Printf since it is more efficient than Format. *)
 
 (* [out oc s args] outputs [s] with [args] on out_channel [oc]. *)
@@ -61,3 +65,7 @@ let map_file_deps = ref (MapStr.empty : string list MapStr.t);;
 
 (* indicates whether type and term abbreviations should be used. *)
 let use_abbrev = ref true;;
+
+(*REMOVE
+set_jrh_lexer;;
+REMOVE*)

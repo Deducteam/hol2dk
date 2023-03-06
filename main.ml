@@ -2,24 +2,52 @@
 
 open Fusion
 open Xlib
+open Xprelude
 
 let usage() =
-  Printf.printf "usage: %s signature.dump proofs.dump file.[dk|lp] [number]\n%!"
+  log "usage: %s signature.dump proofs.dump [file.[dk|lp] [number]]\n%!"
     Sys.argv.(0)
 
 let main() =
 
   (* check number of arguments *)
   let n = Array.length Sys.argv - 1 in
-  if n < 3 || n > 4 then
+  if n < 2 || n > 4 then
     begin
       Printf.eprintf "wrong number of arguments\n%!";
       usage();
       exit 1
     end;
 
-  (* check range *)
-  let range = if n = 4 then Only (int_of_string Sys.argv.(4)) else All in
+  (* read signature *)
+  let dump_file = Sys.argv.(1) in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  let read() = Marshal.from_channel ic in
+  the_type_constants := read();
+  the_term_constants := ("el",aty)::read();
+  the_axioms := read();
+  the_definitions := read();
+  let nb_proofs = read() in
+  Printf.printf "%d proof steps\n%!" nb_proofs;
+  the_proofs := Array.make nb_proofs dummy_proof;
+
+  (* read proofs *)
+  begin
+    let dump_file = Sys.argv.(2) in
+    log "read %s ...\n%!" dump_file;
+    let ic = open_in_bin dump_file in
+    the_proofs_idx := -1;
+    try
+      while true do
+        let k = !the_proofs_idx + 1 in
+        Array.set (!the_proofs) k (Marshal.from_channel ic);
+        the_proofs_idx := k
+      done
+    with End_of_file -> close_in ic
+  end;
+  print_proof_stats();
+  if n = 2 then exit 0;
 
   (* get filename and check file extension *)
   let filename = Sys.argv.(3) in
@@ -35,33 +63,8 @@ let main() =
   in
   let basename = Filename.chop_extension filename in
 
-  (* read signature *)
-  let dump_file = Sys.argv.(1) in
-  let ic = open_in_bin dump_file in
-  let read() = Marshal.from_channel ic in
-  the_type_constants := read();
-  the_term_constants := ("el",aty)::read();
-  the_axioms := read();
-  the_definitions := read();
-  let nb_proofs = read() in
-  Printf.printf "%d proof steps\n%!" nb_proofs;
-  the_proofs := Array.make nb_proofs dummy_proof;
-
-  (* read proofs *)
-  begin
-    let dump_file = Sys.argv.(2) in
-    let ic = open_in_bin dump_file in
-    the_proofs_idx := -1;
-    try
-      while true do
-        let k = !the_proofs_idx + 1 in
-        Array.set (!the_proofs) k (Marshal.from_channel ic);
-        the_proofs_idx := k
-      done
-    with End_of_file -> close_in ic
-  end;
-
   (* generate output *)
+  let range = if n = 4 then Only (int_of_string Sys.argv.(4)) else All in
   (if dk then Xdk.export_to_dk_file else Xlp.export_to_lp_file) basename range
 
 let _ = main()

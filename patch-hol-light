@@ -29,3 +29,19 @@ else
     echo "patch $dir/bool.ml"
     sed -e 's/.*REMOVE.*//' bool.ml > $dir/bool.ml
 fi
+
+# usage: cp_file f
+cp_file() {
+    if test -f $dir/$1
+    then
+        echo "$dir/$1 already exists"
+        exit 1
+    else
+        echo "create $dir/$1"
+        sed -e 's/.*REMOVE.*//' -e 's/^open .*//' $1 > $dir/$1
+    fi
+}
+
+cp_file xprelude.ml
+cp_file xlib.ml
+cp_file xnames.ml

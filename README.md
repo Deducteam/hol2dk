@@ -78,6 +78,14 @@ Compiling hol2dk
 dune build
 ```
 
+Get statistics on proofs
+------------------------
+
+```
+cd $hol2dk-dir
+dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump
+```
+
 Generating dk/lp files from dump files
 --------------------------------------
 
@@ -174,6 +182,53 @@ On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - checking time with kocheck -j 7: 23s
 - lp file generation: 14s 69 Mo
 - checking time with lambdapi: 2m
+
+Getting information on HOL-Light files and theorems
+---------------------------------------------------
+
+```
+#use "topfind";;
+#require "camlp5";;
+#load "camlp5o.cma";;
+#load "str.cma";;
+#use "xprelude.ml";;
+#use "hol.ml";;
+(* #use any other HOL-Light file here *)
+
+#use "xlib.ml";;
+#use "xnames.ml";;
+
+(* list of HOL-Light files *)
+files;;
+
+(* map giving the names of theorems proved in each file *)
+update_map_file_thms();;
+!map_file_thms;;
+
+(* map giving the name of each named theorem number *)
+update_map_thm_id_name();;
+!map_thm_id_name;;
+
+(* map giving the number of every named theorem *)
+update_map_thm_name_id();;
+!map_name_thm_id;;
+
+(* function returning the number of a theorem name *)
+thm_id;;
+
+(* dependency graph of HOL-Light files *)
+update_map_file_deps();;
+!map_file_deps;;
+
+(* function outputing the dependency graph in Makefile syntax *)
+print_map_file_deps_to;;
+
+(* function giving the declared dependencies of a file *)
+deps;;
+
+(* function giving the list of all files a file depends on*)
+trans_deps;;
+```
 
 Exporting Q0 proofs
 -------------------
