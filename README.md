@@ -62,7 +62,9 @@ cd $hol-light-dir
 $hol2dk-dir/dump-proofs file.ml
 ```
 
-generates two files: `proofs.dump` and `signature.dump`.
+generates two temporary files, `proofs.dump` and `signature.dump`,
+which are renamed at the end into `file_proofs.dump` and
+`file_sig.dump`.
 
 `file.ml` should at least include `hol.ml` until the line `loads
 "fusion.ml";;`.
