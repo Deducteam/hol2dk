@@ -127,9 +127,10 @@ module type Hol_kernel =
       val DISJ2 : term -> thm -> thm
       val DISJ_CASES : thm -> thm -> thm -> thm
       (*END_ND*)
-      REMOVE*)
 
       val new_theorem : term list -> term -> proof_content -> thm
+      val dump_signature : unit -> unit
+      REMOVE*)
 
       val axioms : unit -> thm list
       val new_axiom : term -> thm
@@ -137,8 +138,6 @@ module type Hol_kernel =
       val new_basic_definition : term -> thm
       val new_basic_type_definition :
               string -> string * string -> thm -> thm * thm
-
-      val dump_signature : unit -> unit
 
       (*REMOVE*)val dummy_proof : proof
       (*REMOVE*)val the_type_constants : (string * int) list ref

@@ -61,7 +61,7 @@ let abbrev_typ =
      | _ -> out oc "(type%d%a)" k (list_prefix " " raw_typ) tvs
 ;;
 
-let typ oc b = if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;
+let typ = if !use_abbrev then abbrev_typ else raw_typ;;
 
 (* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
 let decl_map_typ oc m =
@@ -86,6 +86,12 @@ let raw_var oc t =
   | _ -> assert false
 ;;
 
+(* [var rmap oc t] prints on [oc] the variable [t] using the name
+   given by [rmap]. Fails if [t] is not a variable or if [t] is not in
+   [rmap]. Variables need to be renamed in Dedukti or Lambdapi
+   because, in HOL-Light, a variable is identified by both its name
+   AND its type, that is, two distinct variables can have the same
+   name but distinct types. *)
 let var rmap oc t =
   try name oc (List.assoc t rmap)
   with Not_found -> assert false
@@ -213,9 +219,9 @@ let rec rename rmap t =
      let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
 ;;
 
-let term rmap oc t =
-  if !use_abbrev then abbrev_term oc (rename rmap t)
-  else unabbrev_term rmap oc t
+let term =
+  if !use_abbrev then fun rmap oc t -> abbrev_term oc (rename rmap t)
+  else unabbrev_term
 ;;
 
 (* [decl_map_term oc m] outputs on [oc] the term abbreviations defined
