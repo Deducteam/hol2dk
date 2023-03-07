@@ -3,6 +3,7 @@
 open Fusion
 open Xlib
 open Xprelude
+open Xproof
 
 let usage() =
   log "usage: %s file_sig.dump file_proofs.dump [file.[dk|lp] [number]]\n%!"

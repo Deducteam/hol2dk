@@ -5,6 +5,7 @@
 open Xprelude
 open Fusion
 open Xlib
+open Xproof
 
 (****************************************************************************)
 (* Translation of names. *)
@@ -355,10 +356,11 @@ let proof tvs rmap =
     | Pdisj1(p,k) -> out oc "∨ᵢ₁ %a %a" sub_at k term p
     | Pdisj2(p,k) -> out oc "∨ᵢ₂ %a %a" term p sub_at k
     | Pdisj_cases(k1,k2,k3) ->
-       let Proof(th1,_) = proof_at k1 in
+       let p1 = proof_at k1 in
+       let Proof(th1,_) = p1 in
        let l,r = binop_args (concl th1) in
        out oc "∨ₑ %a (λ h0 : Prf %a, %a) (λ h0 : Prf %a, %a)"
-         sub_at k1 term l sub_at k2 term r sub_at k3
+         (sub k1) p1 term l sub_at k2 term r sub_at k3
   in proof
 ;;
 
