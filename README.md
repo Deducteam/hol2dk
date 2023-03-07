@@ -51,8 +51,9 @@ Patching HOL-Light
 ./patch-hol-light $hol-light-dir
 ```
 
-This script slightly modifies the kernel of HOL-Light, the file
-`fusion.ml`, to dump proofs.
+This script slightly modifies a few HOL-Light files in order to dump proofs:
+- `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
+- `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives
 
 Dumping HOL-Light proofs
 ------------------------
@@ -260,6 +261,29 @@ Results on `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the 
 - checking time with kocheck -j 7: 22s
 - lp file generation: 29s 107 Mo
 - checking time with lambdapi: 2m49s
+
+Files
+-----
+
+Modified HOL-Light files:
+- `lib.ml`: HOL-Light file providing functions on lists, etc. required by `fusion.ml`. A few lines are commented out so that it compiles with ocamlc.
+- `fusion.ml`: HOL-Light kernel file defining types, terms, theorems, proofs and elementary proof rules.
+- `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives.
+
+The files `fusion.ml` and `bool.ml` contains special comments that are removed to patch hol-light.
+
+Additional files required for `hol2dk`:
+- `main.ml`: main program of Hol2dk.
+- `xprelude.ml`: file providing a few basic definitions.
+- `xproof.ml`: functions for accessing proofs.
+- `xlp.ml`: translation to Lambdapi of types, terms and proofs.
+- `xdk.ml`: translation to Dedukti of types, terms and proofs.
+- `xci.ml`: slightly truncated version of the HOL-Light file `hol.ml` used for testing
+
+Note that all these files can be used in the OCaml toplevel as well by removing the `open` instructions and by adding `unset_jrh_lexer;;` and `set_jrh_lexer;;` at the beginning and at the end of the file.
+
+Other files that can be used in the OCaml toplevel:
+- `xnames.ml`: to get information on file dependencies and named theorems
 
 Thanks
 ------
