@@ -220,6 +220,14 @@ let rec rename rmap t =
      let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
 ;;
 
+let rename rmap t =
+  try rename rmap t
+  with Failure _ as e ->
+    let term = raw_term in
+    log "rename %a %a" (olist (opair term string)) rmap term t;
+    raise e
+;;
+
 let term =
   if !use_abbrev then fun rmap oc t -> abbrev_term oc (rename rmap t)
   else unabbrev_term

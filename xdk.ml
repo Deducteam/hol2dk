@@ -266,6 +266,16 @@ let rename tvs =
   in rename
 ;;
 
+let rename tvs rmap t =
+  try rename tvs rmap t
+  with Failure _ as e ->
+    let typ = raw_typ in
+    let term = raw_term in
+    log "rename %a %a %a"
+      (olist typ) tvs (olist (opair term string)) rmap term t;
+    raise e
+;;
+
 let term =
   if !use_abbrev then
     fun tvs rmap oc t -> abbrev_term tvs oc (rename tvs rmap t)
