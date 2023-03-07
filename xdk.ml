@@ -5,6 +5,7 @@
 open Xprelude
 open Fusion
 open Xlib
+open Xproof
 
 (****************************************************************************)
 (* Translation of names. *)
