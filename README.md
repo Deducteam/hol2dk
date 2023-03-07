@@ -108,7 +108,14 @@ dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump fil
 ```
 
 generates the files `file_types.lp`, `file_terms.lp` and `file.lp`
-from the dumped files.
+from the dump files given in arguments.
+
+It is possible to get the proof of a single theorem (useful for debugging) by giving its number as additional argument:
+
+```
+cd $hol2dk-dir
+dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump file.lp $theorem_number
+```
 
 Checking the generated dk file
 ------------------------------

@@ -220,14 +220,6 @@ let rec rename rmap t =
      let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
 ;;
 
-let rename rmap t =
-  try rename rmap t
-  with Failure _ as e ->
-    let term = raw_term in
-    log "rename %a %a" (olist (opair term string)) rmap term t;
-    raise e
-;;
-
 let term =
   if !use_abbrev then fun rmap oc t -> abbrev_term oc (rename rmap t)
   else unabbrev_term
@@ -393,8 +385,9 @@ let decl_sym oc (n,b) =
 ;;
 
 let decl_def oc th =
-  let t = concl th in
-  let rmap = renaming_map [] in (* definitions are closed *)
+  let t = concl th in (* definitions have no assumptions *)
+  let tvs = type_vars_in_term t in
+  let rmap = renaming_map tvs [] in (* definitions are closed *)
   match t with
   | Comb(Comb(Const("=",_),Const(n,_)),_) ->
      out oc "symbol %a_def%a : Prf %a;\n"
@@ -404,9 +397,10 @@ let decl_def oc th =
 
 let decl_axioms oc ths =
   let axiom i th =
-    let t = concl th in
+    let t = concl th in (* axioms have no assumptions *)
+    let tvs = type_vars_in_term t in
     let xs = frees t in
-    let rmap = renaming_map xs in
+    let rmap = renaming_map tvs xs in
     out oc "symbol axiom_%d%a%a : Prf %a;\n"
       i typ_vars (type_vars_in_term t) (list (decl_param rmap)) xs
       (unabbrev_term rmap) t
@@ -424,9 +418,8 @@ let theorem oc k p =
   (*log "theorem %d ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let rmap = renaming_map xs in
   let tvs = type_vars_in_thm thm in
-  (*out oc "/* rmap: %a */" (list_sep "; " (pair raw_var string)) rmap;*)
+  let rmap = renaming_map tvs xs in
   let term = term rmap in
   let decl_hyps oc ts =
     List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
@@ -442,9 +435,8 @@ let theorem_as_axiom oc k p =
   (*log "theorem %d as axiom ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let rmap = renaming_map xs in
   let tvs = type_vars_in_thm thm in
-  (*out oc "/* rmap: %a */" (list_sep "; " (pair raw_var string)) rmap;*)
+  let rmap = renaming_map tvs xs in
   let term = term rmap in
   let decl_hyps oc ts =
     List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in

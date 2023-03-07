@@ -245,13 +245,26 @@ let vars_terms =
   List.sort_uniq compare
     (List.fold_left (fun vs t -> vs @ vars_term t) [] ts);;
 
+(* Reserved names not to be used as variable names. *)
+let reserved : SetStr.t ref = ref SetStr.empty;;
+
+let update_reserved =
+  let add_name s (n,_) = SetStr.add n s in
+  fun () ->
+  reserved :=
+    let s = List.fold_left add_name SetStr.empty !the_type_constants in
+    List.fold_left add_name s !the_term_constants
+;;
+
 (* [rename_var rmap v] returns a variable with the same type as the one
    of [v] but with a name not occuring in the codomain of [rmap]. *)
 let rename_var rmap =
   let rec rename v =
     match v with
     | Var(n,b) ->
-       if List.exists (fun (_,s) -> s = n) rmap then rename (mk_var(n^"'",b))
+       if SetStr.mem n !reserved
+          || List.exists (fun (_,s) -> s = n) rmap
+       then rename (mk_var(n^"'",b))
        else v
     | _ -> assert false
   in rename
@@ -265,9 +278,14 @@ let add_var rmap v =
   | _ -> assert false
 ;;
 
-(* [renaming_map vs] returns an association list giving new distinct names
-   to all the variables occurring in the list of variables [vs]. *)
-let renaming_map = List.fold_left add_var [];;
+(* [renaming_map tvs vs] returns an association list giving names to
+   the term variables in [vs] that are distinct to one another and
+   distinct from the type variables in [tvs]. This is needed to
+   include type variables because HOL-Light may ave type variables and
+   term variables with the same name. *)
+let renaming_map =
+  let tyvar = function Tyvar n -> mk_var(n,bool_ty),n | _ -> assert false in
+  fun tvs vs -> List.fold_left add_var (List.map tyvar tvs) vs;;
 
 (* Add a new HOL-Light constant "el" that could be defined as:
 let el b =
@@ -358,6 +376,64 @@ let deps (Proof(_,content)) =
     -> [k]
   | Prefl _ | Pbeta _ | Passume _ | Paxiom _ | Pdef _ | Ptruth
     -> []
+;;
+
+let code_of_proof (Proof(_,c)) =
+  match c with
+  | Prefl _ -> 0
+  | Ptrans _ -> 1
+  | Pmkcomb _ -> 2
+  | Pabs _ -> 3
+  | Pbeta _ -> 4
+  | Passume _ -> 5
+  | Peqmp _ -> 6
+  | Pdeduct _ -> 7
+  | Pinst _ -> 8
+  | Pinstt _ -> 9
+  | Paxiom _ -> 10
+  | Pdef _ -> 11
+  | Pdeft _ -> 12
+  | Ptruth -> 13
+  | Pconj _ -> 14
+  | Pconjunct1 _ -> 15
+  | Pconjunct2 _ -> 16
+  | Pmp _ -> 17
+  | Pdisch _ -> 18
+  | Pspec _ -> 19
+  | Pgen _ -> 20
+  | Pexists _ -> 21
+  | Pdisj1 _ -> 22
+  | Pdisj2 _ -> 23
+  | Pdisj_cases _ -> 24
+;;
+
+let name_of_code = function
+  | 0 -> "refl"
+  | 1 -> "trans"
+  | 2 -> "comb"
+  | 3 -> "abs"
+  | 4 -> "beta"
+  | 5 -> "assume"
+  | 6 -> "eqmp"
+  | 7 -> "deduct"
+  | 8 -> "term_subst"
+  | 9 -> "type_subst"
+  | 10 -> "axiom"
+  | 11 -> "sym_def"
+  | 12 -> "type_def"
+  | 13 -> "truth"
+  | 14 -> "conj"
+  | 15 -> "conjunct1"
+  | 16 -> "conjunct2"
+  | 17 -> "mp"
+  | 18 -> "disch"
+  | 19 -> "spec"
+  | 20 -> "gen"
+  | 21 -> "exists"
+  | 22 -> "disj1"
+  | 23 -> "disj2"
+  | 24 -> "disj_cases"
+  | _ -> assert false
 ;;
 
 (****************************************************************************)

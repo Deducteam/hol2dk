@@ -86,73 +86,16 @@ let print_proof_stats() =
   done;
   log "number of mappings: %d\n" !nonzeros;
   (* Count the number of times each proof rule is used. *)
-  let index p =
-    let Proof(_,c) = p in
-    match c with
-    | Prefl _ -> 0
-    | Ptrans _ -> 1
-    | Pmkcomb _ -> 2
-    | Pabs _ -> 3
-    | Pbeta _ -> 4
-    | Passume _ -> 5
-    | Peqmp _ -> 6
-    | Pdeduct _ -> 7
-    | Pinst _ -> 8
-    | Pinstt _ -> 9
-    | Paxiom _ -> 10
-    | Pdef _ -> 11
-    | Pdeft _ -> 12
-    | Ptruth -> 13
-    | Pconj _ -> 14
-    | Pconjunct1 _ -> 15
-    | Pconjunct2 _ -> 16
-    | Pmp _ -> 17
-    | Pdisch _ -> 18
-    | Pspec _ -> 19
-    | Pgen _ -> 20
-    | Pexists _ -> 21
-    | Pdisj1 _ -> 22
-    | Pdisj2 _ -> 23
-    | Pdisj_cases _ -> 24
-  in
-  let name = function
-    | 0 -> "refl"
-    | 1 -> "trans"
-    | 2 -> "comb"
-    | 3 -> "abs"
-    | 4 -> "beta"
-    | 5 -> "assume"
-    | 6 -> "eqmp"
-    | 7 -> "deduct"
-    | 8 -> "term_subst"
-    | 9 -> "type_subst"
-    | 10 -> "axiom"
-    | 11 -> "sym_def"
-    | 12 -> "type_def"
-    | 13 -> "truth"
-    | 14 -> "conj"
-    | 15 -> "conjunct1"
-    | 16 -> "conjunct2"
-    | 17 -> "mp"
-    | 18 -> "disch"
-    | 19 -> "spec"
-    | 20 -> "gen"
-    | 21 -> "exists"
-    | 22 -> "disj1"
-    | 23 -> "disj2"
-    | 24 -> "disj_cases"
-    | _ -> assert false
-  in
   let rule_uses = Array.make 25 0 in
   let f k p =
-    let i = index p in
+    let i = code_of_proof p in
     let n = Array.get rule_uses i + 1 in
     Array.set rule_uses i n
   in
   iter_proofs f;
   let total = float_of_int (nb_proofs()) in
   let part n = float_of_int (100 * n) /. total in
-  let f i n = log "%10s %9d %2.f%%\n" (name i) n (part n) in
+  let f i n = log "%10s %9d %2.f%%\n" (name_of_code i) n (part n) in
   Array.iteri f rule_uses;
   log "number of proof steps: %d\nnumber of unused theorems: %d (%2.f%%)\n"
     (nb_proofs()) hist.(0) (part hist.(0))
