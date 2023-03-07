@@ -189,10 +189,10 @@ for checking hol.ml:
 On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - proof dumping: 13s 101 Mo
 - number of proof steps: 408777
-- dk file generation: 24s 99 Mo
-- checking time with dk check: 14s
-- checking time with kocheck -j 7: 23s
-- lp file generation: 16s 69 Mo
+- dk file generation: 29s 99 Mo
+- checking time with dk check: 19s
+- checking time with kocheck -j 7: 14s
+- lp file generation: 17s 69 Mo
 - checking time with lambdapi: 2m
 
 Getting information on HOL-Light files and theorems
