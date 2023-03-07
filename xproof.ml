@@ -13,7 +13,7 @@ let nb_proofs() = !the_proofs_idx + 1
 let iter_proofs f = for k = 0 to !the_proofs_idx do f k (proof_at k) done
 
 (****************************************************************************)
-(* Print some statistics on how many times a proof is used. *)
+(* Print statistics on proofs. *)
 (****************************************************************************)
 
 let print_proof_stats() =
