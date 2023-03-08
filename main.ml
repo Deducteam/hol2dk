@@ -39,10 +39,11 @@ let main() =
   if n = 2 then
     begin
       log "read %s ...\n%!" dump_file;
-      let f _ _ = () in
+      let f _ p = count_thm_uses p; count_rule_uses p in
       iter_proofs f;
-      (*log "compute statistics ...\n";
-      print_proof_stats();*)
+      log "compute statistics ...\n";
+      print_thm_uses_histogram();
+      print_rule_uses();
       exit 0
     end;
 
