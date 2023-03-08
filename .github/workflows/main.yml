@@ -36,7 +36,7 @@ jobs:
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
-          opam pin -y lambdapi lambdapi
+          opam pin lambdapi lambdapi
           opam pin -y add why3 ${{ matrix.why3-version }}
           opam install -y lambdapi
       - name: Get hol-light and patch it
