@@ -38,13 +38,12 @@ let name oc n = string oc (valid_name n);;
 
 let suffix s oc n = name oc (n ^ s);;
 
-let typ_name oc n = name oc n
+let typ_name = name
   (*match !stage with
   | Types | No_abbrev -> name oc n
   | _ -> out oc "%s_types.%a" !basename name n*)
-;;
 
-let cst_name oc n = name oc n
+let cst_name = name
   (*match !stage with
   | Terms | No_abbrev -> name oc n
   | _ -> out oc "%s_terms.%a" !basename name n*)
@@ -492,8 +491,9 @@ let decl_sym oc (n,b) =
 ;;
 
 let decl_def oc th =
-  let t = concl th in
-  let rmap = renaming_map [] in (* definitions are closed *)
+  let t = concl th in (* definitions have no assumptions *)
+  let tvs = type_vars_in_term t in
+  let rmap = renaming_map tvs [] in (* definitions are closed *)
   match t with
   | Comb(Comb(Const("=",_),Const(n,_)),_) ->
      let tvs = type_vars_in_term t in
@@ -505,10 +505,10 @@ let decl_def oc th =
 
 let decl_axioms oc ths =
   let axiom i th =
-    let t = concl th in
+    let t = concl th in (* axioms have no assumptions *)
     let xs = frees t in
-    let rmap = renaming_map xs in
     let tvs = type_vars_in_term t in
+    let rmap = renaming_map tvs xs in
     out oc "def axiom_%d : %a%aPrf %a.\n" i
       (list (decl_typ_param tvs)) tvs  (list (decl_param tvs rmap)) xs
       (unabbrev_term tvs rmap) t
@@ -526,19 +526,18 @@ let theorem oc k p =
   (*log "theorem %d ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let rmap = renaming_map xs in
   let tvs = type_vars_in_thm thm in
-  (*out oc "(;rmap: %a;)" (list_sep "; " (pair raw_var string)) rmap;*)
+  let rmap = renaming_map tvs xs in
   let term = term tvs rmap in
   let hyps_typ oc ts =
     List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
   let hyps oc ts =
     List.iteri (fun i t -> out oc "h%d : Prf %a => " (i+1) term t) ts in
-  out oc "thm thm_%d : %a%a%aPrf %a := %a%a%a%a.\n"
-    k (list (decl_typ_param tvs)) tvs
-    (list (decl_param tvs rmap)) xs hyps_typ ts term t
-    (list (typ_param tvs)) tvs (list (param tvs rmap)) xs hyps ts
-    (proof tvs rmap) p
+  out oc "thm thm_%d : %a%a%aPrf %a := %a%a%a%a.\n" k
+    (list (decl_typ_param tvs)) tvs  (list (decl_param tvs rmap)) xs
+    hyps_typ ts term t
+    (list (typ_param tvs)) tvs (list (param tvs rmap)) xs
+    hyps ts (proof tvs rmap) p
 ;;
 
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
@@ -548,9 +547,8 @@ let theorem_as_axiom oc k p =
   (*log "theorem %d as axiom ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let rmap = renaming_map xs in
   let tvs = type_vars_in_thm thm in
-  (*out oc "(;rmap: %a;)" (list_sep "; " (pair raw_var string)) rmap;*)
+  let rmap = renaming_map tvs xs in
   let term = term tvs rmap in
   let hyps_typ oc ts =
     List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
@@ -639,6 +637,7 @@ let export_to_dk_file f r =
   (*basename := f;*)
   reset_map_typ();
   reset_map_term();
+  update_reserved();
   update_map_const_typ_vars_pos();
   (* generate axioms and theorems *)
   let filename = f ^ "_proofs.dk" in
@@ -736,6 +735,7 @@ decl_axioms (axioms()) (list decl_def) (definitions())
 let export_to_dk_file_no_abbrev f r =
   use_abbrev := false;
   (*stage := No_abbrev;*)
+  update_reserved();
   update_map_const_typ_vars_pos();
   let filename = f ^ ".dk" in
   log "generate %s ...\n%!" filename;

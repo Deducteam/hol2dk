@@ -1,1 +1,6 @@
 _build/
+\#*
+*.lp
+*.dk
+*.dump
+lambdapi.pkg

@@ -734,7 +734,8 @@ module Hol : Hol_kernel = struct
 
   let SPEC t (Sequent(asl,c,k)) =
     match c with
-    | Comb(Const("!",_),p) -> new_theorem asl (Comb(p,t)) (Pspec(t,k))
+    | Comb(Const("!",Tyapp(_,[Tyapp(_,[b;_]);_])),p) when b = type_of t ->
+      new_theorem asl (Comb(p,t)) (Pspec(t,k))
     | _ -> failwith "SPEC"
   ;;
 
