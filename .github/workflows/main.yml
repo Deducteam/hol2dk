@@ -13,7 +13,6 @@ jobs:
         dedukti-version: [2.7]
         lambdapi-version: [master]
         dune-version: [3.7.0]
-        why3-version: [1.5.1]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -37,7 +36,6 @@ jobs:
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
           opam pin lambdapi lambdapi
-          opam pin -y add why3 ${{ matrix.why3-version }}
           opam install -y lambdapi
       - name: Get hol-light and patch it
         run: |
