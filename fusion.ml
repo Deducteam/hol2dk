@@ -129,7 +129,7 @@ module type Hol_kernel =
       (*END_ND*)
 
       val new_theorem : term list -> term -> proof_content -> thm
-      val dump_signature : unit -> unit
+      val dump_signature : string -> unit
       REMOVE*)
 
       val axioms : unit -> thm list
@@ -139,7 +139,6 @@ module type Hol_kernel =
       val new_basic_type_definition :
               string -> string * string -> thm -> thm * thm
 
-      (*REMOVE*)val dummy_proof : proof
       (*REMOVE*)val the_type_constants : (string * int) list ref
       (*REMOVE*)val the_term_constants : (string * hol_type) list ref
       (*REMOVE*)val the_axioms : thm list ref
@@ -204,14 +203,13 @@ module Hol : Hol_kernel = struct
 
   let nb_proofs() = !the_proofs_idx + 1
 
-  let new_theorem =
-    let oc = open_out "proofs.dump" in
-    let dump x = Marshal.to_channel oc x [] in
-    fun hyps concl proof_content ->
+  let oc_prf_dump = open_out ".dump.prf";;
+
+  let new_theorem hyps concl proof_content =
     let k = !the_proofs_idx + 1 in
     the_proofs_idx := k;
     let thm = Sequent(hyps, concl, k) in
-    dump (Proof(thm,proof_content));
+    output_value oc_prf_dump (Proof(thm,proof_content));
     thm
   ;;
 
@@ -853,14 +851,13 @@ REMOVE*)
 (* Function to dump types, constants and axioms.                             *)
 (* ------------------------------------------------------------------------- *)
 
-  let dump_signature() =
-    let oc = open_out "signature.dump" in
-    let dump x = Marshal.to_channel oc x [] in
-    dump (types());
-    dump (constants());
-    dump (axioms());
-    dump (definitions());
-    dump (nb_proofs());
+  let dump_signature filename =
+    let oc = open_out filename in
+    output_value oc (types());
+    output_value oc (constants());
+    output_value oc (axioms());
+    output_value oc (definitions());
+    output_value oc (nb_proofs());
     close_out oc;
     Printf.printf "%d proof steps\n%!" (nb_proofs())
   ;;

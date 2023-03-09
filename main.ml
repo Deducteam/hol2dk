@@ -6,7 +6,7 @@ open Xprelude
 open Xproof
 
 let usage() =
-  log "usage: %s file_sig.dump file_proofs.dump [file.[dk|lp] [number]]\n%!"
+  log "usage: %s file.sig file.prf [file.[dk|lp] [number]]\n%!"
     Sys.argv.(0)
 
 let main() =
@@ -44,6 +44,7 @@ let main() =
       log "compute statistics ...\n";
       print_thm_uses_histogram();
       print_rule_uses();
+      ignore (Sys.command "rm -f .dump.prf");
       exit 0
     end;
 

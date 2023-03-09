@@ -2,5 +2,8 @@ _build/
 \#*
 *.lp
 *.dk
-*.dump
+*.prf
+*.sig
+*.lpo
+*.dko
 lambdapi.pkg
