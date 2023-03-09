@@ -63,9 +63,7 @@ cd $hol-light-dir
 $hol2dk-dir/dump-proofs file.ml
 ```
 
-generates two temporary files, `proofs.dump` and `signature.dump`,
-which are renamed at the end into `file_proofs.dump` and
-`file_sig.dump`.
+generates two files, `file.sig` and `file.prf`.
 
 `file.ml` should at least include `hol.ml` until the line `loads
 "fusion.ml";;`.
@@ -86,25 +84,22 @@ Get statistics on proofs
 
 ```
 cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump
+dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf
 ```
-
-Remark: each time hol2dk is run, an empty file `proofs.dump` is
-generated. You can safely remove it.
 
 Generating dk/lp files from dump files
 --------------------------------------
 
 ```
 cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump file.dk
+dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf file.dk
 ```
 
 generates `file.dk` from the given dumped files.
 
 ```
 cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump file.lp
+dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf file.lp
 ```
 
 generates the files `file_types.lp`, `file_terms.lp` and `file.lp`
@@ -114,7 +109,7 @@ It is possible to get the proof of a single theorem by giving its number as addi
 
 ```
 cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/signature.dump $hol-light-dir/proofs.dump file.lp $theorem_number
+dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf file.lp $theorem_number
 ```
 
 Checking the generated dk file

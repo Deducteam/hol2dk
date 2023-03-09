@@ -44,6 +44,7 @@ let main() =
       log "compute statistics ...\n";
       print_thm_uses_histogram();
       print_rule_uses();
+      ignore (Sys.command "rm -f .dump.prf");
       exit 0
     end;
 
