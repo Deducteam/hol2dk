@@ -6,26 +6,25 @@ open Fusion
 open Xlib
 open Xprelude
 
-let ic_dump : in_channel ref = ref stdin;;
-let pos_dump : int array ref = ref [||];;
+let ic_prf : in_channel ref = ref stdin;;
+let prf_pos : int array ref = ref [||];;
 let thm_uses : int array ref = ref [||];;
 let thm_uses_max : int ref = ref (-1);;
 let thm_uses_argmax : int ref = ref (-1);;
 let rule_uses : int array = Array.make 25 0;;
 
-let set_dump_file (filename : string) (n : int) : unit =
-  let ic = open_in_bin filename in
-  ic_dump := ic;
-  pos_dump := Array.make n (-1);
-  thm_uses :=  Array.make n 0
+let init_proof_reading (filename : string) (nb_proofs : int) : unit =
+  prf_pos := Array.make nb_proofs (-1);
+  thm_uses :=  Array.make nb_proofs 0;
+  ic_prf := open_in_bin filename
 ;;
 
-let nb_proofs() : int = Array.length !pos_dump;;
+let nb_proofs() : int = Array.length !prf_pos;;
 
 (* [proof_at k] returns the proof of index [k]. *)
 let proof_at k =
-  let ic = !ic_dump in
-  let pos = !pos_dump in
+  let ic = !ic_prf in
+  let pos = !prf_pos in
   let cur_pos = pos_in ic in
   let p = Array.get pos k in
   if p < 0 then
@@ -49,7 +48,7 @@ let proof_at k =
 let iter_proofs (f : int -> proof -> unit) =
   let idx = ref 0 in
   try
-    while !idx < Array.length !pos_dump do
+    while !idx < Array.length !prf_pos do
       let k = !idx in
       f k (proof_at k);
       idx := k + 1
@@ -86,7 +85,7 @@ let print_thm_uses_histogram() : unit =
     if n > 0 then (incr nonzeros; log "%d: %d\n" i n)
   done;
   log "number of mappings: %d\n" !nonzeros;
-  log "theorem most used: %d\n" !thm_uses_argmax
+  log "most used theorem: %d\n" !thm_uses_argmax
 ;;
 
 let print_rule_uses() : unit =

@@ -1,6 +1,7 @@
 _build/
 \#*
 *.lp
+!hol_theory.lp
 *.dk
 *.prf
 *.sig
