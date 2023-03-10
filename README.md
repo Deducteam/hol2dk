@@ -63,12 +63,12 @@ cd $hol-light-dir
 $hol2dk-dir/dump-proofs file.ml
 ```
 
-generates two files, `file.sig` and `file.prf`.
+generates two files: `file.sig` and `file.prf`.
 
 `file.ml` should at least include `hol.ml` until the line `loads
 "fusion.ml";;`.
 
-Compiling hol2dk
+Compiling and installing hol2dk
 ----------------
 
 **Requirements:**
@@ -77,39 +77,39 @@ Compiling hol2dk
 
 ```
 dune build
+dune install
 ```
+installs `hol2dk`.
 
 Get statistics on proofs
 ------------------------
 
 ```
-cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf
+hol2dk --stats file.lp
 ```
 
 Generating dk/lp files from dump files
 --------------------------------------
 
 ```
-cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf file.dk
+hol2dk file.dk
 ```
 
-generates `file.dk` from the given dumped files.
+generates `file.dk` from the files `file.sig` and `file.prf`.
 
 ```
-cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf file.lp
+hol2dk file.lp
 ```
 
-generates the files `file_types.lp`, `file_terms.lp` and `file.lp`
-from the dump files given in arguments.
+generates the files `file_types.lp`, `file_type_abbrevs.lp`,
+`file_terms.lp`, `file_term_abbrevs.lp`, `file_axioms.lp` and
+`file.lp` from the files `file.sig` and `file.prf`.
 
-It is possible to get the proof of a single theorem by giving its number as additional argument (useful for debugging):
+It is possible to get the proof of a single theorem by giving its
+number as additional argument (useful for debugging):
 
 ```
-cd $hol2dk-dir
-dune exec -- hol2dk $hol-light-dir/file.sig $hol-light-dir/file.prf file.lp $theorem_number
+hol2dk file.lp $theorem_number
 ```
 
 Checking the generated dk file
@@ -179,16 +179,16 @@ Impact of proof recording on hol-light:
 
 for checking hol.ml:
 - without proof dumping: 1m20s
--    with proof dumping: 3.8 Go 1m51s (+39%)
+-    with proof dumping: 1m51s (+39%) 3.8 Go
 
 On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
 - proof dumping: 13s 101 Mo
 - number of proof steps: 408777
-- dk file generation: 29s 99 Mo
+- dk file generation: 28s 99 Mo
 - checking time with dk check: 19s
 - checking time with kocheck -j 7: 14s
-- lp file generation: 17s 69 Mo
-- checking time with lambdapi: 2m
+- lp file generation: 19s 69 Mo
+- checking time with lambdapi: 1m53s
 
 Getting information on HOL-Light files and theorems
 ---------------------------------------------------
