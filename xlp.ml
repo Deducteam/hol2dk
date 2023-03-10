@@ -523,17 +523,6 @@ let export_proofs b r =
       proofs_in_range oc r)
 ;;
 
-let export_proofs_part =
-  let part i = "part_" ^ string_of_int i in
-  fun b k x y ->
-  export b ("_" ^ part k)
-    (fun oc ->
-      List.iter (require oc b)
-        ["types"; "type_abbrevs"; "terms"; "term_abbrevs"; "axioms"];
-      for i = 1 to k-1 do require oc b (part i) done;
-      proofs_in_range oc (Inter(x,y)))
-;;
-
 (****************************************************************************)
 (* Lambdapi file generation without type and term abbreviations. *)
 (****************************************************************************)
