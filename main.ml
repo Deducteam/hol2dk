@@ -94,7 +94,7 @@ let main() =
       Xlp.export_types basename;
       Xlp.export_terms basename;
       Xlp.export_axioms basename;
-      Xlp.export_proofs basename range
+      Xlp.export_proofs basename range;
       Xlp.export_term_abbrevs basename;
       Xlp.export_type_abbrevs basename;
     end
