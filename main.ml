@@ -6,22 +6,43 @@ open Xprelude
 open Xproof
 
 let usage() =
-  log "usage: %s file.sig file.prf [file.[dk|lp] [number]]\n%!"
+  log "usage: %s [--stats] file.[dk|lp] [number [number]]]\n%!"
     Sys.argv.(0)
+
+let wrong_arg_nb() =
+  Printf.eprintf "wrong number of arguments\n%!";
+  usage();
+  exit 1
 
 let main() =
 
   (* check number of arguments *)
   let n = Array.length Sys.argv - 1 in
-  if n < 2 || n > 4 then
-    begin
-      Printf.eprintf "wrong number of arguments\n%!";
-      usage();
-      exit 1
-    end;
+  if n < 1 || n > 4 then wrong_arg_nb();
 
-  (* read signature *)
-  let dump_file = Sys.argv.(1) in
+  (* parse arguments *)
+  let stats, filename, (*other*) args =
+    if Sys.argv.(1) = "--stats" then
+      if n <> 2 then wrong_arg_nb() else true, Sys.argv.(2), [||]
+    else false, Sys.argv.(1), Array.sub Sys.argv 2 (n-1)
+  in
+  let dk =
+    match Filename.extension filename with
+      | ".dk"  -> true
+      | ".lp" -> false
+      | _ -> Printf.eprintf "wrong file extension\n%!"; usage(); exit 1
+  in
+  let basename = Filename.chop_extension filename in
+  let range =
+    match Array.length args with
+    | 0 -> All
+    | 1 -> Only (int_of_string args.(0))
+    | 2 -> Inter (int_of_string args.(0), int_of_string args.(1))
+    | _ -> wrong_arg_nb()
+  in
+
+  (* read signature file *)
+  let dump_file = basename ^ ".sig" in
   log "read %s ...\n%!" dump_file;
   let ic = open_in_bin dump_file in
   the_type_constants := input_value ic;
@@ -30,48 +51,46 @@ let main() =
   the_definitions := input_value ic;
   let nb_proofs = input_value ic in
   log "%d proof steps\n%!" nb_proofs;
+  update_map_const_typ_vars_pos();
 
-  (* set dump file for proofs *)
-  let dump_file = Sys.argv.(2) in
-  set_dump_file dump_file nb_proofs;
-
-  (* if no output file is given, read proofs, print stats and exit *)
-  if n = 2 then
+  (* print stats *)
+  if stats then
     begin
+      let dump_file = basename ^ ".prf" in
+      set_dump_file dump_file nb_proofs;
       log "read %s ...\n%!" dump_file;
-      let f _ p = count_thm_uses p; count_rule_uses p in
-      iter_proofs f;
+      iter_proofs (fun _ p -> count_thm_uses p; count_rule_uses p);
       log "compute statistics ...\n";
       print_thm_uses_histogram();
       print_rule_uses();
-      ignore (Sys.command "rm -f .dump.prf");
       exit 0
     end;
 
-  (* check file extension *)
-  let filename = Sys.argv.(3) in
-  let ext = Filename.extension filename in
-  let dk =
-    match ext with
-    | ".dk"  -> true
-    | ".lp" -> false
-    | _ ->
-       Printf.eprintf "%s: wrong file extension\n%!" ext;
-       usage();
-       exit 1
-  in
-  let basename = Filename.chop_extension filename in
+  (* generate signature related files *)
+  if not dk then
+    begin
+      Xlp.export_types basename;
+      Xlp.export_terms basename;
+      Xlp.export_axioms basename
+    end;
+
+  (* read proofs before range start *)
+  let dump_file = basename ^ ".prf" in
+  set_dump_file dump_file nb_proofs;
+  log "read %s ...\n%!" dump_file;
+  begin match range with
+  | Only x | Inter(x,_) -> for k = 0 to x-1 do ignore (proof_at k) done
+  | Upto _ -> assert false
+  | All -> iter_proofs (fun _ _ -> ())
+  end;
 
   (* generate output *)
-  let export = if dk then Xdk.export_to_dk_file else Xlp.export_to_lp_file in
-  let range =
-    if n = 4 then
-      let x = int_of_string Sys.argv.(4) in
-      log "read %s ...\n%!" dump_file;
-      for k = 0 to x-1 do ignore (proof_at k) done;
-      Only x
-    else All
-  in
-  export basename range
+  if dk then Xdk.export_to_dk_file basename range
+  else
+    begin
+      Xlp.export_proofs basename range;
+      Xlp.export_term_abbrevs basename;
+      Xlp.export_type_abbrevs basename;
+    end
 
 let _ = main()

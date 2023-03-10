@@ -463,6 +463,70 @@ print thm_%d;\n" x*)
 (* Lambdapi file generation with type and term abbreviations. *)
 (****************************************************************************)
 
+let require oc basename s =
+  out oc "require open hol-light.%s_%s;\n" basename s;;
+
+let export basename suffix f =
+  let filename = basename ^ suffix ^ ".lp" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  out oc "require open hol-light.hol_theory;\n";
+  f oc;
+  close_out oc
+;;
+
+let export_types =
+  let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
+  fun b ->
+  export b "_types" (fun oc -> list decl_typ oc (List.filter f (types())))
+;;
+
+let export_type_abbrevs b =
+  export b "_type_abbrevs"
+    (fun oc -> require oc b "types"; decl_map_typ oc !map_typ)
+;;
+
+let export_terms =
+  let f (n,_) =
+    match n with
+    | "@" | "\\/" | "/\\" | "==>" | "!" | "?" | "?!" | "~" | "F" | "T" | "="
+      -> false
+    | _ -> true
+  in
+  fun b ->
+  export b "_terms"
+    (fun oc ->
+      require oc b "types";
+      list decl_sym oc (List.filter f (constants())))
+;;
+
+let export_term_abbrevs b =
+  export b "_term_abbrevs"
+    (fun oc ->
+      List.iter (require oc b) ["types"; "type_abbrevs"; "terms"];
+      decl_map_term oc !map_term)
+;;
+
+let export_axioms b =
+  export b "_axioms"
+    (fun oc ->
+      List.iter (require oc b) ["types"; "type_abbrevs"; "terms"];
+      decl_axioms oc (axioms());
+      list decl_def oc (definitions()))
+;;
+
+let export_proofs b r =
+  export b ""
+    (fun oc ->
+      List.iter (require oc b)
+        ["types"; "type_abbrevs"; "terms"; "term_abbrevs"; "axioms"];
+      proofs_in_range oc r)
+;;
+
+(****************************************************************************)
+(* Lambdapi file generation without type and term abbreviations. *)
+(****************************************************************************)
+
 let rules =
 "symbol fun_ext [a b] [f g : El (fun a b)] :
   (Π x, Prf (= (f x) (g x))) → Prf (= f g);
@@ -496,61 +560,6 @@ symbol ∨ᵢ₂ p [q] : Prf q → Prf (∨ p q);
 symbol ∨ₑ [p q] :
   Prf (∨ p q) → Π [r], (Prf p → Prf r) → (Prf q → Prf r) → Prf r;
 ";;
-
-(* [export_to_lp_file f r] creates the files "f_types.lp",
-   "f_terms.lp" and "f.lp" for the theorems in range [r]. *)
-let export_to_lp_file basename r =
-  reset_map_typ();
-  reset_map_term();
-  update_map_const_typ_vars_pos();
-  (* generate axioms and theorems *)
-  let filename = basename ^ ".lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  out oc
-"require open hol-light.%s_types hol-light.%s_terms;\n
-injective symbol Prf : El bool → TYPE;\n
-/* axioms */
-%a
-/* rules */
-%s
-/* definitional axioms */
-%a
-/* theorems */
-%a" basename basename
-decl_axioms (axioms()) rules (list decl_def) (definitions()) proofs_in_range r;
-  close_out oc;
-  (* generate constants and term abbreviations *)
-  let filename = basename ^ "_terms.lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  out oc
-"require open hol-light.%s_types;
-
-injective symbol El : Set → TYPE;
-rule El (fun $a $b) ↪ El $a → El $b;
-
-/* constants */
-%a
-/* term abbreviations */
-%a" basename (list decl_sym) (constants()) decl_map_term !map_term;
-  close_out oc;
-  (* generate types and type abbreviations *)
-  let filename = basename ^ "_types.lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  out oc
-"constant symbol Set : TYPE;\n
-/* type constructors */
-%a
-/* type abbreviations */
-%a" (list decl_typ) (types()) decl_map_typ !map_typ;
-  close_out oc
-;;
-
-(****************************************************************************)
-(* Lambdapi file generation without type and term abbreviations. *)
-(****************************************************************************)
 
 (* [theory oc] outputs on [oc] all types, constants and axioms used in
    proofs. *)

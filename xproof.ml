@@ -59,7 +59,7 @@ let iter_proofs (f : int -> proof -> unit) =
     raise e
 ;;
 
-let count_thm_uses : proof -> unit=
+let count_thm_uses : proof -> unit =
   let use k =
     let n = Array.get !thm_uses k + 1 in
     Array.set !thm_uses k n;
