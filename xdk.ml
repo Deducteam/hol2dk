@@ -38,7 +38,7 @@ let name oc n = string oc (valid_name n);;
 
 let suffix s oc n = name oc (n ^ s);;
 
-let typ_name = name
+let typ_name = string
   (*match !stage with
   | Types | No_abbrev -> name oc n
   | _ -> out oc "%s_types.%a" !basename name n*)
@@ -100,8 +100,9 @@ let abbrev_typ =
 ;;
 
 let typ =
-  if !use_abbrev then fun tvs oc b -> abbrev_typ oc (missing_as_bool tvs b)
-  else unabbrev_typ;;
+  (*if !use_abbrev then*)
+  fun tvs oc b -> abbrev_typ oc (missing_as_bool tvs b)
+  (*else unabbrev_typ*);;
 
 (* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
 let decl_map_typ oc m =
@@ -224,17 +225,19 @@ let abbrev_term =
     out oc "(%a%d%a%a)" cst_name "term" k
       (list_prefix " " raw_typ) tvs (list_prefix " " raw_var) vs
   in
-  fun tvs oc t ->
-  match t with
-  | Var(n,_) -> name oc n
-  | Const(n,b) ->
-     begin match List.map (subtyp b) (const_typ_vars_pos n) with
-     | [] -> cst_name oc n
-     | bs -> out oc "(%a%a)" cst_name n (list_prefix " " (typ tvs)) bs
-     end
-  | Comb(Comb(Const("=",b),u),v) ->
-     out oc "(eq %a %a %a)" (typ tvs) (get_domain b) abbrev u abbrev v
-  | _ -> abbrev oc t
+  fun tvs ->
+  let rec term oc t =
+    match t with
+    | Var(n,_) -> name oc n
+    | Const(n,b) ->
+       begin match List.map (subtyp b) (const_typ_vars_pos n) with
+       | [] -> cst_name oc n
+       | bs -> out oc "(%a%a)" cst_name n (list_prefix " " (typ tvs)) bs
+       end
+    | Comb(Comb(Const("=",b),u),v) ->
+       out oc "(eq %a %a %a)" (typ tvs) (get_domain b) term u term v
+    | _ -> abbrev oc t
+  in term
 ;;
 
 (* [subst_missing_as_bool] returns a type substitution mapping every
@@ -266,9 +269,9 @@ let rename tvs =
 ;;
 
 let term =
-  if !use_abbrev then
+  (*if !use_abbrev then*)
     fun tvs rmap oc t -> abbrev_term tvs oc (rename tvs rmap t)
-  else unabbrev_term
+  (*else unabbrev_term*)
 ;;
 
 (* [decl_map_term oc m] outputs on [oc] the term abbreviations defined
