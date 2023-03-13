@@ -33,8 +33,8 @@ let name oc n =
 let rec raw_typ oc b =
   match b with
   | Tyvar n
-  | Tyapp(n,[]) -> name oc n
-  | Tyapp(c,bs) -> out oc "(%a%a)" name c (list_prefix " " raw_typ) bs
+  | Tyapp(n,[]) -> string oc n
+  | Tyapp(n,bs) -> out oc "(%a%a)" string n (list_prefix " " raw_typ) bs
 ;;
 
 let abbrev_typ =
@@ -42,7 +42,7 @@ let abbrev_typ =
   fun oc b ->
   match b with
   | Tyvar n
-  | Tyapp(n,[]) -> name oc n
+  | Tyapp(n,[]) -> string oc n
   | _ ->
      (* check whether the type is already abbreviated; add a new
         abbreviation if needed *)
@@ -62,7 +62,7 @@ let abbrev_typ =
      | _ -> out oc "(type%d%a)" k (list_prefix " " raw_typ) tvs
 ;;
 
-let typ = if !use_abbrev then abbrev_typ else raw_typ;;
+let typ = abbrev_typ (*if !use_abbrev then abbrev_typ else raw_typ*);;
 
 (* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
 let decl_map_typ oc m =
@@ -207,13 +207,13 @@ let abbrev_term =
        out oc "(term%d%a%a)"
          k (list_prefix " " raw_typ) tvs (list_prefix " " raw_term) vs
   in
-  fun oc t ->
-  match t with
-  | Var(_,_)
-  | Const(_,_) -> raw_term oc t
-  | Comb(Comb(Const("=",b),u),v) ->
-     out oc "(@= %a %a %a)" typ (get_domain b) abbrev u abbrev v
-  | _ -> abbrev oc t
+  let rec term oc t =
+    match t with
+    | Var(_,_) | Const(_,_) -> raw_term oc t
+    | Comb(Comb(Const("=",b),u),v) ->
+       out oc "(@= %a %a %a)" typ (get_domain b) term u term v
+    | _ -> abbrev oc t
+  in term
 ;;
 
 (* [rename rmap t] returns a new term obtained from [t] by applying
@@ -229,8 +229,8 @@ let rec rename rmap t =
 ;;
 
 let term =
-  if !use_abbrev then fun rmap oc t -> abbrev_term oc (rename rmap t)
-  else unabbrev_term
+  (*if !use_abbrev then*) fun rmap oc t -> abbrev_term oc (rename rmap t)
+  (*else unabbrev_term*)
 ;;
 
 (* [decl_map_term oc m] outputs on [oc] the term abbreviations defined

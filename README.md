@@ -218,11 +218,11 @@ Translation of `hol.ml` to Lambdapi in parallel with `--part 7`:
 Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
 - proof dumping time: 13s 101 Mo
 - number of proof steps: 409 K
-- dk files generation: 28s 99 Mo
-- checking time with dk check: 19s
+- dk files generation: 26s 99 Mo
+- checking time with dk check: 21s
 - checking time with kocheck -j 7: 14s
-- lp files generation: 19s 69 Mo
-- checking time with lambdapi: 1m53s
+- lp files generation: 17s 69 Mo
+- checking time with lambdapi: 1m54s
 
 Getting information on HOL-Light files and theorems
 ---------------------------------------------------
