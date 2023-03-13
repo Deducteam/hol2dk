@@ -6,7 +6,9 @@ open Xprelude
 open Xproof
 
 let usage() =
-  log "usage: %s [--stats] file.[dk|lp] [number [number]]]\n%!"
+  log
+"usage: %s [option] file.[dk|lp] [number [number]]]
+option: --stats | --sig | --part number\n%!"
     Sys.argv.(0)
 
 let wrong_arg_nb() =
@@ -23,15 +25,22 @@ let split x =
 
 let main() =
 
-  (* check number of arguments *)
-  let n = Array.length Sys.argv - 1 in
-  if n < 1 || n > 4 then wrong_arg_nb();
-
   (* parse arguments *)
   let args = List.tl (Array.to_list Sys.argv) in
   let stats, args =
     try let l1, l2 = split "--stats" args in true, List.rev_append l1 l2
     with Not_found -> false, args
+  in
+  let sig_only, args =
+    try let l1, l2 = split "--sig" args in true, List.rev_append l1 l2
+    with Not_found -> false, args
+  in
+  let part, args =
+    try match split "--part" args with
+        | l1, x::l2 when not sig_only ->
+           Some (int_of_string x), List.rev_append l1 l2
+        | l1, [] -> wrong_arg_nb()
+    with Not_found -> None, args
   in
   let filename, args =
     match args with
@@ -90,13 +99,39 @@ let main() =
   update_map_const_typ_vars_pos();
   if dk then Xdk.export_to_dk_file basename range
   else
-    begin
-      Xlp.export_types basename;
-      Xlp.export_terms basename;
-      Xlp.export_axioms basename;
-      Xlp.export_proofs basename range;
-      Xlp.export_term_abbrevs basename;
-      Xlp.export_type_abbrevs basename;
-    end
+    match part, range with
+    | Some k, All ->
+       let b = basename in
+       let mk = b ^ ".mk" in
+       log "generate %s ...\n%!" mk;
+       let oc = open_out mk in
+       let part_size = nb_proofs / k in
+       out oc ".SUFFIXES:\ndefault: %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
+       for i = 1 to k do out oc " %s_part_%d.lp" b i done;
+       out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp: %s.sig
+\thol2dk %s.lp --sig\n" b b b b b;
+       let x = ref 0 in
+       let cmd i y =
+         out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
+%s_part_%d_term_abbrevs.lp: %s.sig %s.prf
+\thol2dk %s.lp --part %d %d %d\n" b i b i b i b b b i !x y in
+       for i = 1 to k-1 do
+         let y = !x + part_size in cmd i y; x := y
+       done;
+       cmd k (nb_proofs - 1)
+    | Some k, Inter(x,y) ->
+       Xlp.export_proofs_part basename k x y;
+       let suffix = "_part_" ^ string_of_int k in
+       Xlp.export_term_abbrevs basename suffix;
+       Xlp.export_type_abbrevs basename suffix
+    | Some _, _ -> wrong_arg_nb()
+    | _ ->
+       Xlp.export_types basename;
+       Xlp.export_terms basename;
+       Xlp.export_axioms basename;
+       if sig_only then exit 0;
+       Xlp.export_proofs basename range;
+       Xlp.export_term_abbrevs basename "";
+       Xlp.export_type_abbrevs basename ""
 
 let _ = main()

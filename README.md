@@ -88,7 +88,7 @@ Get statistics on proofs
 hol2dk --stats file.lp
 ```
 
-Generating dk/lp files from dump files
+Generating dk/lp files from dumped files
 --------------------------------------
 
 ```
@@ -110,6 +110,24 @@ number as additional argument (useful for debugging):
 
 ```
 hol2dk file.lp $theorem_number
+```
+
+Generating lp files in parallel
+----------------------------------------
+
+Dk/lp file generation is linear in the size of dumped files. For big
+dumped files, we provide a tool to make file generation in
+parallel. For the moment, this is only available for lp file
+generation.
+
+```
+hol2dk file.lp --part 7 # number of processors you can run in parallel
+```
+
+generates a Makefile `file.mk` to generate lp files in parallel:
+
+```
+make -f file.mk
 ```
 
 Checking the generated dk file
@@ -175,13 +193,28 @@ eval `opam env`
 Results
 -------
 
-Impact of proof recording on hol-light:
+Translation of `hol.ml`:
+  * checking time without proof dumping: 1m20s
+  * checking time with proof dumping: 1m51s (+39%)
+  * dumped file size: 3.8 Go
 
-for checking hol.ml:
-- without proof dumping: 1m20s
--    with proof dumping: 1m51s (+39%) 3.8 Go
+  * lp file generation time: 12m8s
+  * total size: 2.5 Go
+  * type abbreviations: 460 Ko
+  * term abbreviations: 787 Mo (31%)
 
-On `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
+  * dk file generation time:
+  * total size:
+  * type abbreviations:
+  * term abbreviations:
+
+Translation of `hol.ml` to Lambdapi in parallel with `--part 7`:
+  * lp file generation: 6m30s (-46%)
+  * total size: 2.5 Go
+  * type abbrevs: 600 Ko (+30%)
+  * term abbrevs: 804 Mo (+2%)
+
+Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
 - proof dumping: 13s 101 Mo
 - number of proof steps: 408777
 - dk file generation: 28s 99 Mo
