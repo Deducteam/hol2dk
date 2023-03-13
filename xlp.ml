@@ -113,11 +113,19 @@ let decl_var rmap oc t =
   | _ -> assert false
 ;;
 
+let decl_param rmap oc v = out oc " (%a)" (decl_var rmap) v;;
+
+let unabbrev_decl_var rmap oc t =
+  match t with
+  | Var(_,b) -> out oc "%a : El %a" (var rmap) t raw_typ b
+  | _ -> assert false
+;;
+
+let unabbrev_decl_param rmap oc v = out oc " (%a)" (unabbrev_decl_var rmap) v;;
+
 (****************************************************************************)
 (* Translation of terms. *)
 (****************************************************************************)
-
-let decl_param rmap oc v = out oc " (%a)" (decl_var rmap) v;;
 
 let rec raw_term oc t =
   match t with
@@ -127,7 +135,7 @@ let rec raw_term oc t =
      | [] -> name oc n
      | ps ->
         let typ_args oc ps =
-          List.iter (fun p -> out oc " %a" typ (subtyp b p)) ps in
+          List.iter (fun p -> out oc " %a" raw_typ (subtyp b p)) ps in
         out oc "(@%a%a)" name n typ_args ps
      end
   | Comb(u,v) ->
@@ -155,7 +163,7 @@ let unabbrev_term =
   | Var(n,b) ->
      begin
        try name oc (List.assoc t rmap)
-       with Not_found -> out oc "/*%a*/(el %a)" name n typ b
+       with Not_found -> out oc "/*%a*/(el %a)" name n raw_typ b
      end
   | Const(_,_) -> raw_term oc t
   | Comb(u,v) ->
@@ -173,7 +181,7 @@ let unabbrev_term =
      end*)
   | Abs(u,v) ->
      let rmap' = add_var rmap u in
-     out oc "(λ %a, %a)" (decl_var rmap') u (term rmap') v
+     out oc "(λ %a, %a)" (unabbrev_decl_var rmap') u (term rmap') v
   in term
 ;;
 
@@ -402,7 +410,7 @@ let decl_axioms oc ths =
     let xs = frees t in
     let rmap = renaming_map tvs xs in
     out oc "symbol axiom_%d%a%a : Prf %a;\n"
-      i typ_vars (type_vars_in_term t) (list (decl_param rmap)) xs
+      i typ_vars (type_vars_in_term t) (list (unabbrev_decl_param rmap)) xs
       (unabbrev_term rmap) t
   in
   List.iteri axiom ths
@@ -464,7 +472,7 @@ print thm_%d;\n" x*)
 (****************************************************************************)
 
 let require oc basename s =
-  out oc "require open hol-light.%s_%s;\n" basename s;;
+  out oc "require open hol-light.%s%s;\n" basename s;;
 
 let export basename suffix f =
   let filename = basename ^ suffix ^ ".lp" in
@@ -481,9 +489,9 @@ let export_types =
   export b "_types" (fun oc -> list decl_typ oc (List.filter f (types())))
 ;;
 
-let export_type_abbrevs b =
-  export b "_type_abbrevs"
-    (fun oc -> require oc b "types"; decl_map_typ oc !map_typ)
+let export_type_abbrevs b s =
+  export b (s ^ "_type_abbrevs")
+    (fun oc -> require oc b "_types"; decl_map_typ oc !map_typ)
 ;;
 
 let export_terms =
@@ -496,21 +504,21 @@ let export_terms =
   fun b ->
   export b "_terms"
     (fun oc ->
-      require oc b "types";
+      require oc b "_types";
       list decl_sym oc (List.filter f (constants())))
 ;;
 
-let export_term_abbrevs b =
-  export b "_term_abbrevs"
+let export_term_abbrevs b s =
+  export b (s ^ "_term_abbrevs")
     (fun oc ->
-      List.iter (require oc b) ["types"; "type_abbrevs"; "terms"];
+      List.iter (require oc b) ["_types"; s ^ "_type_abbrevs"; "_terms"];
       decl_map_term oc !map_term)
 ;;
 
 let export_axioms b =
   export b "_axioms"
     (fun oc ->
-      List.iter (require oc b) ["types"; "type_abbrevs"; "terms"];
+      List.iter (require oc b) ["_types"; "_terms"];
       decl_axioms oc (axioms());
       list decl_def oc (definitions()))
 ;;
@@ -519,8 +527,20 @@ let export_proofs b r =
   export b ""
     (fun oc ->
       List.iter (require oc b)
-        ["types"; "type_abbrevs"; "terms"; "term_abbrevs"; "axioms"];
+        ["_types"; "_type_abbrevs"; "_terms"; "_term_abbrevs"; "_axioms"];
       proofs_in_range oc r)
+;;
+
+let export_proofs_part =
+  let part i s = "_part_" ^ string_of_int i ^ s in
+  fun b k x y ->
+  export b ("_part_" ^ string_of_int k)
+    (fun oc ->
+      List.iter (require oc b)
+        ["_types"; part k "_type_abbrevs"; "_terms"; part k "_term_abbrevs";
+         "_axioms"];
+      for i = 1 to k-1 do require oc b ("_part_" ^ string_of_int i) done;
+      proofs_in_range oc (Inter(x,y)))
 ;;
 
 (****************************************************************************)
