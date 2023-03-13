@@ -116,8 +116,8 @@ Generating lp files in parallel
 ----------------------------------------
 
 Dk/lp file generation is linear in the size of dumped files. For big
-dumped files, we provide a tool to make file generation in
-parallel. For the moment, this is only available for lp file
+dumped files, we provide a command to make file generation in parallel
+using `make`. For the moment, this is only available for lp file
 generation.
 
 ```
@@ -127,7 +127,7 @@ hol2dk file.lp --part 7 # number of processors you can run in parallel
 generates a Makefile `file.mk` to generate lp files in parallel:
 
 ```
-make -f file.mk
+make -j 7 -f file.mk
 ```
 
 Checking the generated dk file
@@ -196,31 +196,32 @@ Results
 Translation of `hol.ml`:
   * checking time without proof dumping: 1m20s
   * checking time with proof dumping: 1m51s (+39%)
-  * dumped file size: 3.8 Go
-
-  * lp file generation time: 12m8s
-  * total size: 2.5 Go
+  * dumped files size: 3.8 Go
+  * number of proof steps: 11 M
+  
+  * lp files generation time: 12m8s
+  * lp files size: 2.5 Go
   * type abbreviations: 460 Ko
   * term abbreviations: 787 Mo (31%)
 
-  * dk file generation time:
-  * total size:
-  * type abbreviations:
-  * term abbreviations:
+  * dk files generation time: 22m37s
+  * dk files size: 3.6 Go
+  * type abbreviations: 524 Ko
+  * term abbreviations: 820 Mo (23%)
 
 Translation of `hol.ml` to Lambdapi in parallel with `--part 7`:
-  * lp file generation: 6m30s (-46%)
-  * total size: 2.5 Go
+  * lp files generation time: 6m30s (-46%)
+  * lp files size: 2.5 Go
   * type abbrevs: 600 Ko (+30%)
   * term abbrevs: 804 Mo (+2%)
 
 Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
-- proof dumping: 13s 101 Mo
-- number of proof steps: 408777
-- dk file generation: 28s 99 Mo
+- proof dumping time: 13s 101 Mo
+- number of proof steps: 409 K
+- dk files generation: 28s 99 Mo
 - checking time with dk check: 19s
 - checking time with kocheck -j 7: 14s
-- lp file generation: 19s 69 Mo
+- lp files generation: 19s 69 Mo
 - checking time with lambdapi: 1m53s
 
 Getting information on HOL-Light files and theorems
