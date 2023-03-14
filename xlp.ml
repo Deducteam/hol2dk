@@ -11,7 +11,7 @@ open Xproof
 (* Translation of names. *)
 (****************************************************************************)
 
-(* rename connectives to unicode symbols *)
+(* Rename HOL-Light names to valid (and sometimes nicer) identifiers. *)
 let name oc n =
   string oc
     (match n with
@@ -25,10 +25,12 @@ let name oc n =
      | "?" -> "∃"
      | "?!" -> "∃!"
      | "~" -> "¬"
-     | "$" -> "dollar" (* $ is not a valid Lambdapi id *)
+     (* invalid Lambdapi identifiers *)
+     | "$" -> "dollar"
+     | ".." -> "dotdot"
      | _ -> n);;
 
-(* rename term constants that have the same name as type constants *)
+(* Rename term constants that have the same name as type constants. *)
 let cst_name oc = function
   | "sum" -> string oc "Sum"
   | n -> name oc n
