@@ -77,8 +77,17 @@ let unabbrev_typ tvs =
     | Tyvar n ->
        if List.mem b tvs then name oc n
        else out oc "(;%a;)%a" name n typ_name "bool"
+    | Tyapp(n,[]) -> typ_name oc n
     | Tyapp(n,bs) -> out oc "(%a%a)" typ_name n (list_prefix " " typ) bs
   in typ
+;;
+
+let part : int option ref = ref None;;
+
+let typ_abbrev oc k =
+  match !part with
+  | None -> out oc "type%d" k
+  | Some i -> out oc "type%d_%d" i k
 ;;
 
 let abbrev_typ =
@@ -102,8 +111,8 @@ let abbrev_typ =
           k
      in
      match tvs with
-     | [] -> out oc "%a%d" typ_name "type" k
-     | _ -> out oc "(%a%d%a)" typ_name "type" k (list_prefix " " raw_typ) tvs
+     | [] -> typ_abbrev oc k
+     | _ -> out oc "(%a%a)" typ_abbrev k (list_prefix " " raw_typ) tvs
 ;;
 
 let typ =
@@ -114,7 +123,7 @@ let typ =
 (* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
 let decl_map_typ oc m =
   let abbrev (b,(k,n)) =
-    out oc "def type%d := " k;
+    out oc "def %a := " typ_abbrev k;
     for i=0 to n-1 do out oc "a%d : %a => " i typ_name "Set" done;
     (* We can use [raw_type] here because [b] is canonical. *)
     out oc "%a.\n" raw_typ b
@@ -160,7 +169,17 @@ let decl_var tvs rmap oc t =
   | _ -> assert false
 ;;
 
+let unabbrev_decl_var tvs rmap oc t =
+  match t with
+  | Var(_,b) ->
+     out oc "%a : %a %a" (var rmap) t cst_name "El" (unabbrev_typ tvs) b
+  | _ -> assert false
+;;
+
 let decl_param tvs rmap oc v = out oc "%a -> " (decl_var tvs rmap) v;;
+
+let unabbrev_decl_param tvs rmap oc v =
+  out oc "%a -> " (unabbrev_decl_var tvs rmap) v;;
 
 let param tvs rmap oc v = out oc "%a => " (decl_var tvs rmap) v;;
 
@@ -202,15 +221,22 @@ let unabbrev_term tvs =
     | Const(n,b) ->
        begin match List.map (subtyp b) (const_typ_vars_pos n) with
        | [] -> cst_name oc n
-       | bs -> out oc "(%a%a)" cst_name n (list_prefix " " typ) bs
+       | bs ->
+          out oc "(%a%a)" cst_name n (list_prefix " " (unabbrev_typ tvs)) bs
        end
     | Comb(_,_) ->
        let h, ts = head_args t in
        out oc "(%a%a)" (term rmap) h (list_prefix " " (term rmap)) ts
     | Abs(t,u) ->
        let rmap' = add_var rmap t in
-       out oc "(%a => %a)" (decl_var tvs rmap') t (term rmap') u
+       out oc "(%a => %a)" (unabbrev_decl_var tvs rmap') t (term rmap') u
   in term
+;;
+
+let term_abbrev oc k =
+  match !part with
+  | None -> out oc "term%d" k
+  | Some i -> out oc "term%d_%d" i k
 ;;
 
 let abbrev_term =
@@ -229,7 +255,7 @@ let abbrev_term =
          map_term := MapTrm.add t x !map_term;
          k
     in
-    out oc "(%a%d%a%a)" cst_name "term" k
+    out oc "(%a%a%a)" term_abbrev k
       (list_prefix " " raw_typ) tvs (list_prefix " " raw_var) vs
   in
   fun tvs ->
@@ -285,7 +311,7 @@ let term =
    by [m]. *)
 let decl_map_term oc m =
   let abbrev (t,(k,n,bs)) =
-    out oc "def term%d := " k;
+    out oc "def %a := " term_abbrev k;
     for i=0 to n-1 do out oc "a%d : %a => " i typ_name "Set" done;
     (* We can use abbrev_typ here since [bs] are canonical. *)
     List.iteri
@@ -519,7 +545,8 @@ let decl_axioms oc ths =
     let tvs = type_vars_in_term t in
     let rmap = renaming_map tvs xs in
     out oc "def axiom_%d : %a%aPrf %a.\n" i
-      (list (decl_typ_param tvs)) tvs  (list (decl_param tvs rmap)) xs
+      (list (decl_typ_param tvs)) tvs
+      (list (unabbrev_decl_param tvs rmap)) xs
       (unabbrev_term tvs rmap) t
   in
   List.iteri axiom ths
@@ -634,15 +661,80 @@ def ex_elim : a : Set -> p : (El a -> El bool) -> Prf (ex a p)
 def or_intro1 : p : El bool -> Prf p -> q : El bool -> Prf (or p q).
 def or_intro2 : p : El bool -> q : El bool -> Prf q -> Prf (or p q).
 def or_elim : p : El bool -> q : El bool -> Prf (or p q)
-  -> r : El bool -> (Prf p -> Prf r) -> (Prf q -> Prf r) -> Prf r.";;
+  -> r : El bool -> (Prf p -> Prf r) -> (Prf q -> Prf r) -> Prf r.
+";;
 
 (****************************************************************************)
 (* Dedukti file generation with type and term abbreviations. *)
 (****************************************************************************)
 
-(* [export_to_dk_file f r] creates the file "f.dk" for the theorems in
-   range [r]. *)
+let export basename suffix f =
+  let filename = basename ^ suffix ^ ".dk" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  f oc;
+  close_out oc
+;;
+
+let export_types =
+  let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
+  fun b ->
+  export b "_types"
+    (fun oc ->
+      out oc "\n(; type constructors ;)\n";
+      list decl_typ oc (List.filter f (types())))
+;;
+
+let export_type_abbrevs b s =
+  export b (s ^ "_type_abbrevs")
+    (fun oc ->
+      out oc "\n(; type abbreviations ;)\n";
+      decl_map_typ oc !map_typ)
+;;
+
+let export_terms =
+  let f (n,_) =
+    match n with
+    | "@" | "\\/" | "/\\" | "==>" | "!" | "?" | "?!" | "~" | "F" | "T" | "="
+    | "el" -> false
+    | _ -> true
+  in
+  fun b ->
+  export b "_terms"
+    (fun oc ->
+      out oc "\n(; constants ;)\n";
+      list decl_sym oc (List.filter f (constants())))
+;;
+
+let export_term_abbrevs b s =
+  export b (s ^ "_term_abbrevs")
+    (fun oc ->
+      out oc "\n(; term abbreviations ;)\n";
+      decl_map_term oc !map_term)
+;;
+
+let export_axioms b =
+  export b "_axioms"
+    (fun oc ->
+      out oc "\n(; axioms ;)\n";
+      decl_axioms oc (axioms());
+      out oc "\n(; definitional axioms ;)\n";
+      list decl_def oc (definitions()))
+;;
+
+let export_proofs b r =
+  export b "_proofs"
+    (fun oc -> out oc "\n(; theorems ;)\n"; proofs_in_range oc r);;
+
+let export_proofs_part b k x y =
+  part := Some k;
+  export b ("_part_" ^ string_of_int k)
+    (fun oc -> proofs_in_range oc (Inter(x,y)))
+;;
+
+(* to be removed *)
 let export_to_dk_file f r =
+  let f = f ^ "_old" in
   (*basename := f;*)
   reset_map_typ();
   reset_map_term();

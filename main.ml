@@ -67,6 +67,7 @@ let main() =
   log "read %s ...\n%!" dump_file;
   let ic = open_in_bin dump_file in
   the_type_constants := input_value ic;
+  (* we add "el" to use mk_const without failing *)
   the_term_constants := ("el",aty)::input_value ic;
   the_axioms := input_value ic;
   the_definitions := input_value ic;
@@ -97,41 +98,95 @@ let main() =
 
   (* generate output *)
   update_map_const_typ_vars_pos();
-  if dk then Xdk.export_to_dk_file basename range
-  else
-    match part, range with
-    | Some k, All ->
-       let b = basename in
-       let mk = b ^ ".mk" in
-       log "generate %s ...\n%!" mk;
-       let oc = open_out mk in
-       let part_size = nb_proofs / k in
-       out oc ".SUFFIXES:\ndefault: %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
-       for i = 1 to k do out oc " %s_part_%d.lp" b i done;
-       out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp: %s.sig
-\thol2dk %s.lp --sig\n" b b b b b;
-       let x = ref 0 in
-       let cmd i y =
-         out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
-%s_part_%d_term_abbrevs.lp: %s.sig %s.prf
-\thol2dk %s.lp --part %d %d %d\n" b i b i b i b b b i !x y in
-       for i = 1 to k-1 do
-         let y = !x + part_size in cmd i y; x := y
-       done;
-       cmd k (nb_proofs - 1)
-    | Some k, Inter(x,y) ->
-       Xlp.export_proofs_part basename k x y;
-       let suffix = "_part_" ^ string_of_int k in
-       Xlp.export_term_abbrevs basename suffix;
-       Xlp.export_type_abbrevs basename suffix
-    | Some _, _ -> wrong_arg_nb()
-    | _ ->
-       Xlp.export_types basename;
-       Xlp.export_terms basename;
-       Xlp.export_axioms basename;
-       if sig_only then exit 0;
-       Xlp.export_proofs basename range;
-       Xlp.export_term_abbrevs basename "";
-       Xlp.export_type_abbrevs basename ""
+  match dk, part, range with
+
+  | _, Some k, All ->
+     let b = basename in
+     let mk = b ^ ".mk" in
+     log "generate %s ...\n%!" mk;
+     let oc = open_out mk in
+     let part_size = nb_proofs / k in
+
+     out oc ".SUFFIXES:\n";
+     out oc ".PHONY: default dk lp\n";
+     out oc "default: dk lp\n";
+
+     out oc "dk: %s.dk\n" b;
+     out oc "%s.dk: hol_theory.dk %s_types.dk %s_terms.dk %s_axioms.dk"
+       b b b b;
+     for i = 1 to k do
+       out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
+               %s_part_%d.dk" b i b i b i
+     done;
+     out oc "\n\tcat $+ > $@\n";
+     out oc "%s_types.dk %s_terms.dk %s_axioms.dk : %s.sig\n\
+             \thol2dk %s.dk --sig\n" b b b b b;
+     let x = ref 0 in
+     let cmd i y =
+       out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
+               %s_part_%d_term_abbrevs.dk: %s.sig %s.prf\n\
+               \thol2dk %s.dk --part %d %d %d\n"
+         b i b i b i b b b i !x y
+     in
+     for i = 1 to k-1 do let y = !x + part_size in cmd i (y-1); x := y done;
+     cmd k (nb_proofs - 1);
+
+     out oc "lp: hol_theory.lp %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
+     for i = 1 to k do
+       out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
+               %s_part_%d.lp" b i b i b i
+     done;
+     out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp : %s.sig\n\
+             \thol2dk %s.lp --sig\n" b b b b b;
+     let x = ref 0 in
+     let cmd i y =
+       out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
+               %s_part_%d_term_abbrevs.lp: %s.sig %s.prf\n\
+               \thol2dk %s.lp --part %d %d %d\n"
+         b i b i b i b b b i !x y
+     in
+     for i = 1 to k-1 do let y = !x + part_size in cmd i (y-1); x := y done;
+     cmd k (nb_proofs - 1);
+
+  | false, Some k, Inter(x,y) ->
+     Xlp.export_proofs_part basename k x y;
+     let suffix = "_part_" ^ string_of_int k in
+     Xlp.export_term_abbrevs basename suffix;
+     Xlp.export_type_abbrevs basename suffix
+
+  | true, Some k, Inter(x,y) ->
+     Xdk.export_proofs_part basename k x y;
+     let suffix = "_part_" ^ string_of_int k in
+     Xdk.export_term_abbrevs basename suffix;
+     Xdk.export_type_abbrevs basename suffix
+
+  | _, Some _, _ -> wrong_arg_nb()
+
+  | false, _, _ ->
+     Xlp.export_types basename;
+     Xlp.export_terms basename;
+     Xlp.export_axioms basename;
+     if sig_only then exit 0;
+     Xlp.export_proofs basename range;
+     Xlp.export_term_abbrevs basename "";
+     Xlp.export_type_abbrevs basename ""
+
+  | true, _, _ ->
+     (*Xdk.export_to_dk_file basename range;*)
+     Xdk.export_types basename;
+     Xdk.export_terms basename;
+     Xdk.export_axioms basename;
+     if sig_only then exit 0;
+     Xdk.export_proofs basename range;
+     Xdk.export_term_abbrevs basename "";
+     Xdk.export_type_abbrevs basename "";
+     log "generate %s.dk ...\n%!" basename;
+     let infiles =
+       List.map (fun s -> basename ^ "_" ^ s ^ ".dk")
+         ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms";"proofs"] in
+     exit
+       (Sys.command
+          ("cat hol_theory.dk " ^ String.concat " " infiles
+           ^ " > " ^ basename ^ ".dk"))
 
 let _ = main()

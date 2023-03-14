@@ -505,7 +505,7 @@ let export_terms =
   let f (n,_) =
     match n with
     | "@" | "\\/" | "/\\" | "==>" | "!" | "?" | "?!" | "~" | "F" | "T" | "="
-      -> false
+    | "el"  -> false
     | _ -> true
   in
   fun b ->
