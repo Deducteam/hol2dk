@@ -216,9 +216,9 @@ Translation of `hol.ml` in parallel with `--part 7`:
   * term abbrevs: 623 Mo
 
   * dk files generation time: 9m24s (-58%)
-  * dk files size: 3.2 Go
-  * type abbrevs: 580 Ko
-  * term abbrevs: 654 Mo
+  * dk files size: 3.7 Go
+  * type abbrevs: 652 Ko
+  * term abbrevs: 731 Mo
 
 Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
 - proof dumping time: 13s 101 Mo

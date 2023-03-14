@@ -120,7 +120,12 @@ let main() =
        out oc (* %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk *)
          " %s_part_%d.dk" (*b i b i*) b i
      done;
-     out oc "\n\tcat $+ > $@\n";
+     out oc "\n\tcat hol_theory.dk %s_types.dk %s_terms.dk %s_axioms.dk" b b b;
+     for i = 1 to k do
+       out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
+               %s_part_%d.dk" b i b i b i
+     done;
+     out oc " > $@\n";
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk : %s.sig\n\
              \thol2dk %s.dk --sig\n" b b b b b;
      let x = ref 0 in
