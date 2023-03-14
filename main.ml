@@ -107,31 +107,25 @@ let main() =
      let oc = open_out mk in
      let part_size = nb_proofs / k in
 
-     out oc ".SUFFIXES:\n";
-     out oc ".PHONY: default dk lp\n";
-     out oc "default: dk lp\n";
+     out oc ".SUFFIXES :\n";
+     out oc ".PHONY : default dk lp\n";
+     out oc "default : dk lp\n";
 
      (* dk part *)
-     out oc "dk: %s.dk\n" b;
-     out oc "%s.dk: hol_theory.dk %s_types.dk %s_terms.dk %s_axioms.dk"
+     out oc "dk : %s.dk\n" b;
+     out oc "%s.dk : hol_theory.dk %s_types.dk %s_terms.dk %s_axioms.dk"
        b b b b;
-     for i = 1 to k do
-       (* we do not put all files so that make does not duplicate works *)
-       out oc (* %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk *)
-         " %s_part_%d.dk" (*b i b i*) b i
-     done;
-     out oc "\n\tcat hol_theory.dk %s_types.dk %s_terms.dk %s_axioms.dk" b b b;
      for i = 1 to k do
        out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
                %s_part_%d.dk" b i b i b i
      done;
-     out oc " > $@\n";
-     out oc "%s_types.dk %s_terms.dk %s_axioms.dk : %s.sig\n\
+     out oc "\n\tcat $+ > $@\n";
+     out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
              \thol2dk %s.dk --sig\n" b b b b b;
      let x = ref 0 in
      let cmd i y =
        out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
-               %s_part_%d_term_abbrevs.dk: %s.sig %s.prf\n\
+               %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf\n\
                \thol2dk %s.dk --part %d %d %d\n"
          b i b i b i b b b i !x y
      in
@@ -139,18 +133,17 @@ let main() =
      cmd k (nb_proofs - 1);
 
      (* lp part *)
-     out oc "lp: hol_theory.lp %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
+     out oc "lp : hol_theory.lp %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
      for i = 1 to k do
-       (* we do not put all files so that make does not duplicate works *)
-       out oc (* %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp *)
-         " %s_part_%d.lp" (*b i b i*) b i
+       out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
+               %s_part_%d.lp" b i b i b i
      done;
-     out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp : %s.sig\n\
+     out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
              \thol2dk %s.lp --sig\n" b b b b b;
      let x = ref 0 in
      let cmd i y =
        out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
-               %s_part_%d_term_abbrevs.lp: %s.sig %s.prf\n\
+               %s_part_%d_term_abbrevs.lp &: %s.sig %s.prf\n\
                \thol2dk %s.lp --part %d %d %d\n"
          b i b i b i b b b i !x y
      in
