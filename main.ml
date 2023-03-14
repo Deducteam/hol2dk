@@ -111,12 +111,14 @@ let main() =
      out oc ".PHONY: default dk lp\n";
      out oc "default: dk lp\n";
 
+     (* dk part *)
      out oc "dk: %s.dk\n" b;
      out oc "%s.dk: hol_theory.dk %s_types.dk %s_terms.dk %s_axioms.dk"
        b b b b;
      for i = 1 to k do
-       out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
-               %s_part_%d.dk" b i b i b i
+       (* we do not put all files so that make does not duplicate works *)
+       out oc (* %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk *)
+         " %s_part_%d.dk" (*b i b i*) b i
      done;
      out oc "\n\tcat $+ > $@\n";
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk : %s.sig\n\
@@ -131,10 +133,12 @@ let main() =
      for i = 1 to k-1 do let y = !x + part_size in cmd i (y-1); x := y done;
      cmd k (nb_proofs - 1);
 
+     (* lp part *)
      out oc "lp: hol_theory.lp %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
      for i = 1 to k do
-       out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
-               %s_part_%d.lp" b i b i b i
+       (* we do not put all files so that make does not duplicate works *)
+       out oc (* %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp *)
+         " %s_part_%d.lp" (*b i b i*) b i
      done;
      out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp : %s.sig\n\
              \thol2dk %s.lp --sig\n" b b b b b;
