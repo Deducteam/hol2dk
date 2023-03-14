@@ -25,6 +25,7 @@ let name oc n =
      | "?" -> "∃"
      | "?!" -> "∃!"
      | "~" -> "¬"
+     | "$" -> "dollar" (* $ is not a valid Lambdapi id *)
      | _ -> n);;
 
 (* rename term constants that have the same name as type constants *)
