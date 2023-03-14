@@ -27,12 +27,10 @@ let name oc n =
      | "~" -> "¬"
      | _ -> n);;
 
-(* rename constant names identical to type names *)
-let cst_name oc n =
-  string oc
-    (match n with
-     | "sum" -> "Sum"
-     | n -> n)
+(* rename term constants that have the same name as type constants *)
+let cst_name oc = function
+  | "sum" -> string oc "Sum"
+  | n -> name oc n
 ;;
 
 (****************************************************************************)
