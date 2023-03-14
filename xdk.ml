@@ -11,14 +11,12 @@ open Xproof
 (* Translation of names. *)
 (****************************************************************************)
 
-let is_valid_id =
-  let re = Str.regexp "[a-zA-Z0-9][a-zA-Z0-9_']*" in
-  fun s -> Str.string_match re s 0
-;;
-
-(* We use String.escaped because of a bug in Dedukti 2.7. This can be
-   removed once the fix is merged in the next release. *)
-let valid_name n = if is_valid_id n then n else "{|" ^ String.escaped n ^ "|}"
+(* Dedukti valid identifiers *)
+let is_alpha = function 'a'..'z' | 'A'..'Z' | '0'..'9' -> true | _ -> false;;
+let is_valid_letter = function
+  | '_' | '\'' | 'a'..'z' | 'A'..'Z' | '0'..'9' -> true | _ -> false;;
+let is_valid_id s =
+  s <> "" && is_alpha s.[0] && String.for_all is_valid_letter s;;
 
 (* We rename some symbols to make files smaller and more readable. *)
 let valid_name = function
@@ -32,18 +30,27 @@ let valid_name = function
   | "?" -> "ex"
   | "?!" -> "ex1"
   | "~" -> "not"
-  | n -> valid_name n;;
+  | n ->
+     (* We use String.escaped because of a bug in Dedukti 2.7. This
+        can be removed once the fix is merged in the next release. *)
+     if is_valid_id n then n else "{|" ^ String.escaped n ^ "|}"
+;;
 
 let name oc n = string oc (valid_name n);;
 
 let suffix s oc n = name oc (n ^ s);;
 
-let typ_name = string
+let typ_name = name
   (*match !stage with
   | Types | No_abbrev -> name oc n
   | _ -> out oc "%s_types.%a" !basename name n*)
 
-let cst_name = name
+(* rename constant names identical to type names *)
+let cst_name oc n =
+  string oc
+    (match n with
+     | "sum" -> "Sum"
+     | n -> valid_name n)
   (*match !stage with
   | Terms | No_abbrev -> name oc n
   | _ -> out oc "%s_terms.%a" !basename name n*)
@@ -168,8 +175,8 @@ let raw_term =
     | Var(n,_) -> name oc n
     | Const(n,b) ->
        begin match List.map (subtyp b) (const_typ_vars_pos n) with
-       | [] -> out oc "%a" name n
-       | bs -> out oc "(%a%a)" name n (list_prefix " " raw_typ) bs
+       | [] -> out oc "%a" cst_name n
+       | bs -> out oc "(%a%a)" cst_name n (list_prefix " " raw_typ) bs
        end
     | Comb(_,_) ->
        let h, ts = head_args t in
@@ -489,8 +496,8 @@ let typ_param tvs oc b = out oc "%a : %a => " (typ tvs) b typ_name "Set";;
 
 let decl_sym oc (n,b) =
   let tvs = tyvars b in
-  out oc "%a : %a%a %a.\n"
-    name n (list (decl_typ_param tvs)) tvs cst_name "El" (unabbrev_typ tvs) b
+  out oc "%a : %a%a %a.\n" cst_name n
+    (list (decl_typ_param tvs)) tvs cst_name "El" (unabbrev_typ tvs) b
 ;;
 
 let decl_def oc th =
@@ -501,8 +508,7 @@ let decl_def oc th =
   | Comb(Comb(Const("=",_),Const(n,_)),_) ->
      let tvs = type_vars_in_term t in
      out oc "%a : %aPrf %a.\n" (suffix "_def") n
-       (list (decl_typ_param tvs)) tvs
-       (unabbrev_term tvs rmap) t
+       (list (decl_typ_param tvs)) tvs (unabbrev_term tvs rmap) t
   | _ -> assert false
 ;;
 

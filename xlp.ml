@@ -11,8 +11,9 @@ open Xproof
 (* Translation of names. *)
 (****************************************************************************)
 
+(* rename connectives to unicode symbols *)
 let name oc n =
-  out oc "%s"
+  string oc
     (match n with
      | "," -> "̦‚" (* low single comma quotation mark
                      https://unicode-table.com/en/201A/ *)
@@ -25,6 +26,12 @@ let name oc n =
      | "?!" -> "∃!"
      | "~" -> "¬"
      | _ -> n);;
+
+(* rename term constants that have the same name as type constants *)
+let cst_name oc = function
+  | "sum" -> string oc "Sum"
+  | n -> name oc n
+;;
 
 (****************************************************************************)
 (* Translation of types. *)
@@ -132,11 +139,11 @@ let rec raw_term oc t =
   | Var(n,_) -> name oc n
   | Const(n,b) ->
      begin match const_typ_vars_pos n with
-     | [] -> name oc n
+     | [] -> cst_name oc n
      | ps ->
         let typ_args oc ps =
           List.iter (fun p -> out oc " %a" raw_typ (subtyp b p)) ps in
-        out oc "(@%a%a)" name n typ_args ps
+        out oc "(@%a%a)" cst_name n typ_args ps
      end
   | Comb(u,v) ->
      let h, ts = head_args t in
@@ -343,7 +350,7 @@ let proof tvs rmap =
        out oc "axiom_%d%a"
          (pos_first (fun th -> concl th = t) (axioms()))
          (list_prefix " " term) (frees t)
-    | Pdef(_,n,_) -> out oc "%a_def" name n
+    | Pdef(_,n,_) -> out oc "%a_def" cst_name n
     | Pdeft(_,t,_,_) ->
        out oc "axiom_%d%a"
          (pos_first (fun th -> concl th = t) (axioms()))
@@ -389,7 +396,7 @@ let typ_vars oc ts =
 
 let decl_sym oc (n,b) =
   out oc "constant symbol %a%a : El %a;\n"
-    name n typ_vars (tyvars b) raw_typ b
+    cst_name n typ_vars (tyvars b) raw_typ b
 ;;
 
 let decl_def oc th =
@@ -399,7 +406,7 @@ let decl_def oc th =
   match t with
   | Comb(Comb(Const("=",_),Const(n,_)),_) ->
      out oc "symbol %a_def%a : Prf %a;\n"
-       name n typ_vars (type_vars_in_term t) (unabbrev_term rmap) t
+       cst_name n typ_vars (type_vars_in_term t) (unabbrev_term rmap) t
   | _ -> assert false
 ;;
 
