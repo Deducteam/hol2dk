@@ -98,6 +98,7 @@ let main() =
 
   (* generate output *)
   update_map_const_typ_vars_pos();
+  update_reserved();
   match dk, part, range with
 
   | _, Some k, All ->

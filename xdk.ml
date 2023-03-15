@@ -556,10 +556,13 @@ let decl_axioms oc ths =
 (* Translation of theorems. *)
 (****************************************************************************)
 
+(*let counter = ref 0;;*)
+
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index [k]. *)
 let theorem oc k p =
   let Proof(thm,content) = p in
-  (*log "theorem %d ...\n%!" k;*)
+  (*incr counter;
+  if !counter = 1000 then (log "theorem %d ...\n%!" k; counter := 0);*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
   let tvs = type_vars_in_thm thm in

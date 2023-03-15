@@ -179,6 +179,8 @@ let rec oterm oc t =
   | Abs(u,v) -> out oc "Abs(%a,%a)" oterm u oterm v
 ;;
 
+let ovar oc = function Var(n,_) -> string oc n | _ -> assert false;;
+
 (* Sets and maps on terms. *)
 module OrdTrm = struct type t = term let compare = compare end;;
 module MapTrm = Map.Make(OrdTrm);;
@@ -263,6 +265,9 @@ let rename_var rmap =
     match v with
     | Var(n,b) ->
        if SetStr.mem n !reserved
+          || let k = String.length n in
+             (k > 1 && n.[0] = 'h' && n.[k-1] <> '\'')
+             (* the last condition is important to avoid looping *)
           || List.exists (fun (_,s) -> s = n) rmap
        then rename (mk_var(n^"'",b))
        else v
