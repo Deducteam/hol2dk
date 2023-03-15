@@ -218,12 +218,12 @@ Multi-threaded translation to Lambdapi (with `--part 7`):
   * term abbrevs: 700 Mo
 
 Multi-threaded translation to Dedukti (with `--part 7`):
-  * dk files generation time: 12m7s
+  * dk file generation time: 12m7s
   * dk file size: 3.7 Go
   * type abbrevs: 652 Ko
   * term abbrevs: 731 Mo
-  * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM, the process is stoped after 11m16s)
   * kocheck can check it in 12m52s
+  * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM and the process is stopped after 11m16s)
 
 Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
   * proof dumping time: 13s 101 Mo
