@@ -123,13 +123,13 @@ let decl_var rmap oc t =
   | _ -> assert false
 ;;
 
-let decl_param rmap oc v = out oc " (%a)" (decl_var rmap) v;;
-
 let unabbrev_decl_var rmap oc t =
   match t with
   | Var(_,b) -> out oc "%a : El %a" (var rmap) t raw_typ b
   | _ -> assert false
 ;;
+
+let decl_param rmap oc v = out oc " (%a)" (decl_var rmap) v;;
 
 let unabbrev_decl_param rmap oc v = out oc " (%a)" (unabbrev_decl_var rmap) v;;
 

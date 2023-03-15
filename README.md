@@ -215,7 +215,7 @@ Translation of `hol.ml` in parallel with `--part 7`:
   * type abbrevs: 532 Ko
   * term abbrevs: 623 Mo
 
-  * dk files generation time: 9m24s (-58%)
+  * dk files generation time: 12m7s
   * dk files size: 3.7 Go
   * type abbrevs: 652 Ko
   * term abbrevs: 731 Mo
