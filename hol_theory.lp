@@ -43,7 +43,7 @@ rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
 rule Prf (∀ $p) ↪ Π x, Prf ($p x);
 
 symbol top : Prf T;
-symbol ∧ᵢ [p q] : Prf p → Prf q → Prf (∧ p q);
+symbol ∧ᵢ [p] : Prf p → Π [q], Prf q → Prf (∧ p q);
 symbol ∧ₑ₁ [p q] : Prf (∧ p q) → Prf p;
 symbol ∧ₑ₂ [p q] : Prf (∧ p q) → Prf q;
 symbol ∃ᵢ [a] p (t : El a) : Prf (p t) → Prf (∃ p);

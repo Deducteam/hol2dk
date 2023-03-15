@@ -3,6 +3,7 @@ _build/
 *.lp
 !hol_theory.lp
 *.dk
+!hol_theory.dk
 *.prf
 *.sig
 *.lpo

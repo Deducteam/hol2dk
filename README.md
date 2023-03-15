@@ -209,11 +209,16 @@ Translation of `hol.ml`:
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Translation of `hol.ml` to Lambdapi in parallel with `--part 7`:
-  * lp files generation time: 6m30s (-46%)
-  * lp files size: 2.5 Go
-  * type abbrevs: 600 Ko (+30%)
-  * term abbrevs: 804 Mo (+2%)
+Translation of `hol.ml` in parallel with `--part 7`:
+  * lp files generation time: 4m56s (-59%)
+  * lp files size: 2.2 Go
+  * type abbrevs: 532 Ko
+  * term abbrevs: 623 Mo
+
+  * dk files generation time: 9m24s (-58%)
+  * dk files size: 3.7 Go
+  * type abbrevs: 652 Ko
+  * term abbrevs: 731 Mo
 
 Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
 - proof dumping time: 13s 101 Mo
