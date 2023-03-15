@@ -85,7 +85,7 @@ Get statistics on proofs
 ------------------------
 
 ```
-hol2dk --stats file.lp
+hol2dk file.lp --stats
 ```
 
 Generating dk/lp files from dumped files
@@ -112,28 +112,28 @@ number as additional argument (useful for debugging):
 hol2dk file.lp $theorem_number
 ```
 
-Generating lp files in parallel
+Generating dk/lp files in parallel
 ----------------------------------------
 
 Dk/lp file generation is linear in the size of dumped files. For big
-dumped files, we provide a command to make file generation in parallel
-using `make`. For the moment, this is only available for lp file
-generation.
+dumped files, we provide a command to do file generation in parallel
+using `make`.
 
 ```
 hol2dk file.lp --part 7 # number of processors you can run in parallel
 ```
 
-generates a Makefile `file.mk` to generate lp files in parallel:
+generates a Makefile `file.mk` to generate dk/lp files in parallel:
 
 ```
-make -j 7 -f file.mk
+make -j 7 -f file.mk dk
+make -j 7 -f file.mk lp
 ```
 
 Checking the generated dk file
 ------------------------------
 
-**Requirement:** dedukti 2.7, lambdapi 2.3 or [kocheck](https://github.com/01mf02/kontroli-rs)
+**Requirement:** lambdapi 2.3, dedukti 2.7 or [kocheck](https://github.com/01mf02/kontroli-rs)
 
 To check the generated dk file with dkcheck, do:
 ```
@@ -193,41 +193,46 @@ eval `opam env`
 Results
 -------
 
-Translation of `hol.ml`:
+Dumping of `hol.ml`:
   * checking time without proof dumping: 1m20s
   * checking time with proof dumping: 1m51s (+39%)
   * dumped files size: 3.8 Go
   * number of proof steps: 11 M
-  
+
+Single-threaded translation to Lambdapi:
   * lp files generation time: 12m8s
   * lp files size: 2.5 Go
   * type abbreviations: 460 Ko
   * term abbreviations: 787 Mo (31%)
 
+Single-threaded translation to Dedukti:
   * dk files generation time: 22m37s
   * dk files size: 3.6 Go
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Translation of `hol.ml` in parallel with `--part 7`:
-  * lp files generation time: 4m56s (-59%)
-  * lp files size: 2.2 Go
-  * type abbrevs: 532 Ko
-  * term abbrevs: 623 Mo
+Multi-threaded translation to Lambdapi (with `--part 7`):
+  * lp files generation time: 5m42s
+  * lp files size: 2.5 Go
+  * type abbrevs: 600 Ko
+  * term abbrevs: 700 Mo
 
+Multi-threaded translation to Dedukti (with `--part 7`):
   * dk files generation time: 12m7s
-  * dk files size: 3.7 Go
+  * dk file size: 3.7 Go
   * type abbrevs: 652 Ko
   * term abbrevs: 731 Mo
+  * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM, the process is stoped after 11m16s)
+  * kocheck can check it in 12m52s
 
 Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
-- proof dumping time: 13s 101 Mo
-- number of proof steps: 409 K
-- dk files generation: 26s 99 Mo
-- checking time with dk check: 21s
-- checking time with kocheck -j 7: 14s
-- lp files generation: 17s 69 Mo
-- checking time with lambdapi: 1m54s
+  * proof dumping time: 13s 101 Mo
+  * number of proof steps: 409 K
+  * dk files generation: 26s 99 Mo
+  * checking time with dk check: 21s
+  * checking time with kocheck -j 7: 14s
+  * lp files generation: 17s 69 Mo
+  * checking time with lambdapi: 1m54s
 
 Getting information on HOL-Light files and theorems
 ---------------------------------------------------
@@ -278,7 +283,7 @@ deps;;
 trans_deps;;
 ```
 
-Exporting Q0 proofs
+Exporting pure Q0 proofs
 -------------------
 
 Hol2dk instruments basic HOL-Light tactics corresponding to
@@ -302,8 +307,8 @@ Results on `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the 
 - lp file generation: 29s 107 Mo
 - checking time with lambdapi: 2m49s
 
-Files
------
+Source files
+------------
 
 Modified HOL-Light files:
 - `lib.ml`: HOL-Light file providing functions on lists, etc. required by `fusion.ml`. A few lines are commented out so that it compiles with ocamlc.
