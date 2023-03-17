@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if test $# -lt 1 -o $# -gt 2; then echo "usage: $0 file.[mh]l"; exit 1; fi
+if test $# -ne 1; then echo "usage: $0 file.[mh]l"; exit 1; fi
 
 case $1 in
     *.ml) f=${1%.ml};;

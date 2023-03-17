@@ -101,11 +101,11 @@ let main() =
     end;
 
   (* read proofs up to range start *)
-  (*begin match range with
+  begin match range with
   | Only x | Inter(x,_) -> for k = 0 to x-1 do ignore (proof_at k) done
   | All -> ()
   | Upto _ -> assert false
-  end;*)
+  end;
 
   (* generate output *)
   match dk, part, range with
