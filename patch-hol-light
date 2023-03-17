@@ -30,8 +30,8 @@ else
     sed -e 's/.*REMOVE.*//' bool.ml > $dir/bool.ml
 fi
 
-# usage: cp_file f
-cp_file() {
+# usage: create f
+create() {
     if test -f $dir/$1
     then
         echo "$dir/$1 already exists"
@@ -42,6 +42,6 @@ cp_file() {
     fi
 }
 
-cp_file xprelude.ml
-cp_file xlib.ml
-cp_file xnames.ml
+create xprelude.ml
+create xlib.ml
+create xnames.ml

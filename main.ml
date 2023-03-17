@@ -64,20 +64,31 @@ let main() =
 
   (* read signature file *)
   let dump_file = basename ^ ".sig" in
-  log "read %s ...\n%!" dump_file;
   let ic = open_in_bin dump_file in
-  the_type_constants := input_value ic;
-  (* we add "el" to use mk_const without failing *)
-  the_term_constants := ("el",aty)::input_value ic;
-  the_axioms := input_value ic;
-  the_definitions := input_value ic;
   let nb_proofs = input_value ic in
   log "%d proof steps\n%!" nb_proofs;
+  begin match stats, part, range with
+  | true, _, _
+  | false, Some _, All -> ()
+  | _ ->
+     log "read %s ...\n%!" dump_file;
+     the_type_constants := input_value ic;
+     (* we add "el" to use mk_const without failing *)
+     the_term_constants := ("el",aty)::input_value ic;
+     the_axioms := input_value ic;
+     the_definitions := input_value ic;
+     close_in ic;
+     update_map_const_typ_vars_pos();
+     update_reserved()
+  end;
 
   (* prepare proof reading *)
-  let dump_file = basename ^ ".prf" in
-  log "read %s ...\n%!" dump_file;
-  init_proof_reading dump_file nb_proofs;
+  if not sig_only then
+    begin
+      let dump_file = basename ^ ".prf" in
+      log "read %s ...\n%!" dump_file;
+      init_proof_reading dump_file nb_proofs
+    end;
 
   (* print stats *)
   if stats then
@@ -97,8 +108,6 @@ let main() =
   end;
 
   (* generate output *)
-  update_map_const_typ_vars_pos();
-  update_reserved();
   match dk, part, range with
 
   | _, Some k, All ->
@@ -109,8 +118,7 @@ let main() =
      let part_size = nb_proofs / k in
 
      out oc ".SUFFIXES :\n";
-     out oc ".PHONY : default dk lp\n";
-     out oc "default : dk lp\n";
+     out oc ".PHONY : dk lp\n";
 
      (* dk part *)
      out oc "dk : %s.dk\n" b;
@@ -175,7 +183,6 @@ let main() =
      Xlp.export_type_abbrevs basename ""
 
   | true, _, _ ->
-     (*Xdk.export_to_dk_file basename range;*)
      Xdk.export_types basename;
      Xdk.export_terms basename;
      Xdk.export_axioms basename;

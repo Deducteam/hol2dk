@@ -6,20 +6,25 @@ then
     echo "usage: $0 hol-light-dir"
     exit 1
 fi
+
 dir=$1
 
 if test -f $dir/fusion-bak.ml
 then
-    echo "restore fusion.ml"
-    mv $dir/fusion-bak.ml $dir/fusion.ml
+    echo "mv -i $dir/fusion-bak.ml $dir/fusion.ml:"
+    mv -i $dir/fusion-bak.ml $dir/fusion.ml
 else
     echo "$dir/fusion-bak.ml does not exist"
 fi
 
 if test -f $dir/bool-bak.ml
 then
-    echo "restore bool.ml"
-    mv $dir/bool-bak.ml $dir/bool.ml
+    echo "mv -i $dir/bool-bak.ml $dir/bool.ml:"
+    mv -i $dir/bool-bak.ml $dir/bool.ml
 else
     echo "$dir/bool-bak.ml does not exist"
 fi
+
+rm -i $dir/xprelude.ml
+rm -i $dir/xlib.ml
+rm -i $dir/xnames.ml

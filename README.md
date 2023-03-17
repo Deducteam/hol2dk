@@ -216,7 +216,8 @@ Multi-threaded translation to Lambdapi (with `--part 7`):
   * lp files size: 2.5 Go
   * type abbrevs: 600 Ko
   * term abbrevs: 700 Mo
-
+  * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
+  
 Multi-threaded translation to Dedukti (with `--part 7`):
   * dk file generation time: 12m7s
   * dk file size: 3.7 Go
