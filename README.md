@@ -79,7 +79,7 @@ Compiling and installing hol2dk
 dune build
 dune install
 ```
-installs `hol2dk`.
+compiles and installs `hol2dk`.
 
 Get statistics on proofs
 ------------------------
@@ -91,19 +91,21 @@ hol2dk file.lp --stats
 Generating dk/lp files from dumped files
 --------------------------------------
 
+You first need to generate `file.pos` with:
+```
+hol2dk file.dk --pos
+```
+
+You can then generate `file.dk` with:
 ```
 hol2dk file.dk
 ```
 
-generates `file.dk` from the files `file.sig` and `file.prf`.
+And `file.lp` with:
 
 ```
 hol2dk file.lp
 ```
-
-generates the files `file_types.lp`, `file_type_abbrevs.lp`,
-`file_terms.lp`, `file_term_abbrevs.lp`, `file_axioms.lp` and
-`file.lp` from the files `file.sig` and `file.prf`.
 
 It is possible to get the proof of a single theorem by giving its
 number as additional argument (useful for debugging):
@@ -119,15 +121,21 @@ Dk/lp file generation is linear in the size of dumped files. For big
 dumped files, we provide a command to do file generation in parallel
 using `make`.
 
+You first generate `file.mk` with:
 ```
-hol2dk file.lp --part 7 # number of processors you can run in parallel
+hol2dk file.dk --part $jobs # number of processors you can run in parallel
 ```
 
-generates a Makefile `file.mk` to generate dk/lp files in parallel:
+You can then generate `file.dk` with:
 
 ```
-make -j 7 -f file.mk dk
-make -j 7 -f file.mk lp
+make -j $jobs -f file.mk dk
+```
+
+And `file_part_$jobs.lp` with:
+
+```
+make -j $jobs -f file.mk lp
 ```
 
 Checking the generated dk file
@@ -212,14 +220,14 @@ Single-threaded translation to Dedukti:
   * term abbreviations: 820 Mo (23%)
 
 Multi-threaded translation to Lambdapi (with `--part 7`):
-  * lp files generation time: 5m42s
+  * lp files generation time: 4m38s
   * lp files size: 2.5 Go
   * type abbrevs: 600 Ko
   * term abbrevs: 700 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
   
 Multi-threaded translation to Dedukti (with `--part 7`):
-  * dk file generation time: 12m7s
+  * dk file generation time: 9m19s
   * dk file size: 3.7 Go
   * type abbrevs: 652 Ko
   * term abbrevs: 731 Mo
