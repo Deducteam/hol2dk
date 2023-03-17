@@ -138,7 +138,7 @@ let main() =
 
       (* dk part *)
       out oc "dk : %s.dk\n" b;
-      out oc "%s.dk : hol_theory.dk %s_types.dk %s_terms.dk %s_axioms.dk"
+      out oc "%s.dk : theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
         b b b b;
       for i = 1 to nb_part do
         out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
@@ -161,7 +161,7 @@ let main() =
       cmd nb_part (nb_proofs - 1);
 
       (* lp part *)
-      out oc "lp : hol_theory.lp %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
+      out oc "lp : theory_hol.lp %s_types.lp %s_terms.lp %s_axioms.lp" b b b;
       for i = 1 to nb_part do
         out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
                 %s_part_%d.lp" b i b i b i
@@ -250,7 +250,7 @@ let main() =
          ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms";"proofs"] in
      exit
        (Sys.command
-          ("cat hol_theory.dk " ^ String.concat " " infiles
+          ("cat theory_hol.dk " ^ String.concat " " infiles
            ^ " > " ^ basename ^ ".dk"))
 
 let _ = main()
