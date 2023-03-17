@@ -8,6 +8,7 @@ open Xprelude
 
 let ic_prf : in_channel ref = ref stdin;;
 let prf_pos : int array ref = ref [||];;
+
 let thm_uses : int array ref = ref [||];;
 let thm_uses_max : int ref = ref (-1);;
 let thm_uses_argmax : int ref = ref (-1);;
@@ -15,7 +16,6 @@ let rule_uses : int array = Array.make 25 0;;
 
 let init_proof_reading (filename : string) (nb_proofs : int) : unit =
   prf_pos := Array.make nb_proofs (-1);
-  thm_uses :=  Array.make nb_proofs 0;
   ic_prf := open_in_bin filename
 ;;
 
@@ -24,23 +24,8 @@ let nb_proofs() : int = Array.length !prf_pos;;
 (* [proof_at k] returns the proof of index [k]. *)
 let proof_at k =
   let ic = !ic_prf in
-  let pos = !prf_pos in
-  let cur_pos = pos_in ic in
-  let p = Array.get pos k in
-  if p < 0 then
-    (* proof not yet read *)
-    begin
-      Array.set pos k cur_pos;
-      input_value ic
-    end
-  else
-    (* proof already read *)
-    begin
-      seek_in ic p;
-      let prf = input_value ic in
-      seek_in ic cur_pos;
-      prf
-    end
+  seek_in ic (Array.get !prf_pos k);
+  input_value ic
 ;;
 
 (* [iter_proofs f] runs [f k (proof_at k)] on all proof index [k] from
