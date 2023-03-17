@@ -194,7 +194,7 @@ let main() =
   update_reserved();
 
   (* generate signature related files *)
-  if sig_only then
+  if nb_part = 0 then
     begin
       if dk then
         begin
@@ -208,7 +208,7 @@ let main() =
           Xlp.export_terms basename;
           Xlp.export_axioms basename
         end;
-      exit 0
+      if sig_only then exit 0
     end;
 
   (* read pos file *)
