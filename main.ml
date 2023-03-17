@@ -118,8 +118,7 @@ let main() =
      let part_size = nb_proofs / k in
 
      out oc ".SUFFIXES :\n";
-     out oc ".PHONY : default dk lp\n";
-     out oc "default : dk lp\n";
+     out oc ".PHONY : dk lp\n";
 
      (* dk part *)
      out oc "dk : %s.dk\n" b;
