@@ -488,7 +488,7 @@ let export basename suffix f =
   let filename = basename ^ suffix ^ ".lp" in
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
-  out oc "require open hol-light.hol_theory;\n";
+  out oc "require open hol-light.theory_hol;\n";
   f oc;
   close_out oc
 ;;

@@ -91,6 +91,8 @@ hol2dk file.lp --stats
 Generating dk/lp files from dumped files
 --------------------------------------
 
+The base theory in which HOL-Light proofs are translated is described in the files [theory_hol.lp](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.lp) and [theory_hol.dk](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.dk).
+
 You first need to generate `file.pos` with:
 ```
 hol2dk file.dk --pos
