@@ -735,69 +735,6 @@ let export_proofs_part b k x y =
     (fun oc -> proofs_in_range oc (Inter(x,y)))
 ;;
 
-(* to be removed *)
-let export_to_dk_file f r =
-  let f = f ^ "_old" in
-  (*basename := f;*)
-  reset_map_typ();
-  reset_map_term();
-  update_reserved();
-  update_map_const_typ_vars_pos();
-  (* generate axioms and theorems *)
-  let filename = f ^ "_proofs.dk" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  (*stage := Proofs;*)
-  out oc
-"\n(;#REQUIRE %s_types.
-#REQUIRE %s_terms.;)\n
-%s\n
-(; axioms ;)
-%a
-(; rules ;)
-%s
-(; definitional axioms ;)
-%a
-(; theorems ;)
-%a" f f decl_Prf
-decl_axioms (axioms()) decl_rules (list decl_def) (definitions())
-proofs_in_range r;
-  close_out oc;
-  (* generate constants and term abbreviations *)
-  let filename = f ^ "_terms.dk" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  (*stage := Terms;*)
-  out oc
-"\n(;#REQUIRE %s_types.;)\n
-%s\n
-(; constants ;)
-%a
-(; term abbreviations ;)
-%a" f decl_El (list decl_sym) (constants()) decl_map_term !map_term;
-  close_out oc;
-  (* generate types and type abbreviations *)
-  let filename = f ^ "_types.dk" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  (*stage := Types;*)
-  out oc
-"Set : Type.\n
-(; type constructors ;)
-%a
-(; type abbreviations ;)
-%a" (list decl_typ) (types()) decl_map_typ !map_typ;
-  close_out oc;
-  (* generate final file *)
-  let filename = f ^ ".dk" in
-  log "generate %s by concatenating the previous files ...\n%!" filename;
-  let files = f ^ "_types.dk " ^ f ^ "_terms.dk " ^ f ^ "_proofs.dk" in
-  let k = Sys.command ("cat " ^ files ^ " > " ^ filename) in
-  if k <> 0 then exit k;
-  log "remove %s ...\n%!" files;
-  ignore(Sys.command ("rm -f " ^ files))
-;;
-
 (****************************************************************************)
 (* Dedukti file generation without type and term abbreviations. *)
 (****************************************************************************)

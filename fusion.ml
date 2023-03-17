@@ -853,11 +853,11 @@ REMOVE*)
 
   let dump_signature filename =
     let oc = open_out filename in
+    output_value oc (nb_proofs());
     output_value oc (types());
     output_value oc (constants());
     output_value oc (axioms());
     output_value oc (definitions());
-    output_value oc (nb_proofs());
     close_out oc;
     Printf.printf "%d proof steps\n%!" (nb_proofs())
   ;;
