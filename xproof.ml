@@ -14,11 +14,6 @@ let thm_uses_max : int ref = ref (-1);;
 let thm_uses_argmax : int ref = ref (-1);;
 let rule_uses : int array = Array.make 25 0;;
 
-let init_proof_reading (filename : string) (nb_proofs : int) : unit =
-  prf_pos := Array.make nb_proofs (-1);
-  ic_prf := open_in_bin filename
-;;
-
 let nb_proofs() : int = Array.length !prf_pos;;
 
 (* [proof_at k] returns the proof of index [k]. *)
