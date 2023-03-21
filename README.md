@@ -84,43 +84,7 @@ compiles and installs `hol2dk`.
 Summary of commands
 -------
 
-Get it using `hol2dk --help`:
-
-```
-hol2dk [-h|--help]
-  print this help
-
-hol2dk file.[dk|lp] --sig
-  generate dk/lp signature files from file.sig
-
-hol2dk file.[dk|lp] --stats
-  print statistics on file.prf
-
-hol2dk file.[dk|lp] --pos
-  generate file.pos from file.prf
-
-hol2dk file.[dk|lp] --part $n
-  generate file.mk from file.prf and file.pos to generate file.[dk|lp]
-  using $n processors
-
-hol2dk file.[dk|lp] --part $k $x $y
-  generate dk/lp proof files of part $k (in [1..$n])
-  from proof index $x to proof index $y
-
-hol2dk --deps
-  print on stdout a Makefile giving the dependencies of HOL-Light files
-  in the working directory and all its subdirectories recursively
-
-hol2dk --deps file.[ml|hl]
-  print on stdout all the HOL-Light files required to check file.[ml|hl]
-
-hol2dk --thms file.[ml|hl]
-  print on stdout the named theorems proved in file.[ml|hl]
-
-hol2dk --thms
-  print on stdout the named theorems proved in all HOL-Light files
-  that are in the working directory and its subdirectories recursively
-```
+Get it using `hol2dk --help`.
 
 Generating dk/lp files from dumped files
 --------------------------------------
