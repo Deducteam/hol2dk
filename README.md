@@ -1,10 +1,10 @@
 Export HOL-Light proofs to Dedukti and Lambdapi
 ===============================================
 
-This project provides several things:
+This project provides several programs:
 - a script `patch-hol-light` to patch HOL-Light to dump proofs
 - a script `unpatch-hol-light` to unpatch HOL-Light
-- a script `dump-proofs` to dump proofs
+- a script `dump-proofs` to dump HOL-Light proofs
 - a compiled OCaml program `hol2dk` to generate Dedukti or Lambdapi files from dumped files
 
 [HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
@@ -81,11 +81,45 @@ dune install
 ```
 compiles and installs `hol2dk`.
 
-Get statistics on proofs
-------------------------
+Summary of commands
+-------
+
+Get it using `hol2dk --help`:
 
 ```
-hol2dk file.lp --stats
+hol2dk [-h|--help]
+  print this help
+
+hol2dk file.[dk|lp] --sig
+  generate dk/lp signature files from file.sig
+
+hol2dk file.[dk|lp] --stats
+  print statistics on file.prf
+
+hol2dk file.[dk|lp] --pos
+  generate file.pos from file.prf
+
+hol2dk file.[dk|lp] --part $n
+  generate file.mk from file.prf and file.pos to generate file.[dk|lp]
+  using $n processors
+
+hol2dk file.[dk|lp] --part $k $x $y
+  generate dk/lp proof files of part $k (in [1..$n])
+  from proof index $x to proof index $y
+
+hol2dk --deps
+  print on stdout a Makefile giving the dependencies of HOL-Light files
+  in the working directory and all its subdirectories recursively
+
+hol2dk --deps file.[ml|hl]
+  print on stdout all the HOL-Light files required to check file.[ml|hl]
+
+hol2dk --thms file.[ml|hl]
+  print on stdout the named theorems proved in file.[ml|hl]
+
+hol2dk --thms
+  print on stdout the named theorems proved in all HOL-Light files
+  that are in the working directory and its subdirectories recursively
 ```
 
 Generating dk/lp files from dumped files
@@ -245,55 +279,6 @@ Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
   * lp files generation: 17s 69 Mo
   * checking time with lambdapi: 1m54s
 
-Getting information on HOL-Light files and theorems
----------------------------------------------------
-
-In `$hol-light-dir`, run `ocaml` and type:
-
-```
-#use "topfind";;
-#require "camlp5";;
-#load "camlp5o.cma";;
-#load "str.cma";;
-#use "xprelude.ml";;
-#use "hol.ml";;
-(* #use any other HOL-Light file here *)
-
-#use "xlib.ml";;
-#use "xnames.ml";;
-
-(* list of HOL-Light files *)
-files;;
-
-(* map giving the names of theorems proved in each file *)
-update_map_file_thms();;
-!map_file_thms;;
-
-(* map giving the name of each named theorem number *)
-update_map_thm_id_name();;
-!map_thm_id_name;;
-
-(* map giving the number of every named theorem *)
-update_map_thm_name_id();;
-!map_name_thm_id;;
-
-(* function returning the number of a theorem name *)
-thm_id;;
-
-(* dependency graph of HOL-Light files *)
-update_map_file_deps();;
-!map_file_deps;;
-
-(* function outputing the dependency graph in Makefile syntax *)
-print_map_file_deps_to;;
-
-(* function giving the declared dependencies of a file *)
-deps;;
-
-(* function giving the list of all files a file depends on*)
-trans_deps;;
-```
-
 Exporting pure Q0 proofs
 -------------------
 
@@ -331,15 +316,15 @@ The files `fusion.ml` and `bool.ml` contains special comments that are removed t
 Additional files required for `hol2dk`:
 - `main.ml`: main program of Hol2dk.
 - `xprelude.ml`: file providing a few basic definitions.
+- `xlib.ml`: functions on types, terms and other data structures.
 - `xproof.ml`: functions for accessing proofs.
 - `xlp.ml`: translation to Lambdapi of types, terms and proofs.
 - `xdk.ml`: translation to Dedukti of types, terms and proofs.
+- `xfiles.ml`: functions to compute dependencies and theorems of HOL-Light files.
 - `xci.ml`: slightly truncated version of the HOL-Light file `hol.ml` used for testing
+- `xnames.ml`: functions for dumping the index of named theorems.
 
 Note that all these files can be used in the OCaml toplevel as well by removing the `open` instructions and by adding `unset_jrh_lexer;;` and `set_jrh_lexer;;` at the beginning and at the end of the file.
-
-Other files that can be used in the OCaml toplevel:
-- `xnames.ml`: to get information on file dependencies and named theorems
 
 Thanks
 ------
