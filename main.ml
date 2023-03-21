@@ -4,15 +4,49 @@ open Fusion
 open Xlib
 open Xprelude
 open Xproof
+open Xfiles
 
 let usage() =
   log
-"usage: %s [option] file.[dk|lp] [number [number]]]
-option: --stats | --sig | --pos | --part number\n%!"
-    Sys.argv.(0)
+"hol2dk uses:
 
-let wrong_arg_nb() =
-  Printf.eprintf "wrong number of arguments\n%!"; usage(); exit 1
+hol2dk [-h|--help]
+  print this help
+
+hol2dk file.[dk|lp] --sig
+  generate dk/lp signature files from file.sig
+
+hol2dk file.[dk|lp] --stats
+  print statistics on file.prf
+
+hol2dk file.[dk|lp] --pos
+  generate file.pos from file.prf
+
+hol2dk file.[dk|lp] --part $n
+  generate file.mk from file.prf and file.pos to generate file.[dk|lp]
+  using $n processors
+
+hol2dk file.[dk|lp] --part $k $x $y
+  generate dk/lp proof files of part $k (in [1..$n])
+  from proof index $x to proof index $y
+
+hol2dk --deps
+  print on stdout a Makefile giving the dependencies of HOL-Light files
+  in the working directory and all its subdirectories recursively
+
+hol2dk --deps file.[ml|hl]
+  print on stdout all the HOL-Light files required to check file.[ml|hl]
+
+hol2dk --thms file.[ml|hl]
+  print on stdout the named theorems proved in file.[ml|hl]
+
+hol2dk --thms
+  print on stdout the named theorems proved in all HOL-Light files
+  in the working directory and its subdirectories recursively
+%!"
+
+let wrong_args() =
+  Printf.eprintf "wrong argument(s)\n%!"; usage(); exit 1
 
 (* [split x l] returns a pair of lists [l1,l2] such that [l = rev l1 @
    x :: l2], and raises [Not_found] if [x] does not occur in [l]. *)
@@ -27,6 +61,39 @@ let main() =
 
   (* parse arguments *)
   let args = List.tl (Array.to_list Sys.argv) in
+  if args = [] then (usage(); exit 0);
+  begin
+    try ignore (split "--help" args); usage(); exit 0
+    with Not_found -> ()
+  end;
+  begin
+    try ignore (split "-h" args); usage(); exit 0
+    with Not_found -> ()
+  end;
+  begin
+    try
+      match split "--deps" args with
+      | [], [x] ->
+         let dg = dep_graph (files()) in
+         out stdout "%a\n" (list_sep " " string) (trans_deps dg x); exit 0
+      | [], [] -> out_dep_graph stdout (dep_graph (files())); exit 0
+      | _ -> wrong_args()
+    with Not_found -> ()
+  end;
+  begin
+    try
+      match split "--thms" args with
+      | [], [f] ->
+         out stdout "%a\n" (list_sep "\n" string) (thms_of_file f);
+         exit 0
+      | [], [] ->
+         List.iter
+           (fun f -> out stdout "%a\n" (list_sep "\n" string) (thms_of_file f))
+           (files());
+         exit 0
+      | _ -> wrong_args()
+    with Not_found -> ()
+  end;
   let stats, args =
     try let l1, l2 = split "--stats" args in true, List.rev_append l1 l2
     with Not_found -> false, args
@@ -39,9 +106,9 @@ let main() =
     try match split "--part" args with
         | l1, x::l2 when not sig_only ->
            let k = int_of_string x in
-           if k < 1 then wrong_arg_nb();
+           if k < 1 then wrong_args();
            k, List.rev_append l1 l2
-        | l1, [] -> wrong_arg_nb()
+        | l1, [] -> wrong_args()
     with Not_found -> 0, args
   in
   let pos, args =
@@ -50,7 +117,7 @@ let main() =
   in
   let filename, args =
     match args with
-    | [] -> wrong_arg_nb()
+    | [] -> wrong_args()
     | filename :: args -> filename, args
   in
   let dk =
@@ -65,7 +132,7 @@ let main() =
     | [] -> All
     | [x] -> Only (int_of_string x)
     | [x;y] -> Inter (int_of_string x, int_of_string y)
-    | _ -> wrong_arg_nb()
+    | _ -> wrong_args()
   in
 
   (* read nb_proofs *)
