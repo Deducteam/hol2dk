@@ -50,12 +50,12 @@ jobs:
       - name: Generate and check dk output
         run: |
           eval `opam env`
-          _build/default/main.exe xci.dk --pos
+          _build/default/main.exe pos xci.dk
           _build/default/main.exe xci.dk
           dk check xci.dk
       - name: Generate and check lp output
         run: |
           eval `opam env`
-          _build/default/main.exe xci.lp --pos
+          _build/default/main.exe pos xci.lp
           _build/default/main.exe xci.lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp

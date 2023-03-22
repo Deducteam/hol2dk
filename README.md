@@ -81,10 +81,10 @@ dune install
 ```
 compiles and installs `hol2dk`.
 
-Summary of commands
+Summary of hol2dk commands
 -------
 
-Get it using `hol2dk --help`.
+Get it by running `hol2dk` without arguments.
 
 Generating dk/lp files from dumped files
 --------------------------------------
@@ -93,7 +93,7 @@ The base theory in which HOL-Light proofs are translated is described in the fil
 
 You first need to generate `file.pos` with:
 ```
-hol2dk file.dk --pos
+hol2dk pos file
 ```
 
 You can then generate `file.dk` with:
@@ -123,7 +123,7 @@ using `make`.
 
 You first generate `file.mk` with:
 ```
-hol2dk file.dk --part $jobs # number of processors you can run in parallel
+hol2dk part $nb_proc file # number of processors you can run in parallel
 ```
 
 You can then generate `file.dk` with:
