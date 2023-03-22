@@ -279,7 +279,20 @@ let main() =
      in
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
+     (* read and translate sig file *)
      read_sig basename;
+     if dk then
+       begin
+         Xdk.export_types basename;
+         Xdk.export_terms basename;
+         Xdk.export_axioms basename;
+       end
+     else
+       begin
+         Xlp.export_types basename;
+         Xlp.export_terms basename;
+         Xlp.export_axioms basename
+       end;
      (* read pos file *)
      let dump_file = basename ^ ".pos" in
      log "read %s ...\n%!" dump_file;
@@ -312,7 +325,5 @@ let main() =
          Xlp.export_type_abbrevs basename "";
          exit 0
        end
-
-  | _ -> wrong_arg()
 
 let _ = main()
