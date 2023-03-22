@@ -27,7 +27,7 @@ jobs:
       - name: Compile hol2dk
         run: |
           eval `opam env`
-          dune build -p hol2dk @install
+          dune build
       - name: Install hol-light dependencies, dedukti
         run: |
           sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
@@ -46,7 +46,7 @@ jobs:
       - name: Dump proofs
         run: |
           eval `opam env`
-          cd hol-light; hol2dk dump ../xci.ml
+          cd hol-light; ../_build/default/main.exe dump ../xci.ml
       - name: Generate and check dk output
         run: |
           eval `opam env`

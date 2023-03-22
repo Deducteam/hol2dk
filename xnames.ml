@@ -39,10 +39,8 @@ let cmd_set_idx name = Printf.sprintf "idx := index_of %s;;" name;;
 let map_thid_name tnames =
   List.fold_left
     (fun map tname ->
-      if tname = "_" then map
-      else
-        try eval (cmd_set_idx tname); MapInt.add !idx tname map
-        with _ -> map)
+      try eval (cmd_set_idx tname); MapInt.add !idx tname map
+      with _ -> map)
     MapInt.empty tnames
 ;;
 
