@@ -5,7 +5,7 @@ This project provides several programs:
 - a script `patch-hol-light` to patch HOL-Light to dump proofs
 - a script `unpatch-hol-light` to unpatch HOL-Light
 - a script `dump-proofs` to dump HOL-Light proofs
-- a compiled OCaml program `hol2dk` to generate Dedukti or Lambdapi files from dumped files
+- a program `hol2dk` to generate Dedukti or Lambdapi files from dumped proofs
 
 [HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
 based on higher-order logic, aka simple type theory.
@@ -26,19 +26,23 @@ Installing HOL-Light
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml 4.14.1
-- camlp5.8.00.03
+- camlp5.8.00.05
 - ocamlfind
 - num
 
 Find other potential working ocaml-camlp5 pairs on
 https://github.com/jrh13/hol-light/pull/71 .
 
-If you don't have HOL-Light already installed, you can install it in
-the current directory using the following commands:
+If you don't have HOL-Light already installed, you can install it by
+using the following commands:
 
 ```
+cd $HOME
 sudo apt-get install -y libipc-system-simple-perl libstring-shellquote
--perl
+-perl opam
+opam init
+opam switch ocaml.4.14.1
+eval `opam env`
 opam install ocamlfind num camlp5
 git clone --depth 1 -b master https://github.com/jrh13/hol-light
 make -C hol-light
@@ -48,12 +52,17 @@ Patching HOL-Light
 ------------------
 
 ```
-./patch-hol-light $hol-light-dir
+$hol2dk-dir/patch-hol-light $hol-light-dir
 ```
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
 - `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
 - `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives
+
+To unpatch HOL-Light, siimply do:
+```
+$hol2dk-dir/unpatch-hol-light $hol-light-dir
+```
 
 Dumping HOL-Light proofs
 ------------------------
@@ -76,8 +85,8 @@ Compiling and installing hol2dk
 - dune >= 3.7
 
 ```
-dune build
-dune install
+cd $hol2dk-dir
+dune build && dune install
 ```
 compiles and installs `hol2dk`.
 
