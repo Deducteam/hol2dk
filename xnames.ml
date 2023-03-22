@@ -28,20 +28,18 @@ let eval (code : string) : unit =
   ignore (Toploop.execute_phrase true Format.std_formatter parsed)
   REMOVE*)
 
-let idx = ref (-1);;
-
-(* OCaml code for setting [idx] to the index of theorem [name]. *)
-let cmd_set_idx name = Printf.sprintf "idx := index_of %s;;" name;;
-
 (* [map_thid_name tnames] get the index of every theorem which name is
    in [tnames] and build a map associating its name to each theorem
    index. *)
-let map_thid_name tnames =
+let map_thid_name =
+  let idx = ref (-1) in
+  (* OCaml code for setting [idx] to the index of theorem [name]. *)
+  let cmd_set_idx = Printf.sprintf "idx := index_of %s;;" in
   List.fold_left
     (fun map tname ->
       try eval (cmd_set_idx tname); MapInt.add !idx tname map
       with _ -> map)
-    MapInt.empty tnames
+    MapInt.empty
 ;;
 
 (* [thms_of_file f] computes the list of named theorems in [f]. *)
