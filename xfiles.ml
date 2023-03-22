@@ -1,5 +1,6 @@
 open Xprelude;;
 open Xlib;;
+open Xnames;;
 
 (* [files()] computes the list of HOL-Light files in the current
    directory and its subdirectories recursively. *)
@@ -73,81 +74,4 @@ let trans_deps dg filename =
        if List.mem f visited then trans visited to_visit
        else trans (f::visited) (deps dg f @ to_visit)
   in trans [] [filename]
-;;
-
-(* [thms_of_file f] computes the list of named theorems in [f]. *)
-let thms_of_file =
-  let search_1 =
-    let re =
-      Str.regexp
-        ("\\(let\\|and\\)[ \n\t]*"
-         ^"\\([a-zA-Z0-9_-]+\\)[ \n\t]*"
-         ^"=[ \n\t]*"
-         ^"\\(prove\\|"
-         ^"prove_by_refinement\\|"
-         ^"new_definition\\|"
-         ^"new_basic_definition\\|"
-         ^"new_axiom\\|"
-         ^"new_infix_definition\\|"
-         ^"INT_OF_REAL_THM\\|"
-         ^"define_finite_type\\|"
-         ^"TAUT\\|"
-         ^"INT_ARITH\\|"
-         ^"new_recursive_definition\\)")
-    in
-    fun content ->
-    let rec search acc start =
-      try
-        let _ = Str.search_forward re content start in
-        let matches = [Str.matched_group 2 content] in
-        search (matches @ acc) (Str.match_end())
-      with e -> (acc)
-    in
-    search [] 0
-  in
-  let search_2 =
-    let re =
-      Str.regexp
-        ("\\(let\\|and\\)[ \n\t]*"
-         ^"\\([a-zA-Z0-9_-]+\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([a-zA-Z0-9_-]+\\)[ \n\t]*"
-         ^"=[ \n\t]*"
-         ^"\\(define_type\\|"
-         ^"(CONJ_PAIR o prove)\\)")
-    in
-    fun content ->
-    let rec search acc start =
-      try
-        let _ = Str.search_forward re content start in
-        let matches =
-          [Str.matched_group 2 content
-          ;Str.matched_group 3 content] in
-        search (matches @ acc) (Str.match_end())
-      with e -> acc
-    in search [] 0
-  in
-  let search_3 =
-    let re =
-      Str.regexp
-        ("\\(let\\|and\\)[ \n\t]*"
-         ^"\\([a-zA-Z0-9_-]+\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([a-zA-Z0-9_-]+\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([a-zA-Z0-9_-]+\\)[ \n\t]*"
-         ^"=[ \n\t]*"
-         ^"\\(new_inductive_definition\\)")
-    in
-    fun content ->
-    let rec search acc start =
-      try
-        let _ = Str.search_forward re content start in
-        let matches =
-          [Str.matched_group 2 content
-          ;Str.matched_group 3 content
-          ;Str.matched_group 4 content]
-        in
-        search (matches @ acc) (Str.match_end())
-      with e -> acc
-    in search [] 0
-  in
-  fun f -> let s = string_of_file f in search_1 s @ search_2 s @ search_3 s
 ;;

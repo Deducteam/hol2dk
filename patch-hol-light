@@ -42,6 +42,4 @@ create() {
     fi
 }
 
-create xprelude.ml
-create xlib.ml
 create xnames.ml
