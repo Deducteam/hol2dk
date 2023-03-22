@@ -5,6 +5,7 @@ open Xlib
 open Xprelude
 open Xproof
 open Xfiles
+open Xnames
 
 let usage() =
   log
@@ -12,6 +13,9 @@ let usage() =
 
 hol2dk [-h|--help]
   print this help
+
+hol2dk dump file.[ml|hl]
+  run OCaml to check file.[ml|hl] and dump its proofs
 
 hol2dk sig basename
   generate dk/lp signature files from basename.sig
@@ -46,6 +50,10 @@ hol2dk dep file.[ml|hl]
 
 hol2dk thm file.[ml|hl]
   print on stdout the named theorems proved in file.[ml|hl]
+
+hol2dk thm upto file.[ml|hl]
+  print on stdout the named theorems proved in file.[ml|hl]
+  and all its dependencies
 
 hol2dk thm
   print on stdout the named theorems proved in all HOL-Light files
@@ -101,11 +109,39 @@ let main() =
      out stdout "%a\n" (list_sep "\n" string) (thms_of_file f);
      exit 0
 
+  | ["thm";"upto";f] ->
+     let dg = dep_graph (files()) in
+     List.iter
+       (fun d -> List.iter (out stdout "%s %s\n" d) (thms_of_file d))
+       (trans_deps dg f);
+     exit 0
+
   | ["thm"] ->
      List.iter
-       (fun f -> out stdout "%a\n" (list_sep "\n" string) (thms_of_file f))
+       (fun f -> List.iter (out stdout "%s %s\n" f) (thms_of_file f))
        (files());
      exit 0
+
+  | ["dump";f] ->
+     begin match Filename.extension f with
+     | ".ml" | ".hl" ->
+        let b = Filename.chop_extension f in
+        log "generate .dump.ml ...\n%!";
+        let oc = open_out ".dump.ml" in
+        out oc
+{|#use "topfind";;
+#require "camlp5";;
+#load "camlp5o.cma";;
+#use "%s";;
+dump_signature "%s.sig";;
+#load "str.cma";;
+#use "xnames.ml";;
+dump_map_thid_name "%s.thm" %a;;
+|} f b b (olist ostring) (trans_deps (dep_graph (files())) f);
+        close_out oc;
+        exit (Sys.command ("cat .dump.ml | ocaml"))
+     | _ -> wrong_arg()
+     end
 
   | ["stat";basename] ->
      let nb_proofs = read_nb_proofs basename in

@@ -55,6 +55,8 @@ let int oc k = out oc "%d" k;;
 
 let string oc s = out oc "%s" s;;
 
+let ostring oc s = out oc "\"%s\"" s;;
+
 let pair f g oc (x, y) = out oc "%a, %a" f x g y;;
 
 let opair f g oc (x, y) = out oc "(%a, %a)" f x g y;;

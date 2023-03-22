@@ -4,7 +4,6 @@ Export HOL-Light proofs to Dedukti and Lambdapi
 This project provides several programs:
 - a script `patch-hol-light` to patch HOL-Light to dump proofs
 - a script `unpatch-hol-light` to unpatch HOL-Light
-- a script `dump-proofs` to dump HOL-Light proofs
 - a program `hol2dk` to generate Dedukti or Lambdapi files from dumped proofs
 
 [HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
@@ -64,19 +63,6 @@ To unpatch HOL-Light, siimply do:
 $hol2dk-dir/unpatch-hol-light $hol-light-dir
 ```
 
-Dumping HOL-Light proofs
-------------------------
-
-```
-cd $hol-light-dir
-$hol2dk-dir/dump-proofs file.ml
-```
-
-generates two files: `file.sig` and `file.prf`.
-
-`file.ml` should at least include `hol.ml` until the line `loads
-"fusion.ml";;`.
-
 Compiling and installing hol2dk
 ----------------
 
@@ -94,6 +80,19 @@ Summary of hol2dk commands
 -------
 
 Get it by running `hol2dk` without arguments.
+
+Dumping HOL-Light proofs
+------------------------
+
+```
+cd $hol-light-dir
+hol2dk dump file.ml
+```
+
+generates the files `file.sig`, `file.prf` and `file.thm`.
+
+`file.ml` should at least require `hol.ml` until the line `loads
+"fusion.ml";;`.
 
 Generating dk/lp files from dumped files
 --------------------------------------
