@@ -139,7 +139,7 @@ dump_signature "%s.sig";;
 dump_map_thid_name "%s.thm" %a;;
 |} f b b (olist ostring) (trans_deps (dep_graph (files())) f);
         close_out oc;
-        exit (Sys.command ("cat .dump.ml | ocaml"))
+        exit (Sys.command ("ocaml .dump.ml && mv -f .dump.prf "^b^".prf"))
      | _ -> wrong_arg()
      end
 
