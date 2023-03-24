@@ -64,11 +64,13 @@ jobs:
         run: |
           eval `opam env`
           _build/default/main.exe mk 3 xci
+          cat xci.mk
           make -j 3 -f xci.mk dk
           dk check xci.dk
       - name: Generate and check multi-threaded lp output
         run: |
           eval `opam env`
           _build/default/main.exe mk 3 xci
+          cat xci.mk
           make -j 3 -f xci.mk lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
