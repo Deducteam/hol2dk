@@ -564,9 +564,14 @@ let decl_axioms oc ths =
 
 (*let counter = ref 0;;*)
 
-(* [decl_theorem oc k p n b] outputs on [oc] the theorem of index [k],
-   proof [p] and name [n], together with its proof if [b]. *)
-let decl_theorem oc k p n b =
+type decl =
+  | Unnamed_thm
+  | Axiom
+  | Named_thm of string
+
+(* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k],
+   proof [p] and name [n] as declaration type [d]. *)
+let decl_theorem oc k p d =
   let Proof(thm,content) = p in
   (*incr counter;
   if !counter = 1000 then (log "theorem %d ...\n%!" k; counter := 0);*)
@@ -574,33 +579,40 @@ let decl_theorem oc k p n b =
   let xs = freesl (t::ts) in
   let tvs = type_vars_in_thm thm in
   let rmap = renaming_map tvs xs in
-  match n with
-  | None ->
+  match d with
+  | Unnamed_thm ->
      let term = term tvs rmap in
      let hyps_typ oc ts =
        List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
      let hyps oc ts =
        List.iteri (fun i t -> out oc "h%d : Prf %a => " (i+1) term t) ts in
      out oc "thm thm_%d : %a%a%aPrf %a := %a%a%a%a.\n" k
-       (list (decl_typ_param tvs)) tvs (list (decl_param tvs rmap)) xs
-       hyps_typ ts term t
-       (list (typ_param tvs)) tvs (list (param tvs rmap)) xs
-       hyps ts (proof tvs rmap) p
-  | Some n ->
+       (list (decl_typ_param tvs)) tvs
+       (list (decl_param tvs rmap)) xs hyps_typ ts term t
+       (list (typ_param tvs)) tvs (list (param tvs rmap)) xs hyps ts
+       (proof tvs rmap) p
+  | Axiom ->
+     let term = unabbrev_term tvs rmap in
+     let hyps_typ oc ts =
+       List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
+     out oc "thm thm_%d : %a%a%aPrf %a.\n" k
+       (list (decl_typ_param tvs)) tvs
+       (list (decl_param tvs rmap)) xs hyps_typ ts term t
+  | Named_thm n ->
      let term = unabbrev_term tvs rmap in
      let hyps_typ oc ts =
        List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
      out oc "thm thm_%s : %a%a%aPrf %a := thm_%d.\n" n
-       (list (decl_typ_param tvs)) tvs (list (decl_param tvs rmap)) xs
-       hyps_typ ts term t k
+       (list (decl_typ_param tvs)) tvs
+       (list (unabbrev_decl_param tvs rmap)) xs hyps_typ ts term t k
 ;;
 
 (* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
-let theorem oc k p = decl_theorem oc k p None true;;
+let theorem oc k p = decl_theorem oc k p Unnamed_thm;;
 
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
    [k] as an axiom. *)
-let theorem_as_axiom oc k p = decl_theorem oc k p None false;;
+let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
 
 (* [proofs_in_range oc r] outputs on [oc] the theorems in range [r]. *)
 let proofs_in_range oc = function
@@ -740,7 +752,7 @@ let export_theorems b map_thid_name =
     (fun oc ->
       out oc "\n(; named theorems ;)\n";
       MapInt.iter
-        (fun k n -> decl_theorem oc k (proof_at k) (Some n) true)
+        (fun k n -> decl_theorem oc k (proof_at k) (Named_thm n))
         map_thid_name)
 ;;
 
