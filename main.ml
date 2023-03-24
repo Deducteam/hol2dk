@@ -91,6 +91,8 @@ let read_sig basename =
   update_map_const_typ_vars_pos();
   update_reserved()
 
+let int s = try int_of_string s with Failure _ -> wrong_arg()
+
 let main() =
   match List.tl (Array.to_list Sys.argv) with
 
@@ -187,8 +189,8 @@ dump_map_thid_name "%s.thm" %a;;
      close_out oc;
      exit 0
 
-  | ["part";nb_part;b] ->
-     let nb_part = int_of_string nb_part in
+  | ["mk";nb_part;b] ->
+     let nb_part = int nb_part in
      if nb_part < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
      let mk = b ^ ".mk" in
@@ -209,14 +211,14 @@ dump_map_thid_name "%s.thm" %a;;
      done;
      out oc "\n\tcat $+ > $@\n";
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
-             \thol2dk %s.dk --sig\n" b b b b b;
-     out oc "%s.pos : %s.prf\n\thol2dk %s.dk --pos\n" b b b;
+             \thol2dk sig %s.dk\n" b b b b b;
+     out oc "%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
      let x = ref 0 in
      let cmd i y =
        out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
                %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
-               \thol2dk %s.dk --part %d %d %d\n"
-         b i b i b i b b b b i !x y
+               \thol2dk part %d %d %d %s.dk\n"
+         b i b i b i b b b i !x y b
      in
      for i = 1 to nb_part - 1 do
        let y = !x + part_size in cmd i (y-1); x := y
@@ -230,13 +232,13 @@ dump_map_thid_name "%s.thm" %a;;
                %s_part_%d.lp" b i b i b i
      done;
      out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
-             \thol2dk %s.lp --sig\n" b b b b b;
+             \thol2dk sig %s.lp\n" b b b b b;
      let x = ref 0 in
      let cmd i y =
        out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
                %s_part_%d_term_abbrevs.lp &: %s.sig %s.prf %s.pos\n\
-               \thol2dk %s.lp --part %d %d %d\n"
-         b i b i b i b b b b i !x y
+               \thol2dk part %d %d %d %s.lp\n"
+         b i b i b i b b b i !x y b
      in
      for i = 1 to nb_part - 1 do
        let y = !x + part_size in cmd i (y-1); x := y
@@ -263,11 +265,11 @@ dump_map_thid_name "%s.thm" %a;;
      exit 0
 
   | ["part";nb_part;x;y;f] ->
-     let nb_part = int_of_string nb_part in
+     let nb_part = int nb_part in
      if nb_part < 1 then wrong_arg();
-     let x = int_of_string x in
+     let x = int x in
      if x < 0 then wrong_arg();
-     let y = int_of_string y in
+     let y = int y in
      if y < x then wrong_arg();
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
@@ -303,13 +305,13 @@ dump_map_thid_name "%s.thm" %a;;
        match args with
        | [] -> All
        | [x] ->
-          let x = int_of_string x in
+          let x = int x in
           if x < 0 then wrong_arg();
           Only x
        | [x;y] ->
-          let x = int_of_string x in
+          let x = int x in
           if x < 0 then wrong_arg();
-          let y = int_of_string y in
+          let y = int y in
           if y < x then wrong_arg();
           Inter(x,y)
      in

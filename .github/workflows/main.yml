@@ -28,6 +28,7 @@ jobs:
         run: |
           eval `opam env`
           dune build
+          dune install
       - name: Install hol-light dependencies, dedukti
         run: |
           sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
@@ -47,15 +48,21 @@ jobs:
         run: |
           eval `opam env`
           cd hol-light; ../_build/default/main.exe dump ../xci.ml
-      - name: Generate and check dk output
+      - name: Generate and check single-threaded dk output
         run: |
           eval `opam env`
           _build/default/main.exe pos xci
           _build/default/main.exe xci.dk
           dk check xci.dk
-      - name: Generate and check lp output
+      - name: Generate and check single-threaded lp output
         run: |
           eval `opam env`
           _build/default/main.exe pos xci
           _build/default/main.exe xci.lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
+      - name: Generate and check multi-threaded dk output
+        run: |
+          eval `opam env`
+          _build/default/main.exe part 3 xci
+          make -j 3 -f xci.mk dk
+          dk check xci.dk
