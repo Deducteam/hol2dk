@@ -63,7 +63,7 @@ hol2dk name
   in the working directory and all its subdirectories recursively
 %!"
 
-let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; usage(); exit 1
+let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
 let read_nb_proofs basename =
   let dump_file = basename ^ ".sig" in
@@ -236,7 +236,7 @@ dump_map_thid_name "%s.thm" %a;;
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
              \thol2dk sig %s.dk\n" b b b b b;
      out oc "%s_theorems.dk : %s.sig %s.prf %s.pos %s.thm\n\
-             \thol2dk thm %s.dk\n" b b b b b b;
+             \thol2dk thm %d %s.dk\n" b b b b b nb_part b;
      out oc "%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
      let x = ref 0 in
      let cmd i y =
@@ -282,13 +282,13 @@ dump_map_thid_name "%s.thm" %a;;
        begin
          Xdk.export_types basename;
          Xdk.export_terms basename;
-         Xdk.export_axioms basename;
+         Xdk.export_axioms basename
        end
      else
        begin
          Xlp.export_types basename;
          Xlp.export_terms basename;
-         Xlp.export_axioms basename;
+         Xlp.export_axioms basename
        end;
      exit 0
 
