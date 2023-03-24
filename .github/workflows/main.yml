@@ -47,30 +47,28 @@ jobs:
       - name: Dump proofs
         run: |
           eval `opam env`
-          cd hol-light; ../_build/default/main.exe dump ../xci.ml
+          cd hol-light; hol2dk dump ../xci.ml
       - name: Generate and check single-threaded dk output
         run: |
           eval `opam env`
-          _build/default/main.exe pos xci
-          _build/default/main.exe xci.dk
+          hol2dk pos xci
+          hol2dk xci.dk
           dk check xci.dk
       - name: Generate and check single-threaded lp output
         run: |
           eval `opam env`
-          _build/default/main.exe pos xci
-          _build/default/main.exe xci.lp
+          hol2dk pos xci
+          hol2dk xci.lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
       - name: Generate and check multi-threaded dk output
         run: |
           eval `opam env`
-          _build/default/main.exe mk 3 xci
-          cat xci.mk
+          hol2dk mk 3 xci
           make -j 3 -f xci.mk dk
           dk check xci.dk
       - name: Generate and check multi-threaded lp output
         run: |
           eval `opam env`
-          _build/default/main.exe mk 3 xci
-          cat xci.mk
+          hol2dk mk 3 xci
           make -j 3 -f xci.mk lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
