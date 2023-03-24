@@ -37,6 +37,7 @@ let map_thid_name =
   let cmd_set_idx = Printf.sprintf "idx := index_of %s;;" in
   List.fold_left
     (fun map tname ->
+      if tname = "_" then map else
       try eval (cmd_set_idx tname); MapInt.add !idx tname map
       with _ -> map)
     MapInt.empty
@@ -48,7 +49,7 @@ let thms_of_file =
     let re =
       Str.regexp
         ("^\\(let\\|and\\)[ \n\t]*"
-         ^"\\([A-Z][A-Z0-9_]*\\)[ \n\t]*"
+         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*"
          ^"=[ \n\t]*"
          ^"\\(prove\\|"
          ^"prove_by_refinement\\|"
@@ -76,8 +77,8 @@ let thms_of_file =
     let re =
       Str.regexp
         ("^\\(let\\|and\\)[ \n\t]*"
-         ^"\\([A-Z][A-Z0-9_]*\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([A-Z][A-Z0-9_]*\\)[ \n\t]*"
+         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*"
+         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*"
          ^"=[ \n\t]*"
          ^"\\(define_type\\|"
          ^"(CONJ_PAIR o prove)\\)")
@@ -97,9 +98,9 @@ let thms_of_file =
     let re =
       Str.regexp
         ("^\\(let\\|and\\)[ \n\t]*"
-         ^"\\([A-Z][A-Z0-9_]*\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([A-Z][A-Z0-9_]*\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([A-Z][A-Z0-9_]*\\)[ \n\t]*"
+         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*"
+         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*"
+         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*"
          ^"=[ \n\t]*"
          ^"\\(new_inductive_definition\\)")
     in

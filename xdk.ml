@@ -115,10 +115,16 @@ let abbrev_typ =
      | _ -> out oc "(%a%a)" typ_abbrev k (list_prefix " " raw_typ) tvs
 ;;
 
-let typ =
+(*let typ =
   (*if !use_abbrev then*)
   fun tvs oc b -> abbrev_typ oc (missing_as_bool tvs b)
-  (*else unabbrev_typ*);;
+  (*else unabbrev_typ*)
+;;*)
+
+let typ ?(abbrev=true) tvs oc b =
+  if abbrev then abbrev_typ oc (missing_as_bool tvs b)
+  else unabbrev_typ tvs oc b
+;;
 
 (* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
 let decl_map_typ oc m =
@@ -558,8 +564,9 @@ let decl_axioms oc ths =
 
 (*let counter = ref 0;;*)
 
-(* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index [k]. *)
-let theorem oc k p =
+(* [decl_theorem oc k p n b] outputs on [oc] the theorem of index [k],
+   proof [p] and name [n], together with its proof if [b]. *)
+let decl_theorem oc k p n b =
   let Proof(thm,content) = p in
   (*incr counter;
   if !counter = 1000 then (log "theorem %d ...\n%!" k; counter := 0);*)
@@ -567,34 +574,33 @@ let theorem oc k p =
   let xs = freesl (t::ts) in
   let tvs = type_vars_in_thm thm in
   let rmap = renaming_map tvs xs in
-  let term = term tvs rmap in
-  let hyps_typ oc ts =
-    List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-  let hyps oc ts =
-    List.iteri (fun i t -> out oc "h%d : Prf %a => " (i+1) term t) ts in
-  out oc "thm thm_%d : %a%a%aPrf %a := %a%a%a%a.\n" k
-    (list (decl_typ_param tvs)) tvs  (list (decl_param tvs rmap)) xs
-    hyps_typ ts term t
-    (list (typ_param tvs)) tvs (list (param tvs rmap)) xs
-    hyps ts (proof tvs rmap) p
+  match n with
+  | None ->
+     let term = term tvs rmap in
+     let hyps_typ oc ts =
+       List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
+     let hyps oc ts =
+       List.iteri (fun i t -> out oc "h%d : Prf %a => " (i+1) term t) ts in
+     out oc "thm thm_%d : %a%a%aPrf %a := %a%a%a%a.\n" k
+       (list (decl_typ_param tvs)) tvs (list (decl_param tvs rmap)) xs
+       hyps_typ ts term t
+       (list (typ_param tvs)) tvs (list (param tvs rmap)) xs
+       hyps ts (proof tvs rmap) p
+  | Some n ->
+     let term = unabbrev_term tvs rmap in
+     let hyps_typ oc ts =
+       List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
+     out oc "thm thm_%s : %a%a%aPrf %a := thm_%d.\n" n
+       (list (decl_typ_param tvs)) tvs (list (decl_param tvs rmap)) xs
+       hyps_typ ts term t k
 ;;
+
+(* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
+let theorem oc k p = decl_theorem oc k p None true;;
 
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
    [k] as an axiom. *)
-let theorem_as_axiom oc k p =
-  let Proof(thm,content) = p in
-  (*log "theorem %d as axiom ...\n%!" k;*)
-  let ts,t = dest_thm thm in
-  let xs = freesl (t::ts) in
-  let tvs = type_vars_in_thm thm in
-  let rmap = renaming_map tvs xs in
-  let term = term tvs rmap in
-  let hyps_typ oc ts =
-    List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-  out oc "thm_%d : %a%a%aPrf %a.\n"
-    k (list (decl_typ_param tvs)) tvs
-    (list (decl_param tvs rmap)) xs hyps_typ ts term t
-;;
+let theorem_as_axiom oc k p = decl_theorem oc k p None false;;
 
 (* [proofs_in_range oc r] outputs on [oc] the theorems in range [r]. *)
 let proofs_in_range oc = function
@@ -728,6 +734,15 @@ let export_axioms b =
 let export_proofs b r =
   export b "_proofs"
     (fun oc -> out oc "\n(; theorems ;)\n"; proofs_in_range oc r);;
+
+let export_theorems b map_thid_name =
+  export b "_theorems"
+    (fun oc ->
+      out oc "\n(; named theorems ;)\n";
+      MapInt.iter
+        (fun k n -> decl_theorem oc k (proof_at k) (Some n) true)
+        map_thid_name)
+;;
 
 let export_proofs_part b k x y =
   part := Some k;
