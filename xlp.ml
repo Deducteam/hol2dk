@@ -430,37 +430,39 @@ let decl_axioms oc ths =
 (* Translation of theorems. *)
 (****************************************************************************)
 
-(* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
-let theorem oc k p =
+(* [decl_theorem oc k p n b] outputs on [oc] the theorem of index [k],
+   proof [p] and name [n], together with its proof if [b]. *)
+let decl_theorem oc k p n b =
   let Proof(thm,content) = p in
   (*log "theorem %d ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
   let tvs = type_vars_in_thm thm in
   let rmap = renaming_map tvs xs in
-  let term = term rmap in
+  let term = (match n with None -> term | _ -> unabbrev_term) rmap in
   let decl_hyps oc ts =
     List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-  out oc "opaque symbol thm_%d%a%a%a : Prf %a ≔ %a;\n"
-    k typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
-    (proof tvs rmap) p
+  let hyps oc ts = List.iteri (fun i _ -> out oc " h%d" (i+1)) ts in
+  let opaque oc b = if b then string oc "opaque " in
+  let name oc =
+    function None -> out oc "thm_%d" k | Some n -> out oc "thm_%s" n in
+  let def oc b =
+    if b then
+      match n with
+      | None -> out oc " ≔ %a" (proof tvs rmap) p
+      | Some _ ->
+         out oc " ≔ thm_%d%a%a" k (list_prefix " " (var rmap)) xs hyps ts
+  in
+  out oc "%asymbol %a%a%a%a : Prf %a%a;\n" opaque b name n
+    typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t def b
 ;;
+
+(* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
+let theorem oc k p = decl_theorem oc k p None true;;
 
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
    [k] as an axiom. *)
-let theorem_as_axiom oc k p =
-  let Proof(thm,content) = p in
-  (*log "theorem %d as axiom ...\n%!" k;*)
-  let ts,t = dest_thm thm in
-  let xs = freesl (t::ts) in
-  let tvs = type_vars_in_thm thm in
-  let rmap = renaming_map tvs xs in
-  let term = term rmap in
-  let decl_hyps oc ts =
-    List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-  out oc "symbol thm_%d%a%a%a : Prf %a;\n"
-    k typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
-;;
+let theorem_as_axiom oc k p = decl_theorem oc k p None false;;
 
 (* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
 let proofs_in_range oc = function
@@ -534,11 +536,21 @@ let export_axioms b =
 ;;
 
 let export_proofs b r =
-  export b ""
+  export b "_proofs"
     (fun oc ->
       List.iter (require oc b)
         ["_types"; "_type_abbrevs"; "_terms"; "_term_abbrevs"; "_axioms"];
       proofs_in_range oc r)
+;;
+
+let export_theorems b map_thid_name =
+  export b ""
+    (fun oc ->
+      List.iter (require oc b)
+        ["_types";"_type_abbrevs";"_terms";"_term_abbrevs";"_axioms";"_proofs"];
+      MapInt.iter
+        (fun k n -> decl_theorem oc k (proof_at k) (Some n) true)
+        map_thid_name)
 ;;
 
 let export_proofs_part =

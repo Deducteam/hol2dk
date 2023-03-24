@@ -335,6 +335,12 @@ dump_map_thid_name "%s.thm" %a;;
      let ic = open_in_bin dump_file in
      Xproof.prf_pos := input_value ic;
      close_in ic;
+     (* read thm file *)
+     let dump_file = basename ^ ".thm" in
+     log "read %s ...\n%!" dump_file;
+     let ic = open_in_bin (basename ^ ".thm") in
+     let map_thid_name = input_value ic in
+     close_in ic;
      (* read and translate proof file *)
      let dump_file = basename ^ ".prf" in
      log "read %s ...\n%!" dump_file;
@@ -342,12 +348,14 @@ dump_map_thid_name "%s.thm" %a;;
      if dk then
        begin
          Xdk.export_proofs basename range;
+         Xdk.export_theorems basename map_thid_name;
          Xdk.export_term_abbrevs basename "";
          Xdk.export_type_abbrevs basename "";
          log "generate %s.dk ...\n%!" basename;
          let infiles =
            List.map (fun s -> basename ^ "_" ^ s ^ ".dk")
-             ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms";"proofs"]
+             ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
+              ;"proofs";"theorems"]
          in
          exit
            (Sys.command
@@ -357,6 +365,7 @@ dump_map_thid_name "%s.thm" %a;;
      else
        begin
          Xlp.export_proofs basename range;
+         Xlp.export_theorems basename map_thid_name;
          Xlp.export_term_abbrevs basename "";
          Xlp.export_type_abbrevs basename "";
          exit 0
