@@ -63,6 +63,12 @@ jobs:
       - name: Generate and check multi-threaded dk output
         run: |
           eval `opam env`
-          _build/default/main.exe part 3 xci
+          _build/default/main.exe mk 3 xci
           make -j 3 -f xci.mk dk
           dk check xci.dk
+      - name: Generate and check multi-threaded dk output
+        run: |
+          eval `opam env`
+          _build/default/main.exe mk 3 xci
+          make -j 3 -f xci.mk lp
+          lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp

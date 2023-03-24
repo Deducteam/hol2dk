@@ -91,6 +91,21 @@ let read_sig basename =
   update_map_const_typ_vars_pos();
   update_reserved()
 
+let read_pos basename =
+  let dump_file = basename ^ ".pos" in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  Xproof.prf_pos := input_value ic;
+  close_in ic
+
+let read_map_thid_name basename =
+  let dump_file = basename ^ ".thm" in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin (basename ^ ".thm") in
+  let map_thid_name = input_value ic in
+  close_in ic;
+  map_thid_name
+
 let int s = try int_of_string s with Failure _ -> wrong_arg()
 
 let main() =
@@ -250,17 +265,20 @@ dump_map_thid_name "%s.thm" %a;;
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
+     let map_thid_name = read_map_thid_name basename in
      if dk then
        begin
          Xdk.export_types basename;
          Xdk.export_terms basename;
          Xdk.export_axioms basename;
+         Xdk.export_theorems basename map_thid_name
        end
      else
        begin
          Xlp.export_types basename;
          Xlp.export_terms basename;
-         Xlp.export_axioms basename
+         Xlp.export_axioms basename;
+         Xlp.export_theorems basename map_thid_name
        end;
      exit 0
 
@@ -274,12 +292,7 @@ dump_map_thid_name "%s.thm" %a;;
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
-     (* read pos file *)
-     let dump_file = basename ^ ".pos" in
-     log "read %s ...\n%!" dump_file;
-     let ic = open_in_bin dump_file in
-     Xproof.prf_pos := input_value ic;
-     close_in ic;
+     read_pos basename;
      (* read and translate proof file *)
      let dump_file = basename ^ ".prf" in
      log "read %s ...\n%!" dump_file;
@@ -331,18 +344,8 @@ dump_map_thid_name "%s.thm" %a;;
          Xlp.export_terms basename;
          Xlp.export_axioms basename
        end;
-     (* read pos file *)
-     let dump_file = basename ^ ".pos" in
-     log "read %s ...\n%!" dump_file;
-     let ic = open_in_bin dump_file in
-     Xproof.prf_pos := input_value ic;
-     close_in ic;
-     (* read thm file *)
-     let dump_file = basename ^ ".thm" in
-     log "read %s ...\n%!" dump_file;
-     let ic = open_in_bin (basename ^ ".thm") in
-     let map_thid_name = input_value ic in
-     close_in ic;
+     read_pos basename;
+     let map_thid_name = read_map_thid_name basename in
      (* read and translate proof file *)
      let dump_file = basename ^ ".prf" in
      log "read %s ...\n%!" dump_file;
