@@ -14,35 +14,45 @@ let usage() =
 hol2dk [-h|--help]
   print this help
 
-hol2dk dump file.[ml|hl]
-  run OCaml to check file.[ml|hl] and generate file.sig, file.prf and file.thm
+Dumping commands:
 
-hol2dk sig basename
-  generate dk/lp signature files from basename.sig
+hol2dk dump $file.[ml|hl]
+  run OCaml toplevel to check $file.[ml|hl] and generate $file.sig, $file.prf
+  and $file.thm
 
-hol2dk thm basename
-  generate dk/lp theorems from basename.thm
+hol2dk pos $file
+  generate $file.pos from $file.prf
 
-hol2dk stat basename
-  print statistics on basename.prf
+Single-threaded dk/lp file generation:
 
-hol2dk pos basename
-  generate file.pos from basename.prf
+hol2dk $file.[dk|lp]
+  generate $file.[dk|lp]
 
-hol2dk file.[dk|lp]
-  generate file.[dk|lp] from file.sig, file.prf and file.pos
+hol2dk $file.[dk|lp] $thm_id
+  generate $file.[dk|lp] but with theorem index $thm_id only (useful for debug)
 
-hol2dk file.[dk|lp] $thm_id
-  generate file.[dk|lp] from file.sig, file.prf and file.pos
-  but for theorem index $thm_id only (useful for debug)
+Multi-threaded dk/lp file generation:
 
-hol2dk mk $n basename
-  generate basename.mk from basename.prf
-  (to generate dk/lp files using $n processors)
+hol2dk mk $n $file
+  generate $file.mk to generate dk/lp files using $n processors
 
-hol2dk part $k $x $y file.[dk|lp]
-  generate dk/lp proof files of part $k (in [1..$n])
+hol2dk sig $file
+  generate dk/lp signature files
+
+hol2dk thm $n $file.[dk|lp]
+  generate dk/lp theorem files
+
+hol2dk use $file
+  generate $file.use
+
+hol2dk part $n $k $x $y $file.[dk|lp]
+  generate dk/lp proof files of part $k in [1..$n]
   from proof index $x to proof index $y
+
+Other commands:
+
+hol2dk stat $file
+  print statistics on $file.prf
 
 hol2dk dep
   print on stdout a Makefile giving the dependencies of all HOL-Light files
@@ -101,7 +111,14 @@ let read_pos basename =
   Xproof.prf_pos := input_value ic;
   close_in ic
 
-let read_map_thid_name basename =
+let read_use basename =
+  let dump_file = basename ^ ".use" in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  Xproof.thm_uses := input_value ic;
+  close_in ic
+
+let read_thm basename =
   let dump_file = basename ^ ".thm" in
   log "read %s ...\n%!" dump_file;
   let ic = open_in_bin (basename ^ ".thm") in
@@ -114,16 +131,16 @@ let init_proof_reading basename =
   log "read %s ...\n%!" dump_file;
   Xproof.ic_prf := open_in_bin dump_file
 
-let int s = try int_of_string s with Failure _ -> wrong_arg()
+let integer s = try int_of_string s with Failure _ -> wrong_arg()
 
 let main() =
   match List.tl (Array.to_list Sys.argv) with
 
-  | [] | ["-"|"--help"] -> usage(); exit 0
+  | [] | ["-"|"--help"|"help"] -> usage(); exit 0
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
-     out stdout "%a\n" (list_sep " " string) (trans_deps dg f);
+     out stdout "%a\n" (list_sep " " string) (trans_file_deps dg f);
      exit 0
 
   | ["dep"] ->
@@ -138,7 +155,7 @@ let main() =
      let dg = dep_graph (files()) in
      List.iter
        (fun d -> List.iter (out stdout "%s %s\n" d) (thms_of_file d))
-       (trans_deps dg f);
+       (trans_file_deps dg f);
      exit 0
 
   | ["name"] ->
@@ -162,31 +179,11 @@ dump_signature "%s.sig";;
 #load "str.cma";;
 #use "xnames.ml";;
 dump_map_thid_name "%s.thm" %a;;
-|} f b b (olist ostring) (trans_deps (dep_graph (files())) f);
+|} f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
         close_out oc;
         exit (Sys.command ("ocaml .dump.ml && mv -f .dump.prf "^b^".prf"))
      | _ -> wrong_arg()
      end
-
-  | ["stat";basename] ->
-     let nb_proofs = read_nb_proofs basename in
-     let dump_file = basename ^ ".prf" in
-     log "read %s ...\n%!" dump_file;
-     let ic = open_in_bin dump_file in
-     Xproof.thm_uses := Array.make nb_proofs 0;
-     begin
-       try
-         while true do
-           let p = input_value ic in
-           count_thm_uses p;
-           count_rule_uses p
-         done
-       with End_of_file -> close_in ic
-     end;
-     log "compute statistics ...\n";
-     print_thm_uses_histogram();
-     print_rule_uses();
-     exit 0
 
   | ["pos";basename] ->
      let nb_proofs = read_nb_proofs basename in
@@ -212,8 +209,58 @@ dump_map_thid_name "%s.thm" %a;;
      close_out oc;
      exit 0
 
+  | ["stat";basename] ->
+     let nb_proofs = read_nb_proofs basename in
+     let dump_file = basename ^ ".prf" in
+     log "read %s ...\n%!" dump_file;
+     let ic = open_in_bin dump_file in
+     let thm_uses = Array.make nb_proofs 0 in
+     Xproof.thm_uses := thm_uses;
+     let rule_uses = Array.make nb_rules 0 in
+     begin
+       try
+         while true do
+           let p = input_value ic in
+           count_thm thm_uses p;
+           count_rule rule_uses p
+         done
+       with End_of_file -> close_in ic
+     end;
+     log "compute statistics ...\n";
+     print_histogram thm_uses;
+     print_stats rule_uses nb_proofs;
+     exit 0
+
+  | ["use";basename] ->
+     (* The .use file records an array uses such that uses[i] = 0 if
+        i is a named theorem, the highest theorem index j>i using i if
+        there is one, and -1 otherwise. *)
+     let nb_proofs = read_nb_proofs basename in
+     let dump_file = basename ^ ".prf" in
+     log "read %s ...\n%!" dump_file;
+     let ic = open_in_bin dump_file in
+     let uses = Array.make nb_proofs (-1) in
+     Xproof.thm_uses := uses;
+     let idx = ref 0 in
+     let update_uses p =
+       List.iter (fun k -> Array.set uses k !idx) (deps p);
+       incr idx
+     in
+     begin
+       try while !idx < nb_proofs do update_uses (input_value ic) done
+       with End_of_file -> assert false
+     end;
+     close_in ic;
+     MapInt.iter (fun k _ -> Array.set uses k 0) (read_thm basename);
+     let dump_file = basename ^ ".use" in
+     log "generate %s ...\n" dump_file;
+     let oc = open_out_bin dump_file in
+     output_value oc uses;
+     close_out oc;
+     exit 0
+
   | ["mk";nb_part;b] ->
-     let nb_part = int nb_part in
+     let nb_part = integer nb_part in
      if nb_part < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
      let mk = b ^ ".mk" in
@@ -221,6 +268,7 @@ dump_map_thid_name "%s.thm" %a;;
      let oc = open_out mk in
      let part_size = nb_proofs / nb_part in
 
+     out oc "# file generated with: hol2dk mk %d %s\n\n" nb_part b;
      out oc ".SUFFIXES :\n";
      out oc ".PHONY : dk lp\n";
 
@@ -235,15 +283,14 @@ dump_map_thid_name "%s.thm" %a;;
      out oc " %s_theorems.dk\n\tcat $+ > $@\n" b;
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
              \thol2dk sig %s.dk\n" b b b b b;
-     out oc "%s_theorems.dk : %s.sig %s.prf %s.pos %s.thm\n\
+     out oc "%s_theorems.dk : %s.sig %s.thm %s.pos %s.prf\n\
              \thol2dk thm %d %s.dk\n" b b b b b nb_part b;
-     out oc "%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
      let x = ref 0 in
      let cmd i y =
        out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
                %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
-               \thol2dk part %d %d %d %s.dk\n"
-         b i b i b i b b b i !x y b
+               \thol2dk part %d %d %d %d %s.dk\n"
+         b i b i b i b b b nb_part i !x y b
      in
      for i = 1 to nb_part - 1 do
        let y = !x + part_size in cmd i (y-1); x := y
@@ -259,19 +306,23 @@ dump_map_thid_name "%s.thm" %a;;
      done;
      out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
              \thol2dk sig %s.lp\n" b b b b b;
-     out oc "%s.lp : %s.sig %s.prf %s.pos %s.thm\n\
+     out oc "%s.lp : %s.sig %s.thm %s.pos %s.prf\n\
              \thol2dk thm %d %s.lp\n" b b b b b nb_part b;
      let x = ref 0 in
      let cmd i y =
        out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
-               %s_part_%d_term_abbrevs.lp &: %s.sig %s.prf %s.pos\n\
-               \thol2dk part %d %d %d %s.lp\n"
-         b i b i b i b b b i !x y b
+               %s_part_%d_term_abbrevs.lp &: %s.sig %s.pos %s.prf %s.use\n\
+               \thol2dk part %d %d %d %d %s.lp\n"
+         b i b i b i b b b b nb_part i !x y b
      in
      for i = 1 to nb_part - 1 do
        let y = !x + part_size in cmd i (y-1); x := y
      done;
      cmd nb_part (nb_proofs - 1);
+
+     (* targets common to dk and lp *)
+     out oc "%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
+     out oc "%s.use : %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
      exit 0
 
   | ["sig";f] ->
@@ -293,40 +344,44 @@ dump_map_thid_name "%s.thm" %a;;
      exit 0
 
   | ["thm";nb_part;f] ->
-     let nb_part = int nb_part in
+     let nb_part = integer nb_part in
      if nb_part < 2 then wrong_arg();
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
-     let map_thid_name = read_map_thid_name basename in
+     let map_thid_name = read_thm basename in
      read_pos basename;
      init_proof_reading basename;
      if dk then Xdk.export_theorems basename map_thid_name
      else Xlp.export_theorems_part nb_part basename map_thid_name
 
-  | ["part";nb_part;x;y;f] ->
-     let nb_part = int nb_part in
-     if nb_part < 0 then wrong_arg();
-     let x = int x in
+  | ["part";nb_part;k;x;y;f] ->
+     let nb_part = integer nb_part in
+     if nb_part < 2 then wrong_arg();
+     let k = integer k in
+     if k < 1 then wrong_arg();
+     let x = integer x in
      if x < 0 then wrong_arg();
-     let y = int y in
+     let y = integer y in
      if y < x then wrong_arg();
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
      read_pos basename;
      init_proof_reading basename;
+     cur_part_max := k * (nb_proofs() / nb_part);
      if dk then
        begin
-         Xdk.export_proofs_part basename nb_part x y;
-         let suffix = "_part_" ^ string_of_int nb_part in
+         Xdk.export_proofs_part basename k x y;
+         let suffix = "_part_" ^ string_of_int k in
          Xdk.export_term_abbrevs basename suffix;
          Xdk.export_type_abbrevs basename suffix
        end
      else
        begin
-         Xlp.export_proofs_part basename nb_part x y;
-         let suffix = "_part_" ^ string_of_int nb_part in
+         read_use basename;
+         Xlp.export_proofs_part basename nb_part k x y;
+         let suffix = "_part_" ^ string_of_int k in
          Xlp.export_term_abbrevs basename suffix;
          Xlp.export_type_abbrevs basename suffix
        end;
@@ -337,15 +392,16 @@ dump_map_thid_name "%s.thm" %a;;
        match args with
        | [] -> All
        | [x] ->
-          let x = int x in
+          let x = integer x in
           if x < 0 then wrong_arg();
           Only x
        | [x;y] ->
-          let x = int x in
+          let x = integer x in
           if x < 0 then wrong_arg();
-          let y = int y in
+          let y = integer y in
           if y < x then wrong_arg();
           Inter(x,y)
+       | _ -> wrong_arg()
      in
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
@@ -364,7 +420,7 @@ dump_map_thid_name "%s.thm" %a;;
          Xlp.export_axioms basename
        end;
      read_pos basename;
-     let map_thid_name = read_map_thid_name basename in
+     let map_thid_name = read_thm basename in
      init_proof_reading basename;
      if dk then
        begin

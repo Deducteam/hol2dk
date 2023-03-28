@@ -345,9 +345,7 @@ let proof tvs rmap =
        out oc "prop_ext (λ h%d : Prf %a, %a) (λ h%d : Prf %a, %a)"
          n term t1 (subproof tvs rmap [] [] (ts @ [t1]) k2) p2
          n term t2 (subproof tvs rmap [] [] (ts @ [t2]) k1) p1
-    | Pinst(k,[]) -> proof oc (proof_at k)
     | Pinst(k,s) -> out oc "%a" (subproof tvs rmap [] s ts k) (proof_at k)
-    | Pinstt(k,[]) -> proof oc (proof_at k)
     | Pinstt(k,s) -> out oc "%a" (subproof tvs rmap s [] ts k) (proof_at k)
     | Paxiom(t) ->
        out oc "axiom_%d%a"
@@ -449,7 +447,13 @@ let decl_theorem oc k p d =
      let term = term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     out oc "opaque symbol thm_%d%a%a%a : Prf %a  ≔ %a;\n" k
+     let prv =
+       Array.length !Xproof.thm_uses > 0 &&
+       let l = Array.get !Xproof.thm_uses k in
+       l = -1 || (l > 0 && l < !cur_part_max)
+     in
+     out oc "%s symbol thm_%d%a%a%a : Prf %a ≔ %a;\n"
+       (if prv then "private" else "opaque") k
        typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
        (proof tvs rmap) p
   | Axiom ->
@@ -480,6 +484,7 @@ let proofs_in_range oc = function
   | Only x ->
      let p = proof_at x in
      List.iter (fun k -> theorem_as_axiom oc k (proof_at k)) (deps p);
+     log "here 1\n%!";
      theorem oc x p(*;
      out oc
 "flag \"print_implicits\" on;
@@ -566,7 +571,7 @@ let export_theorems b map_thid_name =
 
 let export_proofs_part =
   let part i s = "_part_" ^ string_of_int i ^ s in
-  fun b k x y ->
+  fun b _nb_part k x y ->
   export b ("_part_" ^ string_of_int k)
     (fun oc ->
       List.iter (require oc b)

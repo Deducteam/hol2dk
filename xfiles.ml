@@ -61,17 +61,17 @@ let out_dep_graph oc dg =
     dg;
 ;;
 
-(* [deps dg f] returns the immediate dependencies of [f] in [dg]. *)
-let deps dg filename = try MapStr.find filename dg with Not_found -> [];;
+(* [file_deps dg f] returns the immediate dependencies of [f] in [dg]. *)
+let file_deps dg filename = try MapStr.find filename dg with Not_found -> [];;
 
 (* [trans_deps dg f] returns all the dependencies of [f] in [dg],
    recursively. *)
-let trans_deps dg filename =
+let trans_file_deps dg filename =
   let rec trans visited to_visit =
     match to_visit with
     | [] -> visited
     | f::to_visit ->
        if List.mem f visited then trans visited to_visit
-       else trans (f::visited) (deps dg f @ to_visit)
+       else trans (f::visited) (file_deps dg f @ to_visit)
   in trans [] [filename]
 ;;

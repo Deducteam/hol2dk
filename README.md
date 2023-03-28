@@ -149,7 +149,7 @@ make -j $jobs -f file.mk lp
 Checking the generated dk file
 ------------------------------
 
-**Requirement:** lambdapi 2.3, dedukti 2.7 or [kocheck](https://github.com/01mf02/kontroli-rs)
+**Requirement:** lambdapi >= 2.3.0, dedukti >= 2.7 or [kocheck](https://github.com/01mf02/kontroli-rs)
 
 To check the generated dk file with dkcheck, do:
 ```
@@ -168,7 +168,7 @@ kocheck -j 7 file-for-kocheck.dk
 Checking the generated lp files
 -------------------------------
 
-**Requirement:** lambdapi 2.3
+**Requirement:** lambdapi >= 2.3.0 for single-threaded generated files, lambdapi master branch for multi-threaded generated files
 
 To check the generated lp files with
 [lambdapi](https://github.com/Deducteam/lambdapi), do:
@@ -227,14 +227,14 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Multi-threaded translation to Lambdapi (with `--part 7`):
+Multi-threaded translation to Lambdapi (with `mk 7`):
   * lp files generation time: 4m38s
   * lp files size: 2.5 Go
   * type abbrevs: 600 Ko
   * term abbrevs: 700 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
   
-Multi-threaded translation to Dedukti (with `--part 7`):
+Multi-threaded translation to Dedukti (with `mk 7`):
   * dk file generation time: 9m19s
   * dk file size: 3.7 Go
   * type abbrevs: 652 Ko
@@ -248,8 +248,8 @@ Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
   * dk files generation: 26s 99 Mo
   * checking time with dk check: 21s
   * checking time with kocheck -j 7: 14s
-  * lp files generation: 17s 69 Mo
-  * checking time with lambdapi: 1m54s
+  * lp files generation: 17s 70 Mo (4s with `mk 7`)
+  * checking time with lambdapi: 1m54s (2m with `mk 7`)
 
 Exporting pure Q0 proofs
 -------------------

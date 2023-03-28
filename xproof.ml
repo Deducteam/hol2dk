@@ -8,13 +8,7 @@ open Xprelude
 
 let ic_prf : in_channel ref = ref stdin;;
 let prf_pos : int array ref = ref [||];;
-
-let thm_uses : int array ref = ref [||];;
-let thm_uses_max : int ref = ref (-1);;
-let thm_uses_argmax : int ref = ref (-1);;
-let rule_uses : int array = Array.make 25 0;;
-
-let nb_proofs() : int = Array.length !prf_pos;;
+let nb_proofs() = Array.length !prf_pos;;
 
 (* [proof_at k] returns the proof of index [k]. *)
 let proof_at k =
@@ -38,39 +32,5 @@ let iter_proofs (f : int -> proof -> unit) =
     raise e
 ;;
 
-let count_thm_uses : proof -> unit =
-  let use k =
-    let n = Array.get !thm_uses k + 1 in
-    Array.set !thm_uses k n;
-    if n > !thm_uses_max then (thm_uses_max := n; thm_uses_argmax := k)
-  in
-  fun p -> List.iter use (deps p)
-;;
-
-let count_rule_uses (p : proof) : unit =
-  let i = code_of_proof p in
-  Array.set rule_uses i (Array.get rule_uses i + 1)
-;;
-
-(* Prints on stdout the number of theorems that are used i times, for
-   each i from 0 to !thm_uses_max. *)
-let print_thm_uses_histogram() : unit =
-  let hist = Array.make (!thm_uses_max + 1) 0 in
-  let f nb_uses = Array.set hist nb_uses (Array.get hist nb_uses + 1) in
-  Array.iter f !thm_uses;
-  log "(* \"i: n\" means that n proofs are used i times *)\n";
-  let nonzeros = ref 0 in
-  for i=0 to !thm_uses_max do
-    let n = Array.get hist i in
-    if n > 0 then (incr nonzeros; log "%d: %d\n" i n)
-  done;
-  log "number of mappings: %d\n" !nonzeros;
-  log "most used theorem: %d\n" !thm_uses_argmax
-;;
-
-let print_rule_uses() : unit =
-  let total = float_of_int (nb_proofs()) in
-  let part n = float_of_int (100 * n) /. total in
-  let f i n = log "%10s %9d %2.f%%\n" (name_of_code i) n (part n) in
-  Array.iteri f rule_uses
-;;
+let thm_uses : int array ref = ref [||];;
+let cur_part_max : int ref = ref (-1);;
