@@ -289,8 +289,8 @@ dump_map_thid_name "%s.thm" %a;;
      let cmd i y =
        out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
                %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
-               \thol2dk part %d %d %d %s.dk\n"
-         b i b i b i b b b i !x y b
+               \thol2dk part %d %d %d %d %s.dk\n"
+         b i b i b i b b b nb_part i !x y b
      in
      for i = 1 to nb_part - 1 do
        let y = !x + part_size in cmd i (y-1); x := y
@@ -401,6 +401,7 @@ dump_map_thid_name "%s.thm" %a;;
           let y = integer y in
           if y < x then wrong_arg();
           Inter(x,y)
+       | _ -> wrong_arg()
      in
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
