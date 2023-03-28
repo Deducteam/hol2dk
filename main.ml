@@ -420,19 +420,18 @@ dump_map_thid_name "%s.thm" %a;;
          Xlp.export_axioms basename
        end;
      read_pos basename;
-     let map_thid_name = read_thm basename in
      init_proof_reading basename;
      if dk then
        begin
          Xdk.export_proofs basename range;
-         Xdk.export_theorems basename map_thid_name;
+         if range = All then Xdk.export_theorems basename (read_thm basename);
          Xdk.export_term_abbrevs basename "";
          Xdk.export_type_abbrevs basename "";
          log "generate %s.dk ...\n%!" basename;
          let infiles =
            List.map (fun s -> basename ^ "_" ^ s ^ ".dk")
-             ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
-              ;"proofs";"theorems"]
+             (["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
+              ;"proofs"] @ if range = All then ["theorems"] else [])
          in
          exit
            (Sys.command
@@ -442,7 +441,7 @@ dump_map_thid_name "%s.thm" %a;;
      else
        begin
          Xlp.export_proofs basename range;
-         Xlp.export_theorems basename map_thid_name;
+         if range = All then Xlp.export_theorems basename (read_thm basename);
          Xlp.export_term_abbrevs basename "";
          Xlp.export_type_abbrevs basename "";
          exit 0
