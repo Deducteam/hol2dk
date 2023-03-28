@@ -453,6 +453,43 @@ let name_of_code = function
   | _ -> assert false
 ;;
 
+let nb_rules = 25;;
+
+(* [count_thm uses p] updates [uses] with the dependencies of [p]. *)
+let count_thm (uses : int array) (p : proof) : unit =
+  List.iter (fun k -> Array.set uses k (Array.get uses k + 1)) (deps p)
+;;
+
+(* [print_histogram uses] prints on stdout the number of theorems that
+   are used i times, for each i from 0 to the maximum of [uses]. *)
+let print_histogram (uses : int array) : unit =
+  (* compute max and argmax *)
+  let max = ref (-1) and argmax = ref (-1) in
+  Array.iteri (fun k n -> if n > !max then (max := n; argmax := k)) uses;
+  let hist = Array.make (!max + 1) 0 in
+  Array.iter (fun n -> Array.set hist n (Array.get hist n + 1)) uses;
+  log "(* \"i: n\" means that n proofs are used i times *)\n";
+  let nonzeros = ref 0 in
+  Array.iteri
+    (fun i n -> if n > 0 then (incr nonzeros; log "%d: %d\n" i n)) hist;
+  log "number of mappings: %d\n" !nonzeros;
+  log "most used theorem: %d\n" !argmax
+;;
+
+(* [count_rule uses p] updates [uses] with the rule of [p]. *)
+let count_rule (uses : int array) (p : proof) : unit =
+  let i = code_of_proof p in Array.set uses i (Array.get uses i + 1)
+;;
+
+(* [print_rule uses nb_proofs] prints on stdout the array [uses] and
+   the corresponding percentages wrt [nb_proofs]. *)
+let print_stats (uses : int array) (nb_proofs : int) : unit =
+  let total = float_of_int nb_proofs in
+  let part n = float_of_int (100 * n) /. total in
+  Array.iteri
+    (fun i n -> log "%10s %9d %2.f%%\n" (name_of_code i) n (part n)) uses
+;;
+
 (****************************************************************************)
 (* Build a map associating to each constant c a list of positions
    [p1;..;pn] such that pi is the position in the type of c of its
