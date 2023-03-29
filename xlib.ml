@@ -47,6 +47,14 @@ let string_of_file f =
   Bytes.to_string s
 ;;
 
+(* [read_val f] reads value from file [f]. *)
+let read_val dump_file =
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  let v = input_value ic in
+  close_in ic;
+  v
+
 (****************************************************************************)
 (* Printing functions. *)
 (****************************************************************************)

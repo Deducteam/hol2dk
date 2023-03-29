@@ -490,7 +490,7 @@ let proofs_in_range oc = function
 flag \"print_domains\" on;
 print thm_%d;\n" x*)
   | Upto y -> for k = 0 to y do theorem oc k (proof_at k) done
-  | All -> iter_proofs (theorem oc)
+  | All -> iter_proofs_at (theorem oc)
   | Inter(x,y) -> for k = x to y do theorem oc k (proof_at k) done
 ;;
 
@@ -570,13 +570,15 @@ let export_theorems b map_thid_name =
 
 let export_proofs_part =
   let part i s = "_part_" ^ string_of_int i ^ s in
-  fun b _nb_part k x y ->
+  fun b dg k x y ->
   export b ("_part_" ^ string_of_int k)
     (fun oc ->
       List.iter (require oc b)
         ["_types"; part k "_type_abbrevs"; "_terms"; part k "_term_abbrevs";
          "_axioms"];
-      for i = 1 to k-1 do require oc b ("_part_" ^ string_of_int i) done;
+      for i = 1 to k-1 do
+        if dg.(k-1).(i-1) > 0 then require oc b ("_part_" ^ string_of_int i)
+      done;
       proofs_in_range oc (Inter(x,y)))
 ;;
 
@@ -729,7 +731,7 @@ done\n" n;
     close_out oc
   in
   match r with
-  | All -> iter_proofs theorem_file
+  | All -> iter_proofs_at theorem_file
   | Upto x -> for k=0 to x do theorem_file k (proof_at k) done
   | Only _ | Inter _ -> invalid_arg "export_to_lp_dir"
 ;;

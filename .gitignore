@@ -13,3 +13,4 @@ lambdapi.pkg
 *.thm
 *.use
 *.mk
+*.dg

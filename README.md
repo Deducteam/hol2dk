@@ -129,9 +129,10 @@ Dk/lp file generation is linear in the size of dumped files. For big
 dumped files, we provide a command to do file generation in parallel
 using `make`.
 
-You first generate `file.mk` with:
+You first generate `file.dg` and `file.mk` with:
 ```
-hol2dk part $nb_proc file # number of processors you can run in parallel
+hol2dk dg file
+hol2dk mk $nb_proc file # number of processors you can run in parallel
 ```
 
 You can then generate `file.dk` with:

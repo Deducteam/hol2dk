@@ -21,7 +21,7 @@ hol2dk dump $file.[ml|hl]
   and $file.thm
 
 hol2dk pos $file
-  generate $file.pos from $file.prf
+  generate $file.pos
 
 Single-threaded dk/lp file generation:
 
@@ -32,6 +32,9 @@ hol2dk $file.[dk|lp] $thm_id
   generate $file.[dk|lp] but with theorem index $thm_id only (useful for debug)
 
 Multi-threaded dk/lp file generation:
+
+hol2dk dg $n $file
+  generate $file.dg
 
 hol2dk mk $n $file
   generate $file.mk to generate dk/lp files using $n processors
@@ -104,14 +107,6 @@ let read_sig basename =
   update_map_const_typ_vars_pos();
   update_reserved()
 
-let read_thm basename =
-  let dump_file = basename ^ ".thm" in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin (basename ^ ".thm") in
-  let map_thid_name = input_value ic in
-  close_in ic;
-  map_thid_name
-
 let integer s = try int_of_string s with Failure _ -> wrong_arg()
 
 let main() =
@@ -168,10 +163,10 @@ dump_map_thid_name "%s.thm" %a;;
 
   | ["pos";basename] ->
      let nb_proofs = read_nb_proofs basename in
+     let pos = Array.make nb_proofs 0 in
      let dump_file = basename ^ ".prf" in
      log "read %s ...\n%!" dump_file;
      let ic = open_in_bin dump_file in
-     let pos = Array.make nb_proofs 0 in
      let idx = ref 0 in
      begin
        try
@@ -192,21 +187,10 @@ dump_map_thid_name "%s.thm" %a;;
 
   | ["stat";basename] ->
      let nb_proofs = read_nb_proofs basename in
-     let dump_file = basename ^ ".prf" in
-     log "read %s ...\n%!" dump_file;
-     let ic = open_in_bin dump_file in
      let thm_uses = Array.make nb_proofs 0 in
-     Xproof.thm_uses := thm_uses;
      let rule_uses = Array.make nb_rules 0 in
-     begin
-       try
-         while true do
-           let p = input_value ic in
-           count_thm thm_uses p;
-           count_rule rule_uses p
-         done
-       with End_of_file -> close_in ic
-     end;
+     read_prf basename
+       (fun _ p -> count_thm thm_uses p; count_rule rule_uses p);
      log "compute statistics ...\n";
      print_histogram thm_uses;
      print_stats rule_uses nb_proofs;
@@ -217,22 +201,10 @@ dump_map_thid_name "%s.thm" %a;;
         i is a named theorem, the highest theorem index j>i using i if
         there is one, and -1 otherwise. *)
      let nb_proofs = read_nb_proofs basename in
-     let dump_file = basename ^ ".prf" in
-     log "read %s ...\n%!" dump_file;
-     let ic = open_in_bin dump_file in
      let uses = Array.make nb_proofs (-1) in
-     Xproof.thm_uses := uses;
-     let idx = ref 0 in
-     let update_uses p =
-       List.iter (fun k -> Array.set uses k !idx) (deps p);
-       incr idx
-     in
-     begin
-       try while !idx < nb_proofs do update_uses (input_value ic) done
-       with End_of_file -> assert false
-     end;
-     close_in ic;
-     MapInt.iter (fun k _ -> Array.set uses k 0) (read_thm basename);
+     read_prf basename
+       (fun idx p -> List.iter (fun k -> Array.set uses k idx) (deps p));
+     MapInt.iter (fun k _ -> Array.set uses k 0) (read_val (basename ^ ".thm"));
      let dump_file = basename ^ ".use" in
      log "generate %s ...\n" dump_file;
      let oc = open_out_bin dump_file in
@@ -240,20 +212,60 @@ dump_map_thid_name "%s.thm" %a;;
      close_out oc;
      exit 0
 
+  | ["dg";nb_part;b] ->
+     let nb_part = integer nb_part in
+     if nb_part < 2 then wrong_arg();
+     let nb_proofs = read_nb_proofs b in
+     let part_size = nb_proofs / nb_part in
+     let part idx =
+       let k = idx / part_size in if k >= nb_part then k - 1 else k in
+     (*let thdg = Array.make nb_part 0 in*)
+     (*let map_thid_name = read_val (b ^ ".thm") in*)
+     let dg = Array.init nb_part (fun i -> Array.make i 0) in
+     let add_dep x =
+       (*let named_thm = ref (MapInt.mem x map_thid_name) in*)
+       let px = part x in
+       fun y ->
+       let py = part y in
+       (*if !named_thm then thdg.(py) <- thdg.(py) + 1;*)
+       if px <> py then
+         begin
+           (*log "add_dep %d (%d) %d (%d)\n" x (px+1) y (py+1);*)
+           dg.(px).(py) <- dg.(px).(py) + 1
+         end
+     in
+     read_prf b (fun idx p -> List.iter (add_dep idx) (deps p));
+     for i = 0 to nb_part - 1 do
+       log "%d:" (i+1);
+       for j = 0 to i - 1 do
+         if dg.(i).(j) > 0 then log " %d (%d)" (j+1) dg.(i).(j)
+       done;
+       log "\n"
+     done;
+     (*log "th:";
+     for i = 0 to nb_part - 1 do
+       if thdg.(i) > 0 then log " %d (%d)" (i+1) thdg.(i)
+     done;
+     log "\n";*)
+     let dump_file = b ^ ".dg" in
+     log "generate %s ...\n%!" dump_file;
+     let oc = open_out_bin dump_file in
+     output_value oc dg;
+     close_out oc;
+     exit 0
+
   | ["mk";nb_part;b] ->
      let nb_part = integer nb_part in
      if nb_part < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
-
-     (* generate makefile *)
-     let mk = b ^ ".mk" in
-     log "generate %s ...\n%!" mk;
-     let oc = open_out mk in
      let part_size = nb_proofs / nb_part in
-
+     let dg = read_val (b ^ ".dg") in
+     let make_file = b ^ ".mk" in
+     log "generate %s ...\n%!" make_file;
+     let oc = open_out make_file in
      out oc "# file generated with: hol2dk mk %d %s\n\n" nb_part b;
      out oc ".SUFFIXES :\n";
-     out oc ".PHONY : dk lp\n";
+     out oc ".PHONY : dk lp lpo\n";
 
      (* dk files generation *)
      out oc "\ndk : %s.dk\n" b;
@@ -304,8 +316,33 @@ dump_map_thid_name "%s.thm" %a;;
      cmd nb_part (nb_proofs - 1);
 
      (* targets common to dk and lp files part *)
-     out oc "%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
+     out oc "\n%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
      out oc "%s.use : %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
+
+     (* lp files checking *)
+     out oc "\nlpo : %s.lpo\n" b;
+     out oc "%s.lpo : theory_hol.lpo %s_types.lpo %s_terms.lpo %s_axioms.lpo"
+       b b b b;
+     for i = 1 to nb_part do out oc " %s_part_%d.lpo" b i done;
+     out oc "\n%s_types.lpo : theory_hol.lpo\n" b;
+     out oc "%s_terms.lpo : theory_hol.lpo %s_types.lpo\n" b b;
+     out oc "%s_axioms.lpo : theory_hol.lpo %s_types.lpo %s_terms.lpo\n"
+       b b b;
+     for i = 0 to nb_part - 1 do
+       let j = i+1 in
+       out oc "%s_part_%d_type_abbrevs.lpo : theory_hol.lpo %s_types.lpo\n"
+         b j b;
+       out oc "%s_part_%d_term_abbrevs.lpo : theory_hol.lpo %s_types.lpo \
+               %s_part_%d_type_abbrevs.lpo %s_terms.lpo\n" b j b b j b;
+       out oc "%s_part_%d.lpo : theory_hol.lpo %s_types.lpo \
+               %s_part_%d_type_abbrevs.lpo %s_terms.lpo \
+               %s_part_%d_term_abbrevs.lpo %s_axioms.lpo" b j b b j b b j b;
+       for j = 0 to i - 1 do
+         if dg.(i).(j) > 0 then out oc " %s_part_%d.lpo" b (j+1)
+       done;
+       out oc "\n"
+     done;
+     out oc "%%.lpo : %%.lp\n\tlambdapi check -c $<\n";
      exit 0
 
   | ["sig";f] ->
@@ -332,7 +369,7 @@ dump_map_thid_name "%s.thm" %a;;
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
-     let map_thid_name = read_thm basename in
+     let map_thid_name = read_val (basename ^ ".thm") in
      read_pos basename;
      init_proof_reading basename;
      if dk then Xdk.export_theorems basename map_thid_name
@@ -363,7 +400,7 @@ dump_map_thid_name "%s.thm" %a;;
      else
        begin
          read_use basename;
-         Xlp.export_proofs_part basename nb_part k x y;
+         Xlp.export_proofs_part basename (read_val (basename ^ ".dg")) k x y;
          let suffix = "_part_" ^ string_of_int k in
          Xlp.export_term_abbrevs basename suffix;
          Xlp.export_type_abbrevs basename suffix
@@ -407,7 +444,8 @@ dump_map_thid_name "%s.thm" %a;;
      if dk then
        begin
          Xdk.export_proofs basename range;
-         if range = All then Xdk.export_theorems basename (read_thm basename);
+         if range = All then
+           Xdk.export_theorems basename (read_val (basename ^ ".thm"));
          Xdk.export_term_abbrevs basename "";
          Xdk.export_type_abbrevs basename "";
          log "generate %s.dk ...\n%!" basename;
@@ -424,7 +462,8 @@ dump_map_thid_name "%s.thm" %a;;
      else
        begin
          Xlp.export_proofs basename range;
-         if range = All then Xlp.export_theorems basename (read_thm basename);
+         if range = All then
+           Xlp.export_theorems basename (read_val (basename ^ ".thm"));
          Xlp.export_term_abbrevs basename "";
          Xlp.export_type_abbrevs basename "";
          exit 0

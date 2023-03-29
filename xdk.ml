@@ -621,7 +621,7 @@ let proofs_in_range oc = function
      List.iter (fun k -> theorem_as_axiom oc k (proof_at k)) (deps p);
      theorem oc x p
   | Upto y -> for k = 0 to y do theorem oc k (proof_at k) done
-  | All -> iter_proofs (theorem oc)
+  | All -> iter_proofs_at (theorem oc)
   | Inter(x,y) -> for k = x to y do theorem oc k (proof_at k) done
 ;;
 
