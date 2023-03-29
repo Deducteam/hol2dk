@@ -595,7 +595,7 @@ let decl_theorem oc k p d =
      let term = unabbrev_term tvs rmap in
      let hyps_typ oc ts =
        List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-     out oc "thm thm_%d : %a%a%aPrf %a.\n" k
+     out oc "thm_%d : %a%a%aPrf %a.\n" k
        (list (decl_typ_param tvs)) tvs
        (list (decl_param tvs rmap)) xs hyps_typ ts term t
   | Named_thm n ->

@@ -303,7 +303,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   in
   match ty_su with
   | [] ->
-     out oc "(thm_%d%a%a)" i2
+     out oc "(@thm_%d%a%a%a)" i2 (list_prefix " " typ) tvs2
        (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
   | _ ->
      (* vs2 is now the application of ty_su on vs2 *)
@@ -484,7 +484,6 @@ let proofs_in_range oc = function
   | Only x ->
      let p = proof_at x in
      List.iter (fun k -> theorem_as_axiom oc k (proof_at k)) (deps p);
-     log "here 1\n%!";
      theorem oc x p(*;
      out oc
 "flag \"print_implicits\" on;
