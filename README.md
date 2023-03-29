@@ -245,10 +245,10 @@ Multi-threaded translation to Dedukti (with `mk 7`):
 Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
   * proof dumping time: 13s 101 Mo
   * number of proof steps: 409 K
-  * dk files generation: 26s 99 Mo
-  * checking time with dk check: 21s
-  * checking time with kocheck -j 7: 14s
-  * lp files generation: 17s 70 Mo (4s with `mk 7`)
+  * dk file generation: 21s 97 Mo
+  * checking time with dk check: 26s
+  * checking time with kocheck -j 7: 16s
+  * lp file generation: 15s 70 Mo (4s with `mk 7`)
   * checking time with lambdapi: 1m54s (2m with `mk 7`)
 
 Exporting pure Q0 proofs
@@ -266,14 +266,14 @@ sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml
 ```
 
 Results on `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
-- ocaml proof dumping: 13.2s
-- number of proof steps: 564351
-- proof dumping: 1.4s 157 Mo
-- dk file generation: 45s 153 Mo
-- checking time with dk check: 26s
-- checking time with kocheck -j 7: 22s
-- lp file generation: 29s 107 Mo
-- checking time with lambdapi: 2m49s
+  * ocaml proof dumping: 13.2s
+  * number of proof steps: 564351
+  * proof dumping: 1.4s 157 Mo
+  * dk file generation: 45s 153 Mo
+  * checking time with dk check: 26s
+  * checking time with kocheck -j 7: 22s
+  * lp file generation: 29s 107 Mo
+  * checking time with lambdapi: 2m49s
 
 Source files
 ------------

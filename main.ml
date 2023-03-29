@@ -104,20 +104,6 @@ let read_sig basename =
   update_map_const_typ_vars_pos();
   update_reserved()
 
-let read_pos basename =
-  let dump_file = basename ^ ".pos" in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
-  Xproof.prf_pos := input_value ic;
-  close_in ic
-
-let read_use basename =
-  let dump_file = basename ^ ".use" in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
-  Xproof.thm_uses := input_value ic;
-  close_in ic
-
 let read_thm basename =
   let dump_file = basename ^ ".thm" in
   log "read %s ...\n%!" dump_file;
@@ -125,11 +111,6 @@ let read_thm basename =
   let map_thid_name = input_value ic in
   close_in ic;
   map_thid_name
-
-let init_proof_reading basename =
-  let dump_file = basename ^ ".prf" in
-  log "read %s ...\n%!" dump_file;
-  Xproof.ic_prf := open_in_bin dump_file
 
 let integer s = try int_of_string s with Failure _ -> wrong_arg()
 
@@ -263,6 +244,8 @@ dump_map_thid_name "%s.thm" %a;;
      let nb_part = integer nb_part in
      if nb_part < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
+
+     (* generate makefile *)
      let mk = b ^ ".mk" in
      log "generate %s ...\n%!" mk;
      let oc = open_out mk in
@@ -272,7 +255,7 @@ dump_map_thid_name "%s.thm" %a;;
      out oc ".SUFFIXES :\n";
      out oc ".PHONY : dk lp\n";
 
-     (* dk part *)
+     (* dk files generation *)
      out oc "\ndk : %s.dk\n" b;
      out oc "%s.dk : theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
        b b b b;
@@ -297,7 +280,7 @@ dump_map_thid_name "%s.thm" %a;;
      done;
      cmd nb_part (nb_proofs - 1);
 
-     (* lp part *)
+     (* lp files generation *)
      out oc "\nlp : %s.lp theory_hol.lp %s_types.lp %s_terms.lp %s_axioms.lp"
        b b b b;
      for i = 1 to nb_part do
@@ -320,7 +303,7 @@ dump_map_thid_name "%s.thm" %a;;
      done;
      cmd nb_part (nb_proofs - 1);
 
-     (* targets common to dk and lp *)
+     (* targets common to dk and lp files part *)
      out oc "%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
      out oc "%s.use : %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
      exit 0
