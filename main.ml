@@ -235,7 +235,7 @@ dump_map_thid_name "%s.thm" %a;;
          end
      in
      read_prf b (fun idx p -> List.iter (add_dep idx) (deps p));
-     for i = 0 to nb_part - 1 do
+     for i = 1 to nb_part - 1 do
        log "%d:" (i+1);
        for j = 0 to i - 1 do
          if dg.(i).(j) > 0 then log " %d (%d)" (j+1) dg.(i).(j)
