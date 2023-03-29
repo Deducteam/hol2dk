@@ -6,6 +6,16 @@ open Fusion
 open Xlib
 open Xprelude
 
+(* [read_prf basename f] runs [f] on every proof of [basename.prf]. *)
+let read_prf (basename : string) (f : int -> proof -> unit) =
+  let dump_file = basename ^ ".prf" in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  let idx = ref 0 in
+  try while true do f !idx (input_value ic); incr idx done
+  with End_of_file -> close_in ic
+;;
+
 let prf_pos : int array ref = ref [||];;
 
 let read_pos basename =
@@ -36,7 +46,7 @@ let proof_at k =
 (* [iter_proofs f] runs [f k (proof_at k)] on all proof index [k] from
    0 to [nb_proofs() - 1]. Can be used after [read_pos] and
    [init_proof_reading] only. *)
-let iter_proofs (f : int -> proof -> unit) =
+let iter_proofs_at (f : int -> proof -> unit) =
   let idx = ref 0 in
   let n = nb_proofs() in
   try
@@ -52,11 +62,6 @@ let iter_proofs (f : int -> proof -> unit) =
 
 let thm_uses : int array ref = ref [||];;
 
-let read_use basename =
-  let dump_file = basename ^ ".use" in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
-  thm_uses := input_value ic;
-  close_in ic
+let read_use basename = thm_uses := read_val (basename ^ ".use");;
 
 let cur_part_max : int ref = ref (-1);;
