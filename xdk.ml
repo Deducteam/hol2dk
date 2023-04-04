@@ -38,23 +38,22 @@ let valid_name = function
 
 let name oc n = string oc (valid_name n);;
 
-let suffix s oc n = name oc (n ^ s);;
-
-let typ_name = name
+let typ_name oc n =
+  string oc
+    (match n with
+     | "sum" -> "sum_type" (* sum is also a term constant *)
+     | n -> valid_name n)
   (*match !stage with
   | Types | No_abbrev -> name oc n
   | _ -> out oc "%s_types.%a" !basename name n*)
 
-(* rename constant names identical to type names *)
-let cst_name oc n =
-  string oc
-    (match n with
-     | "sum" -> "Sum"
-     | n -> valid_name n)
+let cst_name = name
   (*match !stage with
   | Terms | No_abbrev -> name oc n
   | _ -> out oc "%s_terms.%a" !basename name n*)
 ;;
+
+let suffix s oc n = name oc (n ^ s);;
 
 (****************************************************************************)
 (* Translation of types. *)

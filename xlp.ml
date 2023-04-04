@@ -14,37 +14,46 @@ open Xproof
 (* Rename HOL-Light names to valid (and sometimes nicer) identifiers. *)
 let name oc n =
   string oc
-    (match n with
-     | "," -> "̦‚" (* low single comma quotation mark
-                     https://unicode-table.com/en/201A/ *)
-     | "@" -> "ε" (* Hilbert choice operator *)
-     | "\\/" -> "∨"
-     | "/\\" -> "∧"
-     | "==>" -> "⇒"
-     | "!" -> "∀"
-     | "?" -> "∃"
-     | "?!" -> "∃!"
-     | "~" -> "¬"
-     (* invalid Lambdapi identifiers *)
-     | "$" -> "dollar"
-     | ".." -> "dotdot"
-     | _ -> n);;
-
-(* Rename term constants that have the same name as type constants. *)
-let cst_name oc = function
-  | "sum" -> string oc "Sum"
-  | n -> name oc n
+    begin match n with
+    | "," -> "̦‚" (* low single comma quotation mark
+                    https://unicode-table.com/en/201A/ *)
+    | "@" -> "ε" (* Hilbert choice operator *)
+    | "\\/" -> "∨"
+    | "/\\" -> "∧"
+    | "==>" -> "⇒"
+    | "!" -> "∀"
+    | "?" -> "∃"
+    | "?!" -> "∃!"
+    | "~" -> "¬"
+    (* invalid Lambdapi identifiers *)
+    | "$" -> "dollar"
+    | ".." -> "dotdot"
+    | "" -> assert false
+    | _ -> n
+    end
 ;;
+
+let cst_name = name;;
 
 (****************************************************************************)
 (* Translation of types. *)
 (****************************************************************************)
 
+let typ_name oc n =
+  string oc
+    begin match n with
+     | "" -> assert false
+     | "sum" -> "sum_type" (* sum is also a term constant *)
+     | n ->
+        if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
+        else n
+    end
+
 let rec raw_typ oc b =
   match b with
   | Tyvar n
-  | Tyapp(n,[]) -> string oc n
-  | Tyapp(n,bs) -> out oc "(%a%a)" string n (list_prefix " " raw_typ) bs
+  | Tyapp(n,[]) -> typ_name oc n
+  | Tyapp(n,bs) -> out oc "(%a%a)" typ_name n (list_prefix " " raw_typ) bs
 ;;
 
 let abbrev_typ =
@@ -52,7 +61,7 @@ let abbrev_typ =
   fun oc b ->
   match b with
   | Tyvar n
-  | Tyapp(n,[]) -> string oc n
+  | Tyapp(n,[]) -> typ_name oc n
   | _ ->
      (* check whether the type is already abbreviated; add a new
         abbreviation if needed *)
