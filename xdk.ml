@@ -533,7 +533,7 @@ let typ_arity oc k =
   for i = 1 to k do out oc "%a -> " typ_name "Set" done; typ_name oc "Set";;
 
 let decl_typ oc (n,k) =
-  out oc "%a : %a.\n" name n typ_arity k;;
+  out oc "%a : %a.\n" typ_name n typ_arity k;;
 
 let decl_typ_param tvs oc b = out oc "%a : %a -> " (typ tvs) b typ_name "Set";;
 

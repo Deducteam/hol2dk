@@ -756,7 +756,7 @@ module Hol : Hol_kernel = struct
 
   let CHOOSE (v,Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
     match c1 with
-    | Comb(Const("?",_),(Abs(Var _,_) as p)) ->
+    | Comb(Const("?",_),(Abs(bv,bod) as p)) ->
       let asl2 = term_remove (mk_comb(p,v)) asl2 in
       let asl2 = term_remove (vsubst [v,bv] bod) asl2 in
       new_theorem (term_union asl1 asl2) c2 (Pchoose(v,k1,k2))

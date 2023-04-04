@@ -254,8 +254,8 @@ Multi-threaded translation to Lambdapi (with `mk 7`):
   * term abbrevs: 700 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
   
-Multi-threaded translation to Dedukti (with `mk 7`):
-  * dk file generation time: 9m19s
+Multi-threaded translation to Dedukti:
+  * dk file generation time: 9m19s (with `mk 7`) 8m56s (with `mk 21`)
   * dk file size: 3.7 Go
   * type abbrevs: 652 Ko
   * term abbrevs: 731 Mo
