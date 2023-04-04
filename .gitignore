@@ -14,3 +14,12 @@ lambdapi.pkg
 *.use
 *.mk
 *.dg
+*.v
+*.vo
+_CoqProject
+Makefile.coq
+Makefile.coq.conf
+.Makefile.coq.d
+*.vman
+*.vok
+*.vos

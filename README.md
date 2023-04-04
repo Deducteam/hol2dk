@@ -207,6 +207,25 @@ opam switch link 4.14.1
 eval `opam env`
 ```
 
+Translating HOL-Light files to Coq
+----------------------------------
+
+Once HOL-Light files have been translated to Lambdapi, it is possible
+to translate Lambdapi files into [Coq](https://coq.inria.fr/) files
+using the Coq export feature of Lambdapi:
+
+First, translate every Lambdapi file into a Coq file:
+```
+lambdapi export -o stt_coq --encoding encoding.lp --renaming renaming.lp file.lp | sed -e 's/hol-light\.//g' > file.v || exit 1
+```
+
+You can then check the generated Coq files as follows:
+```
+echo theory_hol.v file*.v > _CoqProject
+coq_makefile -f _CoqProject > Makefile.coq
+make -j 7 -f Makefile.coq
+```
+
 Results
 -------
 
@@ -243,7 +262,7 @@ Multi-threaded translation to Dedukti (with `mk 7`):
   * kocheck can check it in 12m52s
   * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM and the process is stopped after 11m16s)
 
-Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
+Results for `hol.ml` up to `arith.ml`:
   * proof dumping time: 13s 101 Mo
   * number of proof steps: 409 K
   * dk file generation: 21s 97 Mo
@@ -251,9 +270,11 @@ Results for `arith.ml` (i.e. `hol.ml` until `arith.ml`):
   * checking time with kocheck -j 7: 16s
   * lp file generation: 15s 70 Mo (4s with `mk 7`)
   * checking time with lambdapi: 1m54s (2m with `mk 7`)
+  * translation to Coq: 10s
+  * checking time for Coq: 7m5s (with `mk 22` and `j 7`)
 
 Exporting pure Q0 proofs
--------------------
+------------------------
 
 Hol2dk instruments basic HOL-Light tactics corresponding to
 introduction and elimination rules of connectives to get smaller
