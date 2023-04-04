@@ -359,6 +359,8 @@ Q0*)
 let SIMPLE_EXISTS v th =
   EXISTS (mk_exists(v,concl th),v) th;;
 
+(*Q0
+(*REMOVE [v], [th1: Γ₁ ⊢ ? abs], [th2: Γ₂ ⊢ c₂] ~~> [Γ₁ U Γ₂ - {abs v} ⊢ c₂] *)
 let CHOOSE =
   let P = `P:A->bool` and Q = `Q:bool` in
   let pth =
@@ -376,7 +378,7 @@ let CHOOSE =
         let th5 = PINST [snd(dest_var v),aty] [abs,P; concl th2,Q] pth in
         MP (MP th5 th4) th1
     with Failure _ -> failwith "CHOOSE";;
-
+Q0*)
 let SIMPLE_CHOOSE v th =
   CHOOSE(v,ASSUME (mk_exists(v,hd(hyp th)))) th;;
 

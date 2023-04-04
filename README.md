@@ -263,13 +263,13 @@ Multi-threaded translation to Dedukti (with `mk 7`):
   * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM and the process is stopped after 11m16s)
 
 Results for `hol.ml` up to `arith.ml`:
-  * proof dumping time: 13s 101 Mo
-  * number of proof steps: 409 K
-  * dk file generation: 21s 97 Mo
-  * checking time with dk check: 26s
-  * checking time with kocheck -j 7: 16s
-  * lp file generation: 15s 70 Mo (4s with `mk 7`)
-  * checking time with lambdapi: 1m54s (2m with `mk 7`)
+  * proof dumping time: 13s 100 Mo
+  * number of proof steps: 405 K
+  * dk file generation: 20s 96 Mo
+  * checking time with dk check: 19s
+  * checking time with kocheck -j 7: 14s
+  * lp file generation: 15s 69 Mo (4s with `mk 7`)
+  * checking time with lambdapi: 1m53s (2m with `mk 7`)
   * translation to Coq: 10s
   * checking time for Coq: 7m5s (with `mk 22` and `j 7`)
 
