@@ -48,6 +48,7 @@ module type Hol_kernel =
       | Pspec of term * int
       | Pgen of term * int
       | Pexists of term * term * int
+      | Pchoose of term * int * int
       | Pdisj1 of term * int
       | Pdisj2 of term * int
       | Pdisj_cases of int * int * int
@@ -123,6 +124,7 @@ module type Hol_kernel =
       val SPEC : term -> thm -> thm
       val GEN : term -> thm -> thm
       val EXISTS : term * term -> thm -> thm
+      val CHOOSE : (term * thm) -> thm -> thm
       val DISJ1 : thm -> term -> thm
       val DISJ2 : term -> thm -> thm
       val DISJ_CASES : thm -> thm -> thm -> thm
@@ -189,6 +191,7 @@ module Hol : Hol_kernel = struct
   | Pspec of term * int
   | Pgen of term * int
   | Pexists of term * term * int
+  | Pchoose of term * int * int
   | Pdisj1 of term * int
   | Pdisj2 of term * int
   | Pdisj_cases of int * int * int
@@ -749,6 +752,15 @@ module Hol : Hol_kernel = struct
     | Comb(Const("?",_),(Abs(Var(_,b),_) as p)) ->
       new_theorem asl (Comb(cst_ex b,p)) (Pexists(p,t,k))
     | _ -> failwith "GEN"
+  ;;
+
+  let CHOOSE (v,Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
+    match c1 with
+    | Comb(Const("?",_),(Abs(bv,bod) as p)) ->
+      let asl2 = term_remove (mk_comb(p,v)) asl2 in
+      let asl2 = term_remove (vsubst [v,bv] bod) asl2 in
+      new_theorem (term_union asl1 asl2) c2 (Pchoose(v,k1,k2))
+    | _ -> failwith "CHOOSE"
   ;;
 
   let DISJ1 (Sequent(asl,c,k)) p =

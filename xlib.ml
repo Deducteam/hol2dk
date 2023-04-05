@@ -393,7 +393,7 @@ let deps (Proof(_,content)) =
   match content with
   | Pdisj_cases(k1,k2,k3) -> [k1;k2;k3]
   | Ptrans(k1,k2) | Pmkcomb(k1,k2) | Peqmp(k1,k2) | Pdeduct(k1,k2)
-  | Pconj(k1,k2) | Pmp(k1,k2)
+  | Pconj(k1,k2) | Pmp(k1,k2) | Pchoose(_,k1,k2)
     -> [k1;k2]
   | Pabs(k,_) | Pinst(k,_) | Pinstt(k,_)| Pdeft(k,_,_,_)
   | Pconjunct1 k | Pconjunct2 k | Pdisch(_,k) | Pspec(_,k) | Pgen(_,k)
@@ -430,6 +430,7 @@ let code_of_proof (Proof(_,c)) =
   | Pdisj1 _ -> 22
   | Pdisj2 _ -> 23
   | Pdisj_cases _ -> 24
+  | Pchoose _ -> 25
 ;;
 
 let name_of_code = function
@@ -458,10 +459,11 @@ let name_of_code = function
   | 22 -> "disj1"
   | 23 -> "disj2"
   | 24 -> "disj_cases"
+  | 25 -> "choose"
   | _ -> assert false
 ;;
 
-let nb_rules = 25;;
+let nb_rules = 26;;
 
 (* [count_thm uses p] updates [uses] with the dependencies of [p]. *)
 let count_thm (uses : int array) (p : proof) : unit =

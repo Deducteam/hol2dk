@@ -386,6 +386,17 @@ let proof tvs rmap =
        let l,r = binop_args (concl th1) in
        out oc "∨ₑ %a (λ h0 : Prf %a, %a) (λ h0 : Prf %a, %a)"
          (sub k1) p1 term l sub_at k2 term r sub_at k3
+    | Pchoose(v,k1,k2) ->
+       let p1 = proof_at k1 in
+       let Proof(th1,_) = p1 in
+       begin match concl th1 with
+       | Comb(_,p) ->
+          let rmap' = add_var rmap v in
+          out oc "∃ₑ %a (λ %a, λ h0 : Prf(%a %a), %a)"
+            (sub k1) p1 (decl_var rmap') v term p (var rmap') v
+            (subproof tvs rmap' [] [] ts k2) (proof_at k2)
+       | _ -> assert false
+       end
   in proof
 ;;
 
@@ -638,7 +649,8 @@ symbol ∧ᵢ [p q] : Prf p → Prf q → Prf (∧ p q);
 symbol ∧ₑ₁ [p q] : Prf (∧ p q) → Prf p;
 symbol ∧ₑ₂ [p q] : Prf (∧ p q) → Prf q;
 symbol ∃ᵢ [a] p (t : El a) : Prf (p t) → Prf (∃ p);
-symbol ∃ₑ [a] p : Prf (∃ p) → Π r, (Π x:El a, Prf (p x) → Prf r) → Prf r;
+symbol ∃ₑ [a p] :
+  Prf (∃ (λ x:El a, p x)) → Π [r], (Π x:El a, Prf (p x) → Prf r) → Prf r;
 symbol ∨ᵢ₁ [p] : Prf p → Π q, Prf (∨ p q);
 symbol ∨ᵢ₂ p [q] : Prf q → Prf (∨ p q);
 symbol ∨ₑ [p q] :

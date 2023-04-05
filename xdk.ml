@@ -508,6 +508,20 @@ let proof tvs rmap =
        out oc "or_elim %a %a %a %a (h0 : Prf %a => %a) (h0 : Prf %a => %a)"
          term l term r (sub k1) p1 term (concl th2)
          term l (sub k2) p2 term r sub_at k3
+    | Pchoose(v,k1,k2) ->
+       let p1 = proof_at k1 in
+       let Proof(th1,_) = p1 in
+       let p2 = proof_at k2 in
+       let Proof(th2,_) = p2 in
+       begin match concl th1 with
+       | Comb(_,p) ->
+          let rmap' = add_var rmap v in
+          out oc "ex_elim %a %a %a %a (%a => h0 : Prf(%a %a) => %a)"
+            typ (type_of v) term p (sub k1) p1 term (concl th2)
+            (decl_var tvs rmap') v term p (var rmap') v
+            (subproof tvs rmap' [] [] ts k2) p2
+       | _ -> assert false
+       end
   in proof
 ;;
 
@@ -519,7 +533,7 @@ let typ_arity oc k =
   for i = 1 to k do out oc "%a -> " typ_name "Set" done; typ_name oc "Set";;
 
 let decl_typ oc (n,k) =
-  out oc "%a : %a.\n" name n typ_arity k;;
+  out oc "%a : %a.\n" typ_name n typ_arity k;;
 
 let decl_typ_param tvs oc b = out oc "%a : %a -> " (typ tvs) b typ_name "Set";;
 
