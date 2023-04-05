@@ -19,7 +19,7 @@ dir=$1
 
 if test -f $dir/fusion-bak.ml
 then
-    echo "mv$opt $dir/fusion-bak.ml $dir/fusion.ml:"
+    echo "mv$opt $dir/fusion-bak.ml $dir/fusion.ml"
     mv$opt $dir/fusion-bak.ml $dir/fusion.ml
 else
     echo "$dir/fusion-bak.ml does not exist"
@@ -27,10 +27,11 @@ fi
 
 if test -f $dir/bool-bak.ml
 then
-    echo "mv$opt $dir/bool-bak.ml $dir/bool.ml:"
+    echo "mv$opt $dir/bool-bak.ml $dir/bool.ml"
     mv$opt $dir/bool-bak.ml $dir/bool.ml
 else
     echo "$dir/bool-bak.ml does not exist"
 fi
 
+echo "rm$opt $dir/xnames.ml"
 rm$opt $dir/xnames.ml
