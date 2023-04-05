@@ -107,6 +107,11 @@ let read_sig basename =
   update_map_const_typ_vars_pos();
   update_reserved()
 
+let read_thm basename =
+  let map = read_val (basename ^ ".thm") in
+  log "%d named theorems\n%!" (MapInt.cardinal map);
+  map
+
 let integer s = try int_of_string s with Failure _ -> wrong_arg()
 
 let main() =
@@ -116,7 +121,7 @@ let main() =
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
-     out stdout "%a\n" (list_sep " " string) (trans_file_deps dg f);
+     log "%a\n" (list_sep " " string) (trans_file_deps dg f);
      exit 0
 
   | ["dep"] ->
@@ -124,19 +129,19 @@ let main() =
      exit 0
 
   | ["name";f] ->
-     out stdout "%a\n" (list_sep "\n" string) (thms_of_file f);
+     log "%a\n" (list_sep "\n" string) (thms_of_file f);
      exit 0
 
   | ["name";"upto";f] ->
      let dg = dep_graph (files()) in
      List.iter
-       (fun d -> List.iter (out stdout "%s %s\n" d) (thms_of_file d))
+       (fun d -> List.iter (log "%s %s\n" d) (thms_of_file d))
        (trans_file_deps dg f);
      exit 0
 
   | ["name"] ->
      List.iter
-       (fun f -> List.iter (out stdout "%s %s\n" f) (thms_of_file f))
+       (fun f -> List.iter (log "%s %s\n" f) (thms_of_file f))
        (files());
      exit 0
 
@@ -204,7 +209,7 @@ dump_map_thid_name "%s.thm" %a;;
      let uses = Array.make nb_proofs (-1) in
      read_prf basename
        (fun idx p -> List.iter (fun k -> Array.set uses k idx) (deps p));
-     MapInt.iter (fun k _ -> Array.set uses k 0) (read_val (basename ^ ".thm"));
+     MapInt.iter (fun k _ -> Array.set uses k 0) (read_thm basename);
      let dump_file = basename ^ ".use" in
      log "generate %s ...\n" dump_file;
      let oc = open_out_bin dump_file in
@@ -220,7 +225,7 @@ dump_map_thid_name "%s.thm" %a;;
      let part idx =
        let k = idx / part_size in if k >= nb_part then k - 1 else k in
      (*let thdg = Array.make nb_part 0 in*)
-     (*let map_thid_name = read_val (b ^ ".thm") in*)
+     (*let map_thid_name = read_thm b in*)
      let dg = Array.init nb_part (fun i -> Array.make i 0) in
      let add_dep x =
        (*let named_thm = ref (MapInt.mem x map_thid_name) in*)
@@ -369,7 +374,7 @@ dump_map_thid_name "%s.thm" %a;;
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
-     let map_thid_name = read_val (basename ^ ".thm") in
+     let map_thid_name = read_thm basename in
      read_pos basename;
      init_proof_reading basename;
      if dk then Xdk.export_theorems basename map_thid_name
@@ -444,8 +449,7 @@ dump_map_thid_name "%s.thm" %a;;
      if dk then
        begin
          Xdk.export_proofs basename range;
-         if range = All then
-           Xdk.export_theorems basename (read_val (basename ^ ".thm"));
+         if range = All then Xdk.export_theorems basename (read_thm basename);
          Xdk.export_term_abbrevs basename "";
          Xdk.export_type_abbrevs basename "";
          log "generate %s.dk ...\n%!" basename;
@@ -462,8 +466,7 @@ dump_map_thid_name "%s.thm" %a;;
      else
        begin
          Xlp.export_proofs basename range;
-         if range = All then
-           Xlp.export_theorems basename (read_val (basename ^ ".thm"));
+         if range = All then Xlp.export_theorems basename (read_thm basename);
          Xlp.export_term_abbrevs basename "";
          Xlp.export_type_abbrevs basename "";
          exit 0
