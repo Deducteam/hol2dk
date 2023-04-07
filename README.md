@@ -213,6 +213,8 @@ eval `opam env`
 Translating HOL-Light files to Coq
 ----------------------------------
 
+Requirement: lambdapi master branch
+
 Once HOL-Light files have been translated to Lambdapi files, it is possible
 to translate Lambdapi files into [Coq](https://coq.inria.fr/) files
 using the Coq export feature of Lambdapi.

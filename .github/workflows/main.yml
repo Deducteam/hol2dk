@@ -9,10 +9,11 @@ jobs:
       fail-fast: false
       matrix:
         ocaml-version: [4.14.1]
-        camlp5-version: [8.00.05]
+        camlp5-version: [8.01.00]
         dedukti-version: [2.7]
         lambdapi-version: [master]
         dune-version: [3.7.0]
+        coq-version: [8.17.0]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -29,10 +30,10 @@ jobs:
           eval `opam env`
           dune build
           dune install
-      - name: Install hol-light dependencies, dedukti
+      - name: Install hol-light dependencies, dedukti, coq
         run: |
           sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
-          opam install -y camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
+          opam install -y camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} coq.${{ matrix.coq-version }} #lambdapi.${{ matrix.lambdapi-version }}
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
@@ -73,3 +74,8 @@ jobs:
           hol2dk mk 3 xci
           make -j 3 -f xci.mk lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
+      - name: Generate and check coq output
+        run: |
+          eval `opam env`
+          make -j 3 -f xci.mk v
+          make -j 3 -f xci.mk vo
