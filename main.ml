@@ -220,8 +220,8 @@ let make nb_part b req =
      check "lp" "lambdapi check -c" "";
 
      (* v files generation *)
-     out oc "\n.PHONY : v\nv : %stheory_hol.v %s_types.v %s_terms.v"
-       (if req = "" then "" else req ^ " ") b b;
+     out oc "\n.PHONY : v\nv : %stheory_hol.v %s_types.v %s_terms.v \
+             %s_axioms.v" (if req = "" then "" else req ^ " ") b b b;
      for i = 1 to nb_part do
        out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
                %s_part_%d.v" b i b i b i
@@ -233,7 +233,8 @@ let make nb_part b req =
              --erasing erasing.lp";
      if req <> "" then string oc (" --requiring " ^ req);
      out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
-     out oc " | sed -e 's/^Require /From HOLLight Require /' > $@\n";
+     (*out oc " | sed -e 's/^Require /From HOLLight Require /'";*)
+     out oc " > $@\n";
 
      (* coq files checking *)
      check "v" "coqc" req;
