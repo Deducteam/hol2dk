@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         ocaml-version: [4.14.1]
-        camlp5-version: [8.01.00]
+        camlp5-version: [8.00.05]
         dedukti-version: [2.7]
         lambdapi-version: [master]
         dune-version: [3.7.0]
