@@ -237,7 +237,7 @@ let make nb_part b req =
      out oc " > $@\n";
 
      (* coq files checking *)
-     check "v" "coqc" req;
+     check "v" "coqc" (*-R . HOLLight*) req;
 
      (* _CoqProject *)
      log "generate _CoqProject ...\n";
