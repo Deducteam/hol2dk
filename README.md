@@ -275,7 +275,7 @@ Multi-threaded translation to Dedukti:
   * kocheck can check it in 12m52s
   * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM and the process is stopped after 11m16s)
 
-Results for `hol.ml` up to `arith.ml`:
+Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end):
   * proof dumping time: 13s 100 Mo
   * number of proof steps: 405 K
   * dk file generation: 20s 96 Mo
@@ -284,7 +284,7 @@ Results for `hol.ml` up to `arith.ml`:
   * lp file generation: 15s 69 Mo (4s with `mk 7`)
   * checking time with lambdapi: 1m53s (2m with `mk 7`)
   * translation to Coq: 10s
-  * checking time for Coq: 7m5s with `mk 22` and `j 7`
+  * checking time for Coq 8.16.1: 7m5s with `mk 22` and `j 7`
 
 Exporting pure Q0 proofs
 ------------------------
@@ -300,7 +300,7 @@ cd $hol-light-dir
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml
 ```
 
-Results on `hol.ml` until `arith.ml` (by commenting from `loads "wf.ml"` to the end):
+Results on `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
   * ocaml proof dumping: 13.2s
   * number of proof steps: 564351
   * proof dumping: 1.4s 157 Mo
@@ -318,7 +318,7 @@ Modified HOL-Light files:
 - `fusion.ml`: HOL-Light kernel file defining types, terms, theorems, proofs and elementary proof rules.
 - `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives.
 
-The files `fusion.ml` and `bool.ml` contains special comments that are removed to patch hol-light.
+The files `fusion.ml` and `bool.ml` contain special comments that are removed to patch hol-light.
 
 Additional files required for `hol2dk`:
 - `main.ml`: main program of Hol2dk.
@@ -328,10 +328,12 @@ Additional files required for `hol2dk`:
 - `xlp.ml`: translation to Lambdapi of types, terms and proofs.
 - `xdk.ml`: translation to Dedukti of types, terms and proofs.
 - `xfiles.ml`: functions to compute dependencies and theorems of HOL-Light files.
-- `xci.ml`: slightly truncated version of the HOL-Light file `hol.ml` used for testing
 - `xnames.ml`: functions for dumping the index of named theorems.
+- `xci.ml`: slightly truncated version of the HOL-Light file `hol.ml` used for testing.
 
 Note that all these files can be used in the OCaml toplevel as well by removing the `open` instructions and by adding `unset_jrh_lexer;;` and `set_jrh_lexer;;` at the beginning and at the end of the file.
+
+Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp`, `coq.v`.
 
 Thanks
 ------
