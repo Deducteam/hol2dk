@@ -29,7 +29,7 @@ Installing HOL-Light
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml 4.14.1
-- camlp5.8.00.05
+- camlp5 8.00.05
 - ocamlfind
 - num
 
