@@ -13,7 +13,7 @@ jobs:
         dedukti-version: [2.7]
         lambdapi-version: [master]
         dune-version: [3.7.0]
-        coq-version: [8.17.0]
+        coq-version: [8.16.1]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
