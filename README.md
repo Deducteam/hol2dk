@@ -222,6 +222,7 @@ using the Coq export feature of Lambdapi.
 
 If your Lambdapi files have been generated using `file.mk`, you can simply do:
 ```
+hol2dk mk $n file coq.v
 make -j 7 -f file.mk v # to generate Coq files
 make -j 7 -f file.mk vo # to check the generated Coq files
 ```
