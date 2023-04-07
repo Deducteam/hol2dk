@@ -157,19 +157,14 @@ let rec raw_term oc t =
           List.iter (fun p -> out oc " %a" raw_typ (subtyp b p)) ps in
         out oc "(@%a%a)" cst_name n typ_args ps
      end
-  | Comb(u,v) ->
+  | Comb _ ->
      let h, ts = head_args t in
-     out oc "(%a%a)" raw_term h (list_prefix " " raw_term) ts
-     (*begin match h with
-     | Const(n,b) ->
-        let k = if n = "=" then 2 else arity b in
-        if List.compare_length_with ts k < 0 then
-          out oc "(@%a%a%a)" name n
-            (list_prefix " " typ) (List.map (subtyp b) (const_typ_vars_pos n))
-            (list_prefix " " raw_term) ts
-        else out oc "(%a%a)" name n (list_prefix " " raw_term) ts
+     begin match h, ts with
+     | Const(("=") as n,_), [_;_]
+     | Const(("!"|"?") as n,_), [_] ->
+        out oc "(%a%a)" cst_name n (list_prefix " " raw_term) ts
      | _ -> out oc "(%a%a)" raw_term h (list_prefix " " raw_term) ts
-     end*)
+     end
   | Abs(u,v) -> out oc "(λ %a, %a)" raw_decl_var u raw_term v
 ;;
 
@@ -184,20 +179,15 @@ let unabbrev_term =
        try name oc (List.assoc t rmap)
        with Not_found -> out oc "/*%a*/(el %a)" name n raw_typ b
      end
-  | Const(_,_) -> raw_term oc t
-  | Comb(u,v) ->
+  | Const _ -> raw_term oc t
+  | Comb _ ->
      let h, ts = head_args t in
-     out oc "(%a%a)" (term rmap) h (list_prefix " " (term rmap)) ts
-     (*begin match h with
-     | Const(n,b) ->
-        let k = if n = "=" then 2 else arity b in
-        if List.compare_length_with ts k < 0 then
-          out oc "(@%a%a%a)" name n
-            (list_prefix " " typ) (List.map (subtyp b) (const_typ_vars_pos n))
-            (list_prefix " " (term rmap)) ts
-        else out oc "(%a%a)" name n (list_prefix " " (term rmap)) ts
+     begin match h, ts with
+     | Const(("=") as n,_), [_;_]
+     | Const(("!"|"?") as n,_), [_] ->
+        out oc "(%a%a)" cst_name n (list_prefix " " (term rmap)) ts
      | _ -> out oc "(%a%a)" (term rmap) h (list_prefix " " (term rmap)) ts
-     end*)
+     end
   | Abs(u,v) ->
      let rmap' = add_var rmap u in
      out oc "(λ %a, %a)" (unabbrev_decl_var rmap') u (term rmap') v

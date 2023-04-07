@@ -28,7 +28,7 @@ symbol REFL [a] (t : El a) : Prf (= t t);
 symbol MK_COMB [a b] [s t : El (fun a b)] [u v : El a] :
   Prf (= s t) → Prf (= u v) → Prf (= (s u) (t v));
 symbol EQ_MP [p q : El bool] : Prf (= p q) → Prf p → Prf q;
-symbol TRANS [a] [x y z : El a] :
+opaque symbol TRANS [a] [x y z : El a] :
   Prf (= x y) → Prf (= y z) → Prf (= x z) ≔
 /*begin
   assume a x y z xy yz; apply EQ_MP _ xy; apply MK_COMB (REFL (= x)) yz;
@@ -47,7 +47,7 @@ symbol ∧ᵢ [p : El bool] : Prf p → Π [q : El bool], Prf q → Prf (∧ p q
 symbol ∧ₑ₁ [p q : El bool] : Prf (∧ p q) → Prf p;
 symbol ∧ₑ₂ [p q : El bool] : Prf (∧ p q) → Prf q;
 symbol ∃ᵢ [a] (p : El a → El bool) t : Prf (p t) → Prf (∃ p);
-symbol ∃ₑ [a p] : Prf (∃ (λ x, p x)) → Π [r], (Π x:El a, Prf (p x) → Prf r) → Prf r;
+symbol ∃ₑ [a] [p : El a → El bool] : Prf (∃ (λ x, p x)) → Π [r : El bool], (Π x:El a, Prf (p x) → Prf r) → Prf r;
 symbol ∨ᵢ₁ [p : El bool] : Prf p → Π q : El bool, Prf (∨ p q);
 symbol ∨ᵢ₂ (p : El bool) [q : El bool] : Prf q → Prf (∨ p q);
 symbol ∨ₑ [p q : El bool] :

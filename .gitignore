@@ -2,6 +2,9 @@ _build/
 \#*
 *.lp
 !hol_theory.lp
+!encoding.lp
+!erasing.lp
+!renaming.lp
 *.dk
 !hol_theory.dk
 *.prf
@@ -15,11 +18,11 @@ lambdapi.pkg
 *.mk
 *.dg
 *.v
+!coq.v
 *.vo
-_CoqProject
-Makefile.coq
-Makefile.coq.conf
-.Makefile.coq.d
+*.conf
+*.d
 *.vman
 *.vok
 *.vos
+_CoqProject
