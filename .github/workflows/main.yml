@@ -8,6 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        image: 'coqorg/coq:8.17'
         ocaml-version: [4.14.1]
         camlp5-version: [8.00.05]
         dedukti-version: [2.7]
@@ -30,10 +31,10 @@ jobs:
           eval `opam env`
           dune build
           dune install
-      - name: Install hol-light dependencies, dedukti, coq
+      - name: Install hol-light dependencies and dedukti
         run: |
           sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
-          opam install -y camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} coq.${{ matrix.coq-version }} #lambdapi.${{ matrix.lambdapi-version }}
+          opam install -y camlp5.${{ matrix.camlp5-version }} num ocamlfind dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
@@ -74,6 +75,10 @@ jobs:
           hol2dk mk 3 xci
           make -j 3 -f xci.mk lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
+      - name: Install Coq
+        uses: coq-community/docker-coq-action@v1
+        with:
+          custom_image: ${{ matrix.image }}
       - name: Generate and check coq output
         run: |
           eval `opam env`
