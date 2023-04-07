@@ -1,0 +1,17 @@
+opam-version: "2.0"
+synopsis: "Translation of HOL-Light library in Coq"
+homepage: "https://github.com/Deducteam/hol2dk"
+license: "CeCILL"
+bug-reports: "https://github.com/Deducteam/hol2dk/issues"
+dev-repo: "git+https://github.com/Deducteam/hol2dk.git"
+depends: [
+  "ocaml"
+  "coq" {>= "8.16.1"}
+]
+build: [make "-j%{jobs}%" "-f" "xci.mk" "vo"]
+maintainer: "frederic.blanqui@inria.fr"
+authors: ["Frédéric Blanqui"]
+tags: [
+  "date:2023-04-07"
+  "logpath:HOLLight"
+]

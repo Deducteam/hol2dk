@@ -21,10 +21,6 @@ jobs:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
       - name: Checkout hol2dk
         uses: actions/checkout@v3
-      - name: Install Coq
-        uses: coq-community/docker-coq-action@v1
-        with:
-          custom_image: ${{ matrix.image }}
       - name: Install opam
         uses: avsm/setup-ocaml@v2
         with:
@@ -80,10 +76,12 @@ jobs:
           hol2dk mk 3 xci
           make -j 3 -f xci.mk lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
-      - name: Generate and check coq output
+      - name: Generate coq output
         run: |
           eval `opam env`
           make -j 3 -f xci.mk v
-          ls *.v
-          coqc -R . HOLLight coq.v
-          make -j 3 -f xci.mk vo
+      - name: Check coq output
+        uses: coq-community/docker-coq-action@v1
+        with:
+          opam-file: 'coq-hol-light.opam'
+          custom_image: ${{ matrix.image }}
