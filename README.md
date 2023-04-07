@@ -25,10 +25,11 @@ Installing HOL-Light
 --------------------
 
 **Requirements:**
+- hol-light >= af186e9f3c685f5acab16097b05717c10ebb030d (28/01/23)
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml 4.14.1
-- camlp5.8.00.05
+- camlp5 8.00.05
 - ocamlfind
 - num
 
@@ -213,12 +214,15 @@ eval `opam env`
 Translating HOL-Light files to Coq
 ----------------------------------
 
+Requirement: lambdapi master branch
+
 Once HOL-Light files have been translated to Lambdapi files, it is possible
 to translate Lambdapi files into [Coq](https://coq.inria.fr/) files
 using the Coq export feature of Lambdapi.
 
 If your Lambdapi files have been generated using `file.mk`, you can simply do:
 ```
+hol2dk mk $n file coq.v
 make -j 7 -f file.mk v # to generate Coq files
 make -j 7 -f file.mk vo # to check the generated Coq files
 ```
