@@ -8,7 +8,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: 'coqorg/coq:8.17'
+        image:
+          - 'coqorg/coq:8.17'
         ocaml-version: [4.14.1]
         camlp5-version: [8.00.05]
         dedukti-version: [2.7]
