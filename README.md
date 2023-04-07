@@ -210,18 +210,28 @@ eval `opam env`
 Translating HOL-Light files to Coq
 ----------------------------------
 
-Once HOL-Light files have been translated to Lambdapi, it is possible
+Once HOL-Light files have been translated to Lambdapi files, it is possible
 to translate Lambdapi files into [Coq](https://coq.inria.fr/) files
-using the Coq export feature of Lambdapi:
+using the Coq export feature of Lambdapi.
 
-First, translate every Lambdapi file into a Coq file:
+If your Lambdapi files have been generated using `file.mk`, you can simply do:
 ```
-lambdapi export -o stt_coq --encoding encoding.lp --renaming renaming.lp file.lp | sed -e 's/hol-light\.//g' > file.v || exit 1
+make -j 7 -f file.mk v # to generate Coq files
+make -j 7 -f file.mk vo # to check the generated Coq files
+```
+To indicate a specific `lambdapi` command, to:
+```
+make -j 7 -f file.mk LAMBAPI=$lambdapi v # to generate Coq files
+```
+
+Otherwise, you need to translate Lambdapi files one by one by hand or using a script:
+```
+lambdapi export -o stt_coq --encoding encoding.lp --erasing erasing.lp --renaming renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
 ```
 
 You can then check the generated Coq files as follows:
 ```
-echo theory_hol.v file*.v > _CoqProject
+echo coq.v theory_hol.v file*.v > _CoqProject
 coq_makefile -f _CoqProject > Makefile.coq
 make -j 7 -f Makefile.coq
 ```
@@ -247,15 +257,15 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Multi-threaded translation to Lambdapi (with `mk 7`):
-  * lp files generation time: 4m38s
+Multi-threaded translation to Lambdapi:
+  * lp files generation time: 4m38s with `mk 7`, 5m5s with `mk 22`
   * lp files size: 2.5 Go
   * type abbrevs: 600 Ko
   * term abbrevs: 700 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
   
 Multi-threaded translation to Dedukti:
-  * dk file generation time: 9m19s (with `mk 7`) 8m56s (with `mk 21`)
+  * dk file generation time: 9m19s with `mk 7`, 8m56s with `mk 21`
   * dk file size: 3.7 Go
   * type abbrevs: 652 Ko
   * term abbrevs: 731 Mo
@@ -271,7 +281,7 @@ Results for `hol.ml` up to `arith.ml`:
   * lp file generation: 15s 69 Mo (4s with `mk 7`)
   * checking time with lambdapi: 1m53s (2m with `mk 7`)
   * translation to Coq: 10s
-  * checking time for Coq: 7m5s (with `mk 22` and `j 7`)
+  * checking time for Coq: 7m5s with `mk 22` and `j 7`
 
 Exporting pure Q0 proofs
 ------------------------
