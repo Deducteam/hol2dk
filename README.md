@@ -1,5 +1,5 @@
-Export HOL-Light proofs to Dedukti and Lambdapi
-===============================================
+Export HOL-Light proofs to Dedukti, Lambdapi and Coq
+====================================================
 
 This project provides several programs:
 - a script `patch-hol-light` to patch HOL-Light to dump proofs
@@ -17,6 +17,9 @@ rewriting rules).
 [Lambdapi](https://github.com/Deducteam/lambdapi) is a proof assistant
 based on the λΠ-calculus modulo rewriting that can read and generate
 Dedukti proofs.
+
+[Coq](https://coq.inria.fr/) is a proof assistant based on the
+Calculus of Inductive Constructions.
 
 Installing HOL-Light
 --------------------
