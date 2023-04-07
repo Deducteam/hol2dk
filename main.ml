@@ -236,13 +236,13 @@ let make nb_part b req =
      out oc " | sed -e 's/^Require /From HOLLight Require /' > $@\n";
 
      (* coq files checking *)
-     check "v" "coqc -R . HOLLight" req;
+     check "v" "coqc" req;
 
      (* _CoqProject *)
      log "generate _CoqProject ...\n";
      let dump_file = "_CoqProject" in
      let oc = open_out dump_file in
-     out oc "-R . HOLLight\n%stheory_hol.v\n%s_types.v\n%s_terms.v\n"
+     out oc "%stheory_hol.v\n%s_types.v\n%s_terms.v\n"
        (if req = "" then "" else req ^ "\n") b b;
      for i = 1 to nb_part do
        out oc "%s_part_%d_type_abbrevs.v\n%s_part_%d_term_abbrevs.v\n\
