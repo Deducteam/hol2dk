@@ -2,8 +2,8 @@ Export HOL-Light proofs to Dedukti, Lambdapi and Coq
 ====================================================
 
 This project provides several programs:
-- a script `patch-hol-light` to patch HOL-Light to dump proofs
-- a script `unpatch-hol-light` to unpatch HOL-Light
+- a script `patch` to patch HOL-Light to dump proofs
+- a script `unpatch` to unpatch HOL-Light
 - a program `hol2dk` to generate Dedukti or Lambdapi files from dumped proofs
 
 [HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
@@ -55,7 +55,7 @@ Patching HOL-Light
 ------------------
 
 ```
-$hol2dk-dir/patch-hol-light $hol-light-dir
+$hol2dk-dir/patch $hol-light-dir
 ```
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
@@ -64,7 +64,7 @@ This script slightly modifies a few HOL-Light files in order to dump proofs:
 
 To unpatch HOL-Light, siimply do:
 ```
-$hol2dk-dir/unpatch-hol-light $hol-light-dir
+$hol2dk-dir/unpatch $hol-light-dir
 ```
 
 Compiling and installing hol2dk
