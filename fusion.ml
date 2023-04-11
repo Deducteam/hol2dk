@@ -57,7 +57,9 @@ module type Hol_kernel =
 
       val types: unit -> (string * int)list
       val get_type_arity : string -> int
+      (*REMOVE
       val new_type : (string * int) -> unit
+      REMOVE*)
       val mk_type: (string * hol_type list) -> hol_type
       val mk_vartype : string -> hol_type
       val dest_type : hol_type -> (string * hol_type list)
@@ -71,7 +73,9 @@ module type Hol_kernel =
 
       val constants : unit -> (string * hol_type) list
       val get_const_type : string -> hol_type
+      (*REMOVE
       val new_constant : string * hol_type -> unit
+      REMOVE*)
       val type_of : term -> hol_type
       val alphaorder : term -> term -> int
       val is_var : term -> bool
@@ -133,14 +137,16 @@ module type Hol_kernel =
       val new_theorem : term list -> term -> proof_content -> thm
       val dump_signature : string -> unit
       REMOVE*)
-
       val axioms : unit -> thm list
+      (*REMOVE
       val new_axiom : term -> thm
+      REMOVE*)
       val definitions : unit -> thm list
+      (*REMOVE
       val new_basic_definition : term -> thm
       val new_basic_type_definition :
               string -> string * string -> thm -> thm * thm
-
+      REMOVE*)
       (*REMOVE*)val the_type_constants : (string * int) list ref
       (*REMOVE*)val the_term_constants : (string * hol_type) list ref
       (*REMOVE*)val the_axioms : thm list ref
@@ -197,16 +203,10 @@ module Hol : Hol_kernel = struct
   | Pdisj_cases of int * int * int
 
   type proof = Proof of (thm * proof_content)
-
-  let dummy_proof =
-    let dummy_term = Var("",Tyvar"") in
-    Proof(Sequent([],dummy_term,-1),Prefl dummy_term)
-
+(*REMOVE
   let the_proofs_idx = ref (-1)
 
-  let nb_proofs() = !the_proofs_idx + 1
-
-  let oc_prf_dump = open_out ".dump.prf";;
+  let oc_prf_dump = open_out "dump.prf"
 
   let new_theorem hyps concl proof_content =
     let k = !the_proofs_idx + 1 in
@@ -215,7 +215,7 @@ module Hol : Hol_kernel = struct
     output_value oc_prf_dump (Proof(thm,proof_content));
     thm
   ;;
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* List of current type constants with their arities.                        *)
 (*                                                                           *)
@@ -241,12 +241,12 @@ module Hol : Hol_kernel = struct
 (* ------------------------------------------------------------------------- *)
 (* Declare a new type.                                                       *)
 (* ------------------------------------------------------------------------- *)
-
+(*REMOVE
   let new_type(name,arity) =
     if can get_type_arity name then
       failwith ("new_type: type "^name^" has already been declared")
     else the_type_constants := (name,arity)::(!the_type_constants)
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Basic type constructors.                                                  *)
 (* ------------------------------------------------------------------------- *)
@@ -334,12 +334,12 @@ module Hol : Hol_kernel = struct
 (* ------------------------------------------------------------------------- *)
 (* Declare a new constant.                                                   *)
 (* ------------------------------------------------------------------------- *)
-
+(*REMOVE
   let new_constant(name,ty) =
     if can get_const_type name then
       failwith ("new_constant: constant "^name^" has already been declared")
     else the_term_constants := (name,ty)::(!the_term_constants)
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Finds the type of a term (assumes it is well-typed).                      *)
 (* ------------------------------------------------------------------------- *)
@@ -788,13 +788,13 @@ REMOVE*)
   let the_axioms = ref ([]:thm list)
 
   let axioms() = !the_axioms
-
+(*REMOVE
   let new_axiom tm =
     if Stdlib.compare (type_of tm) bool_ty = 0 then
       let th = new_theorem [] tm (Paxiom tm) in
       (the_axioms := th::(!the_axioms); th)
     else failwith "new_axiom: Not a proposition"
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of (term) definitions.                                           *)
 (* ------------------------------------------------------------------------- *)
@@ -802,7 +802,7 @@ REMOVE*)
   let the_definitions = ref ([]:thm list)
 
   let definitions() = !the_definitions
-
+(*REMOVE
   let new_basic_definition tm =
     match tm with
       Comb(Comb(Const("=",_),Var(cname,ty)),r) ->
@@ -816,7 +816,7 @@ REMOVE*)
              let dth = new_theorem [] dtm (Pdef(dtm,cname,ty)) in
              (the_definitions := dth::(!the_definitions); dth)
     | _ -> failwith "new_basic_definition"
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of type definitions.                                             *)
 (*                                                                           *)
@@ -829,7 +829,7 @@ REMOVE*)
 (*                                                                           *)
 (* Where "abs" and "rep" are new constants with the nominated names.         *)
 (* ------------------------------------------------------------------------- *)
-
+(*REMOVE
   let new_basic_type_definition tyname (absname,repname) (Sequent(asl,c,p)) =
     if exists (can get_const_type) [absname; repname] then
       failwith "new_basic_type_definition: Constant(s) already in use" else
@@ -858,22 +858,23 @@ REMOVE*)
     let _ = new_axiom atm in
     let _ = new_axiom rtm in
     (ath,rth)
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Function to dump types, constants and axioms.                             *)
 (* ------------------------------------------------------------------------- *)
-
+(*REMOVE
   let dump_signature filename =
     let oc = open_out filename in
-    output_value oc (nb_proofs());
+    let nb_proofs = !the_proofs_idx + 1 in
+    output_value oc nb_proofs;
     output_value oc (types());
     output_value oc (constants());
     output_value oc (axioms());
     output_value oc (definitions());
     close_out oc;
-    Printf.printf "%d proof steps\n%!" (nb_proofs())
+    Printf.printf "%d proof steps\n%!" nb_proofs
   ;;
-
+REMOVE*)
 end;;
 
 include Hol;;

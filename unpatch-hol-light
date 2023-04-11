@@ -11,27 +11,28 @@ fi
 if test $# -ne 1
 then
     echo "wrong number of arguments"
-    echo "usage: $0 hol-light-dir"
+    echo "usage: `basename $0` hol-light-dir"
     exit 1
 fi
 
 dir=$1
 
-if test -f $dir/fusion-bak.ml
-then
-    echo "mv$opt $dir/fusion-bak.ml $dir/fusion.ml"
-    mv$opt $dir/fusion-bak.ml $dir/fusion.ml
-else
-    echo "$dir/fusion-bak.ml does not exist"
-fi
+restore() {
+    if test -f $dir/$1-bak.ml
+    then
+        echo "mv$opt $dir/$1-bak.ml $dir/$1.ml"
+        mv$opt $dir/$1-bak.ml $dir/$1.ml
+    else
+        echo "$dir/lib-bak.ml does not exist"
+    fi
+}
 
-if test -f $dir/bool-bak.ml
-then
-    echo "mv$opt $dir/bool-bak.ml $dir/bool.ml"
-    mv$opt $dir/bool-bak.ml $dir/bool.ml
-else
-    echo "$dir/bool-bak.ml does not exist"
-fi
+remove() {
+    echo "rm$opt $dir/$1.ml"
+    rm$opt $dir/$1.ml
+}
 
-echo "rm$opt $dir/xnames.ml"
-rm$opt $dir/xnames.ml
+restore fusion
+restore bool
+remove xnames
+remove hol_upto_bool

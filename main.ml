@@ -287,8 +287,8 @@ let main() =
      begin match Filename.extension f with
      | ".ml" | ".hl" ->
         let b = Filename.chop_extension f in
-        log "generate .dump.ml ...\n%!";
-        let oc = open_out ".dump.ml" in
+        log "generate dump.ml ...\n%!";
+        let oc = open_out "dump.ml" in
         out oc
 {|#use "topfind";;
 #require "camlp5";;
@@ -300,7 +300,7 @@ dump_signature "%s.sig";;
 dump_map_thid_name "%s.thm" %a;;
 |} f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
         close_out oc;
-        exit (Sys.command ("ocaml .dump.ml && mv -f .dump.prf "^b^".prf"))
+        exit (Sys.command ("ocaml dump.ml && mv -f dump.prf "^b^".prf"))
      | _ -> wrong_arg()
      end
 
