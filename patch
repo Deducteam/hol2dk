@@ -1,0 +1,38 @@
+#!/bin/sh
+
+if test $# -ne 1
+then
+    echo "wrong number of arguments"
+    echo "usage: `basename $0` hol-light-dir"
+    exit 1
+fi
+
+dir=$1
+
+patch() {
+    if test -f $dir/$1-bak.ml
+    then
+        echo "$dir/$1-bak.ml already exists"
+        exit 1
+    else
+        echo "cp $dir/$1.ml $dir/$1-bak.ml"
+        cp $dir/$1.ml $dir/$1-bak.ml
+        echo "patch $dir/$1.ml"
+        sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' $1.ml > $dir/$1.ml
+    fi
+}
+
+create() {
+    if test -f $dir/$1.ml
+    then
+        echo "$dir/$1.ml already exists"
+        exit 1
+    else
+        echo "create $dir/$1.ml"
+        sed -e 's/.*REMOVE.*//' -e 's/^open .*//' $1.ml > $dir/$1.ml
+    fi
+}
+
+patch fusion
+patch bool
+create xnames

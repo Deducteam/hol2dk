@@ -44,7 +44,7 @@ let dep_graph =
         let _ = Str.search_forward re content start in
         search (Str.matched_group 2 content :: acc) (Str.match_end())
       with _ -> acc
-    in search [] 0
+    in List.rev (search [] 0)
   in
   fun (files : string list) : string list MapStr.t ->
   List.fold_left
@@ -69,9 +69,21 @@ let file_deps dg filename = try MapStr.find filename dg with Not_found -> [];;
 let trans_file_deps dg filename =
   let rec trans visited to_visit =
     match to_visit with
-    | [] -> visited
+    | [] -> List.rev visited
     | f::to_visit ->
        if List.mem f visited then trans visited to_visit
-       else trans (f::visited) (file_deps dg f @ to_visit)
+       else (*trans (f::visited) (file_deps dg f @ to_visit)*)
+         let fs = file_deps dg f in
+         if List.for_all (fun f -> List.mem f visited) fs then
+           trans (f :: visited) to_visit
+         else trans visited (fs @ f :: to_visit)
   in trans [] [filename]
 ;;
+
+(* unit test *)
+let _ =
+  let dg =
+    List.fold_left (fun dg (f,deps) -> MapStr.add f deps dg) MapStr.empty
+      ["a",["b";"c"]; "b",["d";"e"]; "c",["f";"g"]]
+  in
+  assert (trans_file_deps dg "a" = ["d";"e";"b";"f";"g";"c";"a"])

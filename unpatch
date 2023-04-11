@@ -1,0 +1,37 @@
+#!/bin/sh
+
+if test "$1" = "-y"
+then
+    opt=''
+    shift
+else
+    opt=' -i'
+fi
+
+if test $# -ne 1
+then
+    echo "wrong number of arguments"
+    echo "usage: `basename $0` hol-light-dir"
+    exit 1
+fi
+
+dir=$1
+
+restore() {
+    if test -f $dir/$1-bak.ml
+    then
+        echo "mv$opt $dir/$1-bak.ml $dir/$1.ml"
+        mv$opt $dir/$1-bak.ml $dir/$1.ml
+    else
+        echo "$dir/lib-bak.ml does not exist"
+    fi
+}
+
+remove() {
+    echo "rm$opt $dir/$1.ml"
+    rm$opt $dir/$1.ml
+}
+
+restore fusion
+restore bool
+remove xnames
