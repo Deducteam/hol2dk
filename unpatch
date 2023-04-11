@@ -35,4 +35,3 @@ remove() {
 restore fusion
 restore bool
 remove xnames
-remove hol_upto_bool
