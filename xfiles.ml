@@ -72,10 +72,18 @@ let trans_file_deps dg filename =
     | [] -> List.rev visited
     | f::to_visit ->
        if List.mem f visited then trans visited to_visit
-       else
+       else (*trans (f::visited) (file_deps dg f @ to_visit)*)
          let fs = file_deps dg f in
          if List.for_all (fun f -> List.mem f visited) fs then
            trans (f :: visited) to_visit
          else trans visited (fs @ f :: to_visit)
   in trans [] [filename]
 ;;
+
+(* unit test *)
+let _ =
+  let dg =
+    List.fold_left (fun dg (f,deps) -> MapStr.add f deps dg) MapStr.empty
+      ["a",["b";"c"]; "b",["d";"e"]; "c",["f";"g"]]
+  in
+  assert (trans_file_deps dg "a" = ["d";"e";"b";"f";"g";"c";"a"])
