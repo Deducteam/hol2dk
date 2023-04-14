@@ -1,3 +1,5 @@
+// dk/lp symbols used for encoding simple type theory
+
 builtin "El" ≔ El;
 builtin "Prf" ≔ Prf;
 
