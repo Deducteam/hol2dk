@@ -127,7 +127,8 @@ let make nb_part b req =
      let dump_file = b ^ ".mk" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out dump_file in
-     out oc "# file generated with: hol2dk mk %d %s\n\n" nb_part b;
+     out oc "# file generated with: hol2dk mk %d %s%s\n\n"
+       nb_part b (if req = "" then "" else " " ^ req);
      out oc ".SUFFIXES :\n";
 
      (* dk files generation *)
@@ -230,7 +231,7 @@ let make nb_part b req =
      out oc "LAMBDAPI = lambdapi\n";
      out oc "%%.v : %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
              --encoding encoding.lp --renaming renaming.lp \
-             --erasing erasing.lp";
+             --erasing erasing.lp --use-notations";
      if req <> "" then string oc (" --requiring " ^ req);
      out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
      (*out oc " | sed -e 's/^Require /From HOLLight Require /'";*)
@@ -290,7 +291,8 @@ let main() =
         log "generate dump.ml ...\n%!";
         let oc = open_out "dump.ml" in
         out oc
-{|#use "topfind";;
+{|(* file generated with: hol2dk dump %s *)
+#use "topfind";;
 #require "camlp5";;
 #load "camlp5o.cma";;
 #use "%s";;
@@ -298,7 +300,7 @@ dump_signature "%s.sig";;
 #load "str.cma";;
 #use "xnames.ml";;
 dump_map_thid_name "%s.thm" %a;;
-|} f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
+|} f f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
         close_out oc;
         exit (Sys.command ("ocaml dump.ml && mv -f dump.prf "^b^".prf"))
      | _ -> wrong_arg()
