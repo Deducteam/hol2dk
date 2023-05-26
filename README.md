@@ -44,7 +44,7 @@ cd $HOME
 sudo apt-get install -y libipc-system-simple-perl libstring-shellquote
 -perl opam
 opam init
-opam switch ocaml.4.14.1
+opam switch create ocaml.4.14.1
 eval `opam env`
 opam install ocamlfind num camlp5
 git clone --depth 1 -b master https://github.com/jrh13/hol-light
@@ -97,6 +97,8 @@ generates the files `file.sig`, `file.prf` and `file.thm`.
 
 `file.ml` should at least require `hol.ml` until the line `loads
 "fusion.ml";;`.
+
+WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
 
 Generating dk/lp files from dumped files
 --------------------------------------

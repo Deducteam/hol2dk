@@ -1,7 +1,23 @@
-Definition arr (a : Type) (b : Type) := a -> b.
+Record Type' := { type :> Type; el : type }.
 
-Definition imp (p q : Prop) := p -> q.
-Definition all {a : Type} (p : a -> Prop) := forall x:a, p x.
+Definition Prop' : Type' := {| type := Prop; el := True |}.
+Canonical Prop'.
+
+Definition nat' := {| type := nat; el := 0 |}.
+Canonical nat'.
+
+Definition unit' := {| type := unit; el := tt |}.
+Canonical unit'.
+
+Definition arr a (b : Type') := {| type := a -> b; el := fun _ => el b |}.
+Canonical arr.
+
+Definition prod (a b : Type') := {| type := a * b; el := pair (el a) (el b) |}.
+Canonical prod.
+
+Definition imp (p q : Prop) : Prop := p -> q.
+
+(*Definition all {a : Type} (p : a -> Prop) : Prop := forall x:a, p x.*)
 
 Lemma MK_COMB {a b : Type} {s t : a -> b} {u v : a} (h1 : s = t) (h2 : u = v) : (s u) = (t v).
 Proof. rewrite h1, h2. reflexivity. Qed.

@@ -1,7 +1,7 @@
 // dk/lp symbols (on the right) the declarations of which are removed
 // and whose uses are replaced by the given Coq expressions (on the left)
 
-builtin "Type" ≔ Set;
+builtin "Type'" ≔ Set;
 builtin "Prop" ≔ bool;
 builtin "arr" ≔ fun;
 builtin "imp" ≔ ⇒;
@@ -25,3 +25,15 @@ builtin "ex_elim" ≔ ∃ₑ;
 builtin "eq_refl" ≔ REFL;
 builtin "EQ_MP" ≔ EQ_MP;
 builtin "MK_COMB" ≔ MK_COMB;
+builtin "el" ≔ el;
+builtin "nat" ≔ num;
+builtin "0" ≔ _0;
+builtin "S" ≔ SUC;
+builtin "prod" ≔ prod;
+builtin "pair" ≔ pair;
+builtin "fst" ≔ FST;
+builtin "snd" ≔ SND;
+builtin "unit" ≔ 1;
+builtin "tt" ≔ one;
+builtin "id" ≔ I;
+builtin "False" ≔ _FALSITY_;
