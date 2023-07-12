@@ -44,7 +44,7 @@ cd $HOME
 sudo apt-get install -y libipc-system-simple-perl libstring-shellquote
 -perl opam
 opam init
-opam switch ocaml.4.14.1
+opam switch create ocaml.4.14.1
 eval `opam env`
 opam install ocamlfind num camlp5
 git clone --depth 1 -b master https://github.com/jrh13/hol-light
@@ -97,6 +97,8 @@ generates the files `file.sig`, `file.prf` and `file.thm`.
 
 `file.ml` should at least require `hol.ml` until the line `loads
 "fusion.ml";;`.
+
+WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
 
 Generating dk/lp files from dumped files
 --------------------------------------
@@ -287,8 +289,8 @@ Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the
   * checking time with kocheck -j 7: 14s
   * lp file generation: 15s 69 Mo (4s with `mk 7`)
   * checking time with lambdapi: 1m53s (2m with `mk 7`)
-  * translation to Coq: 10s
-  * checking time for Coq 8.16.1: 7m5s with `mk 22` and `j 7`
+  * translation to Coq: 3s with `mk 15` and `j 7`
+  * checking time for Coq 8.17.1: 5m16s with `mk 15` and `j 7`
 
 Exporting pure Q0 proofs
 ------------------------

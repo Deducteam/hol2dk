@@ -751,7 +751,7 @@ REMOVE*)
     match e with
     | Comb(Const("?",_),(Abs(Var(_,b),_) as p)) ->
       new_theorem asl (Comb(cst_ex b,p)) (Pexists(p,t,k))
-    | _ -> failwith "GEN"
+    | _ -> failwith "EXISTS"
   ;;
 
   let CHOOSE (v,Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
