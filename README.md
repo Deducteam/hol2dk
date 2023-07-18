@@ -290,7 +290,7 @@ Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the
   * lp file generation: 15s 69 Mo (4s with `mk 7`)
   * checking time with lambdapi: 1m53s (2m with `mk 7`)
   * translation to Coq: 3s with `mk 15` and `j 7`
-  * checking time for Coq 8.17.1: 5m16s with `mk 15` and `j 7`
+  * checking time for Coq 8.17.1: 5m28s with `mk 15` and `j 7`
 
 Exporting pure Q0 proofs
 ------------------------
