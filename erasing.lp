@@ -13,6 +13,7 @@ builtin "ex" ≔ ∃;
 builtin "not" ≔ ¬;
 builtin "True" ≔ T;
 builtin "False" ≔ F;
+
 builtin "Logic.I" ≔ top;
 builtin "conj" ≔ ∧ᵢ;
 builtin "proj1" ≔ ∧ₑ₁;
@@ -26,30 +27,39 @@ builtin "eq_refl" ≔ REFL;
 builtin "EQ_MP" ≔ EQ_MP;
 builtin "MK_COMB" ≔ MK_COMB;
 builtin "el" ≔ el;
+
 builtin "nat" ≔ num;
 builtin "0" ≔ _0;
 builtin "S" ≔ SUC;
+
 builtin "prod" ≔ prod;
 builtin "pair" ≔ pair;
 builtin "fst" ≔ FST;
 builtin "snd" ≔ SND;
+
 builtin "unit" ≔ 1;
 builtin "tt" ≔ one;
+
 builtin "id" ≔ I;
+
 builtin "False" ≔ _FALSITY_;
+
 builtin "ε" ≔ ε;
 builtin "ex1" ≔ ∃!;
+
 builtin "axiom_7" ≔ axiom_7;
 builtin "axiom_8" ≔ axiom_8;
+
 builtin "_FALSITY__def" ≔ _FALSITY__def;
-builtin "ex1_def" ≔ ex1_def;
-builtin "not_def" ≔ not_def;
+builtin "ex1_def" ≔ ∃!_def;
+builtin "not_def" ≔ ¬_def;
+builtin "or_def" ≔ ∨_def;
+builtin "ex_def" ≔ ∃_def;
+builtin "all_def" ≔ ∀_def;
+builtin "imp_def" ≔ ⇒_def;
+builtin "and_def" ≔ ∧_def;
 builtin "F_def" ≔ F_def;
-builtin "or_def" ≔ or_def;
-builtin "ex_def" ≔ ex_def;
-builtin "all_def" ≔ all_def;
-builtin "imp_def" ≔ imp_def;
+builtin "T_def" ≔ T_def;
+
 builtin "fun_ext" ≔ fun_ext;
 builtin "prop_ext" ≔ prop_ext;
-builtin "and_def" ≔ and_def;
-builtin "T_def" ≔ T_def;

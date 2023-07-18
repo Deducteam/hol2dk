@@ -29,7 +29,7 @@ let name oc n =
     | "$" -> "dollar"
     | ".." -> "dotdot"
     | "" -> assert false
-    | _ -> n
+    | _ -> Xlib.replace '%' '_' n (* for Coq *)
     end
 ;;
 
@@ -397,7 +397,7 @@ let proof tvs rmap =
 let typ_arity oc k = for i = 1 to k do out oc "Set → " done; out oc "Set";;
 
 let decl_typ oc (n,k) =
-  out oc "constant symbol %a : %a;\n" name n typ_arity k;;
+  out oc "constant symbol %a : %a;\n" typ_name n typ_arity k;;
 
 let typ_vars oc ts =
   match ts with

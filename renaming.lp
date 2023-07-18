@@ -1,14 +1,6 @@
 // map for renaming dk/lp identifiers (on the right)
 // to Coq expressions (on the left)
 
-builtin "ex1" ≔ ∃!;
-builtin "ex1_def" ≔ ∃!_def;
-builtin "not_def" ≔ ¬_def;
-builtin "or_def" ≔ ∨_def;
-builtin "ex_def" ≔ ∃_def;
-builtin "all_def" ≔ ∀_def;
-builtin "imp_def" ≔ ⇒_def;
-builtin "and_def" ≔ ∧_def;
 builtin "unit" ≔ 1;
 builtin "minus" ≔ -;
 builtin "minus_def" ≔ -_def;
@@ -31,3 +23,17 @@ builtin "add_def" ≔ +_def;
 builtin "add'" ≔ +';
 builtin "pair" ≔ ̦‚;
 builtin "pair_def" ≔ ̦‚_def;
+builtin "gt_c" ≔ >_c;
+builtin "gt_c_def" ≔ >_c_def;
+builtin "ge_c" ≔ >=_c;
+builtin "ge_c_def" ≔ >=_c_def;
+builtin "eq_c" ≔ =_c;
+builtin "eq_c_def" ≔ =_c_def;
+builtin "lt_c" ≔ <_c;
+builtin "lt_c_def" ≔ <_c_def;
+builtin "le_c" ≔ <=_c;
+builtin "le_c_def" ≔ <=_c_def;
+builtin "eqeq" ≔ ==;
+builtin "eqeq_def" ≔ ==_def;
+builtin "ltle" ≔ <<=;
+builtin "ltlt" ≔ "<<";
