@@ -137,9 +137,10 @@ using `make`.
 
 You first generate `file.dg` and `file.mk` with:
 ```
-hol2dk dg file
-hol2dk mk $nb_proc file # number of processors you can run in parallel
+hol2dk dg $nb_parts file
+hol2dk mk $nb_parts file
 ```
+where `$nb_parts` is the number of files in which you want to split the dk/lp translation.
 
 You can then generate `file.dk` with:
 
@@ -147,7 +148,7 @@ You can then generate `file.dk` with:
 make -j $jobs -f file.mk dk
 ```
 
-And `file_part_$jobs.lp` with:
+And `file.lp` with:
 
 ```
 make -j $jobs -f file.mk lp
@@ -213,8 +214,8 @@ opam switch link 4.14.1
 eval `opam env`
 ```
 
-Translating HOL-Light files to Coq
-----------------------------------
+Translating lp files to Coq files
+---------------------------------
 
 Requirement: lambdapi master branch
 
@@ -224,13 +225,13 @@ using the Coq export feature of Lambdapi.
 
 If your Lambdapi files have been generated using `file.mk`, you can simply do:
 ```
-hol2dk mk $n file coq.v
-make -j 7 -f file.mk v # to generate Coq files
-make -j 7 -f file.mk vo # to check the generated Coq files
+hol2dk mk $nb_parts file coq.v
+make -j $jobs -f file.mk v # to generate Coq files
+make -j $jobs -f file.mk vo # to check the generated Coq files
 ```
 To indicate a specific `lambdapi` command, to:
 ```
-make -j 7 -f file.mk LAMBAPI=$lambdapi v # to generate Coq files
+make -j $jobs -f file.mk LAMBAPI=$lambdapi v # to generate Coq files
 ```
 
 Otherwise, you need to translate Lambdapi files one by one by hand or using a script:
@@ -242,7 +243,7 @@ You can then check the generated Coq files as follows:
 ```
 echo coq.v theory_hol.v file*.v > _CoqProject
 coq_makefile -f _CoqProject > Makefile.coq
-make -j 7 -f Makefile.coq
+make -j $jobs -f Makefile.coq
 ```
 
 Results
