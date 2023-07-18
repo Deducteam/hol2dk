@@ -1,12 +1,10 @@
 _build/
 \#*
 *.lp
-!hol_theory.lp
 !encoding.lp
 !erasing.lp
 !renaming.lp
 *.dk
-!hol_theory.dk
 *.prf
 *.sig
 *.lpo
