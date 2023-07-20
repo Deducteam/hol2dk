@@ -38,10 +38,10 @@ hol2dk dg $n $file
   generate $file.dg, the dependency graph of parts
   when $file.prf is split in $n parts
 
-hol2dk mk $n $file [$coq_file.v]
+hol2dk mk $n $file $dir
   generate $file.mk and _CoqProject to generate, translate and check files
   when $file.prf is split in $n parts
-  ($coq_file.v is a Coq file required in every generated Coq file)
+  $dir is the source directory of hol2dk
 
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
@@ -118,7 +118,7 @@ let read_thm basename =
 
 let integer s = try int_of_string s with Failure _ -> wrong_arg()
 
-let make nb_part b req =
+let make nb_part b dir =
      let nb_part = integer nb_part in
      if nb_part < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
@@ -127,14 +127,14 @@ let make nb_part b req =
      let dump_file = b ^ ".mk" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out dump_file in
-     out oc "# file generated with: hol2dk mk %d %s%s\n\n"
-       nb_part b (if req = "" then "" else " " ^ req);
+     out oc "# file generated with: hol2dk mk %d %s%s\n\n" nb_part b dir;
+     out oc "DIR = %s\n\n" dir;
      out oc ".SUFFIXES :\n";
 
      (* dk files generation *)
      out oc "\n.PHONY : dk\n";
      out oc "dk : %s.dk\n" b;
-     out oc "%s.dk : theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
+     out oc "%s.dk : $(DIR)/theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
        b b b b;
      for i = 1 to nb_part do
        out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
@@ -159,8 +159,8 @@ let make nb_part b req =
 
      (* lp files generation *)
      out oc "\n.PHONY : lp\n";
-     out oc "lp : %s.lp theory_hol.lp %s_types.lp %s_terms.lp %s_axioms.lp"
-       b b b b;
+     out oc "lp : $(DIR)/theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
+             %s_axioms.lp" b b b b;
      for i = 1 to nb_part do
        out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
                %s_part_%d.lp" b i b i b i
@@ -186,29 +186,28 @@ let make nb_part b req =
      out oc "%s.use : %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
 
      (* generic function for lpo/vo file generation *)
-     let check e c r =
-       let s = if r = "" then "" else r ^ "o " in
+     let check e c =
        out oc "\n.PHONY : %so\n" e;
        out oc "%so : %s.%so\n" e b e;
-       if r <> "" then out oc "theory_hol.%so : %so\n" e r;
-       out oc "%s.%so : %stheory_hol.%so %s_types.%so %s_terms.%so \
-               %s_axioms.%so" b e s e b e b e b e;
+       out oc "$(DIR)/theory_hol.%so : $(DIR)/coq.%so\n" e e;
+       out oc "%s.%so : $(DIR)/coq.%so $(DIR)/theory_hol.%so %s_types.%so \
+               %s_terms.%so %s_axioms.%so" b e e e b e b e b e;
        for i = 1 to nb_part do out oc " %s_part_%d.%so" b i e done;
-       out oc "\n%s_types.%so : %stheory_hol.%so\n" b e s e;
-       out oc "%s_terms.%so : %stheory_hol.%so %s_types.%so\n" b e s e b e;
-       out oc "%s_axioms.%so : %stheory_hol.%so %s_types.%so %s_terms.%so\n"
-         b e s e b e b e;
+       out oc "\n%s_types.%so : $(DIR)/theory_hol.%so\n" b e e;
+       out oc "%s_terms.%so : $(DIR)/theory_hol.%so %s_types.%so\n" b e e b e;
+       out oc "%s_axioms.%so : $(DIR)/theory_hol.%so %s_types.%so \
+               %s_terms.%so\n" b e e b e b e;
        for i = 0 to nb_part - 1 do
          let j = i+1 in
-         out oc "%s_part_%d_type_abbrevs.%so : %stheory_hol.%so %s_types.%so\n"
-           b j e s e b e;
-         out oc "%s_part_%d_term_abbrevs.%so : %stheory_hol.%so %s_types.%so \
-                 %s_part_%d_type_abbrevs.%so %s_terms.%so\n"
-           b j e s e b e b j e b e;
-         out oc "%s_part_%d.%so : %stheory_hol.%so %s_types.%so \
-                 %s_part_%d_type_abbrevs.%so %s_terms.%so \
+         out oc "%s_part_%d_type_abbrevs.%so : $(DIR)/theory_hol.%so \
+                 %s_types.%so\n" b j e e b e;
+         out oc "%s_part_%d_term_abbrevs.%so : $(DIR)/coq.%so \
+                 $(DIR)/theory_hol.%so %s_types.%so %s_part_%d_\
+                 type_abbrevs.%so %s_terms.%so\n" b j e e e b e b j e b e;
+         out oc "%s_part_%d.%so : $(DIR)/coq.%so $(DIR)/theory_hol.%so \
+                 %s_types.%so %s_part_%d_type_abbrevs.%so %s_terms.%so \
                  %s_part_%d_term_abbrevs.%so %s_axioms.%so"
-           b j e s e b e b j e b e b j e b e;
+           b j e e e b e b j e b e b j e b e;
          for j = 0 to i - 1 do
            if dg.(i).(j) > 0 then out oc " %s_part_%d.%so" b (j+1) e
          done;
@@ -218,11 +217,11 @@ let make nb_part b req =
      in
 
      (* lp files checking *)
-     check "lp" "lambdapi check -c" "";
+     check "lp" "lambdapi check -c";
 
      (* v files generation *)
-     out oc "\n.PHONY : v\nv : %stheory_hol.v %s_types.v %s_terms.v \
-             %s_axioms.v" (if req = "" then "" else req ^ " ") b b b;
+     out oc "\n.PHONY : v\nv : $(DIR)/coq.v $(DIR)/theory_hol.v \
+             %s_types.v %s_terms.v %s_axioms.v" b b b;
      for i = 1 to nb_part do
        out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
                %s_part_%d.v" b i b i b i
@@ -230,22 +229,21 @@ let make nb_part b req =
      out oc " %s.v\n" b;
      out oc "LAMBDAPI = lambdapi\n";
      out oc "%%.v : %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
-             --encoding encoding.lp --renaming renaming.lp \
-             --erasing erasing.lp --use-notations";
-     if req <> "" then string oc (" --requiring " ^ req);
+             --encoding $(DIR)/encoding.lp --renaming $(DIR)/renaming.lp \
+             --erasing $(DIR)/erasing.lp --use-notations \
+             --requiring coq.v";
      out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
      (*out oc " | sed -e 's/^Require /From HOLLight Require /'";*)
      out oc " > $@\n";
 
      (* coq files checking *)
-     check "v" "coqc" (*-R . HOLLight*) req;
+     check "v" ("coqc -I "^dir) (*-R . HOLLight*);
 
      (* _CoqProject *)
      log "generate _CoqProject ...\n";
      let dump_file = "_CoqProject" in
      let oc = open_out dump_file in
-     out oc "%stheory_hol.v\n%s_types.v\n%s_terms.v\n"
-       (if req = "" then "" else req ^ "\n") b b;
+     out oc "%s/coq.v\n%s/theory_hol.v\n%s_types.v\n%s_terms.v\n" dir dir b b;
      for i = 1 to nb_part do
        out oc "%s_part_%d_type_abbrevs.v\n%s_part_%d_term_abbrevs.v\n\
                %s_part_%d.v\n" b i b i b i
@@ -399,8 +397,7 @@ dump_map_thid_name "%s.thm" %a;;
      close_out oc;
      exit 0
 
-  | ["mk";nb_part;b] -> make nb_part b ""
-  | ["mk";nb_part;b;req] -> make nb_part b req
+  | ["mk";nb_part;b;dir] -> make nb_part b dir
 
   | ["sig";f] ->
      let dk = is_dk f in

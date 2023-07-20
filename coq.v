@@ -1,3 +1,5 @@
+(* Coq theory for encoding HOL-Light proofs. *)
+
 Record Type' := { type :> Type; el : type }.
 
 Definition Prop' : Type' := {| type := Prop; el := True |}.
@@ -22,6 +24,9 @@ Proof. rewrite h1, h2. reflexivity. Qed.
 
 Lemma EQ_MP {p q : Prop} (e : p = q) (h : p) : q.
 Proof. rewrite <- e. apply h. Qed.
+
+(*Lemma TRANS {a : Type'} {x y z : a} : (x = y) -> (y = z) -> x = z.
+Proof. exact (fun xy : x = y => fun yz : y = z => @EQ_MP (x = y) (x = z) (@MK_COMB a Prop (@eq a x) (@eq a x) y z (@eq_refl (a -> Prop) (@eq a x)) yz) xy). Qed.*)
 
 Lemma or_intro1 {p:Prop} (h : p) (q:Prop) : p \/ q.
 Proof. exact (@or_introl p q h). Qed.
