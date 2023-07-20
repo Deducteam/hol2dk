@@ -267,14 +267,16 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Multi-threaded translation to Lambdapi:
-  * lp files generation time: 4m38s with `mk 7`, 5m5s with `mk 22`
+Multi-threaded translation to Lambdapi with `-j 7`:
+  * hol2dk dg 1000: 24s
+  * lp files generation time: 4m38s with `mk 7`, 5m5s with `mk 22`, 5m16s with `mk 1000`
   * lp files size: 2.5 Go
-  * type abbrevs: 600 Ko
-  * term abbrevs: 700 Mo
+  * type abbrevs: 600 Ko (5.3 Mo with `mk 1000`)
+  * term abbrevs: 700 Mo (841 Mo with `mk 1000`)
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
+  * translation to Coq: 2m48s 2.3 Go with `mk 7` (3m8s 2.5 Go with `mk 1000`)
   
-Multi-threaded translation to Dedukti:
+Multi-threaded translation to Dedukti with `-j 7`:
   * dk file generation time: 9m19s with `mk 7`, 8m56s with `mk 21`
   * dk file size: 3.7 Go
   * type abbrevs: 652 Ko
@@ -290,8 +292,8 @@ Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the
   * checking time with kocheck -j 7: 14s
   * lp file generation: 15s 69 Mo (4s with `mk 7`)
   * checking time with lambdapi: 1m53s (2m with `mk 7`)
-  * translation to Coq: 3s with `mk 15` and `j 7`
-  * checking time for Coq 8.17.1: 5m28s with `mk 15` and `j 7`
+  * translation to Coq: 3s with `mk 15`
+  * checking time for Coq 8.17.1: 5m28s with `mk 15`
 
 Exporting pure Q0 proofs
 ------------------------

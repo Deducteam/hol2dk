@@ -55,6 +55,15 @@ let read_val dump_file =
   close_in ic;
   v
 
+(* [replace c1 c2 s] returns a new string identical to [s] but with
+   every character [c1] replaced by [c2]. *)
+let replace c1 c2 s =
+  let b = String.to_bytes s in
+  for i=0 to Bytes.length b - 1 do
+    if Bytes.get b i = c1 then Bytes.set b i c2
+  done;
+  String.of_bytes b
+
 (****************************************************************************)
 (* Printing functions. *)
 (****************************************************************************)
