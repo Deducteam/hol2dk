@@ -64,12 +64,11 @@ jobs:
         run: |
           eval `opam env`
           hol2dk dg 3 xci
-          hol2dk mk 3 xci
+          hol2dk mk 3 xci .
           make -j 3 -f xci.mk dk
           dk check xci.dk
       - name: Generate and check multi-threaded lp output
         run: |
           eval `opam env`
-          hol2dk mk 3 xci
           make -j 3 -f xci.mk lp
           lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
