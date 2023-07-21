@@ -332,7 +332,6 @@ let proof tvs rmap =
        let rmap' = add_var rmap t in
        out oc "fun_ext (λ %a, %a)" (decl_var rmap') t
          (subproof tvs rmap' [] [] ts k) (proof_at k)
-    | Pbeta(Comb(Abs(x,t),y)) when x = y -> out oc "REFL %a" term t
     | Pbeta(t) -> out oc "REFL %a" term t
     | Passume(t) -> hyp_var (hyp thm) oc t
     | Peqmp(k1,k2) -> out oc "EQ_MP %a %a" sub_at k1 sub_at k2

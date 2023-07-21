@@ -420,8 +420,6 @@ let proof tvs rmap =
        out oc "fun_ext %a %a %a %a (%a => %a)"
          typ a typ b term f term g (decl_var tvs rmap') t
          (subproof tvs rmap' [] [] ts k) (proof_at k)
-    | Pbeta(Comb(Abs(x,t),y)) when x = y ->
-       out oc "REFL %a %a" typ (type_of t) term t
     | Pbeta(t) ->
        out oc "REFL %a %a" typ (type_of t) term t
     | Passume(t) ->

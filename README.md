@@ -138,9 +138,9 @@ using `make`.
 You first generate `file.dg` and `file.mk` with:
 ```
 hol2dk dg $nb_parts file
-hol2dk mk $nb_parts file
+hol2dk mk $nb_parts file $hol2dk_dir
 ```
-where `$nb_parts` is the number of files in which you want to split the dk/lp translation.
+where `$nb_parts` is the number of files in which you want to split the dk/lp translation, and `$hol2dk_dir` is the source directory of hol2dk.
 
 You can then generate `file.dk` with:
 
