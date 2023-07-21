@@ -11,7 +11,7 @@ fi
 if test $# -ne 1
 then
     echo "wrong number of arguments"
-    echo "usage: `basename $0` hol-light-dir"
+    echo "usage: `basename $0` [-y] hol-light-dir"
     exit 1
 fi
 
@@ -34,4 +34,5 @@ remove() {
 
 restore fusion
 restore bool
+restore equal
 remove xnames

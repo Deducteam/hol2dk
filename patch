@@ -35,4 +35,5 @@ create() {
 
 patch fusion
 patch bool
+patch equal
 create xnames
