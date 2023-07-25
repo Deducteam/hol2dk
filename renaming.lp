@@ -38,4 +38,5 @@ builtin "eq2_def" ≔ ==_def;
 builtin "ltle" ≔ <<=;
 builtin "ltle'" ≔ <<=';
 builtin "lt2" ≔ <<;
+builtin "lt2'" ≔ <<';
 builtin "lt3" ≔ <<<;
