@@ -251,9 +251,9 @@ Results
 
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m20s
-  * checking time with proof dumping: 1m51s (+39%)
-  * dumped files size: 3.8 Go
-  * number of proof steps: 11 M
+  * checking time with proof dumping: 1m46s (+32%)
+  * dumped files size: 3.1 Go
+  * number of proof steps: 8.9 M
 
 Single-threaded translation to Lambdapi:
   * lp files generation time: 12m8s
@@ -268,13 +268,13 @@ Single-threaded translation to Dedukti:
   * term abbreviations: 820 Mo (23%)
 
 Multi-threaded translation to Lambdapi with `-j 7`:
-  * hol2dk dg 1000: 24s
-  * lp files generation time: 4m38s with `mk 7`, 5m5s with `mk 22`, 5m16s with `mk 1000`
-  * lp files size: 2.5 Go
+  * hol2dk dg 1000: 14.8s
+  * lp files generation time: 4m23s with `mk 1000`
+  * lp files size: 2.2 Go with `mk 1000`
   * type abbrevs: 600 Ko (5.3 Mo with `mk 1000`)
-  * term abbrevs: 700 Mo (841 Mo with `mk 1000`)
+  * term abbrevs: 700 Mo (840 Mo with `mk 1000`)
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
-  * translation to Coq: 2m48s 2.3 Go with `mk 7` (3m8s 2.5 Go with `mk 1000`)
+  * translation to Coq: 2m22s 2.1 Go with `mk 1000`
   
 Multi-threaded translation to Dedukti with `-j 7`:
   * dk file generation time: 9m19s with `mk 7`, 8m56s with `mk 21`
