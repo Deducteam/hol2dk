@@ -347,5 +347,5 @@ Thanks
 ------
 
 HOL-Light proof recording follows
-[ProofTrace](https://github.com/fblanqui/hol-light/tree/master/ProofTrace)
+[ProofTrace](https://github.com/jrh13/hol-light/tree/master/ProofTrace)
 developed by Stanislas Polu in 2019.
