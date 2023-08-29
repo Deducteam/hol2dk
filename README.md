@@ -322,15 +322,15 @@ Source files
 ------------
 
 Modified HOL-Light files:
-- `lib.ml`: HOL-Light file providing functions on lists, etc. required by `fusion.ml`. A few lines are commented out so that it compiles with ocamlc.
-- `fusion.ml`: HOL-Light kernel file defining types, terms, theorems, proofs and elementary proof rules.
-- `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives.
-
-The files `fusion.ml` and `bool.ml` contain special comments that are removed to patch hol-light.
+- `lib.ml`: provides functions on lists, etc. required by `fusion.ml`. A few lines are commented out so that it compiles with ocamlc.
+- `fusion.ml`: defines types, terms, theorems, proofs and elementary proof rules.
+- `bool.ml`: defines basic tactics corresponding to introduction and elimination rules of connectives.
+- `equal.ml`: defines basic tactic(al)s on equality including alpha and beta-reduction.
+These files contain special comments that are removed to patch hol-light.
 
 Additional files required for `hol2dk`:
 - `main.ml`: main program of Hol2dk.
-- `xprelude.ml`: file providing a few basic definitions.
+- `xprelude.ml`: provides a few basic definitions.
 - `xlib.ml`: functions on types, terms and other data structures.
 - `xproof.ml`: functions for accessing proofs.
 - `xlp.ml`: translation to Lambdapi of types, terms and proofs.
