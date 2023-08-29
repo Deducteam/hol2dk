@@ -250,8 +250,8 @@ Results
 -------
 
 Dumping of `hol.ml`:
-  * checking time without proof dumping: 1m20s
-  * checking time with proof dumping: 1m46s (+32%)
+  * checking time without proof dumping: 1m14s
+  * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3.1 Go
   * number of proof steps: 8.9 M (2834 theorems)
 
@@ -330,8 +330,10 @@ Results on `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the e
   * checking time with lambdapi: 2m49s
 
 Results on `hol.ml`:
-  * ocaml proof dumping: 2m11s
-  * number of proof steps: 14.3 M (2834 theorems)
+  * ocaml cheking without proof dumping: 1m14s
+  * ocaml proof dumping: 2m9s (+74%)
+  * proof size file: 5.5 Go
+  * number of proof steps: 14.3 M
 
 | rule       |  % |
 |:-----------|---:|
