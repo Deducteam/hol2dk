@@ -132,6 +132,7 @@ module type Hol_kernel =
       val DISJ1 : thm -> term -> thm
       val DISJ2 : term -> thm -> thm
       val DISJ_CASES : thm -> thm -> thm -> thm
+      val ALPHA : term -> term -> thm
       (*END_ND*)
 
       val new_theorem : term list -> term -> proof_content -> thm
@@ -780,6 +781,11 @@ REMOVE*)
     new_theorem (term_union asl1 (term_union asl2 asl3)) c2
       (Pdisj_cases(k1,k2,k3))
   ;;
+
+  let ALPHA tm1 tm2 =
+    if alphaorder tm1 tm2 = 0 then
+      new_theorem [] (safe_mk_eq tm1 tm2) (Prefl tm1)
+    else failwith "ALPHA";;
 REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of axioms.                                                       *)

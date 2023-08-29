@@ -127,20 +127,21 @@ let make nb_part b dir =
      let dump_file = b ^ ".mk" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out dump_file in
-     out oc "# file generated with: hol2dk mk %d %s%s\n\n" nb_part b dir;
+     out oc "# file generated with: hol2dk mk %d %s %s\n\n" nb_part b dir;
      out oc "DIR = %s\n\n" dir;
      out oc ".SUFFIXES :\n";
 
      (* dk files generation *)
      out oc "\n.PHONY : dk\n";
      out oc "dk : %s.dk\n" b;
-     out oc "%s.dk : $(DIR)/theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
+     out oc "%s.dk : theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
        b b b b;
      for i = 1 to nb_part do
        out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
                %s_part_%d.dk" b i b i b i
      done;
      out oc " %s_theorems.dk\n\tcat $+ > $@\n" b;
+     out oc "theory_hol.dk: $(DIR)/theory_hol.dk\n\tln -f -s $< $@\n";
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
              \thol2dk sig %s.dk\n" b b b b b;
      out oc "%s_theorems.dk : %s.sig %s.thm %s.pos %s.prf\n\
@@ -159,12 +160,13 @@ let make nb_part b dir =
 
      (* lp files generation *)
      out oc "\n.PHONY : lp\n";
-     out oc "lp : $(DIR)/theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
+     out oc "lp : theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
              %s_axioms.lp" b b b b;
      for i = 1 to nb_part do
        out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
                %s_part_%d.lp" b i b i b i
      done;
+     out oc "\ntheory_hol.lp: $(DIR)/theory_hol.lp\n\tln -f -s $< $@\n";
      out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
              \thol2dk sig %s.lp\n" b b b b b;
      out oc "%s.lp : %s.sig %s.thm %s.pos %s.prf\n\
@@ -189,22 +191,22 @@ let make nb_part b dir =
      let check e c =
        out oc "\n.PHONY : %so\n" e;
        out oc "%so : %s.%so\n" e b e;
-       out oc "$(DIR)/theory_hol.%so : $(DIR)/coq.%so\n" e e;
-       out oc "%s.%so : $(DIR)/coq.%so $(DIR)/theory_hol.%so %s_types.%so \
+       out oc "theory_hol.%so : coq.%so\n" e e;
+       out oc "%s.%so : coq.%so theory_hol.%so %s_types.%so \
                %s_terms.%so %s_axioms.%so" b e e e b e b e b e;
        for i = 1 to nb_part do out oc " %s_part_%d.%so" b i e done;
-       out oc "\n%s_types.%so : $(DIR)/theory_hol.%so\n" b e e;
-       out oc "%s_terms.%so : $(DIR)/theory_hol.%so %s_types.%so\n" b e e b e;
-       out oc "%s_axioms.%so : $(DIR)/theory_hol.%so %s_types.%so \
+       out oc "\n%s_types.%so : theory_hol.%so\n" b e e;
+       out oc "%s_terms.%so : theory_hol.%so %s_types.%so\n" b e e b e;
+       out oc "%s_axioms.%so : theory_hol.%so %s_types.%so \
                %s_terms.%so\n" b e e b e b e;
        for i = 0 to nb_part - 1 do
          let j = i+1 in
-         out oc "%s_part_%d_type_abbrevs.%so : $(DIR)/theory_hol.%so \
+         out oc "%s_part_%d_type_abbrevs.%so : theory_hol.%so \
                  %s_types.%so\n" b j e e b e;
-         out oc "%s_part_%d_term_abbrevs.%so : $(DIR)/coq.%so \
-                 $(DIR)/theory_hol.%so %s_types.%so %s_part_%d_\
+         out oc "%s_part_%d_term_abbrevs.%so : coq.%so \
+                 theory_hol.%so %s_types.%so %s_part_%d_\
                  type_abbrevs.%so %s_terms.%so\n" b j e e e b e b j e b e;
-         out oc "%s_part_%d.%so : $(DIR)/coq.%so $(DIR)/theory_hol.%so \
+         out oc "%s_part_%d.%so : coq.%so theory_hol.%so \
                  %s_types.%so %s_part_%d_type_abbrevs.%so %s_terms.%so \
                  %s_part_%d_term_abbrevs.%so %s_axioms.%so"
            b j e e e b e b j e b e b j e b e;
@@ -220,13 +222,14 @@ let make nb_part b dir =
      check "lp" "lambdapi check -c";
 
      (* v files generation *)
-     out oc "\n.PHONY : v\nv : $(DIR)/coq.v $(DIR)/theory_hol.v \
+     out oc "\n.PHONY : v\nv : coq.v theory_hol.v \
              %s_types.v %s_terms.v %s_axioms.v" b b b;
      for i = 1 to nb_part do
        out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
                %s_part_%d.v" b i b i b i
      done;
      out oc " %s.v\n" b;
+     out oc "coq.v: $(DIR)/coq.v\n\tln -f -s $< $@\n";
      out oc "LAMBDAPI = lambdapi\n";
      out oc "%%.v : %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
              --encoding $(DIR)/encoding.lp --renaming $(DIR)/renaming.lp \
@@ -237,7 +240,7 @@ let make nb_part b dir =
      out oc " > $@\n";
 
      (* coq files checking *)
-     check "v" ("coqc -I "^dir) (*-R . HOLLight*);
+     check "v" "coqc" (*-R . HOLLight*);
 
      (* _CoqProject *)
      log "generate _CoqProject ...\n";

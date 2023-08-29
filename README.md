@@ -250,10 +250,22 @@ Results
 -------
 
 Dumping of `hol.ml`:
-  * checking time without proof dumping: 1m20s
-  * checking time with proof dumping: 1m51s (+39%)
-  * dumped files size: 3.8 Go
-  * number of proof steps: 11 M
+  * checking time without proof dumping: 1m14s
+  * checking time with proof dumping: 1m44s (+40%)
+  * dumped files size: 3.1 Go
+  * number of proof steps: 8.9 M (2834 theorems)
+
+| rule       |  % |
+|:-----------|---:|
+| refl       | 29 |
+| eqmp       | 19 |
+| comb       | 17 |
+| term_subst | 12 |
+| trans      |  6 |
+| type_subst |  3 |
+| beta       |  3 |
+| abs        |  2 |
+| spec       |  2 |
 
 Single-threaded translation to Lambdapi:
   * lp files generation time: 12m8s
@@ -267,33 +279,32 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Multi-threaded translation to Lambdapi with `-j 7`:
-  * hol2dk dg 1000: 24s
-  * lp files generation time: 4m38s with `mk 7`, 5m5s with `mk 22`, 5m16s with `mk 1000`
-  * lp files size: 2.5 Go
-  * type abbrevs: 600 Ko (5.3 Mo with `mk 1000`)
-  * term abbrevs: 700 Mo (841 Mo with `mk 1000`)
+Multi-threaded translation to Lambdapi with `mk 1000` and `-j 7`:
+  * hol2dk dg: 14.8s
+  * lp files generation time: 4m23s
+  * lp files size: 2.2 Go
+  * type abbrevs: 5.3 Mo
+  * term abbrevs: 841 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
-  * translation to Coq: 2m48s 2.3 Go with `mk 7` (3m8s 2.5 Go with `mk 1000`)
+  * translation to Coq: 2m22s 2.1 Go
   
-Multi-threaded translation to Dedukti with `-j 7`:
-  * dk file generation time: 9m19s with `mk 7`, 8m56s with `mk 21`
-  * dk file size: 3.7 Go
-  * type abbrevs: 652 Ko
-  * term abbrevs: 731 Mo
+Multi-threaded translation to Dedukti with `mk 1000` and `-j 7`:
+  * dk file generation time: 9m2s
+  * dk file size: 3.3 Go
+  * type abbrevs: 5.3 Mo
+  * term abbrevs: 960 Mo
   * kocheck can check it in 12m52s
   * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM and the process is stopped after 11m16s)
 
-Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end):
-  * proof dumping time: 13s 100 Mo
-  * number of proof steps: 405 K
-  * dk file generation: 20s 96 Mo
-  * checking time with dk check: 19s
-  * checking time with kocheck -j 7: 14s
-  * lp file generation: 15s 69 Mo (4s with `mk 7`)
-  * checking time with lambdapi: 1m53s (2m with `mk 7`)
-  * translation to Coq: 3s with `mk 15`
-  * checking time for Coq 8.17.1: 5m28s with `mk 15`
+Results for `hol.ml` up to `arith.ml` with `mk 7` and `-j 7` (by commenting from `loads "wf.ml"` to the end):
+  * proof dumping time: 11.7s 82 Mo
+  * number of proof steps: 324 K
+  * dk file generation: 6.6s 82 Mo
+  * checking time with dk check: 13.6s
+  * lp file generation: 3.7s 56 Mo
+  * checking time with lambdapi: 1m22s (1m30s with `-c`)
+  * translation to Coq: 2.8s
+  * checking time for Coq 8.17.1: 3m59s
 
 Exporting pure Q0 proofs
 ------------------------
@@ -301,12 +312,11 @@ Exporting pure Q0 proofs
 Hol2dk instruments basic HOL-Light tactics corresponding to
 introduction and elimination rules of connectives to get smaller
 proofs and proofs closer to natural deduction proofs. It is however
-possible to generate full Q0 proofs by patching HOL-Light files as
-follows:
+possible to generate full Q0 proofs by doing after patching:
 
 ```
 cd $hol-light-dir
-sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml
+sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
 
 Results on `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
@@ -319,19 +329,38 @@ Results on `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the e
   * lp file generation: 29s 107 Mo
   * checking time with lambdapi: 2m49s
 
+Results on `hol.ml`:
+  * ocaml cheking without proof dumping: 1m14s
+  * ocaml proof dumping: 2m9s (+74%)
+  * proof size file: 5.5 Go
+  * number of proof steps: 14.3 M
+
+| rule       |  % |
+|:-----------|---:|
+| refl       | 26 |
+| eqmp       | 21 |
+| term_subst | 15 |
+| trans      | 11 |
+| comb       | 10 |
+| deduct     |  7 |
+| type_subst |  4 |
+| abs        |  2 |
+| beta       |  2 |
+| assume     |  2 |
+
 Source files
 ------------
 
 Modified HOL-Light files:
-- `lib.ml`: HOL-Light file providing functions on lists, etc. required by `fusion.ml`. A few lines are commented out so that it compiles with ocamlc.
-- `fusion.ml`: HOL-Light kernel file defining types, terms, theorems, proofs and elementary proof rules.
-- `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives.
-
-The files `fusion.ml` and `bool.ml` contain special comments that are removed to patch hol-light.
+- `lib.ml`: provides functions on lists, etc. required by `fusion.ml`. A few lines are commented out so that it compiles with ocamlc.
+- `fusion.ml`: defines types, terms, theorems, proofs and elementary proof rules.
+- `bool.ml`: defines basic tactics corresponding to introduction and elimination rules of connectives.
+- `equal.ml`: defines basic tactic(al)s on equality including alpha and beta-reduction.
+These files contain special comments that are removed to patch hol-light.
 
 Additional files required for `hol2dk`:
 - `main.ml`: main program of Hol2dk.
-- `xprelude.ml`: file providing a few basic definitions.
+- `xprelude.ml`: provides a few basic definitions.
 - `xlib.ml`: functions on types, terms and other data structures.
 - `xproof.ml`: functions for accessing proofs.
 - `xlp.ml`: translation to Lambdapi of types, terms and proofs.
@@ -348,5 +377,5 @@ Thanks
 ------
 
 HOL-Light proof recording follows
-[ProofTrace](https://github.com/fblanqui/hol-light/tree/master/ProofTrace)
+[ProofTrace](https://github.com/jrh13/hol-light/tree/master/ProofTrace)
 developed by Stanislas Polu in 2019.
