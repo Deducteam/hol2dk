@@ -253,7 +253,19 @@ Dumping of `hol.ml`:
   * checking time without proof dumping: 1m20s
   * checking time with proof dumping: 1m46s (+32%)
   * dumped files size: 3.1 Go
-  * number of proof steps: 8.9 M
+  * number of proof steps: 8.9 M (2834 theorems)
+
+| rule       |  % |
+|:-----------|---:|
+| refl       | 29 |
+| eqmp       | 19 |
+| comb       | 17 |
+| term_subst | 12 |
+| trans      |  6 |
+| type_subst |  3 |
+| beta       |  3 |
+| abs        |  2 |
+| spec       |  2 |
 
 Single-threaded translation to Lambdapi:
   * lp files generation time: 12m8s
@@ -300,12 +312,11 @@ Exporting pure Q0 proofs
 Hol2dk instruments basic HOL-Light tactics corresponding to
 introduction and elimination rules of connectives to get smaller
 proofs and proofs closer to natural deduction proofs. It is however
-possible to generate full Q0 proofs by patching HOL-Light files as
-follows:
+possible to generate full Q0 proofs by doing after patching:
 
 ```
 cd $hol-light-dir
-sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml
+sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
 
 Results on `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
@@ -317,6 +328,23 @@ Results on `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the e
   * checking time with kocheck -j 7: 22s
   * lp file generation: 29s 107 Mo
   * checking time with lambdapi: 2m49s
+
+Results on `hol.ml`:
+  * ocaml proof dumping: 2m11s
+  * number of proof steps: 14.3 M (2834 theorems)
+
+| rule       |  % |
+|:-----------|---:|
+| refl       | 26 |
+| eqmp       | 21 |
+| term_subst | 15 |
+| trans      | 11 |
+| comb       | 10 |
+| deduct     |  7 |
+| type_subst |  4 |
+| abs        |  2 |
+| beta       |  2 |
+| assume     |  2 |
 
 Source files
 ------------
