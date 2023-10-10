@@ -47,8 +47,8 @@ builtin "False" ≔ _FALSITY_;
 builtin "ε" ≔ ε;
 builtin "ex1" ≔ ∃!;
 
-builtin "axiom_7" ≔ axiom_7;
-builtin "axiom_8" ≔ axiom_8;
+builtin "axiom_0" ≔ axiom_0;
+builtin "axiom_1" ≔ axiom_1;
 
 builtin "_FALSITY__def" ≔ _FALSITY__def;
 builtin "ex1_def" ≔ ∃!_def;
