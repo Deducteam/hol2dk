@@ -62,7 +62,7 @@ This script slightly modifies a few HOL-Light files in order to dump proofs:
 - `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
 - `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives
 
-To unpatch HOL-Light, siimply do:
+To unpatch HOL-Light, simply do:
 ```
 $hol2dk-dir/unpatch $hol-light-dir
 ```
