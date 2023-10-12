@@ -388,7 +388,8 @@ dump_map_thid_name "%s.thm" %a;;
      let nb_proofs = read_nb_proofs b in
      let part_size = nb_proofs / nb_part in
      let part idx =
-       let k = idx / part_size in if k >= nb_part then k - 1 else k in
+       let k = idx / part_size in
+       if k >= nb_part - 1 then nb_part - 1 else k in
      (*let thdg = Array.make nb_part 0 in*)
      (*let map_thid_name = read_thm b in*)
      let dg = Array.init nb_part (fun i -> Array.make i 0) in
@@ -400,8 +401,10 @@ dump_map_thid_name "%s.thm" %a;;
        (*if !named_thm then thdg.(py) <- thdg.(py) + 1;*)
        if px <> py then
          begin
-           (*log "add_dep %d (%d) %d (%d)\n" x (px+1) y (py+1);*)
-           dg.(px).(py) <- dg.(px).(py) + 1
+           (*try*) dg.(px).(py) <- dg.(px).(py) + 1
+           (*with (Invalid_argument _) as e ->
+             log "x = %d, px = %d, y = %d, py = %d\n%!" x px y py;
+             raise e*)
          end
      in
      read_prf b (fun idx p -> List.iter (add_dep idx) (deps p));
@@ -412,11 +415,6 @@ dump_map_thid_name "%s.thm" %a;;
        done;
        log "\n"
      done;
-     (*log "th:";
-     for i = 0 to nb_part - 1 do
-       if thdg.(i) > 0 then log " %d (%d)" (i+1) thdg.(i)
-     done;
-     log "\n";*)
      let dump_file = b ^ ".dg" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
