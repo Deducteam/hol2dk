@@ -99,14 +99,14 @@ let is_dk filename =
 let read_sig basename =
   let dump_file = basename ^ ".sig" in
   let ic = open_in_bin dump_file in
+  log "read %s ...\n%!" dump_file;
   let nb_proofs = input_value ic in
   log "%d proof steps\n%!" nb_proofs;
-  log "read %s ...\n%!" dump_file;
-  the_type_constants := input_value ic;
+  the_type_constants := List.rev (input_value ic);
   (* we add "el" to use mk_const without failing *)
-  the_term_constants := ("el",aty)::input_value ic;
-  the_axioms := input_value ic;
-  the_definitions := input_value ic;
+  the_term_constants := ("el",aty)::List.rev (input_value ic);
+  the_axioms := List.rev (input_value ic);
+  the_definitions := List.rev (input_value ic);
   close_in ic;
   update_map_const_typ_vars_pos();
   update_reserved()

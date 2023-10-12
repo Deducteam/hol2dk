@@ -303,7 +303,7 @@ Results for `hol.ml` up to `arith.ml` with `mk 7` and `-j 7` (by commenting from
   * checking time with dk check: 13.6s
   * lp file generation: 3.7s 56 Mo
   * checking time with lambdapi: 1m22s (1m30s with `-c`)
-  * translation to Coq: 2.8s
+  * translation to Coq: 2.8s 52 Mo
   * checking time for Coq 8.17.1: 3m59s
 
 Exporting pure Q0 proofs
