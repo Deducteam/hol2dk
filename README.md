@@ -287,7 +287,8 @@ Multi-threaded translation to Lambdapi with `mk 1000` and `-j 7`:
   * term abbrevs: 841 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
   * translation to Coq: 2m22s 2.1 Go
-  
+  * verification by Coq with `-j 28` and 64 Go RAM: 23h45m
+
 Multi-threaded translation to Dedukti with `mk 1000` and `-j 7`:
   * dk file generation time: 9m2s
   * dk file size: 3.3 Go

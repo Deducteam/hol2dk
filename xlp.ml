@@ -697,17 +697,17 @@ let export_to_lp_file_no_abbrev basename r =
    and term abbreviations). *)
 (****************************************************************************)
 
-(* [export_to_lp_dir d r] creates in directory [d] a file for each
-   proof in range [r]. This function is not interesting to use for the
-   moment as checking the generated lp files take more times because
-   of the way loading is currently done in Lambdapi. *)
-let export_to_lp_dir dirname r =
+(* [export_to_lp_dir r] creates a file for each proof in range
+   [r]. Warning: checking the generated lp files take more times
+   because of the way loading is currently done in Lambdapi (see
+   https://github.com/Deducteam/lambdapi/issues/959). *)
+let export_to_lp_dir r =
   use_abbrev := false;
   update_map_const_typ_vars_pos();
-  if not (Sys.is_directory dirname) then
-    failwith (Printf.sprintf "\"%s\" is not a directory\n" dirname);
-  let filename = Filename.concat dirname in
-  (* Generate the prelude with the encoding and the axioms. *)
+  (*if not (Sys.is_directory dirname) then
+    failwith (Printf.sprintf "\"%s\" is not a directory\n" dirname);*)
+  let filename x = (*Filename.concat dirname*) x in
+  (* Generate lambdapi.pkg. *)
   let fname = filename "lambdapi.pkg" in
   log "generate %s ...\n" fname;
   let oc = open_out fname in
