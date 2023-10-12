@@ -10,11 +10,13 @@ open Xnames
 let usage() =
   log
 "hol2dk uses:
+------------
 
 hol2dk [-h|--help]
   print this help
 
 Dumping commands:
+-----------------
 
 hol2dk dump $file.[ml|hl]
   run OCaml toplevel to check $file.[ml|hl] and generate
@@ -33,6 +35,7 @@ hol2dk $file.[dk|lp] $thm_id
   generate $file.[dk|lp] but with theorem index $thm_id only (useful for debug)
 
 Multi-threaded dk/lp file generation:
+-------------------------------------
 
 hol2dk dg $n $file
   generate $file.dg, the dependency graph of parts
@@ -56,7 +59,13 @@ hol2dk part $n $k $x $y $file.[dk|lp]
   generate dk/lp proof files of part $k in [1..$n]
   from proof index $x to proof index $y
 
+Lp file generation with a file for each proof step:
+---------------------------------------------------
+
+hol2dk exp $dir
+
 Other commands:
+---------------
 
 hol2dk stat $file
   print statistics on $file.prf
@@ -253,6 +262,21 @@ let make nb_part b dir =
      done;
      out oc "%s.v\n" b;
      exit 0
+
+let range args =
+  match args with
+  | [] -> All
+  | [x] ->
+     let x = integer x in
+     if x < 0 then wrong_arg();
+     Only x
+  | [x;y] ->
+     let x = integer x in
+     if x < 0 then wrong_arg();
+     let y = integer y in
+     if y < x then wrong_arg();
+     if x=0 then Upto y else Inter(x,y)
+  | _ -> wrong_arg()
 
 let main() =
   match List.tl (Array.to_list Sys.argv) with
@@ -464,22 +488,15 @@ dump_map_thid_name "%s.thm" %a;;
        end;
      exit 0
 
+  | "exp"::basename::args ->
+     let r = range args in
+     read_sig basename;
+     read_pos basename;
+     init_proof_reading basename;
+     Xlp.export_to_lp_dir r
+
   | f::args ->
-     let range =
-       match args with
-       | [] -> All
-       | [x] ->
-          let x = integer x in
-          if x < 0 then wrong_arg();
-          Only x
-       | [x;y] ->
-          let x = integer x in
-          if x < 0 then wrong_arg();
-          let y = integer y in
-          if y < x then wrong_arg();
-          Inter(x,y)
-       | _ -> wrong_arg()
-     in
+     let r = range args in
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      (* read and translate sig file *)
@@ -500,15 +517,15 @@ dump_map_thid_name "%s.thm" %a;;
      init_proof_reading basename;
      if dk then
        begin
-         Xdk.export_proofs basename range;
-         if range = All then Xdk.export_theorems basename (read_thm basename);
+         Xdk.export_proofs basename r;
+         if r = All then Xdk.export_theorems basename (read_thm basename);
          Xdk.export_term_abbrevs basename "";
          Xdk.export_type_abbrevs basename "";
          log "generate %s.dk ...\n%!" basename;
          let infiles =
            List.map (fun s -> basename ^ "_" ^ s ^ ".dk")
              (["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
-              ;"proofs"] @ if range = All then ["theorems"] else [])
+              ;"proofs"] @ if r = All then ["theorems"] else [])
          in
          exit
            (Sys.command
@@ -517,8 +534,8 @@ dump_map_thid_name "%s.thm" %a;;
        end
      else
        begin
-         Xlp.export_proofs basename range;
-         if range = All then Xlp.export_theorems basename (read_thm basename);
+         Xlp.export_proofs basename r;
+         if r = All then Xlp.export_theorems basename (read_thm basename);
          Xlp.export_term_abbrevs basename "";
          Xlp.export_type_abbrevs basename "";
          exit 0
