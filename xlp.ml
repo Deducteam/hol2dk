@@ -326,6 +326,7 @@ let proof tvs rmap =
     let sub_at oc k = sub k oc (proof_at k) in
     match content with
     | Prefl(t) -> out oc "REFL %a" term t
+    | Psym k -> out oc "SYM %a" sub_at k
     | Ptrans(k1,k2) -> out oc "TRANS %a %a" sub_at k1 sub_at k2
     | Pmkcomb(k1,k2) -> out oc "MK_COMB %a %a" sub_at k1 sub_at k2
     | Pabs(k,t) ->

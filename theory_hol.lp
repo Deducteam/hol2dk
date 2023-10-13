@@ -28,16 +28,10 @@ symbol REFL [a] (t : El a) : Prf (= t t);
 symbol MK_COMB [a b] [s t : El (fun a b)] [u v : El a] :
   Prf (= s t) → Prf (= u v) → Prf (= (s u) (t v));
 symbol EQ_MP [p q : El bool] : Prf (= p q) → Prf p → Prf q;
-opaque symbol TRANS [a] [x y z : El a] :
-  Prf (= x y) → Prf (= y z) → Prf (= x z) ≔
-/*begin
-  assume a x y z xy yz; apply EQ_MP _ xy; apply MK_COMB (REFL (= x)) yz;
-  flag "print_implicits" on; flag "print_domains" on; proofterm;
-end;*/
-  λ xy : Prf (= x y), λ yz : Prf (= y z),
-    @EQ_MP (= x y) (= x z)
-      (@MK_COMB a bool (@= a x) (@= a x) y z (@REFL (fun a bool) (@= a x)) yz)
-      xy;
+opaque symbol TRANS [a] [x y z : El a] (xy: Prf (= x y)) (yz: Prf (= y z))
+  : Prf (= x z) ≔ EQ_MP (MK_COMB (REFL (= x)) yz) xy;
+opaque symbol SYM [a] [x y : El a] (xy: Prf (= x y)) : Prf (= y x) ≔
+  EQ_MP (MK_COMB (MK_COMB (REFL (@= a)) xy) (REFL x)) (REFL x);
 
 rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
 rule Prf (∀ $p) ↪ Π x, Prf ($p x);

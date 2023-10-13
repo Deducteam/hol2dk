@@ -52,6 +52,7 @@ module type Hol_kernel =
       | Pdisj1 of term * int
       | Pdisj2 of term * int
       | Pdisj_cases of int * int * int
+      | Psym of int
 
       type proof = private Proof of (thm * proof_content)
 
@@ -133,6 +134,7 @@ module type Hol_kernel =
       val DISJ2 : term -> thm -> thm
       val DISJ_CASES : thm -> thm -> thm -> thm
       val ALPHA : term -> term -> thm
+      val SYM : thm -> thm
       (*END_ND*)
 
       val new_theorem : term list -> term -> proof_content -> thm
@@ -202,6 +204,7 @@ module Hol : Hol_kernel = struct
   | Pdisj1 of term * int
   | Pdisj2 of term * int
   | Pdisj_cases of int * int * int
+  | Psym of int
 
   type proof = Proof of (thm * proof_content)
 (*REMOVE
@@ -786,6 +789,11 @@ REMOVE*)
     if alphaorder tm1 tm2 = 0 then
       new_theorem [] (safe_mk_eq tm1 tm2) (Prefl tm1)
     else failwith "ALPHA";;
+
+  let SYM (Sequent(asl,c,k)) =
+    let (l,r) = dest_eq c in
+    new_theorem asl (safe_mk_eq r l) (Psym k);;
+
 REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of axioms.                                                       *)

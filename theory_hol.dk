@@ -27,6 +27,7 @@ def REFL : a : Set -> t : El a -> Prf (eq a t t).
 def MK_COMB : a : Set -> b : Set -> s : El (fun a b) -> t : El (fun a b) -> u : El a -> v : El a -> Prf (eq (fun a b) s t) -> Prf (eq a u v) -> Prf (eq b (s u) (t v)).
 def EQ_MP : p : El bool -> q : El bool -> Prf (eq bool p q) -> Prf p -> Prf q.
 def TRANS : a : Set -> x : El a -> y : El a -> z : El a -> Prf (eq a x y) -> Prf (eq a y z) -> Prf (eq a x z) := a : Set => x : El a => y : El a => z : El a => xy : Prf (eq a x y) => yz : Prf (eq a y z) => EQ_MP (eq a x y) (eq a x z) (MK_COMB a bool (eq a x) (eq a x) y z (REFL (fun a bool) (eq a x)) yz) xy.
+def SYM : a : Set -> x : El a -> y : El a -> Prf (eq a x y) -> Prf (eq a y x) := a : Set => x : El a => y : El a => xy : Prf (eq a x y) => EQ_MP (eq a x x) (eq a y x) (MK_COMB a bool (eq a x) (eq a y) x x (MK_COMB a (fun a bool) (eq a) (eq a) x y (REFL (fun a (fun a bool)) (eq a)) xy) (REFL a x)) (REFL a x).
 
 [p,q] Prf (imp p q) --> Prf p -> Prf q.
 [a,p] Prf (all a p) --> x : El a -> Prf (p x).

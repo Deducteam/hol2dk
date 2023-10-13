@@ -406,7 +406,7 @@ let deps (Proof(_,content)) =
     -> [k1;k2]
   | Pabs(k,_) | Pinst(k,_) | Pinstt(k,_)| Pdeft(k,_,_,_)
   | Pconjunct1 k | Pconjunct2 k | Pdisch(_,k) | Pspec(_,k) | Pgen(_,k)
-  | Pexists(_,_,k) | Pdisj1(_,k) | Pdisj2(_,k)
+  | Pexists(_,_,k) | Pdisj1(_,k) | Pdisj2(_,k) | Psym k
     -> [k]
   | Prefl _ | Pbeta _ | Passume _ | Paxiom _ | Pdef _ | Ptruth
     -> []
@@ -440,6 +440,7 @@ let code_of_proof (Proof(_,c)) =
   | Pdisj2 _ -> 23
   | Pdisj_cases _ -> 24
   | Pchoose _ -> 25
+  | Psym _ -> 26
 ;;
 
 let name_of_code = function
@@ -469,10 +470,11 @@ let name_of_code = function
   | 23 -> "disj2"
   | 24 -> "disj_cases"
   | 25 -> "choose"
+  | 26 -> "sym"
   | _ -> assert false
 ;;
 
-let nb_rules = 26;;
+let nb_rules = 27;;
 
 (* [count_thm uses p] updates [uses] with the dependencies of [p]. *)
 let count_thm (uses : int array) (p : proof) : unit =
