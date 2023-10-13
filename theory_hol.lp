@@ -30,16 +30,22 @@ symbol MK_COMB [a b] [s t : El (fun a b)] [u v : El a] :
 symbol EQ_MP [p q : El bool] : Prf (= p q) → Prf p → Prf q;
 opaque symbol TRANS [a] [x y z : El a] :
   Prf (= x y) → Prf (= y z) → Prf (= x z) ≔
-begin
+//λ a: Set, λ x: El a, λ y: El a, λ z: El a,
+//λ xy: Prf (@= a x y), λ yz: Prf (@= a y z), @EQ_MP (@= a x y) (@= a x z) (@MK_COMB a bool (@= a x) (@= a x) y z (@REFL (fun a bool) (@= a x)) yz) xy;
+λ xy: Prf (= x y), λ yz: Prf (= y z), EQ_MP (MK_COMB (REFL (= x)) yz) xy;
+/*begin
   assume a x y z xy yz; apply EQ_MP (MK_COMB (REFL (= x)) yz) xy;
-  //flag "print_implicits" on; flag "print_domains" on; proofterm
-end;
+  flag "print_implicits" on; flag "print_domains" on; proofterm
+end;*/
 opaque symbol SYM [a] [x y : El a] : Prf (= x y) → Prf (= y x) ≔
-begin
+//λ a: Set, λ x: El a, λ y: El a,
+//λ xy: Prf (@= a x y), @EQ_MP (@= a x x) (@= a y x) (@MK_COMB a bool (@= a x) (@= a y) x x (@MK_COMB a (fun a bool) (@= a) (@= a) x y (@REFL (fun a (fun a bool)) (@= a)) xy) (@REFL a x)) (@REFL a x);
+λ xy: Prf (= x y), EQ_MP (MK_COMB (MK_COMB (REFL (@= a)) xy) (REFL x)) (REFL x);
+/*begin
   assume a x y xy;
   apply EQ_MP (MK_COMB (MK_COMB (REFL (@= a)) xy) (REFL x)) (REFL x);
-  //flag "print_implicits" on; flag "print_domains" on; proofterm
-end;
+  flag "print_implicits" on; flag "print_domains" on; proofterm
+end;*/
 
 rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
 rule Prf (∀ $p) ↪ Π x, Prf ($p x);
