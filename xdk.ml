@@ -400,12 +400,16 @@ let proof tvs rmap =
     match content with
     | Prefl(t) ->
        out oc "REFL %a %a" typ (get_eq_typ p) term t
+    | Psym(k) ->
+       let p = proof_at k in
+       let a,x,y = get_eq_typ_args p in
+       out oc "SYM %a %a %a %a" typ a term x term y (sub k) p
     | Ptrans(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let a,x,y = get_eq_typ_args p1 in
        let _,z = get_eq_args p2 in
        out oc "TRANS %a %a %a %a %a %a"
-         typ (get_eq_typ p1) term x term y term z (sub k1) p1 (sub k2) p2
+         typ a term x term y term z (sub k1) p1 (sub k2) p2
     | Pmkcomb(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let ab,s,t = get_eq_typ_args p1 in
