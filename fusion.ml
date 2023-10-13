@@ -135,6 +135,7 @@ module type Hol_kernel =
       val DISJ_CASES : thm -> thm -> thm -> thm
       val ALPHA : term -> term -> thm
       val SYM : thm -> thm
+      val BETA_CONV : term -> thm
       (*END_ND*)
 
       val new_theorem : term list -> term -> proof_content -> thm
@@ -793,6 +794,12 @@ REMOVE*)
   let SYM (Sequent(asl,c,k)) =
     let (l,r) = dest_eq c in
     new_theorem asl (safe_mk_eq r l) (Psym k);;
+
+  let BETA_CONV tm =
+    match tm with
+    | Comb(Abs(v,bod),arg) ->
+      new_theorem [] (safe_mk_eq tm (vsubst [arg,v] bod)) (Pbeta tm)
+    | _ -> failwith "BETA_CONV: Not a beta-redex";;
 
 REMOVE*)
 (* ------------------------------------------------------------------------- *)

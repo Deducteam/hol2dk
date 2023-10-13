@@ -42,14 +42,14 @@ let mk_primed_var =
 (* ------------------------------------------------------------------------- *)
 (* General case of beta-conversion.                                          *)
 (* ------------------------------------------------------------------------- *)
-
+(*Q0
 let BETA_CONV tm =
   try BETA tm with Failure _ ->
   try let f,arg = dest_comb tm in
       let v = bndvar f in
       INST [arg,v] (BETA (mk_comb(f,v)))
   with Failure _ -> failwith "BETA_CONV: Not a beta-redex";;
-
+Q0*)
 (* ------------------------------------------------------------------------- *)
 (* A few very basic derived equality rules.                                  *)
 (* ------------------------------------------------------------------------- *)
