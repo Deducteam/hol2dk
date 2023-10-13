@@ -1,13 +1,22 @@
 TODO
 ----
 
+- turn proof_content into a private data type so as to simplify proofs
+  on the fly with the following rules:
+
+    trans p (refl _) --> p
+    trans (refl _) p --> p
+    sym (refl x) --> refl x
+    sym (sym p) --> p
+    trans (sym p) (sym q) --> or <-- sym (trans q p) ?
+    
 - replace ALPHA* by REFL
 
 - hol2dk mk: keep generating _CoqProject ?
 
 - add v file checking in ci
 
-- split proofs so that lp/v files are of a fixed equivalent size
+- split proofs so that lp/v files are of a fixed equivalent size ?
 
 - uniformize names between no part and part
 
