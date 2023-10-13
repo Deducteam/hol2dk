@@ -1,6 +1,8 @@
 NOTES
 -----
 
+- instrumenting BETA_CONV reduces the number of proof steps of `hol.ml` by 0.1% only
+
 - instrumenting SYM reduces the number of proof steps of `hol.ml` by 4%
 
 - replacing ALPHA by REFL reduces the number of proof steps of `hol_upto_arith` from 405621 to 324391 (-20%)!
