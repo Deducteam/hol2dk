@@ -81,7 +81,7 @@ let abbrev_typ =
      | _ -> out oc "(type%d%a)" k (list_prefix " " raw_typ) tvs
 ;;
 
-let typ = abbrev_typ (*if !use_abbrev then abbrev_typ else raw_typ*);;
+let typ oc b = if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;
 
 (* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
 let decl_map_typ oc m =
@@ -237,9 +237,9 @@ let rec rename rmap t =
      let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
 ;;
 
-let term =
-  (*if !use_abbrev then*) fun rmap oc t -> abbrev_term oc (rename rmap t)
-  (*else unabbrev_term*)
+let term rmap oc t =
+  if !use_abbrev then abbrev_term oc (rename rmap t)
+  else unabbrev_term rmap oc (rename rmap t)
 ;;
 
 (* [decl_map_term oc m] outputs on [oc] the term abbreviations defined
@@ -620,16 +620,10 @@ symbol REFL [a] (t:El a) : Prf (= t t);
 symbol MK_COMB [a b] [s t : El (fun a b)] [u v : El a] :
   Prf (= s t) → Prf (= u v) → Prf (= (s u) (t v));
 symbol EQ_MP [p q] : Prf (= p q) → Prf p → Prf q;
-symbol TRANS [a] [x y z : El a] :
-  Prf (= x y) → Prf (= y z) → Prf (= x z) ≔
-/*begin
-  assume a x y z xy yz; apply EQ_MP _ xy; apply MK_COMB (REFL (= x)) yz;
-  flag \"print_implicits\" on; flag \"print_domains\" on; proofterm;
-end;*/
-  λ xy : Prf (= x y), λ yz : Prf (= y z),
-    @EQ_MP (= x y) (= x z)
-      (@MK_COMB a bool (@= a x) (@= a x) y z (@REFL (fun a bool) (@= a x)) yz)
-      xy;\n
+opaque symbol TRANS [a] [x y z : El a] (xy: Prf (= x y)) (yz: Prf (= y z))
+  : Prf (= x z) ≔ EQ_MP (MK_COMB (REFL (= x)) yz) xy;
+opaque symbol SYM [a] [x y : El a] (xy: Prf (= x y)) : Prf (= y x) ≔
+  EQ_MP (MK_COMB (MK_COMB (REFL (@= a)) xy) (REFL x)) (REFL x);
 
 /* natural deduction rules */
 rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
@@ -739,11 +733,11 @@ done\n" n;
   close_out oc;
   (* Generate a lp file for each proof. *)
   let theorem_file k p =
-    let fname = filename (string_of_int k ^ ".lp") in
+    let fname = filename ("p" ^ string_of_int k ^ ".lp") in
     log "generate %s ...\n%!" fname;
     let oc = open_out fname in
-    let dep oc k = out oc " hol-light.%d" k in
-    out oc "require open hol-light.prelude%a;\n" (list dep) (deps p);
+    let dep oc k = out oc "require open hol-light.p%d;\n" k in
+    out oc "require open hol-light.prelude;\n%a" (list dep) (deps p);
     theorem oc k p;
     close_out oc
   in
