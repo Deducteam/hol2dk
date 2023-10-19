@@ -65,7 +65,8 @@ jobs:
         run: |
           eval `opam env`
           hol2dk dg 3 xci
-          hol2dk mk 3 xci .
+          export HOL2DK_DIR=.
+          hol2dk mk 3 xci
           make -j 3 -f xci.mk dk
           dk check xci.dk
       - name: Generate and check multi-threaded lp output
