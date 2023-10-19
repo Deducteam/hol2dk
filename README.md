@@ -51,11 +51,25 @@ git clone --depth 1 -b master https://github.com/jrh13/hol-light
 make -C hol-light
 ```
 
+Setting the environment variable `$HOL2DK_DIR`
+-------------------------------------------
+
+For some commands to have access to files in hol2dk sources, you need
+to set the following environment variable:
+
+```
+export HOL2DK_DIR=$hol2dk_dir
+```
+
+where `$hol2dk_dir` is the absolute path to the directory where are
+the hol2dk sources.
+
 Patching HOL-Light
 ------------------
 
 ```
-$hol2dk-dir/patch $hol-light-dir
+cd $hol2dk-dir
+./patch $hol-light-dir
 ```
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
@@ -64,7 +78,8 @@ This script slightly modifies a few HOL-Light files in order to dump proofs:
 
 To unpatch HOL-Light, simply do:
 ```
-$hol2dk-dir/unpatch $hol-light-dir
+$hol2dk-dir
+./unpatch $hol-light-dir
 ```
 
 Compiling and installing hol2dk

@@ -48,6 +48,7 @@ let typ_name oc n =
         if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
         else n
     end
+;;
 
 let rec raw_typ oc b =
   match b with
@@ -442,6 +443,7 @@ type decl =
   | Unnamed_thm
   | Axiom
   | Named_thm of string
+;;
 
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k]
    and proof [p] as declaration type [d]. *)
@@ -520,10 +522,13 @@ let export basename suffix f =
   close_out oc
 ;;
 
-let export_types =
+let types() =
   let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
-  fun b ->
-  export b "_types" (fun oc -> list decl_typ oc (List.filter f (types())))
+  List.filter f (types())
+;;
+
+let export_types b =
+  export b "_types" (fun oc -> list decl_typ oc (types()))
 ;;
 
 let export_type_abbrevs b s =
@@ -531,18 +536,18 @@ let export_type_abbrevs b s =
     (fun oc -> require oc b "_types"; decl_map_typ oc !map_typ)
 ;;
 
-let export_terms =
+let constants() =
   let f (n,_) =
     match n with
-    | "@" | "\\/" | "/\\" | "==>" | "!" | "?" | "?!" | "~" | "F" | "T" | "="
-    | "el"  -> false
+    |"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T"|"="|"el" -> false
     | _ -> true
   in
-  fun b ->
+  List.filter f (constants())
+;;
+
+let export_terms b =
   export b "_terms"
-    (fun oc ->
-      require oc b "_types";
-      list decl_sym oc (List.filter f (constants())))
+    (fun oc -> require oc b "_types"; list decl_sym oc (constants()))
 ;;
 
 let export_term_abbrevs b s =
@@ -609,58 +614,29 @@ let export_theorems_part k b map_thid_name =
 ;;
 
 (****************************************************************************)
-(* Lambdapi file generation without type and term abbreviations. *)
+(* EXPERIMENTAL. Generaton of one file for each theorem (without type
+   and term abbreviations). *)
 (****************************************************************************)
 
-let rules =
-"symbol fun_ext [a b] [f g : El (fun a b)] :
-  (Π x, Prf (= (f x) (g x))) → Prf (= f g);
-symbol prop_ext [p q] : (Prf p → Prf q) → (Prf q → Prf p) → Prf (= p q);
-symbol REFL [a] (t:El a) : Prf (= t t);
-symbol MK_COMB [a b] [s t : El (fun a b)] [u v : El a] :
-  Prf (= s t) → Prf (= u v) → Prf (= (s u) (t v));
-symbol EQ_MP [p q] : Prf (= p q) → Prf p → Prf q;
-opaque symbol TRANS [a] [x y z : El a] (xy: Prf (= x y)) (yz: Prf (= y z))
-  : Prf (= x z) ≔ EQ_MP (MK_COMB (REFL (= x)) yz) xy;
-opaque symbol SYM [a] [x y : El a] (xy: Prf (= x y)) : Prf (= y x) ≔
-  EQ_MP (MK_COMB (MK_COMB (REFL (@= a)) xy) (REFL x)) (REFL x);
-
-/* natural deduction rules */
-rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
-rule Prf (∀ $p) ↪ Π x, Prf ($p x);
-symbol top : Prf T;
-symbol ∧ᵢ [p q] : Prf p → Prf q → Prf (∧ p q);
-symbol ∧ₑ₁ [p q] : Prf (∧ p q) → Prf p;
-symbol ∧ₑ₂ [p q] : Prf (∧ p q) → Prf q;
-symbol ∃ᵢ [a] p (t : El a) : Prf (p t) → Prf (∃ p);
-symbol ∃ₑ [a p] :
-  Prf (∃ (λ x:El a, p x)) → Π [r], (Π x:El a, Prf (p x) → Prf r) → Prf r;
-symbol ∨ᵢ₁ [p] : Prf p → Π q, Prf (∨ p q);
-symbol ∨ᵢ₂ p [q] : Prf q → Prf (∨ p q);
-symbol ∨ₑ [p q] :
-  Prf (∨ p q) → Π [r], (Prf p → Prf r) → (Prf q → Prf r) → Prf r;
-";;
-
-(* [theory oc] outputs on [oc] all types, constants and axioms used in
-   proofs. *)
-let theory oc =
-  let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
-  let types = List.filter f (types()) in
-  let f (n,_) = match n with "=" | "el" -> false | _ -> true in
-  let constants = List.filter f (constants()) in
+(* [export_one_file_by_prf r] creates a file for each proof in range
+   [r]. Warning: checking the generated lp files currently takes more
+   times because of the way loading is currently done in Lambdapi (see
+   https://github.com/Deducteam/lambdapi/issues/959). *)
+let export_one_file_by_prf r =
+  use_abbrev := false;
+  update_map_const_typ_vars_pos();
+  (* Generate lambdapi.pkg. *)
+  let fname = "lambdapi.pkg" in
+  log "generate %s ...\n" fname;
+  let oc = open_out fname in
+  out oc "package_name = hol-light\nroot_path = hol-light\n";
+  close_out oc;
+  (* Generate prelude.lp. *)
+  let fname = "prelude.lp" in
+  log "generate %s ...\n" fname;
+  let oc = open_out fname in
   out oc
-"/* Encoding of simple type theory */
-constant symbol Set : TYPE;
-constant symbol bool : Set;
-constant symbol fun : Set → Set → Set;
-injective symbol El : Set → TYPE;
-rule El (fun $a $b) ↪ El $a → El $b;
-injective symbol Prf : El bool → TYPE;
-
-/* HOL-Light axioms and rules */
-injective symbol el a : El a;
-constant symbol = [a] : El a → El a → El bool;
-%s
+"require open hol-light.theory_hol;\n
 /* type constructors */
 %a
 /* constants */
@@ -669,80 +645,64 @@ constant symbol = [a] : El a → El a → El bool;
 %a
 /* definitions */
 %a\n"
-rules (list decl_typ) types (list decl_sym) constants
-decl_axioms (axioms()) (list decl_def) (definitions())
-;;
-
-(* [export_to_lp_file_no_abbrev f r] creates a file of name [f.lp] and
-   outputs to this file the proofs in range [r]. *)
-let export_to_lp_file_no_abbrev basename r =
-  use_abbrev := false;
-  update_map_const_typ_vars_pos();
-  let filename = basename ^ ".lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  theory oc;
-  out oc "/* theorems */\n";
-  proofs_in_range oc r;
-  close_out oc
-;;
-
-(****************************************************************************)
-(* EXPERIMENTAL. Generaton of one file for each theorem (without type
-   and term abbreviations). *)
-(****************************************************************************)
-
-(* [export_to_lp_dir r] creates a file for each proof in range
-   [r]. Warning: checking the generated lp files take more times
-   because of the way loading is currently done in Lambdapi (see
-   https://github.com/Deducteam/lambdapi/issues/959). *)
-let export_to_lp_dir r =
-  use_abbrev := false;
-  update_map_const_typ_vars_pos();
-  (*if not (Sys.is_directory dirname) then
-    failwith (Printf.sprintf "\"%s\" is not a directory\n" dirname);*)
-  let filename x = (*Filename.concat dirname*) x in
-  (* Generate lambdapi.pkg. *)
-  let fname = filename "lambdapi.pkg" in
-  log "generate %s ...\n" fname;
-  let oc = open_out fname in
-  out oc "package_name = hol-light\nroot_path = hol-light\n";
+    (list decl_typ) (types()) (list decl_sym) (constants())
+    decl_axioms (axioms()) (list decl_def) (definitions());
   close_out oc;
-  (* Generate the prelude with the encoding and the axioms. *)
-  let fname = filename "prelude.lp" in
+  (* Start generating Makefile. *)
+  let fname = "Makefile" in
   log "generate %s ...\n" fname;
-  let oc = open_out fname in
-  theory oc;
-  close_out oc;
-  (* Generate shell script to check lp files. *)
-  let fname = filename "check-lp.sh" in
+  let oc_makefile = open_out fname in
+  out oc_makefile
+    "# file generated by \"hol2dk exp\"\n\
+     .SUFFIXES:\n\
+     include vofiles.mk\n\
+     .PHONY: clean\n\
+     clean:\n\
+     \trm -f *.glob *.vo* .*.aux *.lpo *.dko\n\
+     %%.vo: %%.v\n\
+     \tcoqc -R . HOLLight $<\n\
+     %%.v: %%.lp\n\
+     \tlambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp \
+     --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp \
+     --use-notations --requiring coq.v $< \
+     | sed -e 's/^Require Import hol-light\\./Require Import /g' > $@\n\
+     prelude.vo: coq.vo theory_hol.vo\n";
+  let add_vodep d = out oc_makefile " p%d.vo" d in
+  (* Start generating vofiles.mk. *)
+  let fname = "vofiles.mk" in
   log "generate %s ...\n" fname;
-  let oc = open_out_gen [Open_wronly;Open_creat;Open_trunc] 0o755 fname in
-  let n =
-    match r with
-    | Only _ | Inter _ -> invalid_arg "export_to_lp_dir"
-    | Upto x -> x
-    | All -> nb_proofs() - 1
-  in
-  out oc "#!/bin/bash\n
-for i in prelude {0..%d}
-do
-  echo $i ...
-  lambdapi check -c --verbose 0 $i.lp
-done\n" n;
-  close_out oc;
+  let oc_vofiles = open_out fname in
+  out oc_vofiles
+    "# file generated by: hol2dk exp ...\n\
+     .PHONY: vo\n\
+     vo: coq.vo prelude.vo";
+  let add_vofile d = out oc_vofiles " p%d.vo" d in
+  (* Start generating lpofiles.mk. *)
+  let fname = "lpofiles.mk" in
+  log "generate %s ...\n" fname;
+  let oc_lpofiles = open_out fname in
+  out oc_lpofiles "# file generated by \"hol2dk exp\"\nlpo:";
+  let add_lpofile d = out oc_lpofiles " p%d.lpo" d in
   (* Generate a lp file for each proof. *)
   let theorem_file k p =
-    let fname = filename ("p" ^ string_of_int k ^ ".lp") in
+    out oc_makefile "p%d.vo: prelude.vo" k;
+    let fname = "p" ^ string_of_int k ^ ".lp" in
     log "generate %s ...\n%!" fname;
     let oc = open_out fname in
-    let dep oc k = out oc "require open hol-light.p%d;\n" k in
-    out oc "require open hol-light.prelude;\n%a" (list dep) (deps p);
+    out oc "require open hol-light.theory_hol;\n\
+            require open hol-light.prelude;\n";
+    let lp_dep oc d = out oc "require open hol-light.p%d;\n" d in
+    let f d = lp_dep oc d; add_vofile d; add_vodep d; add_lpofile d in
+    List.iter f (deps p);
     theorem oc k p;
-    close_out oc
+    close_out oc;
+    out oc_makefile "\n"
   in
-  match r with
+  begin match r with
   | All -> iter_proofs_at theorem_file
   | Upto x -> for k=0 to x do theorem_file k (proof_at k) done
-  | Only _ | Inter _ -> invalid_arg "export_to_lp_dir"
+  | Only _ | Inter _ -> invalid_arg "export_one_file_by_prf"
+  end;
+  close_out oc_makefile;
+  close_out oc_vofiles
 ;;
