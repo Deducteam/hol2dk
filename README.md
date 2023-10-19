@@ -154,9 +154,18 @@ using `make`.
 You first generate `file.dg` and `file.mk` with:
 ```
 hol2dk dg $nb_parts file
-hol2dk mk $nb_parts file $hol2dk_dir
+hol2dk mk $nb_parts file
 ```
-where `$nb_parts` is the number of files in which you want to split the dk/lp translation, and `$hol2dk_dir` is the source directory of hol2dk.
+where `$nb_parts` is the number of files in which you want to split the proofs.
+
+You add links to hol2dk files:
+```
+ln -s $HOL2DK_DIR/theory_hol.dk
+ln -s $HOL2DK_DIR/theory_hol.lp
+ln -s $HOL2DK_DIR/lambdapi.pkg
+ln -s $HOL2DK_DIR/coq.v
+ln -s $HOL2DK_DIR/_CoqProject
+```
 
 You can then generate `file.dk` with:
 

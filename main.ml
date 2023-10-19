@@ -150,7 +150,8 @@ let make nb_part b =
                %s_part_%d.dk" b i b i b i
      done;
      out oc " %s_theorems.dk\n\tcat $+ > $@\n" b;
-     out oc "theory_hol.dk: $(HOL2DK_DIR)/theory_hol.dk\n\tln -f -s $< $@\n";
+     (*out oc "theory_hol.dk: $(HOL2DK_DIR)/theory_hol.dk
+       \tln -f -s $< $@\n";*)
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
              \thol2dk sig %s.dk\n" b b b b b;
      out oc "%s_theorems.dk: %s.sig %s.thm %s.pos %s.prf\n\
@@ -175,7 +176,8 @@ let make nb_part b =
        out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
                %s_part_%d.lp" b i b i b i
      done;
-     out oc "\ntheory_hol.lp: $(HOL2DK_DIR)/theory_hol.lp\n\tln -f -s $< $@\n";
+     (*out oc "\ntheory_hol.lp: $(HOL2DK_DIR)/theory_hol.lp
+             \tln -f -s $< $@\n";*)
      out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
              \thol2dk sig %s.lp\n" b b b b b;
      out oc "%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
@@ -238,7 +240,7 @@ let make nb_part b =
                %s_part_%d.v" b i b i b i
      done;
      out oc " %s.v\n" b;
-     out oc "coq.v: $(HOL2DK_DIR)/coq.v\n\tln -f -s $< $@\n";
+     (*out oc "coq.v: $(HOL2DK_DIR)/coq.v\n\tln -f -s $< $@\n";*)
      out oc "LAMBDAPI = lambdapi\n";
      out oc "%%.v: %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
              --encoding $(HOL2DK_DIR)/encoding.lp \
