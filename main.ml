@@ -200,9 +200,8 @@ let make nb_parts b =
      let check e c =
        out oc "\n.PHONY: %so\n" e;
        out oc "%so: %s.%so\n" e b e;
-       out oc "theory_hol.%so: coq.%so\n" e e;
-       out oc "%s.%so: coq.%so theory_hol.%so %s_types.%so \
-               %s_terms.%so %s_axioms.%so" b e e e b e b e b e;
+       out oc "%s.%so: theory_hol.%so %s_types.%so \
+               %s_terms.%so %s_axioms.%so" b e e b e b e b e;
        for i = 1 to nb_parts do out oc " %s_part_%d.%so" b i e done;
        out oc "\n%s_types.%so: theory_hol.%so\n" b e e;
        out oc "%s_terms.%so: theory_hol.%so %s_types.%so\n" b e e b e;
@@ -212,13 +211,13 @@ let make nb_parts b =
          let j = i+1 in
          out oc "%s_part_%d_type_abbrevs.%so: theory_hol.%so \
                  %s_types.%so\n" b j e e b e;
-         out oc "%s_part_%d_term_abbrevs.%so: coq.%so \
+         out oc "%s_part_%d_term_abbrevs.%so: \
                  theory_hol.%so %s_types.%so %s_part_%d_\
-                 type_abbrevs.%so %s_terms.%so\n" b j e e e b e b j e b e;
-         out oc "%s_part_%d.%so: coq.%so theory_hol.%so \
+                 type_abbrevs.%so %s_terms.%so\n" b j e e b e b j e b e;
+         out oc "%s_part_%d.%so: theory_hol.%so \
                  %s_types.%so %s_part_%d_type_abbrevs.%so %s_terms.%so \
                  %s_part_%d_term_abbrevs.%so %s_axioms.%so"
-           b j e e e b e b j e b e b j e b e;
+           b j e e b e b j e b e b j e b e;
          for j = 0 to i - 1 do
            if dg.(i).(j) > 0 then out oc " %s_part_%d.%so" b (j+1) e
          done;
