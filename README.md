@@ -154,7 +154,7 @@ using `make`.
 You first generate `file.dg` and `file.mk` with:
 ```
 hol2dk dg $nb_parts file
-hol2dk mk-part $nb_parts file
+hol2dk mk-part file
 ```
 where `$nb_parts` is the number of files in which you want to split the proofs.
 
