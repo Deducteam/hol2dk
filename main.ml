@@ -450,7 +450,7 @@ dump_map_thid_name "%s.thm" %a;;
      read_sig basename;
      read_pos basename;
      init_proof_reading basename;
-     cur_part_max := k * nb_proofs / nb_parts;
+     cur_part_max := (k * nb_proofs) / nb_parts;
      if is_dk f then
        begin
          Xdk.export_proofs_part basename k x y;
