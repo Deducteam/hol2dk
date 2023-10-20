@@ -1,19 +1,44 @@
-// dk/lp symbols (on the right) the declarations of which are removed
-// and whose uses are replaced by the given Coq expressions (on the left)
+/* Map from dk/lp symbols on the right to Coq expressions on the left:
+The declarations of dk/lp symbols are removed and their occurrences are
+replaced by the given Coq expressions. */
 
+// primitive types
 builtin "Type'" ≔ Set;
+builtin "el" ≔ el;
 builtin "Prop" ≔ bool;
 builtin "arr" ≔ fun;
-builtin "imp" ≔ ⇒;
-builtin "all" ≔ ∀;
-builtin "eq" ≔ =;
-builtin "or" ≔ ∨;
-builtin "and" ≔ ∧;
-builtin "ex" ≔ ∃;
-builtin "not" ≔ ¬;
-builtin "True" ≔ T;
-builtin "False" ≔ F;
 
+// connectives
+builtin "eq" ≔ =;
+
+builtin "imp" ≔ ⇒;
+builtin "imp_def" ≔ ⇒_def;
+
+builtin "all" ≔ ∀;
+builtin "all_def" ≔ ∀_def;
+
+builtin "or" ≔ ∨;
+builtin "or_def" ≔ ∨_def;
+
+builtin "and" ≔ ∧;
+builtin "and_def" ≔ ∧_def;
+
+builtin "ex" ≔ ∃;
+builtin "ex_def" ≔ ∃_def;
+
+builtin "not" ≔ ¬;
+builtin "not_def" ≔ ¬_def;
+
+builtin "True" ≔ T;
+builtin "T_def" ≔ T_def;
+
+builtin "False" ≔ F;
+builtin "F_def" ≔ F_def;
+
+builtin "ex1" ≔ ∃!;
+builtin "ex1_def" ≔ ∃!_def;
+
+// natural deduction rules
 builtin "Logic.I" ≔ top;
 builtin "conj" ≔ ∧ᵢ;
 builtin "proj1" ≔ ∧ₑ₁;
@@ -23,43 +48,59 @@ builtin "or_intro2" ≔ ∨ᵢ₂;
 builtin "or_elim" ≔ ∨ₑ;
 builtin "ex_intro" ≔ ∃ᵢ;
 builtin "ex_elim" ≔ ∃ₑ;
+
+// HOL-Light rules
 builtin "eq_refl" ≔ REFL;
 builtin "EQ_MP" ≔ EQ_MP;
 builtin "MK_COMB" ≔ MK_COMB;
-builtin "el" ≔ el;
 
-builtin "nat" ≔ num;
-builtin "0" ≔ _0;
-builtin "S" ≔ SUC;
+// HOL-Light axioms
+builtin "ε" ≔ ε;
+builtin "axiom_0" ≔ axiom_0;
+builtin "axiom_1" ≔ axiom_1;
+builtin "fun_ext" ≔ fun_ext;
+builtin "prop_ext" ≔ prop_ext;
 
+// unit type
+builtin "unit" ≔ 1;
+builtin "tt" ≔ one;
+builtin "one_ABS" ≔ one_ABS;
+builtin "one_REP" ≔ one_REP;
+builtin "axiom_2" ≔ axiom_2;
+builtin "axiom_3" ≔ axiom_3;
+
+// product type
 builtin "prod" ≔ prod;
 builtin "pair" ≔ pair;
 builtin "fst" ≔ FST;
 builtin "snd" ≔ SND;
 
-builtin "unit" ≔ 1;
-builtin "tt" ≔ one;
+// type of natural numbers
+builtin "nat" ≔ num;
+builtin "0" ≔ _0;
+builtin "S" ≔ SUC;
+
+// definitions
+// to be removed when definitions will be translated to definitions
+builtin "False" ≔ _FALSITY_;
+builtin "_FALSITY__def" ≔ _FALSITY__def;
 
 builtin "id" ≔ I;
+builtin "I_def" ≔ I_def;
 
-builtin "False" ≔ _FALSITY_;
+builtin "o" ≔ o;
+builtin "o_def" ≔ o_def;
 
-builtin "ε" ≔ ε;
-builtin "ex1" ≔ ∃!;
+builtin "LET" ≔ LET;
+builtin "LET_def" ≔ LET_def;
 
-builtin "axiom_0" ≔ axiom_0;
-builtin "axiom_1" ≔ axiom_1;
+builtin "LET_END" ≔ LET_END;
+builtin "LET_END_def" ≔ LET_END_def;
 
-builtin "_FALSITY__def" ≔ _FALSITY__def;
-builtin "ex1_def" ≔ ∃!_def;
-builtin "not_def" ≔ ¬_def;
-builtin "or_def" ≔ ∨_def;
-builtin "ex_def" ≔ ∃_def;
-builtin "all_def" ≔ ∀_def;
-builtin "imp_def" ≔ ⇒_def;
-builtin "and_def" ≔ ∧_def;
-builtin "F_def" ≔ F_def;
-builtin "T_def" ≔ T_def;
+/*
+builtin "CURRY" ≔ CURRY;
+builtin "CURRY_def" ≔ CURRY_def;
 
-builtin "fun_ext" ≔ fun_ext;
-builtin "prop_ext" ≔ prop_ext;
+builtin "UNCURRY" ≔ UNCURRY;
+builtin "UNCURRY_def" ≔ UNCURRY_def;
+*/
