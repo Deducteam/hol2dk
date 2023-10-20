@@ -65,7 +65,7 @@ jobs:
         run: |
           eval `opam env`
           hol2dk dg 3 xci
-          hol2dk mk-part 3 xci
+          hol2dk mk-part xci
           export HOL2DK_DIR=.
           make -j 3 -f xci.mk dk
           dk check xci.dk
