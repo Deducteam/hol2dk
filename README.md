@@ -311,7 +311,7 @@ Multi-threaded translation to Lambdapi with `mk 100` and `-j 28`:
   * lp files size: 2.1 Go
   * type abbrevs: 1.3 Mo
   * term abbrevs: 681 Mo
-  * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
+  * verification by lambdapi with 64 Go RAM: 4h10
   * translation to Coq: 50s 1.9 Go
   * verification by Coq with 64 Go RAM: 6h
 
