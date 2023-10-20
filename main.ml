@@ -57,6 +57,9 @@ hol2dk part $n $k $x $y $file.[dk|lp]
   generate dk/lp proof files of part $k in [1..$n]
   from proof index $x to proof index $y using type and term abbreviations
 
+Experimental (not efficient):
+-----------------------------
+
 hol2dk prf $x $y $file
   generate a lp file for each proof from index $x to index $y in $file.prf
   without using type and term abbreviations
@@ -154,8 +157,6 @@ let make b =
             %s_part_%d.dk" b i b i b i
   done;
   out oc " %s_theorems.dk\n\tcat $+ > $@\n" b;
-  (*out oc "theory_hol.dk: $(HOL2DK_DIR)/theory_hol.dk
-    \tln -f -s $< $@\n";*)
   out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
           \thol2dk sig %s.dk\n" b b b b b;
   out oc "%s_theorems.dk: %s.sig %s.thm %s.pos %s.prf\n\
@@ -176,8 +177,6 @@ let make b =
     out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
             %s_part_%d.lp" b i b i b i
   done;
-  (*out oc "\ntheory_hol.lp: $(HOL2DK_DIR)/theory_hol.lp
-    \tln -f -s $< $@\n";*)
   out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
           \thol2dk sig %s.lp\n" b b b b b;
   out oc "%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
@@ -235,7 +234,6 @@ let make b =
             %s_part_%d.v" b i b i b i
   done;
   out oc " %s.v\n" b;
-  (*out oc "coq.v: $(HOL2DK_DIR)/coq.v\n\tln -f -s $< $@\n";*)
   out oc "LAMBDAPI = lambdapi\n";
   out oc "%%.v: %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
           --encoding $(HOL2DK_DIR)/encoding.lp \
@@ -243,14 +241,16 @@ let make b =
           --erasing $(HOL2DK_DIR)/erasing.lp \
           --use-notations --requiring coq.v";
   out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
-  (*out oc " | sed -e 's/^Require /From HOLLight Require /'";*)
   out oc " > $@\n";
 
   (* coq files checking *)
   check "v" "coqc -R . HOLLight";
+  out oc "theory_hol.vo: coq.vo\n";
 
   (* add clean target *)
-  out oc "\n.PHONY: clean\nclean:\n\trm -f *.v* *.lp *.glob .*.aux\n";
+  out oc "\n.PHONY: clean\n\
+          clean:\n\
+          \trm -f %s*.lp coq.vo theory_hol.vo %s*.v* *.glob .*.aux\n" b b;
   exit 0
 
 let range args =
