@@ -51,11 +51,25 @@ git clone --depth 1 -b master https://github.com/jrh13/hol-light
 make -C hol-light
 ```
 
+Setting the environment variable `$HOL2DK_DIR`
+-------------------------------------------
+
+For some commands to have access to files in hol2dk sources, you need
+to set the following environment variable:
+
+```
+export HOL2DK_DIR=$hol2dk_dir
+```
+
+where `$hol2dk_dir` is the absolute path to the directory where are
+the hol2dk sources.
+
 Patching HOL-Light
 ------------------
 
 ```
-$hol2dk-dir/patch $hol-light-dir
+cd $hol2dk-dir
+./patch $hol-light-dir
 ```
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
@@ -64,7 +78,8 @@ This script slightly modifies a few HOL-Light files in order to dump proofs:
 
 To unpatch HOL-Light, simply do:
 ```
-$hol2dk-dir/unpatch $hol-light-dir
+$hol2dk-dir
+./unpatch $hol-light-dir
 ```
 
 Compiling and installing hol2dk
@@ -139,9 +154,18 @@ using `make`.
 You first generate `file.dg` and `file.mk` with:
 ```
 hol2dk dg $nb_parts file
-hol2dk mk $nb_parts file $hol2dk_dir
+hol2dk mk-part $nb_parts file
 ```
-where `$nb_parts` is the number of files in which you want to split the dk/lp translation, and `$hol2dk_dir` is the source directory of hol2dk.
+where `$nb_parts` is the number of files in which you want to split the proofs.
+
+You add links to hol2dk files:
+```
+ln -s $HOL2DK_DIR/theory_hol.dk
+ln -s $HOL2DK_DIR/theory_hol.lp
+ln -s $HOL2DK_DIR/lambdapi.pkg
+ln -s $HOL2DK_DIR/coq.v
+ln -s $HOL2DK_DIR/_CoqProject
+```
 
 You can then generate `file.dk` with:
 
@@ -226,24 +250,25 @@ using the Coq export feature of Lambdapi.
 
 If your Lambdapi files have been generated using `file.mk`, you can simply do:
 ```
-hol2dk mk $nb_parts file coq.v
 make -j $jobs -f file.mk v # to generate Coq files
 make -j $jobs -f file.mk vo # to check the generated Coq files
 ```
-To indicate a specific `lambdapi` command, to:
+
+To indicate a specific `lambdapi` command, do:
 ```
 make -j $jobs -f file.mk LAMBAPI=$lambdapi v # to generate Coq files
 ```
 
-Otherwise, you need to translate Lambdapi files one by one by hand or using a script:
+Otherwise, you need to translate Lambdapi files one by one by hand or
+using a script:
 ```
-lambdapi export -o stt_coq --encoding encoding.lp --erasing erasing.lp --renaming renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
+lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --erasing $(HOL2DK_DIR)/erasing.lp --renaming $(HOL2DK_DIR)/renaming.lp --requiring $(HOL2DK_DIR)/coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
 ```
 
 You can then check the generated Coq files as follows:
 ```
 echo coq.v theory_hol.v file*.v > _CoqProject
-coq_makefile -f _CoqProject > Makefile.coq
+coq_makefile -f _CoqProject -o Makefile.coq
 make -j $jobs -f Makefile.coq
 ```
 
@@ -280,25 +305,25 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Multi-threaded translation to Lambdapi with `mk 1000` and `-j 7`:
-  * hol2dk dg: 14.8s
-  * lp files generation time: 4m23s
-  * lp files size: 2.2 Go
-  * type abbrevs: 5.3 Mo
-  * term abbrevs: 841 Mo
+Multi-threaded translation to Lambdapi with `mk 100` and `-j 28`:
+  * hol2dk dg: 15s
+  * lp files generation time: 1m5s
+  * lp files size: 2.1 Go
+  * type abbrevs: 1.3 Mo
+  * term abbrevs: 681 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
-  * translation to Coq: 2m22s 2.1 Go
-  * verification by Coq with `-j 28` and 64 Go RAM: 23h45m
+  * translation to Coq: 50s 1.9 Go
+  * verification by Coq with 64 Go RAM: 6h
 
-Multi-threaded translation to Dedukti with `mk 1000` and `-j 7`:
-  * dk file generation time: 9m2s
-  * dk file size: 3.3 Go
-  * type abbrevs: 5.3 Mo
-  * term abbrevs: 960 Mo
-  * kocheck can check it in 12m52s
-  * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM and the process is stopped after 11m16s)
+Multi-threaded translation to Dedukti with `mk 100`:
+  * dk file generation time: 1m57s
+  * dk file size: 3 Go
+  * type abbrevs: 1.3 Mo
+  * term abbrevs: 772 Mo
+  * kocheck with 32 Go RAM: 12m52s
+  * dkcheck with 64 Go RAM: 14m05s
 
-Results for `hol.ml` up to `arith.ml` with `mk 7` and `-j 7` (by commenting from `loads "wf.ml"` to the end):
+Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `mk 7` and `-j 7` :
   * proof dumping time: 12s 77 Mo
   * number of proof steps: 302 K
   * dk file generation: 6s 76 Mo

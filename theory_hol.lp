@@ -1,26 +1,15 @@
+/* Encoding of simple type theory */
 constant symbol Set : TYPE;
-
 constant symbol bool : Set;
 constant symbol fun : Set → Set → Set;
-
 injective symbol El : Set → TYPE;
 rule El (fun $a $b) ↪ El $a → El $b;
-
-constant symbol el [A] : El A;
-constant symbol ε [A] : El (fun (fun A bool) A);
-constant symbol ∃! [A] : El (fun (fun A bool) bool);
-constant symbol ¬ : El (fun bool bool);
-constant symbol F : El bool;
-constant symbol ∨ : El (fun bool (fun bool bool));
-constant symbol ∃ [A] : El (fun (fun A bool) bool);
-constant symbol ∀ [A] : El (fun (fun A bool) bool);
-constant symbol ⇒ : El (fun bool (fun bool bool));
-constant symbol ∧ : El (fun bool (fun bool bool));
-constant symbol T : El bool;
-constant symbol = [A] : El (fun A (fun A bool));
-
 injective symbol Prf : El bool → TYPE;
 
+/* HOL-Light primitive constants, axioms and rules */
+constant symbol = [A] : El (fun A (fun A bool));
+constant symbol el [A] : El A;
+constant symbol ε [A] : El (fun (fun A bool) A);
 symbol fun_ext [a b] [f g : El (fun a b)] :
   (Π x, Prf (= (f x) (g x))) → Prf (= f g);
 symbol prop_ext [p q : El bool] : (Prf p → Prf q) → (Prf q → Prf p) → Prf (= p q);
@@ -33,9 +22,20 @@ opaque symbol TRANS [a] [x y z : El a] (xy: Prf (= x y)) (yz: Prf (= y z))
 opaque symbol SYM [a] [x y : El a] (xy: Prf (= x y)) : Prf (= y x) ≔
   EQ_MP (MK_COMB (MK_COMB (REFL (@= a)) xy) (REFL x)) (REFL x);
 
+/* HOL-Light derived connectives */
+constant symbol ∃! [A] : El (fun (fun A bool) bool);
+constant symbol ¬ : El (fun bool bool);
+constant symbol F : El bool;
+constant symbol ∨ : El (fun bool (fun bool bool));
+constant symbol ∃ [A] : El (fun (fun A bool) bool);
+constant symbol ∀ [A] : El (fun (fun A bool) bool);
+constant symbol ⇒ : El (fun bool (fun bool bool));
+constant symbol ∧ : El (fun bool (fun bool bool));
+constant symbol T : El bool;
+
+/* Natural deduction rules */
 rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
 rule Prf (∀ $p) ↪ Π x, Prf ($p x);
-
 symbol top : Prf T;
 symbol ∧ᵢ [p : El bool] : Prf p → Π [q : El bool], Prf q → Prf (∧ p q);
 symbol ∧ₑ₁ [p q : El bool] : Prf (∧ p q) → Prf p;

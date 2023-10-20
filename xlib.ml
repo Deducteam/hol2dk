@@ -22,6 +22,18 @@ let in_range = function
   | Inter(x,y) -> fun k -> x <= k && k <= y
 ;;
 
+(* [iter_parts n k f] splits the interval [0..n-1] in [k] parts and
+   calls [f 1 x1 y1], .., [f k xk yk] where [xi] and [yi] are the
+   starting and ending indexes (starting from 0) of part [i]. *)
+let iter_parts nb_proofs nb_parts f =
+  let part_size = nb_proofs / nb_parts in
+  let x = ref 0 in
+  for i = 1 to nb_parts - 1 do
+    let y = !x + part_size in f i !x (y-1); x := y
+  done;
+  f nb_parts !x (nb_proofs - 1)
+;;
+
 (****************************************************************************)
 (* Functions on basic data structures. *)
 (****************************************************************************)

@@ -32,7 +32,7 @@ hol2dk $file.[dk|lp]
   generate $file.[dk|lp]
 
 hol2dk $file.[dk|lp] $thm_id
-  generate $file.[dk|lp] but with theorem index $thm_id only (useful for debug)
+  generate $file.[dk|lp] but with theorem index $thm_id only (for debug)
 
 Multi-threaded dk/lp file generation:
 -------------------------------------
@@ -41,10 +41,9 @@ hol2dk dg $n $file
   generate $file.dg, the dependency graph of parts
   when $file.prf is split in $n parts
 
-hol2dk mk $n $file $dir
-  generate $file.mk and _CoqProject to generate, translate and check files
+hol2dk mk-part $n $file
+  generate $file.mk to generate, translate and check files
   when $file.prf is split in $n parts
-  $dir is the source directory of hol2dk
 
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
@@ -57,12 +56,19 @@ hol2dk use $file
 
 hol2dk part $n $k $x $y $file.[dk|lp]
   generate dk/lp proof files of part $k in [1..$n]
-  from proof index $x to proof index $y
+  from proof index $x to proof index $y using type and term abbreviations
 
-Lp file generation with a file for each proof step:
----------------------------------------------------
+hol2dk prf $x $y $file
+  generate a lp file for each proof from index $x to index $y in $file.prf
+  without using type and term abbreviations
 
-hol2dk exp $dir
+hol2dk mk-lp $jobs $file
+  generate Makefile.lp for generating with the option -j $jobs a lp file
+  (without type and term abbreviations) for each proof of $file.prf
+
+hol2dk mk-coq $n $file
+  generate a Makefile for translating to Coq each lp file generated
+  by Makefile.lp and check them by using $n sequential calls to make
 
 Other commands:
 ---------------
@@ -127,140 +133,131 @@ let read_thm basename =
 
 let integer s = try int_of_string s with Failure _ -> wrong_arg()
 
-let make nb_part b dir =
-     let nb_part = integer nb_part in
-     if nb_part < 2 then wrong_arg();
+(* [make n b] generates a makefile for handling the proofs of [b]
+   split in [n] parts. *)
+let make nb_parts b =
+     let nb_parts = integer nb_parts in
+     if nb_parts < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
-     let part_size = nb_proofs / nb_part in
+     let part_size = nb_proofs / nb_parts in
      let dg = read_val (b ^ ".dg") in
      let dump_file = b ^ ".mk" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out dump_file in
-     out oc "# file generated with: hol2dk mk %d %s %s\n\n" nb_part b dir;
-     out oc "DIR = %s\n\n" dir;
-     out oc ".SUFFIXES :\n";
+     out oc "# file generated with: hol2dk mk-part %d %s\n\n" nb_parts b;
+     out oc ".SUFFIXES:\n";
 
      (* dk files generation *)
-     out oc "\n.PHONY : dk\n";
-     out oc "dk : %s.dk\n" b;
-     out oc "%s.dk : theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
+     out oc "\n.PHONY: dk\n";
+     out oc "dk: %s.dk\n" b;
+     out oc "%s.dk: theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
        b b b b;
-     for i = 1 to nb_part do
+     for i = 1 to nb_parts do
        out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
                %s_part_%d.dk" b i b i b i
      done;
      out oc " %s_theorems.dk\n\tcat $+ > $@\n" b;
-     out oc "theory_hol.dk: $(DIR)/theory_hol.dk\n\tln -f -s $< $@\n";
+     (*out oc "theory_hol.dk: $(HOL2DK_DIR)/theory_hol.dk
+       \tln -f -s $< $@\n";*)
      out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
              \thol2dk sig %s.dk\n" b b b b b;
-     out oc "%s_theorems.dk : %s.sig %s.thm %s.pos %s.prf\n\
-             \thol2dk thm %d %s.dk\n" b b b b b nb_part b;
-     let x = ref 0 in
-     let cmd i y =
+     out oc "%s_theorems.dk: %s.sig %s.thm %s.pos %s.prf\n\
+             \thol2dk thm %d %s.dk\n" b b b b b nb_parts b;
+     let cmd i x y =
        out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
                %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
                \thol2dk part %d %d %d %d %s.dk\n"
-         b i b i b i b b b nb_part i !x y b
+         b i b i b i b b b nb_parts i x y b
      in
-     for i = 1 to nb_part - 1 do
-       let y = !x + part_size in cmd i (y-1); x := y
-     done;
-     cmd nb_part (nb_proofs - 1);
+     Xlib.iter_parts nb_proofs nb_parts cmd;
 
      (* lp files generation *)
-     out oc "\n.PHONY : lp\n";
-     out oc "lp : theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
+     out oc "\n.PHONY: lp\n";
+     out oc "lp: theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
              %s_axioms.lp" b b b b;
-     for i = 1 to nb_part do
+     for i = 1 to nb_parts do
        out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
                %s_part_%d.lp" b i b i b i
      done;
-     out oc "\ntheory_hol.lp: $(DIR)/theory_hol.lp\n\tln -f -s $< $@\n";
+     (*out oc "\ntheory_hol.lp: $(HOL2DK_DIR)/theory_hol.lp
+             \tln -f -s $< $@\n";*)
      out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
              \thol2dk sig %s.lp\n" b b b b b;
-     out oc "%s.lp : %s.sig %s.thm %s.pos %s.prf\n\
-             \thol2dk thm %d %s.lp\n" b b b b b nb_part b;
+     out oc "%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
+             \thol2dk thm %d %s.lp\n" b b b b b nb_parts b;
      let x = ref 0 in
      let cmd i y =
        out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
                %s_part_%d_term_abbrevs.lp &: %s.sig %s.pos %s.prf %s.use\n\
                \thol2dk part %d %d %d %d %s.lp\n"
-         b i b i b i b b b b nb_part i !x y b
+         b i b i b i b b b b nb_parts i !x y b
      in
-     for i = 1 to nb_part - 1 do
+     for i = 1 to nb_parts - 1 do
        let y = !x + part_size in cmd i (y-1); x := y
      done;
-     cmd nb_part (nb_proofs - 1);
+     cmd nb_parts (nb_proofs - 1);
 
      (* targets common to dk and lp files part *)
-     out oc "\n%s.pos : %s.prf\n\thol2dk pos %s\n" b b b;
-     out oc "%s.use : %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
+     out oc "\n%s.pos: %s.prf\n\thol2dk pos %s\n" b b b;
+     out oc "%s.use: %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
 
      (* generic function for lpo/vo file generation *)
      let check e c =
-       out oc "\n.PHONY : %so\n" e;
-       out oc "%so : %s.%so\n" e b e;
-       out oc "theory_hol.%so : coq.%so\n" e e;
-       out oc "%s.%so : coq.%so theory_hol.%so %s_types.%so \
-               %s_terms.%so %s_axioms.%so" b e e e b e b e b e;
-       for i = 1 to nb_part do out oc " %s_part_%d.%so" b i e done;
-       out oc "\n%s_types.%so : theory_hol.%so\n" b e e;
-       out oc "%s_terms.%so : theory_hol.%so %s_types.%so\n" b e e b e;
-       out oc "%s_axioms.%so : theory_hol.%so %s_types.%so \
+       out oc "\n.PHONY: %so\n" e;
+       out oc "%so: %s.%so\n" e b e;
+       out oc "%s.%so: theory_hol.%so %s_types.%so \
+               %s_terms.%so %s_axioms.%so" b e e b e b e b e;
+       for i = 1 to nb_parts do out oc " %s_part_%d.%so" b i e done;
+       out oc "\n%s_types.%so: theory_hol.%so\n" b e e;
+       out oc "%s_terms.%so: theory_hol.%so %s_types.%so\n" b e e b e;
+       out oc "%s_axioms.%so: theory_hol.%so %s_types.%so \
                %s_terms.%so\n" b e e b e b e;
-       for i = 0 to nb_part - 1 do
+       for i = 0 to nb_parts - 1 do
          let j = i+1 in
-         out oc "%s_part_%d_type_abbrevs.%so : theory_hol.%so \
+         out oc "%s_part_%d_type_abbrevs.%so: theory_hol.%so \
                  %s_types.%so\n" b j e e b e;
-         out oc "%s_part_%d_term_abbrevs.%so : coq.%so \
+         out oc "%s_part_%d_term_abbrevs.%so: \
                  theory_hol.%so %s_types.%so %s_part_%d_\
-                 type_abbrevs.%so %s_terms.%so\n" b j e e e b e b j e b e;
-         out oc "%s_part_%d.%so : coq.%so theory_hol.%so \
+                 type_abbrevs.%so %s_terms.%so\n" b j e e b e b j e b e;
+         out oc "%s_part_%d.%so: theory_hol.%so \
                  %s_types.%so %s_part_%d_type_abbrevs.%so %s_terms.%so \
                  %s_part_%d_term_abbrevs.%so %s_axioms.%so"
-           b j e e e b e b j e b e b j e b e;
+           b j e e b e b j e b e b j e b e;
          for j = 0 to i - 1 do
            if dg.(i).(j) > 0 then out oc " %s_part_%d.%so" b (j+1) e
          done;
          out oc "\n"
        done;
-       out oc "%%.%so : %%.%s\n\t%s $<\n" e e c
+       out oc "%%.%so: %%.%s\n\t%s $<\n" e e c
      in
 
      (* lp files checking *)
      check "lp" "lambdapi check -c";
 
      (* v files generation *)
-     out oc "\n.PHONY : v\nv : coq.v theory_hol.v \
+     out oc "\n.PHONY: v\nv: coq.v theory_hol.v \
              %s_types.v %s_terms.v %s_axioms.v" b b b;
-     for i = 1 to nb_part do
+     for i = 1 to nb_parts do
        out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
                %s_part_%d.v" b i b i b i
      done;
      out oc " %s.v\n" b;
-     out oc "coq.v: $(DIR)/coq.v\n\tln -f -s $< $@\n";
+     (*out oc "coq.v: $(HOL2DK_DIR)/coq.v\n\tln -f -s $< $@\n";*)
      out oc "LAMBDAPI = lambdapi\n";
-     out oc "%%.v : %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
-             --encoding $(DIR)/encoding.lp --renaming $(DIR)/renaming.lp \
-             --erasing $(DIR)/erasing.lp --use-notations \
-             --requiring coq.v";
+     out oc "%%.v: %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
+             --encoding $(HOL2DK_DIR)/encoding.lp \
+             --renaming $(HOL2DK_DIR)/renaming.lp \
+             --erasing $(HOL2DK_DIR)/erasing.lp \
+             --use-notations --requiring coq.v";
      out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
      (*out oc " | sed -e 's/^Require /From HOLLight Require /'";*)
      out oc " > $@\n";
 
      (* coq files checking *)
-     check "v" "coqc" (*-R . HOLLight*);
+     check "v" "coqc -R . HOLLight";
 
-     (* _CoqProject *)
-     log "generate _CoqProject ...\n";
-     let dump_file = "_CoqProject" in
-     let oc = open_out dump_file in
-     out oc "%s/coq.v\n%s/theory_hol.v\n%s_types.v\n%s_terms.v\n" dir dir b b;
-     for i = 1 to nb_part do
-       out oc "%s_part_%d_type_abbrevs.v\n%s_part_%d_term_abbrevs.v\n\
-               %s_part_%d.v\n" b i b i b i
-     done;
-     out oc "%s.v\n" b;
+     (* add clean target *)
+     out oc "\n.PHONY: clean\nclean:\n\trm -f *.v* *.lp *.glob .*.aux\n";
      exit 0
 
 let range args =
@@ -382,23 +379,19 @@ dump_map_thid_name "%s.thm" %a;;
      close_out oc;
      exit 0
 
-  | ["dg";nb_part;b] ->
-     let nb_part = integer nb_part in
-     if nb_part < 2 then wrong_arg();
+  | ["dg";nb_parts;b] ->
+     let nb_parts = integer nb_parts in
+     if nb_parts < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
-     let part_size = nb_proofs / nb_part in
+     let part_size = nb_proofs / nb_parts in
      let part idx =
        let k = idx / part_size in
-       if k >= nb_part - 1 then nb_part - 1 else k in
-     (*let thdg = Array.make nb_part 0 in*)
-     (*let map_thid_name = read_thm b in*)
-     let dg = Array.init nb_part (fun i -> Array.make i 0) in
+       if k >= nb_parts - 1 then nb_parts - 1 else k in
+     let dg = Array.init nb_parts (fun i -> Array.make i 0) in
      let add_dep x =
-       (*let named_thm = ref (MapInt.mem x map_thid_name) in*)
        let px = part x in
        fun y ->
        let py = part y in
-       (*if !named_thm then thdg.(py) <- thdg.(py) + 1;*)
        if px <> py then
          begin
            (*try*) dg.(px).(py) <- dg.(px).(py) + 1
@@ -408,7 +401,7 @@ dump_map_thid_name "%s.thm" %a;;
          end
      in
      read_prf b (fun idx p -> List.iter (add_dep idx) (deps p));
-     for i = 1 to nb_part - 1 do
+     for i = 1 to nb_parts - 1 do
        log "%d:" (i+1);
        for j = 0 to i - 1 do
          if dg.(i).(j) > 0 then log " %d (%d)" (j+1) dg.(i).(j)
@@ -422,7 +415,7 @@ dump_map_thid_name "%s.thm" %a;;
      close_out oc;
      exit 0
 
-  | ["mk";nb_part;b;dir] -> make nb_part b dir
+  | ["mk-part";nb_parts;b] -> make nb_parts b
 
   | ["sig";f] ->
      let dk = is_dk f in
@@ -442,9 +435,9 @@ dump_map_thid_name "%s.thm" %a;;
        end;
      exit 0
 
-  | ["thm";nb_part;f] ->
-     let nb_part = integer nb_part in
-     if nb_part < 2 then wrong_arg();
+  | ["thm";nb_parts;f] ->
+     let nb_parts = integer nb_parts in
+     if nb_parts < 2 then wrong_arg();
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
@@ -452,11 +445,11 @@ dump_map_thid_name "%s.thm" %a;;
      read_pos basename;
      init_proof_reading basename;
      if dk then Xdk.export_theorems basename map_thid_name
-     else Xlp.export_theorems_part nb_part basename map_thid_name
+     else Xlp.export_theorems_part nb_parts basename map_thid_name
 
-  | ["part";nb_part;k;x;y;f] ->
-     let nb_part = integer nb_part in
-     if nb_part < 2 then wrong_arg();
+  | ["part";nb_parts;k;x;y;f] ->
+     let nb_parts = integer nb_parts in
+     if nb_parts < 2 then wrong_arg();
      let k = integer k in
      if k < 1 then wrong_arg();
      let x = integer x in
@@ -468,7 +461,7 @@ dump_map_thid_name "%s.thm" %a;;
      read_sig basename;
      read_pos basename;
      init_proof_reading basename;
-     cur_part_max := k * (nb_proofs() / nb_part);
+     cur_part_max := k * (nb_proofs() / nb_parts);
      if dk then
        begin
          Xdk.export_proofs_part basename k x y;
@@ -486,12 +479,27 @@ dump_map_thid_name "%s.thm" %a;;
        end;
      exit 0
 
-  | "exp"::basename::args ->
-     let r = range args in
+  | ["prf";x;y;basename] ->
+     let x = integer x and y = integer y and n = nb_proofs() in
+     if x < 0 || y < 0 || x > y || x >= n || y >= n then wrong_arg();
      read_sig basename;
      read_pos basename;
      init_proof_reading basename;
-     Xlp.export_to_lp_dir r
+     Xlp.export_one_file_by_prf basename x y
+
+  | ["mk-lp";nb_parts;basename] ->
+     let nb_parts = integer nb_parts in
+     if nb_parts < 1 then wrong_arg();
+     read_pos basename;
+     init_proof_reading basename;
+     Xlp.gen_lp_makefile_one_file_by_prf basename (nb_proofs()) nb_parts
+
+  | ["mk-coq";nb_parts;basename] ->
+     let nb_parts = integer nb_parts in
+     if nb_parts < 1 then wrong_arg();
+     read_pos basename;
+     init_proof_reading basename;
+     Xlp.gen_coq_makefile_one_file_by_prf basename (nb_proofs()) nb_parts
 
   | f::args ->
      let r = range args in
