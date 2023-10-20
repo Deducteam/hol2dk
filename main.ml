@@ -42,7 +42,7 @@ hol2dk dg $n $file
   when $file.prf is split in $n parts
 
 hol2dk mk $n $file
-  generate $file.mk and _CoqProject to generate, translate and check files
+  generate $file.mk to generate, translate and check files
   when $file.prf is split in $n parts
 
 hol2dk sig $file
@@ -256,12 +256,6 @@ let make nb_part b =
 
      (* add clean target *)
      out oc "\n.PHONY: clean\nclean:\n\trm -f *.v* *.lp *.glob .*.aux\n";
-
-     (* _CoqProject *)
-     log "generate _CoqProject ...\n";
-     let dump_file = "_CoqProject" in
-     let oc = open_out dump_file in
-     out oc "-R . HOLLight .\n";
      exit 0
 
 let range args =
