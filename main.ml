@@ -137,7 +137,6 @@ let integer s = try int_of_string s with Failure _ -> wrong_arg()
 let make b =
   let nb_proofs = read_nb_proofs b
   and nb_parts, dg = read_val (b ^ ".dg") in
-  let part_size = nb_proofs / nb_parts in
 
   let dump_file = b ^ ".mk" in
   log "generate %s ...\n%!" dump_file;
@@ -183,17 +182,13 @@ let make b =
           \thol2dk sig %s.lp\n" b b b b b;
   out oc "%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
           \thol2dk thm %d %s.lp\n" b b b b b nb_parts b;
-  let x = ref 0 in
-  let cmd i y =
+  let cmd i x y =
     out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
             %s_part_%d_term_abbrevs.lp &: %s.sig %s.pos %s.prf %s.use\n\
             \thol2dk part %d %d %d %s.lp\n"
-      b i b i b i b b b b i !x y b
+      b i b i b i b b b b i x y b
   in
-  for i = 1 to nb_parts - 1 do
-    let y = !x + part_size in cmd i (y-1); x := y
-  done;
-  cmd nb_parts (nb_proofs - 1);
+  Xlib.iter_parts nb_proofs nb_parts cmd;
 
   (* targets common to dk and lp files part *)
   out oc "\n%s.pos: %s.prf\n\thol2dk pos %s\n" b b b;
