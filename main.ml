@@ -187,8 +187,8 @@ let make b =
   let cmd i y =
     out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
             %s_part_%d_term_abbrevs.lp &: %s.sig %s.pos %s.prf %s.use\n\
-            \thol2dk part %d %d %d %d %s.lp\n"
-      b i b i b i b b b b nb_parts i !x y b
+            \thol2dk part %d %d %d %s.lp\n"
+      b i b i b i b b b b i !x y b
   in
   for i = 1 to nb_parts - 1 do
     let y = !x + part_size in cmd i (y-1); x := y
@@ -446,15 +446,16 @@ dump_map_thid_name "%s.thm" %a;;
      else Xlp.export_theorems_part nb_parts basename map_thid_name
 
   | ["part";k;x;y;f] ->
-     let k = integer k and x = integer x and y = integer y in
-     if k < 1 || x < 0 || y < x then wrong_arg();
      let basename = Filename.chop_extension f in
      let nb_parts, dg = read_val (basename ^ ".dg") in
-     (* dg is useful for the lp export only *)
+       (* dg is useful for the lp export only *)
+     let k = integer k and x = integer x and y = integer y
+     and nb_proofs = nb_proofs() in
+     if k < 1 || k > nb_parts || x < 0 || y < x then wrong_arg();
      read_sig basename;
      read_pos basename;
      init_proof_reading basename;
-     cur_part_max := k * (nb_proofs() / nb_parts);
+     cur_part_max := k * nb_proofs / nb_parts;
      if is_dk f then
        begin
          Xdk.export_proofs_part basename k x y;
