@@ -304,25 +304,25 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Multi-threaded translation to Lambdapi with `mk 1000` and `-j 7`:
-  * hol2dk dg: 14.8s
-  * lp files generation time: 4m23s
-  * lp files size: 2.2 Go
-  * type abbrevs: 5.3 Mo
-  * term abbrevs: 841 Mo
+Multi-threaded translation to Lambdapi with `mk 100` and `-j 28`:
+  * hol2dk dg: 15s
+  * lp files generation time: 1m5s
+  * lp files size: 2.1 Go
+  * type abbrevs: 1.3 Mo
+  * term abbrevs: 681 Mo
   * Unfortunately, Lambdapi is too slow and takes too much memory to be able to check so big files on my laptop. It can however check some prefix of `hol.ml` (see below).
-  * translation to Coq: 2m22s 2.1 Go
-  * verification by Coq with `-j 28` and 64 Go RAM: 23h45m
+  * translation to Coq: 50s 1.9 Go
+  * verification by Coq with 64 Go RAM: 6h
 
-Multi-threaded translation to Dedukti with `mk 1000` and `-j 7`:
-  * dk file generation time: 9m2s
-  * dk file size: 3.3 Go
-  * type abbrevs: 5.3 Mo
-  * term abbrevs: 960 Mo
-  * kocheck can check it in 12m52s
-  * dkcheck is unable to check the generated dk file on my laptop for lack of memory (I have only 32 Go RAM and the process is stopped after 11m16s)
+Multi-threaded translation to Dedukti with `mk 100`:
+  * dk file generation time: 1m57s
+  * dk file size: 3 Go
+  * type abbrevs: 1.3 Mo
+  * term abbrevs: 772 Mo
+  * kocheck with 32 Go RAM: 12m52s
+  * dkcheck with 64 Go RAM: 14m05s
 
-Results for `hol.ml` up to `arith.ml` with `mk 7` and `-j 7` (by commenting from `loads "wf.ml"` to the end):
+Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `mk 7` and `-j 7` :
   * proof dumping time: 12s 77 Mo
   * number of proof steps: 302 K
   * dk file generation: 6s 76 Mo
