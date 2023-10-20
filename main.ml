@@ -144,7 +144,7 @@ let make nb_parts b =
      let dump_file = b ^ ".mk" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out dump_file in
-     out oc "# file generated with: hol2dk mk %d %s\n\n" nb_parts b;
+     out oc "# file generated with: hol2dk mk-part %d %s\n\n" nb_parts b;
      out oc ".SUFFIXES:\n";
 
      (* dk files generation *)
