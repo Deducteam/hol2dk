@@ -154,7 +154,7 @@ using `make`.
 You first generate `file.dg` and `file.mk` with:
 ```
 hol2dk dg $nb_parts file
-hol2dk mk $nb_parts file
+hol2dk mk-part $nb_parts file
 ```
 where `$nb_parts` is the number of files in which you want to split the proofs.
 
@@ -250,24 +250,25 @@ using the Coq export feature of Lambdapi.
 
 If your Lambdapi files have been generated using `file.mk`, you can simply do:
 ```
-hol2dk mk $nb_parts file coq.v
 make -j $jobs -f file.mk v # to generate Coq files
 make -j $jobs -f file.mk vo # to check the generated Coq files
 ```
-To indicate a specific `lambdapi` command, to:
+
+To indicate a specific `lambdapi` command, do:
 ```
 make -j $jobs -f file.mk LAMBAPI=$lambdapi v # to generate Coq files
 ```
 
-Otherwise, you need to translate Lambdapi files one by one by hand or using a script:
+Otherwise, you need to translate Lambdapi files one by one by hand or
+using a script:
 ```
-lambdapi export -o stt_coq --encoding encoding.lp --erasing erasing.lp --renaming renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
+lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --erasing $(HOL2DK_DIR)/erasing.lp --renaming $(HOL2DK_DIR)/renaming.lp --requiring $(HOL2DK_DIR)/coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
 ```
 
 You can then check the generated Coq files as follows:
 ```
 echo coq.v theory_hol.v file*.v > _CoqProject
-coq_makefile -f _CoqProject > Makefile.coq
+coq_makefile -f _CoqProject -o Makefile.coq
 make -j $jobs -f Makefile.coq
 ```
 

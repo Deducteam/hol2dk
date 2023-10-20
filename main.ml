@@ -387,15 +387,11 @@ dump_map_thid_name "%s.thm" %a;;
      let part idx =
        let k = idx / part_size in
        if k >= nb_parts - 1 then nb_parts - 1 else k in
-     (*let thdg = Array.make nb_parts 0 in*)
-     (*let map_thid_name = read_thm b in*)
      let dg = Array.init nb_parts (fun i -> Array.make i 0) in
      let add_dep x =
-       (*let named_thm = ref (MapInt.mem x map_thid_name) in*)
        let px = part x in
        fun y ->
        let py = part y in
-       (*if !named_thm then thdg.(py) <- thdg.(py) + 1;*)
        if px <> py then
          begin
            (*try*) dg.(px).(py) <- dg.(px).(py) + 1
