@@ -164,8 +164,8 @@ let make b =
   let cmd i x y =
     out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
             %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
-            \thol2dk part %d %d %d %d %s.dk\n"
-      b i b i b i b b b nb_parts i x y b
+            \thol2dk part %d %d %d %s.dk\n"
+      b i b i b i b b b i x y b
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
 
