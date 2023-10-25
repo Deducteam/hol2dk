@@ -119,9 +119,6 @@ Proof.
   exact px. exact py.
 Qed.
 
-(*Lemma not_def : not = (fun p : Prop => p -> False).
-Proof. reflexivity. Qed.*)
-
 Lemma F_def : False = (forall p : Prop, p).
 Proof. apply prop_ext. intros b p. apply (False_rec p b). intro h. exact (h False). Qed.
 
