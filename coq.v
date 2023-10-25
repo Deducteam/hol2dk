@@ -269,9 +269,42 @@ Definition ONTO {A B : Type'} := fun _2069 : A -> B => forall y : B, exists x : 
 
 Axiom axiom_6 : exists f : ind -> ind, (@ONE_ONE ind ind f) /\ (~ (@ONTO ind ind f)).
 
-Definition IND_SUC := (@ε (ind -> ind) (fun f : ind -> ind => exists z : ind, (forall x1 : ind, forall x2 : ind, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((f x) = z)))).
+Definition IND_SUC_pred := fun f : ind -> ind => exists z : ind, (forall x1 : ind, forall x2 : ind, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((f x) = z)).
 
-Definition IND_0 := (@ε ind (fun z : ind => (forall x1 : ind, forall x2 : ind, ((IND_SUC x1) = (IND_SUC x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((IND_SUC x) = z)))).
+Definition IND_SUC := ε IND_SUC_pred.
+
+Lemma not_forall_eq A (P : A -> Prop) : (~ forall x, P x) = exists x, ~ (P x).
+Proof. apply prop_ext; intro h. apply not_all_ex_not. exact h. apply ex_not_not_all. exact h. Qed.
+
+Lemma not_exists_eq A (P : A -> Prop) : (~ exists x, P x) = forall x, ~ (P x).
+Proof. apply prop_ext; intro h. apply not_ex_all_not. exact h. apply all_not_not_ex. exact h. Qed.
+
+Lemma IND_SUC_ex : exists f, IND_SUC_pred f.
+Proof.
+  destruct axiom_6 as [f [h1 h2]]. exists f.
+  unfold ONTO in h2. rewrite not_forall_eq in h2. destruct h2 as [z h2]. exists z. split.
+  intros x y. apply prop_ext. apply h1. intro e. rewrite e. reflexivity.
+  rewrite not_exists_eq in h2. intros x e. apply (h2 x). symmetry. exact e.
+Qed.
+
+Lemma IND_SUC_prop : IND_SUC_pred IND_SUC.
+Proof. unfold IND_SUC. apply ε_spec. apply IND_SUC_ex. Qed.
+
+Lemma IND_SUC_inj : ONE_ONE IND_SUC.
+Proof. generalize IND_SUC_prop. intros [z [h1 h2]]. intros x y e. rewrite <- h1. exact e. Qed.
+
+Definition IND_0_pred := fun z : ind => (forall x1 : ind, forall x2 : ind, ((IND_SUC x1) = (IND_SUC x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((IND_SUC x) = z)).
+
+Definition IND_0 := ε IND_0_pred.
+
+Lemma IND_0_ex : exists z, IND_0_pred z.
+Proof. generalize IND_SUC_prop. intros [z [h1 h2]]. exists z. split. exact h1. exact h2. Qed.
+
+Lemma IND_0_prop : IND_0_pred IND_0.
+Proof. unfold IND_0. apply ε_spec. apply IND_0_ex. Qed.
+
+Lemma IND_SUC_neq_0 i : IND_SUC i <> IND_0.
+Proof. generalize IND_0_prop. intros [h1 h2]. apply h2. Qed.
 
 (****************************************************************************)
 (* Mapping of HOL-Light type num to Coq type nat. *)
@@ -286,11 +319,20 @@ Fixpoint dest_num n :=
   | S p => IND_SUC (dest_num p)
   end.
 
+Lemma dest_num_inj : ONE_ONE dest_num.
+Proof.
+  intro x. induction x; intro y; destruct y; simpl.
+  reflexivity.
+  intro e. apply False_ind. eapply IND_SUC_neq_0. symmetry. exact e.
+  intro e. apply False_ind. eapply IND_SUC_neq_0. exact e.
+  intro e. apply f_equal. apply IHx. apply IND_SUC_inj. exact e.
+Qed.
+
 Definition mk_num_pred f := f IND_0 = 0 /\ forall i, f (IND_SUC i) = S (f i).
 
 Definition mk_num := ε mk_num_pred.
 
-Axiom ex_mk_num : exists f, f IND_0 = 0 /\ forall i, f (IND_SUC i) = S (f i).
+Axiom ex_mk_num : exists f : ind -> nat, f IND_0 = 0 /\ forall i, f (IND_SUC i) = S (f i).
 
 Lemma mk_num_prop : mk_num_pred mk_num.
 Proof. unfold mk_num. apply ε_spec. apply ex_mk_num. Qed.

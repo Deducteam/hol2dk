@@ -557,11 +557,7 @@ let export_type_abbrevs b s =
 ;;
 
 let constants() =
-  let f (n,_) =
-    match n with
-    (*|"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T"*)|"="|"el" -> false
-    | _ -> true
-  in
+  let f (n,_) = match n with "=" | "el" -> false | _ -> true in
   List.filter f (constants())
 ;;
 
