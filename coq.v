@@ -14,17 +14,8 @@ Record Type' := { type :> Type; el : type }.
 Definition Prop' : Type' := {| type := Prop; el := True |}.
 Canonical Prop'.
 
-Definition nat' := {| type := nat; el := 0 |}.
-Canonical nat'.
-
-Definition unit' := {| type := unit; el := tt |}.
-Canonical unit'.
-
 Definition arr a (b : Type') := {| type := a -> b; el := fun _ => el b |}.
 Canonical arr.
-
-Definition prod (a b : Type') := {| type := a * b; el := pair (el a) (el b) |}.
-Canonical prod.
 
 (****************************************************************************)
 (* Curryfied versions of some Coq connectives. *)
@@ -61,28 +52,32 @@ Lemma ex_elim {a} {p : a -> Prop} (h1 : exists x, p x) {r : Prop} (h2 : forall x
 Proof. exact (@ex_ind a p r h2 h1). Qed.
 
 (****************************************************************************)
-(* HOL-Light axioms. *)
+(* Coq axioms necessary to handle HOL-Light proofs. *)
 (****************************************************************************)
 
 Require Import Coq.Logic.ClassicalEpsilon.
 
 Definition ε : forall {A : Type'}, (A -> Prop) -> A := fun A P => epsilon (inhabits (el A)) P.
 
-Axiom fun_ext : forall {a b : Type'} {f g : a -> b}, (forall x, (f x) = (g x)) -> f = g.
-Axiom prop_ext : forall {p q : Prop}, (p -> q) -> (q -> p) -> p = q.
+Lemma ε_spec {A : Type'} (P : A -> Prop) : (exists x, P x) -> P (ε P).
+Proof. intro h. unfold ε. apply epsilon_spec. exact h. Qed.
+
+Axiom fun_ext : forall {A B : Type'} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
+
+Axiom prop_ext : forall {P Q : Prop}, (P -> Q) -> (Q -> P) -> P = Q.
 
 Require Import ClassicalFacts.
 
-Lemma prop_degen : forall p, p = True \/ p = False.
+Lemma prop_degen : forall P, P = True \/ P = False.
 Proof.
   apply prop_ext_em_degen.
   unfold prop_extensionality. intros A B [AB BA]. apply prop_ext. exact AB. exact BA.
-  intro p. apply classic.
+  intro P. apply classic.
 Qed.
 
 Require Import PropExtensionalityFacts.
 
-Lemma is_True p : (p = True) = p.
+Lemma is_True P : (P = True) = P.
 Proof.
   apply prop_ext.
   intro e. rewrite e. exact I.
@@ -90,21 +85,27 @@ Proof.
   intros a b [ab ba]. apply prop_ext. apply ab. apply ba.
 Qed.
 
+Lemma refl_is_True {A} (x:A) : (x = x) = True.
+Proof. rewrite is_True. reflexivity. Qed.
+
 Lemma sym {A} (x y : A) : (x = y) = (y = x).
 Proof. apply prop_ext; intro e; symmetry; exact e. Qed.
+
+Lemma True_and_True : (True /\ True) = True.
+Proof. rewrite is_True. tauto. Qed.
 
 (****************************************************************************)
 (* Proof of HOL-Light axioms. *)
 (****************************************************************************)
 
 Lemma axiom_0 : forall {A B : Type'}, forall t : A -> B, (fun x : A => t x) = t.
-Proof. intros A B f. apply fun_ext; intro x. reflexivity. Qed.
+Proof. reflexivity. Qed.
 
 Lemma axiom_1 : forall {A : Type'}, forall P : A -> Prop, forall x : A, (P x) -> P (@ε A P).
 Proof. intros A P x h. apply (epsilon_spec (inhabits (el A)) P (ex_intro P x h)). Qed.
 
 (****************************************************************************)
-(* Proof of HOL-Light-Coq mappings for connectives. *)
+(* Proof of mappings from HOL-Light connectives to Coq connectives. *)
 (****************************************************************************)
 
 Lemma ex1_def : forall {A : Type'}, (@ex1 A) = (fun P : A -> Prop => (ex P) /\ (forall x : A, forall y : A, ((P x) /\ (P y)) -> x = y)).
@@ -118,8 +119,8 @@ Proof.
   exact px. exact py.
 Qed.
 
-Lemma not_def : not = (fun p : Prop => p -> False).
-Proof. reflexivity. Qed.
+(*Lemma not_def : not = (fun p : Prop => p -> False).
+Proof. reflexivity. Qed.*)
 
 Lemma F_def : False = (forall p : Prop, p).
 Proof. apply prop_ext. intros b p. apply (False_rec p b). intro h. exact (h False). Qed.
@@ -176,6 +177,9 @@ Proof. apply prop_ext. reflexivity. intros _; exact I. Qed.
 (* Mapping of HOL-Light type 1 to Coq type unit. *)
 (****************************************************************************)
 
+Definition unit' := {| type := unit; el := tt |}.
+Canonical unit'.
+
 Definition one_ABS : Prop -> unit := fun _ => tt.
 
 Definition one_REP : unit -> Prop := fun _ => True.
@@ -186,45 +190,86 @@ Proof. intro a. destruct a. reflexivity. Qed.
 Lemma axiom_3 : forall (r : Prop), ((fun b : Prop => b) r) = ((one_REP (one_ABS r)) = r).
 Proof. intro r. compute. rewrite (sym True r), is_True. reflexivity. Qed.
 
+Lemma one_def : tt = ε one_REP.
+Proof. generalize (ε one_REP). destruct t. reflexivity. Qed.
+
 (****************************************************************************)
-(* HOL-Light definitions (to be removed when definitions will be
-translated to definitions automatically). *)
+(* Mapping of HOL-Light type prod to Coq type prod. *)
 (****************************************************************************)
 
-Lemma _FALSITY__def : False = False.
-Proof. reflexivity. Qed.
+Definition prod' (a b : Type') := {| type := a * b; el := pair (el a) (el b) |}.
+Canonical prod'.
 
-Definition o : forall {A B C : Type'}, (B -> C) -> (A -> B) -> A -> C := fun A B C f g x => f (g x).
+Definition mk_pair {A B : Type'} := fun x : A => fun y : B => fun a : A => fun b : B => (a = x) /\ (b = y).
 
-Lemma o_def : forall {A B C : Type'}, (@o A B C) = (fun f : B -> C => fun g : A -> B => fun x : A => f (g x)).
-Proof. reflexivity. Qed.
+Lemma mk_pair_inj (A B : Type') (x x' : A) (y y' : B) : mk_pair x y = mk_pair x' y' -> x = x' /\ y = y'.
+Proof.
+  intro e; generalize (ext_fun e); clear e; intro e. generalize (ext_fun (e x)); clear e; intro e.
+  generalize (e y); clear e. unfold mk_pair.
+  rewrite refl_is_True, refl_is_True, True_and_True, sym, is_True. intro h; exact h.
+Qed.
 
-Lemma I_def : forall {A : Type'}, (@id A) = (fun x : A => x).
-Proof. reflexivity. Qed.
+Definition ABS_prod : forall {A B : Type'}, (A -> B -> Prop) -> prod A B := fun A B f => ε (fun p => f = mk_pair (fst p) (snd p)).
 
-Definition LET : forall {A B : Type'}, (A -> B) -> A -> B := fun A B f x => f x.
+Lemma ABS_prod_mk_pair (A B : Type') (x : A) (y : B) : ABS_prod (mk_pair x y) = (x,y).
+Proof.
+  unfold ABS_prod. match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
+  rewrite (surjective_pairing q).
+  assert (i : exists q, Q q). exists (x,y). reflexivity.
+  generalize (ε_spec Q i); fold q; unfold Q; intro h.
+  apply mk_pair_inj in h. destruct h as [h1 h2]. rewrite h1, h2. reflexivity.
+Qed.
 
-Lemma LET_def : forall {A B : Type'}, (@LET A B) = (fun f : A -> B => fun x : A => f x).
-Proof. reflexivity. Qed.
+Lemma ABS_prod_mk_pair_eta (A B : Type') (x : A) (y : B) : ABS_prod (fun a b => mk_pair x y a b) = (x,y).
+Proof.
+  unfold ABS_prod. match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
+  rewrite (surjective_pairing q).
+  assert (i : exists q, Q q). exists (x,y). reflexivity.
+  generalize (ε_spec Q i); fold q; unfold Q; intro h.
+  apply mk_pair_inj in h. destruct h as [h1 h2]. rewrite h1, h2. reflexivity.
+Qed.
 
-Definition LET_END : forall {A : Type'}, A -> A := fun A x => x.
+Definition REP_prod : forall {A B : Type'}, (prod A B) -> A -> B -> Prop := fun A B p a b => mk_pair (fst p) (snd p) a b.
 
-Lemma LET_END_def : forall {A : Type'}, (@LET_END A) = (fun t : A => t).
-Proof. reflexivity. Qed.
+Lemma pair_def {A B : Type'} : (@pair A B) = (fun x : A => fun y : B => @ABS_prod A B (@mk_pair A B x y)).
+Proof. apply fun_ext; intro x; apply fun_ext; intro y. symmetry. apply ABS_prod_mk_pair. Qed.
 
-(*
-Definition CURRY : forall {A B C : Type'}, ((prod A B) -> C) -> A -> B -> C := fun A B C f a b => f (pair a b).
+Lemma FST_def {A B : Type'} : (@fst A B) = (fun p : prod A B => @ε A (fun x : A => exists y : B, p = (@pair A B x y))).
+Proof.
+  apply fun_ext; intros [x y]. simpl.
+  match goal with [|- _ = ε ?x] => set (Q := x); set (q := ε Q) end.
+  assert (i : exists x, Q x). exists x. exists y. reflexivity.
+  generalize (ε_spec Q i); fold q; intros [x' h']. inversion h'. reflexivity.
+Qed.
 
-Lemma CURRY_def : forall {A B C : Type'}, (@CURRY A B C) = (fun _1283 : (prod A B) -> C => fun _1284 : A => fun _1285 : B => _1283 (@pair A B _1284 _1285)).
-Proof. reflexivity. Qed.
+Lemma SND_def {A B : Type'} : (@snd A B) = (fun p : prod A B => @ε B (fun y : B => exists x : A, p = (@pair A B x y))).
+Proof.
+  apply fun_ext; intros [x y]. simpl.
+  match goal with [|- _ = ε ?x] => set (Q := x); set (q := ε Q) end.
+  assert (i : exists x, Q x). exists y. exists x. reflexivity.
+  generalize (ε_spec Q i); fold q; intros [x' h]. inversion h. reflexivity.
+Qed.
 
-Definition UNCURRY : forall {A B C : Type'}, (A -> B -> C) -> (prod A B) -> C := fun A B C f p => f (fst p) (snd p).
+Lemma axiom_4 : forall {A B : Type'} (a : prod A B), (@ABS_prod A B (@REP_prod A B a)) = a.
+Proof. intros A B [a b]. apply ABS_prod_mk_pair_eta. Qed.
 
-Lemma UNCURRY_def : forall {A B C : Type'}, (@UNCURRY A B C) = (fun _1304 : A -> B -> C => fun _1305 : prod A B => _1304 (@fst A B _1305) (@snd A B _1305)).
-Proof. reflexivity. Qed.
-*)
+Lemma axiom_5 : forall {A B : Type'} (r : A -> B -> Prop), ((fun x : A -> B -> Prop => exists a : A, exists b : B, x = (@mk_pair A B a b)) r) = ((@REP_prod A B (@ABS_prod A B r)) = r).
+Proof.
+  intros A B f. simpl. apply prop_ext.
+  intros [a [b e]]. subst. rewrite ABS_prod_mk_pair. reflexivity.
+  generalize (ABS_prod f); intros [a b] e. subst. exists a. exists b. reflexivity.
+Qed.
 
-Definition ONE_ONE : forall {A B : Type'}, (A -> B) -> Prop := fun A B f => forall x y, f x = f y -> x = y.
+(****************************************************************************)
+(* Mapping of HOL-Light types ind and num to Coq type nat. *)
+(****************************************************************************)
 
-Lemma ONE_ONE_def : forall {A B : Type'}, (@ONE_ONE A B) = (fun _2064 : A -> B => forall x1 : A, forall x2 : A, ((_2064 x1) = (_2064 x2)) -> x1 = x2).
-Proof. reflexivity. Qed.
+Definition nat' := {| type := nat; el := 0 |}.
+Canonical nat'.
+
+Axiom IND_SUC_def : S = (@ε (nat -> nat) (fun f : nat -> nat => exists z : nat, (forall x1 : nat, forall x2 : nat, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : nat, ~ ((f x) = z)))).
+
+Axiom IND_0_def : 0 = (@ε nat (fun z : nat => (forall x1 : nat, forall x2 : nat, ((S x1) = (S x2)) = (x1 = x2)) /\ (forall x : nat, ~ ((S x) = z)))).
+
+Definition mk_num := @id nat.
+Definition dest_num := @id nat.
