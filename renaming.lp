@@ -1,6 +1,7 @@
 // map for renaming dk/lp identifiers (on the right)
 // to Coq expressions (on the left)
 
+builtin "unit" ≔ 1;//to be removed
 builtin "minus" ≔ -;
 builtin "minus_def" ≔ -_def;
 builtin "pair'" ≔ -';
@@ -20,6 +21,8 @@ builtin "mul'" ≔ *';
 builtin "add" ≔ +;
 builtin "add_def" ≔ +_def;
 builtin "add'" ≔ +';
+builtin "pair" ≔ ̦‚;
+builtin "pair_def" ≔ ̦‚_def;
 builtin "gt_c" ≔ >_c;
 builtin "gt_c_def" ≔ >_c_def;
 builtin "ge_c" ≔ >=_c;

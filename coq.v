@@ -258,15 +258,54 @@ Proof.
 Qed.
 
 (****************************************************************************)
-(* Mapping of HOL-Light types ind and num to Coq type nat. *)
+(* HOL-Light type ind. *)
+(****************************************************************************)
+
+Axiom ind : Type'.
+
+Definition ONE_ONE {A B : Type'} := fun _2064 : A -> B => forall x1 : A, forall x2 : A, ((_2064 x1) = (_2064 x2)) -> x1 = x2.
+
+Definition ONTO {A B : Type'} := fun _2069 : A -> B => forall y : B, exists x : A, y = (_2069 x).
+
+Axiom axiom_6 : exists f : ind -> ind, (@ONE_ONE ind ind f) /\ (~ (@ONTO ind ind f)).
+
+Definition IND_SUC := (@ε (ind -> ind) (fun f : ind -> ind => exists z : ind, (forall x1 : ind, forall x2 : ind, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((f x) = z)))).
+
+Definition IND_0 := (@ε ind (fun z : ind => (forall x1 : ind, forall x2 : ind, ((IND_SUC x1) = (IND_SUC x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((IND_SUC x) = z)))).
+
+(****************************************************************************)
+(* Mapping of HOL-Light type num to Coq type nat. *)
 (****************************************************************************)
 
 Definition nat' := {| type := nat; el := 0 |}.
 Canonical nat'.
 
-Axiom IND_SUC_def : S = (@ε (nat -> nat) (fun f : nat -> nat => exists z : nat, (forall x1 : nat, forall x2 : nat, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : nat, ~ ((f x) = z)))).
+Fixpoint dest_num n :=
+  match n with
+  | 0 => IND_0
+  | S p => IND_SUC (dest_num p)
+  end.
 
-Axiom IND_0_def : 0 = (@ε nat (fun z : nat => (forall x1 : nat, forall x2 : nat, ((S x1) = (S x2)) = (x1 = x2)) /\ (forall x : nat, ~ ((S x) = z)))).
+Definition mk_num_pred f := f IND_0 = 0 /\ forall i, f (IND_SUC i) = S (f i).
 
-Definition mk_num := @id nat.
-Definition dest_num := @id nat.
+Definition mk_num := ε mk_num_pred.
+
+Axiom ex_mk_num : exists f, f IND_0 = 0 /\ forall i, f (IND_SUC i) = S (f i).
+
+Lemma mk_num_prop : mk_num_pred mk_num.
+Proof. unfold mk_num. apply ε_spec. apply ex_mk_num. Qed.
+
+Lemma mk_num_0 : mk_num IND_0 = 0.
+Proof. generalize mk_num_prop. intros [e _]. exact e. Qed.
+
+Lemma mk_num_S i : mk_num (IND_SUC i) = S (mk_num i).
+Proof. generalize mk_num_prop. intros [_ e]. apply e. Qed.
+
+Lemma mk_num_dest_num n : mk_num (dest_num n) = n.
+Proof. induction n; simpl. apply mk_num_0. rewrite mk_num_S. apply f_equal. exact IHn. Qed.
+
+Lemma _0_def : 0 = (mk_num IND_0).
+Proof. symmetry. apply mk_num_0. Qed.
+
+Lemma SUC_def : S = (fun _2104 : nat => mk_num (IND_SUC (dest_num _2104))).
+Proof. symmetry. apply fun_ext; intro x. rewrite mk_num_S, mk_num_dest_num. reflexivity. Qed.

@@ -83,12 +83,10 @@ builtin "FST_def" ≔ FST_def;
 builtin "snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
 
-// type ind
-builtin "nat" ≔ ind;
-builtin "0" ≔ IND_0;
-builtin "IND_0_def" ≔ IND_0_def;
-builtin "S" ≔ IND_SUC;
-builtin "IND_SUC_def" ≔ IND_SUC_def;
+// infinite type ind
+builtin "ind" ≔ ind;
+builtin "IND_0" ≔ IND_0;
+builtin "IND_SUC" ≔ IND_SUC;
 
 // type of natural numbers
 builtin "nat" ≔ num;
@@ -96,3 +94,5 @@ builtin "0" ≔ _0;
 builtin "S" ≔ SUC;
 builtin "mk_num" ≔ mk_num;
 builtin "dest_num" ≔ dest_num;
+builtin "_0_def" ≔ _0_def;
+builtin "SUC_def" ≔ SUC_def;
