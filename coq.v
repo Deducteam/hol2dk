@@ -301,11 +301,38 @@ Proof. generalize mk_num_prop. intros [e _]. exact e. Qed.
 Lemma mk_num_S i : mk_num (IND_SUC i) = S (mk_num i).
 Proof. generalize mk_num_prop. intros [_ e]. apply e. Qed.
 
-Lemma mk_num_dest_num n : mk_num (dest_num n) = n.
-Proof. induction n; simpl. apply mk_num_0. rewrite mk_num_S. apply f_equal. exact IHn. Qed.
+Lemma axiom_7 : forall (a : nat), (mk_num (dest_num a)) = a.
+Proof. induction a; simpl. apply mk_num_0. rewrite mk_num_S. apply f_equal. exact IHa. Qed.
 
 Lemma _0_def : 0 = (mk_num IND_0).
 Proof. symmetry. apply mk_num_0. Qed.
 
 Lemma SUC_def : S = (fun _2104 : nat => mk_num (IND_SUC (dest_num _2104))).
-Proof. symmetry. apply fun_ext; intro x. rewrite mk_num_S, mk_num_dest_num. reflexivity. Qed.
+Proof. symmetry. apply fun_ext; intro x. rewrite mk_num_S, axiom_7. reflexivity. Qed.
+
+Definition NUM_REP := fun a : ind => forall NUM_REP' : ind -> Prop, (forall a' : ind, ((a' = IND_0) \/ (exists i : ind, (a' = (IND_SUC i)) /\ (NUM_REP' i))) -> NUM_REP' a') -> NUM_REP' a.
+
+Definition NUM_REP' := fun a : ind => forall P : ind -> Prop, (P IND_0 /\ forall i, P i -> P (IND_SUC i)) -> P a.
+
+Lemma NUM_REP_eq : NUM_REP = NUM_REP'.
+Proof.
+  apply fun_ext; intro a. apply prop_ext; intros h P.
+  intros [p0 ps]. apply h. intros a' [i|i].
+    subst a'. exact p0.
+    destruct i as [b [e i]]. subst a'. apply ps. exact i.
+  intro i. apply h. split.
+    apply i. left. reflexivity.
+    intros b pb. apply i. right. exists b. split. reflexivity. exact pb.
+Qed.
+
+Lemma axiom_8 : forall (r : ind), (NUM_REP r) = ((dest_num (mk_num r)) = r).
+Proof.
+  intro r. rewrite NUM_REP_eq. apply prop_ext; intro h.
+
+  set (P r := dest_num (mk_num r) = r). change (P r). apply h. split.
+  unfold P. rewrite mk_num_0. reflexivity.
+  intros i pi. unfold P. rewrite mk_num_S. simpl. apply (f_equal IND_SUC). apply pi.
+
+  intros P [p0 ps]. destruct (mk_num r); subst; simpl. exact p0. apply ps.
+  induction t.  exact p0. simpl. apply ps. apply IHt.
+Qed.

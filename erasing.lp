@@ -85,8 +85,11 @@ builtin "SND_def" ≔ SND_def;
 
 // infinite type ind
 builtin "ind" ≔ ind;
-builtin "IND_0" ≔ IND_0;
+builtin "ONE_ONE" ≔ ONE_ONE;
+builtin "ONTO" ≔ ONTO;
+builtin "axiom_6" ≔ axiom_6;
 builtin "IND_SUC" ≔ IND_SUC;
+builtin "IND_0" ≔ IND_0;
 
 // type of natural numbers
 builtin "nat" ≔ num;
@@ -96,3 +99,5 @@ builtin "mk_num" ≔ mk_num;
 builtin "dest_num" ≔ dest_num;
 builtin "_0_def" ≔ _0_def;
 builtin "SUC_def" ≔ SUC_def;
+builtin "axiom_7" ≔ axiom_7;
+builtin "axiom_8" ≔ axiom_8;
