@@ -328,30 +328,6 @@ Proof.
   intro e. apply f_equal. apply IHx. apply IND_SUC_inj. exact e.
 Qed.
 
-Definition mk_num_pred f := f IND_0 = 0 /\ forall i, f (IND_SUC i) = S (f i).
-
-Definition mk_num := ε mk_num_pred.
-
-Axiom ex_mk_num : exists f : ind -> nat, f IND_0 = 0 /\ forall i, f (IND_SUC i) = S (f i).
-
-Lemma mk_num_prop : mk_num_pred mk_num.
-Proof. unfold mk_num. apply ε_spec. apply ex_mk_num. Qed.
-
-Lemma mk_num_0 : mk_num IND_0 = 0.
-Proof. generalize mk_num_prop. intros [e _]. exact e. Qed.
-
-Lemma mk_num_S i : mk_num (IND_SUC i) = S (mk_num i).
-Proof. generalize mk_num_prop. intros [_ e]. apply e. Qed.
-
-Lemma axiom_7 : forall (a : nat), (mk_num (dest_num a)) = a.
-Proof. induction a; simpl. apply mk_num_0. rewrite mk_num_S. apply f_equal. exact IHa. Qed.
-
-Lemma _0_def : 0 = (mk_num IND_0).
-Proof. symmetry. apply mk_num_0. Qed.
-
-Lemma SUC_def : S = (fun _2104 : nat => mk_num (IND_SUC (dest_num _2104))).
-Proof. symmetry. apply fun_ext; intro x. rewrite mk_num_S, axiom_7. reflexivity. Qed.
-
 Definition NUM_REP := fun a : ind => forall NUM_REP' : ind -> Prop, (forall a' : ind, ((a' = IND_0) \/ (exists i : ind, (a' = (IND_SUC i)) /\ (NUM_REP' i))) -> NUM_REP' a') -> NUM_REP' a.
 
 Definition NUM_REP' := fun a : ind => forall P : ind -> Prop, (P IND_0 /\ forall i, P i -> P (IND_SUC i)) -> P a.
@@ -367,14 +343,83 @@ Proof.
     intros b pb. apply i. right. exists b. split. reflexivity. exact pb.
 Qed.
 
-Lemma axiom_8 : forall (r : ind), (NUM_REP r) = ((dest_num (mk_num r)) = r).
+Lemma NUM_REP_0 : NUM_REP IND_0.
+Proof. rewrite NUM_REP_eq. intros P [h _]. exact h. Qed.
+
+Lemma NUM_REP_S i : NUM_REP i -> NUM_REP (IND_SUC i).
+Proof. rewrite NUM_REP_eq. intros hi P [h0 hS]. apply hS. apply hi. split. exact h0. exact hS. Qed.
+
+Inductive NUM_REP_ID : ind -> Prop :=
+  | NUM_REP_ID_0 : NUM_REP_ID IND_0
+  | NUM_REP_ID_S i : NUM_REP_ID i -> NUM_REP_ID (IND_SUC i).
+
+Lemma NUM_REP_eq_ID : NUM_REP = NUM_REP_ID.
 Proof.
-  intro r. rewrite NUM_REP_eq. apply prop_ext; intro h.
+  apply fun_ext; intro i. apply prop_ext.
+  rewrite NUM_REP_eq. intro h. apply h. split.
+    apply NUM_REP_ID_0.
+    intros j hj. apply NUM_REP_ID_S. exact hj.
+  induction 1. apply NUM_REP_0. apply NUM_REP_S. assumption.
+Qed.
 
-  set (P r := dest_num (mk_num r) = r). change (P r). apply h. split.
-  unfold P. rewrite mk_num_0. reflexivity.
-  intros i pi. unfold P. rewrite mk_num_S. simpl. apply (f_equal IND_SUC). apply pi.
+Definition dest_num_img i := exists n, i = dest_num n.
 
-  intros P [p0 ps]. destruct (mk_num r); subst; simpl. exact p0. apply ps.
-  induction t.  exact p0. simpl. apply ps. apply IHt.
+Lemma NUM_REP_eq_dest_num_img : NUM_REP = dest_num_img.
+Proof.
+  apply fun_ext; intro i. apply prop_ext.
+  rewrite NUM_REP_eq_ID. revert i. induction 1.
+    exists 0. reflexivity.
+    destruct IHNUM_REP_ID as [n hn]. rewrite hn. exists (S n). reflexivity.
+  intros [n hn]. subst. induction n. apply NUM_REP_0. apply NUM_REP_S. assumption.
+Qed.
+
+Lemma NUM_REP_dest_num k : NUM_REP (dest_num k).
+Proof. induction k. apply NUM_REP_0. simpl. apply NUM_REP_S. assumption. Qed.
+
+Definition mk_num_pred i n := i = dest_num n.
+
+Definition mk_num i := ε (mk_num_pred i).
+
+Lemma mk_num_ex i : NUM_REP i -> exists n, mk_num_pred i n.
+Proof.
+  rewrite NUM_REP_eq_ID. induction 1.
+  exists 0. reflexivity.
+  destruct IHNUM_REP_ID as [n hn]. exists (S n). unfold mk_num_pred. rewrite hn. reflexivity.
+Qed.
+
+Lemma mk_num_prop i : NUM_REP i -> dest_num (mk_num i) = i.
+Proof. intro hi. symmetry. apply (ε_spec (mk_num_pred i) (mk_num_ex i hi)). Qed.
+
+Notation dest_num_mk_num := mk_num_prop.
+
+Lemma mk_num_dest_num k : mk_num (dest_num k) = k.
+Proof. apply dest_num_inj. apply dest_num_mk_num. apply NUM_REP_dest_num. Qed.
+
+Lemma axiom_7 : forall (a : nat), (mk_num (dest_num a)) = a.
+Proof. exact mk_num_dest_num. Qed.
+
+Lemma axiom_8 : forall (r : ind), (NUM_REP r) = ((dest_num (mk_num r)) = r).
+Proof. intro r. apply prop_ext. apply dest_num_mk_num. intro h. rewrite <- h. apply NUM_REP_dest_num. Qed.
+
+Lemma mk_num_0 : mk_num IND_0 = 0.
+Proof.
+  unfold mk_num. set (P := mk_num_pred IND_0).
+  assert (h: exists n, P n). exists 0. reflexivity.
+  generalize (ε_spec P h). set (i := ε P). unfold P, mk_num_pred. intro e.
+  apply dest_num_inj. simpl. symmetry. exact e.
+Qed.
+
+Lemma _0_def : 0 = (mk_num IND_0).
+Proof. symmetry. exact mk_num_0. Qed.
+
+Lemma mk_num_S : forall i, NUM_REP i -> mk_num (IND_SUC i) = S (mk_num i).
+Proof.
+  intros i hi. rewrite NUM_REP_eq_dest_num_img in hi. destruct hi as [n hn]. rewrite hn, mk_num_dest_num.
+  change (mk_num (dest_num (S n)) = S n). apply mk_num_dest_num. 
+Qed.
+
+Lemma SUC_def : S = (fun _2104 : nat => mk_num (IND_SUC (dest_num _2104))).
+Proof.
+  symmetry. apply fun_ext; intro x. rewrite mk_num_S. 2: apply NUM_REP_dest_num.
+  apply f_equal. apply axiom_7.
 Qed.
