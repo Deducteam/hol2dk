@@ -1,7 +1,6 @@
 // map for renaming dk/lp identifiers (on the right)
 // to Coq expressions (on the left)
 
-builtin "unit" ≔ 1;
 builtin "minus" ≔ -;
 builtin "minus_def" ≔ -_def;
 builtin "pair'" ≔ -';
@@ -40,3 +39,4 @@ builtin "ltle'" ≔ <<=';
 builtin "lt2" ≔ <<;
 builtin "lt2'" ≔ <<';
 builtin "lt3" ≔ <<<;
+builtin "not_def" ≔ ¬_def;

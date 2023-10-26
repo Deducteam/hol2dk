@@ -406,20 +406,40 @@ let typ_vars oc ts =
   | ts -> out oc " [%a]" (list_sep " " typ) ts
 ;;
 
-let decl_sym oc (n,b) =
-  out oc "constant symbol %a%a : El %a;\n"
-    cst_name n typ_vars (tyvars b) raw_typ b
+let typ_params = list_prefix " " raw_typ;;
+
+let definition_of n =
+  let f th =
+    let t = concl th in
+    match t with
+    | Comb(Comb(Const("=",_),Const(n',_)),r) ->
+       if n'=n then Some(t,r) else None
+    | _ -> assert false
+  in List.find_map f (definitions())
 ;;
 
-let decl_def oc th =
-  let t = concl th in (* definitions have no assumptions *)
-  let tvs = type_vars_in_term t in
-  let rmap = renaming_map tvs [] in (* definitions are closed *)
-  match t with
-  | Comb(Comb(Const("=",_),Const(n,_)),_) ->
-     out oc "symbol %a_def%a : Prf %a;\n"
-       cst_name n typ_vars (type_vars_in_term t) (unabbrev_term rmap) t
-  | _ -> assert false
+let decl_sym oc (n,b) =
+  match definition_of n with
+  | None ->
+     out oc "symbol %a%a : El %a;\n" cst_name n typ_vars (tyvars b) raw_typ b
+  | Some (t,r) ->
+     let tvst = type_vars_in_term t in
+     let rmap = renaming_map tvst [] in
+     match n with
+     |"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T" ->
+       out oc "symbol %a_def%a : Prf %a;\n"
+         cst_name n typ_vars tvst (unabbrev_term rmap) t
+     | _ ->
+        let tvsb = tyvars b in
+        out oc "symbol %a%a : El %a ≔ %a;\n"
+          cst_name n typ_vars tvsb raw_typ b (unabbrev_term rmap) r;
+        if tvsb = [] then
+          out oc "opaque symbol %a_def%a : Prf %a ≔ REFL %a;\n"
+            cst_name n typ_vars tvst (unabbrev_term rmap) t cst_name n
+        else
+          out oc "opaque symbol %a_def%a : Prf %a ≔ REFL (@%a %a);\n"
+            cst_name n typ_vars tvst (unabbrev_term rmap) t
+            cst_name n typ_params tvsb
 ;;
 
 let decl_axioms oc ths =
@@ -537,11 +557,7 @@ let export_type_abbrevs b s =
 ;;
 
 let constants() =
-  let f (n,_) =
-    match n with
-    |"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T"|"="|"el" -> false
-    | _ -> true
-  in
+  let f (n,_) = match n with "=" | "el" -> false | _ -> true in
   List.filter f (constants())
 ;;
 
@@ -561,8 +577,7 @@ let export_axioms b =
   export b "_axioms"
     (fun oc ->
       List.iter (require oc b) ["_types"; "_terms"];
-      decl_axioms oc (axioms());
-      list decl_def oc (definitions()))
+      decl_axioms oc (axioms()))
 ;;
 
 let export_proofs b r =
@@ -638,11 +653,9 @@ require open hol-light.theory_hol;\n
 /* constants */
 %a
 /* axioms */
-%a
-/* definitions */
 %a\n"
     b (list decl_typ) (types()) (list decl_sym) (constants())
-    decl_axioms (axioms()) (list decl_def) (definitions());
+    decl_axioms (axioms());
   close_out oc;
   (* Generate a lp file for each proof. *)
   let theorem_file k p =

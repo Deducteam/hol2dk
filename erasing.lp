@@ -27,7 +27,6 @@ builtin "ex" ≔ ∃;
 builtin "ex_def" ≔ ∃_def;
 
 builtin "not" ≔ ¬;
-builtin "not_def" ≔ ¬_def;
 
 builtin "True" ≔ T;
 builtin "T_def" ≔ T_def;
@@ -64,43 +63,41 @@ builtin "prop_ext" ≔ prop_ext;
 // unit type
 builtin "unit" ≔ 1;
 builtin "tt" ≔ one;
+builtin "one_def" ≔ one_def;
 builtin "one_ABS" ≔ one_ABS;
 builtin "one_REP" ≔ one_REP;
 builtin "axiom_2" ≔ axiom_2;
 builtin "axiom_3" ≔ axiom_3;
 
 // product type
+builtin "mk_pair" ≔ mk_pair;
 builtin "prod" ≔ prod;
-builtin "pair" ≔ pair;
+builtin "ABS_prod" ≔ ABS_prod;
+builtin "REP_prod" ≔ REP_prod;
+builtin "axiom_4" ≔ axiom_4;
+builtin "axiom_5" ≔ axiom_5;
+builtin "pair" ≔ ̦‚;
+builtin "pair_def" ≔ ̦‚_def;
 builtin "fst" ≔ FST;
+builtin "FST_def" ≔ FST_def;
 builtin "snd" ≔ SND;
+builtin "SND_def" ≔ SND_def;
+
+// infinite type ind
+builtin "ind" ≔ ind;
+builtin "ONE_ONE" ≔ ONE_ONE;
+builtin "ONTO" ≔ ONTO;
+builtin "axiom_6" ≔ axiom_6;
+builtin "IND_SUC" ≔ IND_SUC;
+builtin "IND_0" ≔ IND_0;
 
 // type of natural numbers
 builtin "nat" ≔ num;
 builtin "0" ≔ _0;
 builtin "S" ≔ SUC;
-
-// definitions
-// to be removed when definitions will be translated to definitions
-builtin "False" ≔ _FALSITY_;
-builtin "_FALSITY__def" ≔ _FALSITY__def;
-
-builtin "id" ≔ I;
-builtin "I_def" ≔ I_def;
-
-builtin "o" ≔ o;
-builtin "o_def" ≔ o_def;
-
-builtin "LET" ≔ LET;
-builtin "LET_def" ≔ LET_def;
-
-builtin "LET_END" ≔ LET_END;
-builtin "LET_END_def" ≔ LET_END_def;
-
-/*
-builtin "CURRY" ≔ CURRY;
-builtin "CURRY_def" ≔ CURRY_def;
-
-builtin "UNCURRY" ≔ UNCURRY;
-builtin "UNCURRY_def" ≔ UNCURRY_def;
-*/
+builtin "mk_num" ≔ mk_num;
+builtin "dest_num" ≔ dest_num;
+builtin "_0_def" ≔ _0_def;
+builtin "SUC_def" ≔ SUC_def;
+builtin "axiom_7" ≔ axiom_7;
+builtin "axiom_8" ≔ axiom_8;
