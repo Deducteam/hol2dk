@@ -261,13 +261,17 @@ Qed.
 (* HOL-Light type ind. *)
 (****************************************************************************)
 
-Axiom ind : Type'.
+Definition nat' := {| type := nat; el := 0 |}.
+Canonical nat'.
+
+Definition ind : Type' := nat'.
 
 Definition ONE_ONE {A B : Type'} := fun _2064 : A -> B => forall x1 : A, forall x2 : A, ((_2064 x1) = (_2064 x2)) -> x1 = x2.
 
 Definition ONTO {A B : Type'} := fun _2069 : A -> B => forall y : B, exists x : A, y = (_2069 x).
 
-Axiom axiom_6 : exists f : ind -> ind, (@ONE_ONE ind ind f) /\ (~ (@ONTO ind ind f)).
+Lemma axiom_6 : exists f : ind -> ind, (@ONE_ONE ind ind f) /\ (~ (@ONTO ind ind f)).
+Proof. exists S. split. exact eq_add_S. intro h. generalize (h 0). intros [x hx]. discriminate. Qed.
 
 Definition IND_SUC_pred := fun f : ind -> ind => exists z : ind, (forall x1 : ind, forall x2 : ind, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((f x) = z)).
 
@@ -309,9 +313,6 @@ Proof. generalize IND_0_prop. intros [h1 h2]. apply h2. Qed.
 (****************************************************************************)
 (* Mapping of HOL-Light type num to Coq type nat. *)
 (****************************************************************************)
-
-Definition nat' := {| type := nat; el := 0 |}.
-Canonical nat'.
 
 Fixpoint dest_num n :=
   match n with
