@@ -102,7 +102,6 @@ builtin "_0_def" ≔ _0_def;
 builtin "SUC_def" ≔ SUC_def;
 builtin "axiom_7" ≔ axiom_7;
 builtin "axiom_8" ≔ axiom_8;
-builtin "NUMERAL" ≔ NUMERAL;
 
 // usual mathematical functions on natural numbers
 builtin "BIT0" ≔ BIT0;
