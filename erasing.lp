@@ -107,7 +107,6 @@ builtin "axiom_8" ≔ axiom_8;
 builtin "BIT0" ≔ BIT0;
 builtin "BIT0_def" ≔ BIT0_def;
 builtin "BIT1" ≔ BIT1;
-builtin "BIT1_def" ≔ BIT1_def;
 builtin "Nat.pred" ≔ PRE;
 builtin "PRE_def" ≔ PRE_def;
 builtin "Nat.add" ≔ +;

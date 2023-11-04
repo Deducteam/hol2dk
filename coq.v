@@ -57,12 +57,12 @@ Proof. exact (@ex_ind a p r h2 h1). Qed.
 
 Require Import Coq.Logic.ClassicalEpsilon.
 
-Definition ε : forall {A : Type'}, (A -> Prop) -> A := fun A P => epsilon (inhabits (el A)) P.
+Definition ε : forall {A : Type'}, (type A -> Prop) -> type A := fun A P => epsilon (inhabits (el A)) P.
 
-Lemma ε_spec {A : Type'} (P : A -> Prop) : (exists x, P x) -> P (ε P).
+Lemma ε_spec {A : Type'} (P : type A -> Prop) : (exists x, P x) -> P (ε P).
 Proof. intro h. unfold ε. apply epsilon_spec. exact h. Qed.
 
-Axiom fun_ext : forall {A B : Type'} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
+Axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
 
 Axiom prop_ext : forall {P Q : Prop}, (P -> Q) -> (Q -> P) -> P = Q.
 
@@ -441,12 +441,15 @@ Fixpoint BIT0 n :=
   | S n => S (S (BIT0 n))
   end.
 
-Lemma BIT0_def : BIT0 = (@ε (nat -> nat) (fun fn : nat -> nat => ((fn ( 0)) = ( 0)) /\ (forall n : nat, (fn (S n)) = (S (S (fn n)))))).
+Lemma BIT0_def : BIT0 =
+         (@ε (arr nat nat')
+            (fun fn : forall _ : nat, nat =>
+               and (@eq nat (fn O) O) (forall n : nat, @eq nat (fn (S n)) (S (S (fn n)))))).
 Proof.
   match goal with [|- _ = ε ?x] => set (Q := x) end.
   assert (i : exists q, Q q). exists BIT0. split; reflexivity.
   generalize (ε_spec Q i). intros [h0 hs].
-  apply fun_ext; intro n. induction n; simpl; unfold reverse_coercion.
+  apply fun_ext; intro n. induction n; simpl.
   rewrite h0. reflexivity. rewrite hs, IHn. reflexivity.
 Qed.
 
@@ -458,10 +461,7 @@ Qed.
 
 Definition BIT1 := fun _2143 : nat => S (BIT0 _2143).
 
-Lemma BIT1_def : BIT1 = (fun _2143 : nat => S (BIT0 _2143)).
-Proof. exact (eq_refl BIT1). Qed.
-
-Lemma PRE_def : pred = (@ε ((prod nat (prod nat nat)) -> nat -> nat) (fun PRE' : (prod nat (prod nat nat)) -> nat -> nat => forall _2151 : prod nat (prod nat nat), ((PRE' _2151 ( 0)) = ( 0)) /\ (forall n : nat, (PRE' _2151 (S n)) = n)) (@pair nat (prod nat nat) ( (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) ( (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))).
+Lemma PRE_def : pred = (@ε (arr (prod nat (prod nat nat)) (arr nat nat')) (fun PRE' : (prod nat (prod nat nat)) -> nat -> nat' => forall _2151 : prod nat (prod nat nat), ((PRE' _2151 ( 0)) = ( 0)) /\ (forall n : nat, (PRE' _2151 (S n)) = n)) (@pair nat (prod nat nat) ( (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) ( (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))).
 Proof.
   generalize (@pair nat (prod nat nat) ( (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) ( (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))).
   generalize (prod nat (prod nat nat)).
@@ -469,22 +469,21 @@ Proof.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => pred). split; reflexivity.
   generalize (ε_spec Q i a). intros [h0 hs].
-  apply fun_ext; intro n. induction n; simpl; unfold reverse_coercion.
+  apply fun_ext; intro n. induction n; simpl.
   rewrite h0. reflexivity. rewrite hs. reflexivity.
 Qed.
 
-Lemma add_def : Nat.add = (@ε (nat -> nat -> nat -> nat) (fun add' : nat -> nat -> nat -> nat => forall _2155 : nat, (forall n : nat, (add' _2155 ( 0) n) = n) /\ (forall m : nat, forall n : nat, (add' _2155 (S m) n) = (S (add' _2155 m n)))) ( (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))).
+Lemma add_def : Nat.add = (@ε (arr nat (arr nat (arr nat nat'))) (fun add' : nat -> nat -> nat -> nat => forall _2155 : nat, (forall n : nat, (add' _2155 ( 0) n) = n) /\ (forall m : nat, forall n : nat, (add' _2155 (S m) n) = (S (add' _2155 m n)))) ( (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))).
 Proof.
   generalize ( (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))). intro a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Nat.add). split; reflexivity.
   generalize (ε_spec Q i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
-  induction x; simpl; unfold reverse_coercion.
-  rewrite h0. reflexivity. rewrite hs, IHx. reflexivity.
+  induction x; simpl. rewrite h0. reflexivity. rewrite hs, IHx. reflexivity.
 Qed.
 
-Lemma mul_def : Nat.mul = (@ε (nat -> nat -> nat -> nat) (fun mul' : nat -> nat -> nat -> nat => forall _2186 : nat, (forall n : nat, (mul' _2186 ( 0) n) = ( 0)) /\ (forall m : nat, forall n : nat, (mul' _2186 (S m) n) = (Nat.add (mul' _2186 m n) n))) ( (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))).
+Lemma mul_def : Nat.mul = (@ε (arr nat (arr nat (arr nat nat'))) (fun mul' : nat -> nat -> nat -> nat => forall _2186 : nat, (forall n : nat, (mul' _2186 ( 0) n) = ( 0)) /\ (forall m : nat, forall n : nat, (mul' _2186 (S m) n) = (Nat.add (mul' _2186 m n) n))) ( (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))).
 Proof.
   generalize ( (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))). intro a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
@@ -492,24 +491,22 @@ Proof.
   intros m n. rewrite PeanoNat.Nat.add_comm. reflexivity.
   generalize (ε_spec Q i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
-  induction x; simpl; unfold reverse_coercion.
-  rewrite h0. reflexivity. rewrite hs, IHx, PeanoNat.Nat.add_comm. reflexivity.
+  induction x; simpl. rewrite h0. reflexivity. rewrite hs, IHx, PeanoNat.Nat.add_comm. reflexivity.
 Qed.
 
-Lemma EXP_def : Nat.pow = (@ε ((prod nat (prod nat nat)) -> nat -> nat -> nat) (fun EXP' : (prod nat (prod nat nat)) -> nat -> nat -> nat => forall _2224 : prod nat (prod nat nat), (forall m : nat, EXP' _2224 m 0 = BIT1 0) /\ (forall m : nat, forall n : nat, (EXP' _2224 m (S n)) = (Nat.mul m (EXP' _2224 m n)))) (@pair nat (prod nat nat) (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))) (@pair nat nat (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0))))))) (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))).
+Lemma EXP_def : Nat.pow = (@ε (arr (prod nat (prod nat nat)) (arr nat (arr nat nat'))) (fun EXP' : (prod nat (prod nat nat)) -> nat -> nat -> nat => forall _2224 : prod nat (prod nat nat), (forall m : nat, EXP' _2224 m 0 = BIT1 0) /\ (forall m : nat, forall n : nat, (EXP' _2224 m (S n)) = (Nat.mul m (EXP' _2224 m n)))) (@pair nat (prod nat nat) (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))) (@pair nat nat (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0))))))) (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))).
 Proof.
   generalize (@pair nat (prod nat nat) (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))) (@pair nat nat (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0))))))) (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))); generalize (@prod nat (prod nat nat)); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Nat.pow). split; simpl; intro x; reflexivity.
   generalize (ε_spec Q i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
-  induction y; simpl; unfold reverse_coercion.
-  rewrite h0. reflexivity. rewrite hs, IHy. reflexivity.
+  induction y; simpl. rewrite h0. reflexivity. rewrite hs, IHy. reflexivity.
 Qed.
 
 Require Import Lia.
 
-Lemma le_def : le = (@ε ((prod nat nat) -> nat -> nat -> Prop) (fun le' : (prod nat nat) -> nat -> nat -> Prop => forall _2241 : prod nat nat, (forall m : nat, (le' _2241 m ( 0)) = (m = ( 0))) /\ (forall m : nat, forall n : nat, (le' _2241 m (S n)) = ((m = (S n)) \/ (le' _2241 m n)))) (@pair nat nat ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))))).
+Lemma le_def : le = (@ε (arr (prod nat nat) (arr nat (arr nat Prop'))) (fun le' : (prod nat nat) -> nat -> nat -> Prop => forall _2241 : prod nat nat, (forall m : nat, (le' _2241 m ( 0)) = (m = ( 0))) /\ (forall m : nat, forall n : nat, (le' _2241 m (S n)) = ((m = (S n)) \/ (le' _2241 m n)))) (@pair nat nat ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))))).
 Proof.
   generalize (@pair nat nat ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0)))))))); generalize (prod nat nat); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
@@ -532,7 +529,7 @@ Qed.
 Lemma le_eq_lt x y : x <= y -> x = y \/ x < y.
 Proof. lia. Qed.
 
-Lemma lt_def : lt = (@ε (nat -> nat -> nat -> Prop) (fun lt : nat -> nat -> nat -> Prop => forall _2248 : nat, (forall m : nat, (lt _2248 m ( 0)) = False) /\ (forall m : nat, forall n : nat, (lt _2248 m (S n)) = ((m = n) \/ (lt _2248 m n)))) ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0)))))))).
+Lemma lt_def : lt = (@ε (arr nat (arr nat (arr nat Prop'))) (fun lt : nat -> nat -> nat -> Prop => forall _2248 : nat, (forall m : nat, (lt _2248 m ( 0)) = False) /\ (forall m : nat, forall n : nat, (lt _2248 m (S n)) = ((m = n) \/ (lt _2248 m n)))) ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0)))))))).
 Proof.
   generalize ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))); intro a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
@@ -601,27 +598,25 @@ Proof.
   rewrite! COND_True. reflexivity. rewrite! COND_False. reflexivity.
 Qed.
 
-Lemma minus_def : Nat.sub = (@ε (nat -> nat -> nat -> nat) (fun pair' : nat -> nat -> nat -> nat => forall _2766 : nat, (forall m : nat, (pair' _2766 m ( 0)) = m) /\ (forall m : nat, forall n : nat, (pair' _2766 m (S n)) = (Nat.pred (pair' _2766 m n)))) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0)))))))).
+Lemma minus_def : Nat.sub = (@ε (arr nat (arr nat (arr nat nat'))) (fun pair' : nat -> nat -> nat -> nat => forall _2766 : nat, (forall m : nat, (pair' _2766 m ( 0)) = m) /\ (forall m : nat, forall n : nat, (pair' _2766 m (S n)) = (Nat.pred (pair' _2766 m n)))) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0)))))))).
 Proof.
   generalize ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0))))))); intro a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => minus). split; lia.
   generalize (ε_spec Q i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext. induction x.
-  intro y. induction y; simpl; unfold reverse_coercion.
-  rewrite h0. reflexivity. rewrite hs. unfold reverse_coercion in IHy. rewrite <- IHy. reflexivity.
-  intro y. induction y. rewrite h0. reflexivity.
-  rewrite hs. unfold reverse_coercion in IHy. rewrite <- IHy. lia.
+  intro y. induction y; simpl.
+  rewrite h0. reflexivity. rewrite hs, <- IHy. reflexivity.
+  intro y. induction y. rewrite h0. reflexivity. rewrite hs, <- IHy. lia.
 Qed.
 
-Lemma FACT_def : Factorial.fact = (@ε ((prod nat (prod nat (prod nat nat))) -> nat -> nat) (fun FACT' : (prod nat (prod nat (prod nat nat))) -> nat -> nat => forall _2944 : prod nat (prod nat (prod nat nat)), ((FACT' _2944 ( 0)) = ( (BIT1 0))) /\ (forall n : nat, (FACT' _2944 (S n)) = (Nat.mul (S n) (FACT' _2944 n)))) (@pair nat (prod nat (prod nat nat)) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
+Lemma FACT_def : Factorial.fact = (@ε (arr (prod nat (prod nat (prod nat nat))) (arr nat nat')) (fun FACT' : (prod nat (prod nat (prod nat nat))) -> nat -> nat => forall _2944 : prod nat (prod nat (prod nat nat)), ((FACT' _2944 ( 0)) = ( (BIT1 0))) /\ (forall n : nat, (FACT' _2944 (S n)) = (Nat.mul (S n) (FACT' _2944 n)))) (@pair nat (prod nat (prod nat nat)) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
 Proof.
   generalize (@pair nat (prod nat (prod nat nat)) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Factorial.fact). split; reflexivity.
   generalize (ε_spec Q i a). intros [h0 hs].
-  apply fun_ext; intro x. induction x. unfold reverse_coercion. rewrite h0. reflexivity.
-  unfold reverse_coercion in IHx. rewrite hs, <- IHx. reflexivity.
+  apply fun_ext; intro x. induction x. rewrite h0. reflexivity. rewrite hs, <- IHx. reflexivity.
 Qed.
 
 Lemma add_sub a b : a + b - a = b.
@@ -642,7 +637,7 @@ Proof.
   rewrite add_sub, swap_add_sub, <- PeanoNat.Nat.mul_sub_distr_r in e2. nia. nia.
 Qed.
 
-Lemma DIV_def : Nat.div = (@ε ((prod nat (prod nat nat)) -> nat -> nat -> nat) (fun q : (prod nat (prod nat nat)) -> nat -> nat -> nat => forall _3086 : prod nat (prod nat nat), exists r : nat -> nat -> nat, forall m : nat, forall n : nat, @COND Prop (n = ( 0)) (((q _3086 m n) = ( 0)) /\ ((r m n) = m)) ((m = (Nat.add (Nat.mul (q _3086 m n) n) (r m n))) /\ (lt (r m n) n))) (@pair nat (prod nat nat) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))).
+Lemma DIV_def : Nat.div = (@ε (arr (prod nat (prod nat nat)) (arr nat (arr nat nat'))) (fun q : (prod nat (prod nat nat)) -> nat -> nat -> nat => forall _3086 : prod nat (prod nat nat), exists r : nat -> nat -> nat, forall m : nat, forall n : nat, @COND Prop (n = ( 0)) (((q _3086 m n) = ( 0)) /\ ((r m n) = m)) ((m = (Nat.add (Nat.mul (q _3086 m n) n) (r m n))) /\ (lt (r m n) n))) (@pair nat (prod nat nat) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))).
 Proof.
   generalize (@pair nat (prod nat nat) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
@@ -655,7 +650,7 @@ Proof.
   apply fun_ext; intro x. apply fun_ext; intro y.
   revert x. induction y.
   intro x. generalize (h x 0). rewrite refl_is_True, COND_True. intros [h1 h2].
-  unfold reverse_coercion. rewrite h1. reflexivity.
+  rewrite h1. reflexivity.
   intro x. generalize (h x (S y)). rewrite S_eq_0_is_False, COND_False. intros [h1 h2].
   simpl. generalize (Coq.Arith.PeanoNat.Nat.divmod_spec x y 0 y (le_n y)).
   destruct (Nat.divmod x y 0 y) as [q r]. simpl.
@@ -666,7 +661,7 @@ Proof.
   intros [j1 j2]. symmetry. exact j1.
 Qed.
 
-Lemma MOD_def : Nat.modulo = (@ε ((prod nat (prod nat nat)) -> nat -> nat -> nat) (fun r : (prod nat (prod nat nat)) -> nat -> nat -> nat => forall _3087 : prod nat (prod nat nat), forall m : nat, forall n : nat, @COND Prop (n = ( 0)) (((Nat.div m n) = ( 0)) /\ ((r _3087 m n) = m)) ((m = (Nat.add (Nat.mul (Nat.div m n) n) (r _3087 m n))) /\ (lt (r _3087 m n) n))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))).
+Lemma MOD_def : Nat.modulo = (@ε (arr (prod nat (prod nat nat)) (arr nat (arr nat nat'))) (fun r : (prod nat (prod nat nat)) -> nat -> nat -> nat => forall _3087 : prod nat (prod nat nat), forall m : nat, forall n : nat, @COND Prop (n = ( 0)) (((Nat.div m n) = ( 0)) /\ ((r _3087 m n) = m)) ((m = (Nat.add (Nat.mul (Nat.div m n) n) (r _3087 m n))) /\ (lt (r _3087 m n) n))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))).
 Proof.
   generalize (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
@@ -726,7 +721,7 @@ Proof.
   rewrite <- not_Even_is_Odd. intros [l hl]. lia.
 Qed.
 
-Lemma EVEN_def : Even = (@ε ((prod nat (prod nat (prod nat nat))) -> nat -> Prop) (fun EVEN' : (prod nat (prod nat (prod nat nat))) -> nat -> Prop => forall _2603 : prod nat (prod nat (prod nat nat)), ((EVEN' _2603 (0)) = True) /\ (forall n : nat, (EVEN' _2603 (S n)) = (~ (EVEN' _2603 n)))) (@pair nat (prod nat (prod nat nat)) ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ((BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))))).
+Lemma EVEN_def : Even = (@ε (arr (prod nat (prod nat (prod nat nat))) (arr nat Prop')) (fun EVEN' : (prod nat (prod nat (prod nat nat))) -> nat -> Prop => forall _2603 : prod nat (prod nat (prod nat nat)), ((EVEN' _2603 (0)) = True) /\ (forall n : nat, (EVEN' _2603 (S n)) = (~ (EVEN' _2603 n)))) (@pair nat (prod nat (prod nat nat)) ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ((BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))))).
 Proof.
   generalize (@pair nat (prod nat (prod nat nat)) ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ((BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
@@ -734,12 +729,11 @@ Proof.
   rewrite is_True. exact Even_0. intro n. rewrite not_Even_is_Odd. apply Even_S.
   generalize (ε_spec Q i a). intros [h1 h2].
   apply fun_ext; intro x. induction x.
-  apply prop_ext; intro h. unfold reverse_coercion. rewrite h1. exact I. exact Even_0.
-  unfold reverse_coercion in IHx. unfold reverse_coercion.
+  apply prop_ext; intro h. rewrite h1. exact I. exact Even_0.
   rewrite h2, <- IHx, not_Even_is_Odd. apply Even_S.
 Qed.
 
-Lemma ODD_def : Odd = (@ε ((prod nat (prod nat nat)) -> nat -> Prop) (fun ODD' : (prod nat (prod nat nat)) -> nat -> Prop => forall _2607 : prod nat (prod nat nat), ((ODD' _2607 (0)) = False) /\ (forall n : nat, (ODD' _2607 (S n)) = (~ (ODD' _2607 n)))) (@pair nat (prod nat nat) ((BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))).
+Lemma ODD_def : Odd = (@ε (arr (prod nat (prod nat nat)) (arr nat Prop')) (fun ODD' : (prod nat (prod nat nat)) -> nat -> Prop => forall _2607 : prod nat (prod nat nat), ((ODD' _2607 (0)) = False) /\ (forall n : nat, (ODD' _2607 (S n)) = (~ (ODD' _2607 n)))) (@pair nat (prod nat nat) ((BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))).
 Proof.
   generalize (@pair nat (prod nat nat) ((BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
@@ -747,8 +741,7 @@ Proof.
   rewrite is_False. exact Odd_0. intro n. rewrite not_Odd_is_Even. apply Odd_S.
   generalize (ε_spec Q i a). intros [h1 h2].
   apply fun_ext; intro x. induction x.
-  apply prop_ext; intro h. unfold reverse_coercion. rewrite h1. apply Odd_0. exact h.
+  apply prop_ext; intro h. rewrite h1. apply Odd_0. exact h.
   apply False_rec. rewrite <- h1. exact h.
-  unfold reverse_coercion in IHx. unfold reverse_coercion.
   rewrite h2, <- IHx, not_Odd_is_Even. apply Odd_S.
 Qed.
