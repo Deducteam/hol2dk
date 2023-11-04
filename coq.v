@@ -688,3 +688,67 @@ Proof.
   generalize (divmod_unicity (Nat.div x (S y)) q (S y) (ε Q a x (S y)) (y - r) h2 h3 i1).
   intros [j1 j2]. symmetry. exact j2.
 Qed.
+
+Import PeanoNat.Nat Private_Parity.
+
+Lemma Even_or_Odd x : Even x \/ Odd x.
+Proof.
+  rewrite (div_mod_eq x 2). assert (h1: 0 <= x). lia. assert (h2: 0 < 2). lia.
+  generalize (mod_bound_pos x 2 h1 h2). generalize (x mod 2). intro n. destruct n; intro h.
+  left. exists (x / 2). lia. destruct n. right. exists (x / 2). reflexivity. lia.
+Qed.
+
+Lemma not_Even_is_Odd x : (~Even x) = Odd x.
+Proof.
+  apply prop_ext; intro h; generalize (Even_or_Odd x); intros [i|i].
+  apply False_rec. exact (h i). exact i. destruct h as [k hk]. destruct i as [l hl]. lia.
+  intros [k hk]. destruct i as [l hl]. lia.
+Qed.
+
+Lemma not_Odd_is_Even x : (~Odd x) = Even x.
+Proof.
+  apply prop_ext; intro h; generalize (Even_or_Odd x); intros [i|i].
+  exact i. apply False_rec. exact (h i). destruct h as [k hk]. intro j. destruct j as [l hl]. lia.
+  intros [k hk]. destruct h as [l hl]. lia.
+Qed.
+
+Lemma Even_S x : Even (S x) = Odd x.
+Proof.
+  apply prop_ext; intros [k hk].
+  rewrite <- not_Even_is_Odd. intros [l hl]. lia.
+  rewrite <- not_Odd_is_Even. intros [l hl]. lia.
+Qed.
+
+Lemma Odd_S x : Odd (S x) = Even x.
+Proof.
+  apply prop_ext; intros [k hk].
+  rewrite <- not_Odd_is_Even. intros [l hl]. lia.
+  rewrite <- not_Even_is_Odd. intros [l hl]. lia.
+Qed.
+
+Lemma EVEN_def : Even = (@ε ((prod nat (prod nat (prod nat nat))) -> nat -> Prop) (fun EVEN' : (prod nat (prod nat (prod nat nat))) -> nat -> Prop => forall _2603 : prod nat (prod nat (prod nat nat)), ((EVEN' _2603 (0)) = True) /\ (forall n : nat, (EVEN' _2603 (S n)) = (~ (EVEN' _2603 n)))) (@pair nat (prod nat (prod nat nat)) ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ((BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))))).
+Proof.
+  generalize (@pair nat (prod nat (prod nat nat)) ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ((BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
+  match goal with [|- _ = ε ?x _] => set (Q := x) end.
+  assert (i : exists q, Q q). exists (fun _ => Even). intro x. split.
+  rewrite is_True. exact Even_0. intro n. rewrite not_Even_is_Odd. apply Even_S.
+  generalize (ε_spec Q i a). intros [h1 h2].
+  apply fun_ext; intro x. induction x.
+  apply prop_ext; intro h. unfold reverse_coercion. rewrite h1. exact I. exact Even_0.
+  unfold reverse_coercion in IHx. unfold reverse_coercion.
+  rewrite h2, <- IHx, not_Even_is_Odd. apply Even_S.
+Qed.
+
+Lemma ODD_def : Odd = (@ε ((prod nat (prod nat nat)) -> nat -> Prop) (fun ODD' : (prod nat (prod nat nat)) -> nat -> Prop => forall _2607 : prod nat (prod nat nat), ((ODD' _2607 (0)) = False) /\ (forall n : nat, (ODD' _2607 (S n)) = (~ (ODD' _2607 n)))) (@pair nat (prod nat nat) ((BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))).
+Proof.
+  generalize (@pair nat (prod nat nat) ((BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ((BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
+  match goal with [|- _ = ε ?x _] => set (Q := x) end.
+  assert (i : exists q, Q q). exists (fun _ => Odd). intro x. split.
+  rewrite is_False. exact Odd_0. intro n. rewrite not_Odd_is_Even. apply Odd_S.
+  generalize (ε_spec Q i a). intros [h1 h2].
+  apply fun_ext; intro x. induction x.
+  apply prop_ext; intro h. unfold reverse_coercion. rewrite h1. apply Odd_0. exact h.
+  apply False_rec. rewrite <- h1. exact h.
+  unfold reverse_coercion in IHx. unfold reverse_coercion.
+  rewrite h2, <- IHx, not_Odd_is_Even. apply Odd_S.
+Qed.

@@ -137,3 +137,7 @@ builtin "Nat.div" ≔ DIV;
 builtin "DIV_def" ≔ DIV_def;
 builtin "Nat.modulo" ≔ MOD;
 builtin "MOD_def" ≔ MOD_def;
+builtin "Coq.Arith.PeanoNat.Nat.Even" ≔ EVEN;
+builtin "EVEN_def" ≔ EVEN_def;
+builtin "Coq.Arith.PeanoNat.Nat.Odd" ≔ ODD;
+builtin "ODD_def" ≔ ODD_def;
