@@ -128,6 +128,9 @@ Qed.
 Lemma F_def : False = (forall p : Prop, p).
 Proof. apply prop_ext. intros b p. apply (False_rec p b). intro h. exact (h False). Qed.
 
+Lemma not_def : not = (fun p : Prop => p -> False).
+Proof. reflexivity. Qed.
+
 Lemma or_def : or = (fun p : Prop => fun q : Prop => forall r : Prop, (p -> r) -> (q -> r) -> r).
 Proof.
   apply fun_ext; intro p; apply fun_ext; intro q. apply prop_ext.

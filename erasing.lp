@@ -27,6 +27,7 @@ builtin "ex" ≔ ∃;
 builtin "ex_def" ≔ ∃_def;
 
 builtin "not" ≔ ¬;
+builtin "not_def" ≔ ¬_def;
 
 builtin "True" ≔ T;
 builtin "T_def" ≔ T_def;
