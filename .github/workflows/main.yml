@@ -60,7 +60,7 @@ jobs:
           eval `opam env`
           hol2dk pos xci
           hol2dk xci.lp
-          lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
+          lambdapi check xci.lp
       - name: Generate and check multi-threaded dk output
         run: |
           eval `opam env`
@@ -74,4 +74,4 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=.
           make -j 3 -f xci.mk lp
-          lambdapi check --lib-root=. --map-dir=hol-light:. xci.lp
+          lambdapi check xci.lp
