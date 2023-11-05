@@ -168,6 +168,7 @@ let make b =
       b i b i b i b b b i x y b
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
+  out oc ".PHONY: clean-dk\nclean-dk:\n\trm -f %s*.dk\n" b;
 
   (* lp files generation *)
   out oc "\n.PHONY: lp\n";
@@ -188,13 +189,14 @@ let make b =
       b i b i b i b b b b i x y b
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
+  out oc ".PHONY: clean-lp\nclean-lp:\n\trm -f %s*.lp\n" b;
 
   (* targets common to dk and lp files part *)
   out oc "\n%s.pos: %s.prf\n\thol2dk pos %s\n" b b b;
   out oc "%s.use: %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
 
   (* generic function for lpo/vo file generation *)
-  let check e c =
+  let check e c clean =
     out oc "\n.PHONY: %so\n" e;
     out oc "%so: %s.%so\n" e b e;
     out oc "%s.%so: theory_hol.%so %s_types.%so \
@@ -220,11 +222,14 @@ let make b =
       done;
       out oc "\n"
     done;
-    out oc "%%.%so: %%.%s\n\t%s $<\n" e e c
+    out oc "%%.%so: %%.%s\n\t%s $<\n" e e c;
+    out oc
+      ".PHONY: clean-%so\nclean-%so:\n\trm -f theory_hol.%so %s*.%so%a\n"
+      e e e b e clean b;
   in
 
   (* lp files checking *)
-  check "lp" "lambdapi check -c";
+  check "lp" "lambdapi check -c" (fun _ _ -> ());
 
   (* v files generation *)
   out oc "\n.PHONY: v\nv: coq.v theory_hol.v \
@@ -242,15 +247,16 @@ let make b =
           --use-notations --requiring coq.v";
   out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
   out oc " > $@\n";
+  out oc ".PHONY: clean-v\nclean-v:\n\trm -f theory_hol.v %s*.v\n" b;
 
   (* coq files checking *)
-  check "v" "coqc -R . HOLLight";
+  let clean oc _b = out oc " coq.vo *.vo[sk] *.glob .*.aux .[nl]ia.cache" in
+  check "v" "coqc -R . HOLLight" clean;
   out oc "theory_hol.vo: coq.vo\n";
 
-  (* add clean target *)
-  out oc "\n.PHONY: clean\n\
-          clean:\n\
-          \trm -f %s*.lp coq.vo theory_hol.vo %s*.v* *.glob .*.aux\n" b b;
+  (* clean-all target *)
+  out oc "\n.PHONY: clean-all\nclean-all: \
+          clean-dk clean-lp clean-lpo clean-v clean-vo\n";
   exit 0
 
 let range args =
