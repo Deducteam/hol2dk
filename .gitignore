@@ -9,7 +9,6 @@ _build/
 *.sig
 *.lpo
 *.dko
-lambdapi.pkg
 *.pos
 *.thm
 *.use
@@ -23,6 +22,5 @@ lambdapi.pkg
 *.vman
 *.vok
 *.vos
-_CoqProject
 .lia.cache
 .nia.cache
