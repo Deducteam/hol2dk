@@ -1,6 +1,9 @@
 TODO
 ----
 
+- replace terms of the form (@f _ x) by x if f is a function equal to
+  the identity like I, NUMERAL
+
 - replace type variables like _1718 by better names like A
 
 - turn proof_content into a private data type so as to simplify proofs
@@ -12,13 +15,23 @@ TODO
     sym (sym p) --> p
     trans (sym p) (sym q) --> or <-- sym (trans q p) ?
     
-- replace ALPHA* by REFL
-
-- hol2dk mk: keep generating _CoqProject ?
-
 - add v file checking in ci
 
-- split proofs so that lp/v files are of a fixed equivalent size ?
+- instrument excluded middle in class.ml
+
+- make export incremental (1 lp file for each ml file)
+
+- make or_elim more implicit ?
+
+- detect invalid lp identifiers
+
+- minimize and clean xprelude.ml
+
+- keep in memory theorems used more than n>1 times ?
+
+- check whether Proof constructor is still useful
+
+- factorize code between dk and lp? using a functor?
 
 - uniformize names between no part and part
 
@@ -70,28 +83,3 @@ hol2dk dg 7 xci && hol2dk mk 7 xci coq.v && make -f xci.mk lp generates
     . `xci_part_*_type_abbrevs`
     . `xci_part_*_term_abbrevs`
     
-- instrument excluded middle in class.ml
-
-- make export incremental (1 lp file for each ml file)
-
-- make or_elim more implicit ?
-
-- split term_abbrevs.lp files in manageable pieces
-
-
-- instrument excluded middle
-
-
-- detect invalid lp identifiers
-
-- use iteration functions for theorems and files
-
-- minimize and clean xprelude.ml
-
-- remove private types in hol2dk ?
-
-- keep in memory theorems used more than n>1 times ?
-
-- check whether Proof constructor is still useful
-
-- factorize code between dk and lp? using a functor?

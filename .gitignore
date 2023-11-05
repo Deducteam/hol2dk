@@ -24,3 +24,5 @@ lambdapi.pkg
 *.vok
 *.vos
 _CoqProject
+.lia.cache
+.nia.cache
