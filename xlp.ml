@@ -463,6 +463,7 @@ type decl =
   | Unnamed_thm
   | Axiom
   | Named_thm of string
+  | Named_axm of string
 ;;
 
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k]
@@ -502,6 +503,12 @@ let decl_theorem oc k p d =
      out oc "opaque symbol thm_%s%a%a%a : Prf %a ≔ thm_%d%a%a;\n" n
        typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
        k (list_prefix " " (var rmap)) xs hyps ts
+  | Named_axm n ->
+     let term = unabbrev_term rmap in
+     let decl_hyps oc ts =
+       List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
+     out oc "opaque symbol thm_%s%a%a%a : Prf %a;\n" n
+       typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
 ;;
 
 (* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
@@ -588,14 +595,11 @@ let export_proofs b r =
       proofs_in_range oc r)
 ;;
 
-let out_map_thid_name oc map_thid_name =
+let out_map_thid_name as_axiom oc map_thid_name =
   MapInt.iter
-    (fun k n -> decl_theorem oc k (proof_at k) (Named_thm n))
+    (fun k n -> decl_theorem oc k (proof_at k)
+                  (if as_axiom then Named_axm n else Named_thm n))
     map_thid_name
-  (*List.iter
-    (fun (k,n) -> decl_theorem oc k (proof_at k) (Named_thm n))
-    (List.sort Stdlib.compare
-       (MapInt.fold (fun i n l -> (i,n)::l) map_thid_name []))*)
 ;;
 
 let export_theorems b map_thid_name =
@@ -603,7 +607,14 @@ let export_theorems b map_thid_name =
     (fun oc ->
       List.iter (require oc b)
         ["_types";"_type_abbrevs";"_terms";"_term_abbrevs";"_axioms";"_proofs"];
-      out_map_thid_name oc map_thid_name)
+      out_map_thid_name false oc map_thid_name)
+;;
+
+let export_theorems_as_axioms b map_thid_name =
+  export b "_opam"
+    (fun oc ->
+      List.iter (require oc b) ["_types";"_terms";"_axioms"];
+      out_map_thid_name true oc map_thid_name)
 ;;
 
 let export_proofs_part =
@@ -625,7 +636,7 @@ let export_theorems_part k b map_thid_name =
     (fun oc ->
       List.iter (require oc b) ["_types";"_terms";"_axioms"];
       for i = 1 to k do require oc b ("_part_" ^ string_of_int i) done;
-      out_map_thid_name oc map_thid_name)
+      out_map_thid_name false oc map_thid_name)
 ;;
 
 (****************************************************************************)

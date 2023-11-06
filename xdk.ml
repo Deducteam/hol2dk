@@ -771,6 +771,15 @@ let export_theorems b map_thid_name =
         map_thid_name)
 ;;
 
+let export_theorems_as_axioms b map_thid_name =
+  export b "_opam"
+    (fun oc ->
+      out oc "\n(; named theorems ;)\n";
+      MapInt.iter
+        (fun k _ -> decl_theorem oc k (proof_at k) Axiom)
+        map_thid_name)
+;;
+
 let export_proofs_part b k x y =
   part := Some k;
   export b ("_part_" ^ string_of_int k)

@@ -47,8 +47,11 @@ hol2dk mk-part $file
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
 
-hol2dk thm $n $file.[dk|lp]
-  generate dk/lp theorem files from $file.thm
+hol2dk thm $file.[dk|lp]
+  generate $file.[dk|lp] from $file.thm
+
+hol2dk axm $file.[dk|lp]
+  generate $file_opam.[dk|lp] from $file.thm
 
 hol2dk use $file
   generate $file.use, the number of times each proof step is used
@@ -138,14 +141,21 @@ let integer s = try int_of_string s with Failure _ -> wrong_arg()
 (* [make b] generates a makefile for handling the proofs of [b] in
    parallel, according to the file [b.dg]. *)
 let make b =
-  let nb_proofs = read_nb_proofs b
-  and nb_parts, dg = read_val (b ^ ".dg") in
+  let nb_proofs = read_nb_proofs b in
+
+  let dump_file = b ^ ".dg" in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  let nb_parts = input_value ic in
+  let dg = input_value ic in
+  close_in ic;
 
   let dump_file = b ^ ".mk" in
   log "generate %s ...\n%!" dump_file;
   let oc = open_out dump_file in
-  out oc "# file generated with: hol2dk mk-part %d %s\n\n" nb_parts b;
-  out oc ".SUFFIXES:\n";
+  out oc "# file generated with: hol2dk mk-part %d %s\n" nb_parts b;
+  out oc "\nLAMBDAPI = lambdapi\n";
+  out oc "\n.SUFFIXES:\n";
 
   (* dk files generation *)
   out oc "\n.PHONY: dk\n";
@@ -160,12 +170,11 @@ let make b =
   out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
           \thol2dk sig %s.dk\n" b b b b b;
   out oc "%s_theorems.dk: %s.sig %s.thm %s.pos %s.prf\n\
-          \thol2dk thm %d %s.dk\n" b b b b b nb_parts b;
+          \thol2dk thm %s.dk\n" b b b b b b;
   let cmd i x y =
     out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
             %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
-            \thol2dk part %d %d %d %s.dk\n"
-      b i b i b i b b b i x y b
+            \thol2dk part %d %d %d %s.dk\n" b i b i b i b b b i x y b
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
   out oc ".PHONY: clean-dk\nclean-dk:\n\trm -f %s*.dk\n" b;
@@ -173,7 +182,7 @@ let make b =
   (* lp files generation *)
   out oc "\n.PHONY: lp\n";
   out oc "lp: theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
-          %s_axioms.lp" b b b b;
+          %s_axioms.lp %s_opam.lp" b b b b b;
   for i = 1 to nb_parts do
     out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
             %s_part_%d.lp" b i b i b i
@@ -181,7 +190,7 @@ let make b =
   out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
           \thol2dk sig %s.lp\n" b b b b b;
   out oc "%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
-          \thol2dk thm %d %s.lp\n" b b b b b nb_parts b;
+          \thol2dk thm %s.lp\n" b b b b b b;
   let cmd i x y =
     out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
             %s_part_%d_term_abbrevs.lp &: %s.sig %s.pos %s.prf %s.use\n\
@@ -189,6 +198,8 @@ let make b =
       b i b i b i b b b b i x y b
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
+  out oc "%s_opam.lp: %s.sig %s.thm %s.pos %s.prf\n\
+          \thol2dk axm %s.lp\n" b b b b b b;
   out oc ".PHONY: clean-lp\nclean-lp:\n\trm -f %s*.lp\n" b;
 
   (* targets common to dk and lp files part *)
@@ -200,7 +211,7 @@ let make b =
     out oc "\n.PHONY: %so\n" e;
     out oc "%so: %s.%so\n" e b e;
     out oc "%s.%so: theory_hol.%so %s_types.%so \
-            %s_terms.%so %s_axioms.%so" b e e b e b e b e;
+            %s_terms.%so %s_axioms.%so %s_opam.%so" b e e b e b e b e b e;
     for i = 1 to nb_parts do out oc " %s_part_%d.%so" b i e done;
     out oc "\n%s_types.%so: theory_hol.%so\n" b e e;
     out oc "%s_terms.%so: theory_hol.%so %s_types.%so\n" b e e b e;
@@ -222,6 +233,8 @@ let make b =
       done;
       out oc "\n"
     done;
+    out oc "%s_opam.%so: coq.%so theory_hol.%so %s_types.%so %s_terms.%so \
+            %s_axioms.%so\n" b e e e b e b e b e;
     out oc "%%.%so: %%.%s\n\t%s $<\n" e e c;
     out oc
       ".PHONY: clean-%so\nclean-%so:\n\trm -f theory_hol.%so %s*.%so%a\n"
@@ -229,17 +242,16 @@ let make b =
   in
 
   (* lp files checking *)
-  check "lp" "lambdapi check -c" (fun _ _ -> ());
+  check "lp" "$(LAMBDAPI) check -c" (fun _ _ -> ());
 
   (* v files generation *)
   out oc "\n.PHONY: v\nv: coq.v theory_hol.v \
-          %s_types.v %s_terms.v %s_axioms.v" b b b;
+          %s_types.v %s_terms.v %s_axioms.v %s_opam.v" b b b b;
   for i = 1 to nb_parts do
     out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
             %s_part_%d.v" b i b i b i
   done;
   out oc " %s.v\n" b;
-  out oc "LAMBDAPI = lambdapi\n";
   out oc "%%.v: %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
           --encoding $(HOL2DK_DIR)/encoding.lp \
           --renaming $(HOL2DK_DIR)/renaming.lp \
@@ -410,7 +422,8 @@ dump_map_thid_name "%s.thm" %a;;
      let dump_file = b ^ ".dg" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
-     output_value oc (nb_parts, dg);
+     output_value oc nb_parts;
+     output_value oc dg;
      close_out oc;
      exit 0
 
@@ -434,9 +447,7 @@ dump_map_thid_name "%s.thm" %a;;
        end;
      exit 0
 
-  | ["thm";nb_parts;f] ->
-     let nb_parts = integer nb_parts in
-     if nb_parts < 2 then wrong_arg();
+  | ["thm";f] ->
      let dk = is_dk f in
      let basename = Filename.chop_extension f in
      read_sig basename;
@@ -444,12 +455,27 @@ dump_map_thid_name "%s.thm" %a;;
      read_pos basename;
      init_proof_reading basename;
      if dk then Xdk.export_theorems basename map_thid_name
-     else Xlp.export_theorems_part nb_parts basename map_thid_name
+     else let nb_parts = read_val (basename ^ ".dg") in
+          Xlp.export_theorems_part nb_parts basename map_thid_name
+
+  | ["axm";f] ->
+     let dk = is_dk f in
+     let basename = Filename.chop_extension f in
+     read_sig basename;
+     let map_thid_name = read_thm basename in
+     read_pos basename;
+     init_proof_reading basename;
+     if dk then Xdk.export_theorems_as_axioms basename map_thid_name
+     else Xlp.export_theorems_as_axioms basename map_thid_name
 
   | ["part";k;x;y;f] ->
      let basename = Filename.chop_extension f in
-     let nb_parts, dg = read_val (basename ^ ".dg") in
-       (* dg is useful for the lp export only *)
+
+     let dump_file = basename ^ ".dg" in
+     log "read %s ...\n%!" dump_file;
+     let ic = open_in_bin dump_file in
+     let nb_parts = input_value ic in
+
      let k = integer k and x = integer x and y = integer y
      and nb_proofs = nb_proofs() in
      if k < 1 || k > nb_parts || x < 0 || y < x then wrong_arg();
@@ -467,6 +493,7 @@ dump_map_thid_name "%s.thm" %a;;
      else
        begin
          read_use basename;
+         let dg = input_value ic in
          Xlp.export_proofs_part basename dg k x y;
          let suffix = "_part_" ^ string_of_int k in
          Xlp.export_term_abbrevs basename suffix;
