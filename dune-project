@@ -20,7 +20,7 @@
  (synopsis "HOL-Light to Dedukti/Lambdapi translator")
  (description "HOL-Light to Dedukti/Lambdapi translator")
  (depends
-  ocaml
+  (ocaml (>= 4.13))
   dune
  )
 )
