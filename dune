@@ -9,3 +9,9 @@
  (section share)
  (package hol2dk)
 )
+
+(install
+ (files patch unpatch)
+ (section libexec)
+ (package hol2dk)
+)
