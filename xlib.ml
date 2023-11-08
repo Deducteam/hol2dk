@@ -520,7 +520,7 @@ let print_stats (uses : int array) (nb_proofs : int) : unit =
   let total = float_of_int nb_proofs in
   let part n = float_of_int (100 * n) /. total in
   Array.iteri
-    (fun i n -> log "%10s %9d %2.f%%\n" (name_of_code i) n (part n)) uses
+    (fun i n -> log "%10s %9d %2.0f%%\n" (name_of_code i) n (part n)) uses
 ;;
 
 (****************************************************************************)
