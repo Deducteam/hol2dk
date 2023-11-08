@@ -4,7 +4,7 @@ synopsis: "HOL-Light to Dedukti/Lambdapi translator"
 description: "HOL-Light to Dedukti/Lambdapi translator"
 maintainer: ["Frédéric Blanqui"]
 authors: ["Frédéric Blanqui"]
-license: "CeCILL"
+license: "CeCILL-2.1"
 homepage: "https://github.com/Deducteam/hol2dk"
 doc: "https://github.com/Deducteam/hol2dk/blob/master/README.md"
 bug-reports: "https://github.com/Deducteam/hol2dk/issues"

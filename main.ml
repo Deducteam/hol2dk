@@ -27,6 +27,7 @@ hol2dk pos $file
   generate $file.pos, the positions of proofs in $file.prf
 
 Single-threaded dk/lp file generation:
+--------------------------------------
 
 hol2dk $file.[dk|lp]
   generate $file.[dk|lp]

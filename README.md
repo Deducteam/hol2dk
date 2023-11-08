@@ -61,8 +61,8 @@ to set the following environment variable:
 export HOL2DK_DIR=$hol2dk_dir
 ```
 
-where `$hol2dk_dir` is the absolute path to the directory where are
-the hol2dk sources.
+where `$hol2dk_dir` is the absolute path to the directory where the
+hol2dk sources are.
 
 Patching HOL-Light
 ------------------

@@ -11,7 +11,7 @@
 
 (maintainers "Frédéric Blanqui")
 
-(license CeCILL)
+(license CeCILL-2.1)
 
 (documentation https://github.com/Deducteam/hol2dk/blob/master/README.md)
 
@@ -19,7 +19,10 @@
  (name hol2dk)
  (synopsis "HOL-Light to Dedukti/Lambdapi translator")
  (description "HOL-Light to Dedukti/Lambdapi translator")
- (depends ocaml dune)
+ (depends
+  ocaml
+  dune
+ )
 )
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project

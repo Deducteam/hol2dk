@@ -1,6 +1,8 @@
 TODO
 ----
 
+- create doc on readthedocs.io
+
 - replace terms of the form (@f _ x) by x if f is a function equal to
   the identity like I, NUMERAL
 

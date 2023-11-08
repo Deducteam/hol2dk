@@ -3,3 +3,9 @@
  (name main)
  (libraries str)
  (flags -w -27 -w -8))
+
+(install
+ (files coq.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp erasing.lp)
+ (section share)
+ (package hol2dk)
+)

@@ -1,0 +1,1 @@
+- [Frédéric Blanqui](https://blanqui.gitlabpages.inria.fr/)
