@@ -1,6 +1,13 @@
 NOTES
 -----
 
+- dumping files after hol.ml:
+  * 100/bertrand: 2m13s 14M steps 4.8 Go
+  * 100/isoperimetric:
+
+- results on new computer with 32 * 13th Gen Intel(R) Core(TM) i9-13950HX:
+  * hol.ml dg 100 j 32: lp 48s v 39s vo 175m18s
+
 - instrumenting BETA_CONV reduces the number of proof steps of `hol.ml` by 0.1% only
 
 - instrumenting SYM reduces the number of proof steps of `hol.ml` by 4%
