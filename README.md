@@ -2,8 +2,7 @@ Export HOL-Light proofs to Dedukti, Lambdapi and Coq
 ====================================================
 
 This project provides several programs:
-- a script `patch` to patch HOL-Light to dump proofs
-- a script `unpatch` to unpatch HOL-Light
+- scripts `patch` and `unpatch` to (un)patch HOL-Light to dump proofs
 - a program `hol2dk` to generate Dedukti or Lambdapi files from dumped proofs
 
 [HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
@@ -21,8 +20,8 @@ Dedukti proofs.
 [Coq](https://coq.inria.fr/) is a proof assistant based on the
 Calculus of Inductive Constructions.
 
-Installing HOL-Light
---------------------
+Installing HOL-Light sources
+----------------------------
 
 **Requirements:**
 - hol-light >= af186e9f3c685f5acab16097b05717c10ebb030d (28/01/23)
@@ -36,8 +35,8 @@ Installing HOL-Light
 Find other potential working ocaml-camlp5 pairs on
 https://github.com/jrh13/hol-light/pull/71 .
 
-If you don't have HOL-Light already installed, you can install it by
-using the following commands:
+If you don't already have the HOL-Light sources somewhere, you can
+install them by using the following commands:
 
 ```
 cd $HOME
@@ -51,8 +50,29 @@ git clone --depth 1 -b master https://github.com/jrh13/hol-light
 make -C hol-light
 ```
 
+Installing hol2dk
+-----------------
+
+**Requirements:**
+- ocaml >= 4.13
+- dune >= 3.7
+
+hol2dk is now available on Opam. To install it, simply do:
+```
+opam install hol2dk
+```
+
+For the moment, we however need hol2dk sources to run some commands
+(checking dk/lp files or translating them to coq).
+
+```
+git clone https://github.com/Deducteam/hol2dk.git
+cd hol2dk
+dune build && dune install
+```
+
 Setting the environment variable `$HOL2DK_DIR`
--------------------------------------------
+----------------------------------------------
 
 For some commands to have access to files in hol2dk sources, you need
 to set the following environment variable:
@@ -64,39 +84,33 @@ export HOL2DK_DIR=$hol2dk_dir
 where `$hol2dk_dir` is the absolute path to the directory where the
 hol2dk sources are.
 
-Patching HOL-Light
-------------------
+Patching HOL-Light sources
+--------------------------
 
 ```
-cd $hol2dk-dir
-./patch $hol-light-dir
+cd $(HOL2DK_DIR)
+./patch $(HOL_LIGHT_DIR)
 ```
+
+where $(HOL_LIGHT_DIR) is the directory where are the sources of HOL-Light.
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
 - `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
 - `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives
+- `equal.ml`: HOL-Light file defining basic tactics on equality
+
+The patch also adds a file `xnames.ml`.
+
+Before applying the patch, a copy of these files is created in `fusion-bak.ml`, `bool-bak.ml`, etc.
 
 To unpatch HOL-Light, simply do:
 ```
-$hol2dk-dir
-./unpatch $hol-light-dir
+cd $(HOL2DK_DIR)
+./unpatch -y $(HOL_LIGHT_DIR)
 ```
-
-Compiling and installing hol2dk
-----------------
-
-**Requirements:**
-- ocaml >= 4.14.1
-- dune >= 3.7
-
-```
-cd $hol2dk-dir
-dune build && dune install
-```
-compiles and installs `hol2dk`.
 
 Summary of hol2dk commands
--------
+--------------------------
 
 Get it by running `hol2dk` without arguments.
 
@@ -104,7 +118,7 @@ Dumping HOL-Light proofs
 ------------------------
 
 ```
-cd $hol-light-dir
+cd $(HOL_LIGHT_DIR)
 hol2dk dump file.ml
 ```
 
@@ -342,7 +356,7 @@ proofs and proofs closer to natural deduction proofs. It is however
 possible to generate full Q0 proofs by doing after patching:
 
 ```
-cd $hol-light-dir
+cd $(HOL_LIGHT_DIR)
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
 
