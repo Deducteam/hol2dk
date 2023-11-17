@@ -1,6 +1,8 @@
 TODO
 ----
 
+- use a filename different from "dump.ml" and "dump.prf" to allow parallel dumping
+
 - create doc on readthedocs.io
 
 - replace terms of the form (@f _ x) by x if f is a function equal to

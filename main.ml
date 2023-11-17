@@ -23,6 +23,9 @@ hol2dk dump $file.[ml|hl]
   $file.sig (type and term constants), $file.prf (proof steps)
   and $file.thm (named theorems)
 
+hol2dk dump-use $file.[ml|hl]
+  same as hol2dk dump except that \"hol.ml\" is not loaded first
+
 hol2dk pos $file
   generate $file.pos, the positions of proofs in $file.prf
 
@@ -42,7 +45,7 @@ hol2dk dg $n $file
   generate $file.dg, the dependency graph of parts
   when $file.prf is split in $n parts
 
-hol2dk mk-part $file
+hol2dk mk $file
   generate $file.mk to generate, translate and check files in parallel
 
 hol2dk sig $file
@@ -154,7 +157,7 @@ let make b =
   let dump_file = b ^ ".mk" in
   log "generate %s ...\n%!" dump_file;
   let oc = open_out dump_file in
-  out oc "# file generated with: hol2dk mk-part %d %s\n" nb_parts b;
+  out oc "# file generated with: hol2dk mk %d %s\n" nb_parts b;
   out oc "\nLAMBDAPI = lambdapi\n";
   out oc "\n.SUFFIXES:\n";
 
@@ -329,6 +332,29 @@ let main() =
 #use "topfind";;
 #require "camlp5";;
 #load "camlp5o.cma";;
+#use "hol.ml";;
+needs "%s";;
+dump_signature "%s.sig";;
+#load "str.cma";;
+#use "xnames.ml";;
+dump_map_thid_name "%s.thm" %a;;
+|} f f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
+        close_out oc;
+        exit (Sys.command ("ocaml -w -A dump.ml && mv -f dump.prf "^b^".prf"))
+     | _ -> wrong_arg()
+     end
+
+  | ["dump-use";f] ->
+     begin match Filename.extension f with
+     | ".ml" | ".hl" ->
+        let b = Filename.chop_extension f in
+        log "generate dump.ml ...\n%!";
+        let oc = open_out "dump.ml" in
+        out oc
+{|(* file generated with: hol2dk dump %s *)
+#use "topfind";;
+#require "camlp5";;
+#load "camlp5o.cma";;
 #use "%s";;
 dump_signature "%s.sig";;
 #load "str.cma";;
@@ -336,7 +362,7 @@ dump_signature "%s.sig";;
 dump_map_thid_name "%s.thm" %a;;
 |} f f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
         close_out oc;
-        exit (Sys.command ("ocaml dump.ml && mv -f dump.prf "^b^".prf"))
+        exit (Sys.command ("ocaml -w -A dump.ml && mv -f dump.prf "^b^".prf"))
      | _ -> wrong_arg()
      end
 
@@ -428,7 +454,7 @@ dump_map_thid_name "%s.thm" %a;;
      close_out oc;
      exit 0
 
-  | ["mk-part";b] -> make b
+  | ["mk";b] -> make b
 
   | ["sig";f] ->
      let dk = is_dk f in

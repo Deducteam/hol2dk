@@ -48,7 +48,7 @@ jobs:
       - name: Dump proofs
         run: |
           eval `opam env`
-          cd hol-light; hol2dk dump ../xci.ml
+          cd hol-light; hol2dk dump-use ../xci.ml
       - name: Generate and check single-threaded dk output
         run: |
           eval `opam env`
@@ -65,7 +65,7 @@ jobs:
         run: |
           eval `opam env`
           hol2dk dg 3 xci
-          hol2dk mk-part xci
+          hol2dk mk xci
           export HOL2DK_DIR=.
           make -j 3 -f xci.mk dk
           dk check xci.dk

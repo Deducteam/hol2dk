@@ -1,9 +1,9 @@
 Export HOL-Light proofs to Dedukti, Lambdapi and Coq
 ====================================================
 
-This project provides several programs:
+This project provides several things:
 - scripts `patch` and `unpatch` to (un)patch HOL-Light to dump proofs
-- a program `hol2dk` to generate Dedukti or Lambdapi files from dumped proofs
+- a program `hol2dk` with commands for dumping proofs from HOL-Light, translate those proofs to Dedukti and Lambdapi, and generate Makefile's to translation those proofs to Coq using lambdapi.
 
 [HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
 based on higher-order logic, aka simple type theory.
