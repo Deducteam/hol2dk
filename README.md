@@ -65,6 +65,7 @@ opam install hol2dk
 For the moment, we however need hol2dk sources to run some commands
 (checking dk/lp files or translating them to coq).
 
+You can also install hol2dk from its sources as follows:
 ```
 git clone https://github.com/Deducteam/hol2dk.git
 cd hol2dk
@@ -76,13 +77,14 @@ Setting the environment variable `$HOL2DK_DIR`
 
 For some commands to have access to files in hol2dk sources, you need
 to set the following environment variable:
-
 ```
-export HOL2DK_DIR=$hol2dk_dir
+export HOL2DK_DIR=   # absolute path to hol2dk source directory
 ```
 
-where `$hol2dk_dir` is the absolute path to the directory where the
-hol2dk sources are.
+In case you installed hol2dk using opam, write:
+```
+export HOL2DK_DIR=$OPAM_SWITCH_PREFIX/share/hol2dk
+```
 
 Patching HOL-Light sources
 --------------------------
@@ -165,14 +167,14 @@ Dk/lp file generation is linear in the size of dumped files. For big
 dumped files, we provide a command to do file generation in parallel
 using `make`.
 
-You first generate `file.dg` and `file.mk` with:
+First generate `file.dg` and `file.mk` with:
 ```
 hol2dk dg $nb_parts file
-hol2dk mk-part file
+hol2dk mk file
 ```
 where `$nb_parts` is the number of files in which you want to split the proofs.
 
-You add links to hol2dk files:
+Add links to hol2dk files:
 ```
 ln -s $HOL2DK_DIR/theory_hol.dk
 ln -s $HOL2DK_DIR/theory_hol.lp
@@ -181,7 +183,7 @@ ln -s $HOL2DK_DIR/coq.v
 ln -s $HOL2DK_DIR/_CoqProject
 ```
 
-You can then generate `file.dk` with:
+Then generate `file.dk` with:
 
 ```
 make -j $jobs -f file.mk dk
