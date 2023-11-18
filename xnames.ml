@@ -11,11 +11,11 @@ module MapInt = Map.Make(OrdInt);;
 
 (* [string_of_file f] puts the contents of file [f] in a string. *)
 let string_of_file f =
-  let ic = open_in f in
-  let n = in_channel_length ic in
+  let ic = Stdlib.open_in f in
+  let n = Stdlib.in_channel_length ic in
   let s = Bytes.create n in
-  really_input ic s 0 n;
-  close_in ic;
+  Stdlib.really_input ic s 0 n;
+  Stdlib.close_in ic;
   Bytes.to_string s
 ;;
 REMOVE*)
@@ -25,12 +25,12 @@ let eval (code : string) : unit =
   () (*REMOVE
   let as_buf = Lexing.from_string code in
   let parsed = !Toploop.parse_toplevel_phrase as_buf in
-  ignore (Toploop.execute_phrase true Format.std_formatter parsed)
+  Stdlib.ignore (Toploop.execute_phrase true Format.std_formatter parsed)
   REMOVE*)
 
 (* Top-level reference to compute index of named theorems. Must be
    kept at the toplevel to work. *)
-let idx = ref (-1);;
+let idx = Stdlib.ref (-1);;
 
 (* [map_thid_name tnames] get the index of every theorem which name is
    in [tnames] and build a map associating its name to each theorem
@@ -129,12 +129,12 @@ let thms_of_file =
 ;;
 
 let dump_map_thid_name ofile ifiles =
-  let oc = open_out_bin ofile in
+  let oc = Stdlib.open_out_bin ofile in
   let map = map_thid_name (List.concat_map thms_of_file ifiles) in
   (*MapInt.iter (Printf.printf "%d %s\n") map;*)
   Printf.printf "%d named theorems\n" (MapInt.cardinal map);
-  output_value oc map;
-  close_out oc
+  Stdlib.output_value oc map;
+  Stdlib.close_out oc
 ;;
 
 (*REMOVE
