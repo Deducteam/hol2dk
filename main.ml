@@ -351,7 +351,7 @@ dump_map_thid_name "%s.thm" %a;;
         log "generate dump.ml ...\n%!";
         let oc = open_out "dump.ml" in
         out oc
-{|(* file generated with: hol2dk dump %s *)
+{|(* file generated with: hol2dk dump-use %s *)
 #use "topfind";;
 #require "camlp5";;
 #load "camlp5o.cma";;
