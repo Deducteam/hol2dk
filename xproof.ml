@@ -43,8 +43,17 @@ let proof_at k =
   input_value ic
 ;;
 
+(* [!last_use.(i) = 0] if i is a named theorem, the highest theorem
+   index j using i if there is one, and -1 otherwise. *)
+let last_use : int array ref = ref [||];;
+
+let read_use basename = last_use := read_val (basename ^ ".use");;
+
+(* [!cur_part_max] indicates the maximal index of the current part. *)
+let cur_part_max : int ref = ref (-1);;
+
 (* [iter_proofs f] runs [f k (proof_at k)] on all proof index [k] from
-   0 to [nb_proofs() - 1]. Can be used after [read_pos] and
+   0 to [nb_proofs() - 1]. Can be used after [read_pos], [read_use] and
    [init_proof_reading] only. *)
 let iter_proofs_at (f : int -> proof -> unit) =
   let idx = ref 0 in
@@ -52,16 +61,10 @@ let iter_proofs_at (f : int -> proof -> unit) =
   try
     while !idx < n do
       let k = !idx in
-      f k (proof_at k);
+      if Array.get !last_use k >= 0 then f k (proof_at k);
       idx := k + 1
     done
   with Failure _ as e ->
     log "proof %d\n%!" !idx;
     raise e
 ;;
-
-let thm_uses : int array ref = ref [||];;
-
-let read_use basename = thm_uses := read_val (basename ^ ".use");;
-
-let cur_part_max : int ref = ref (-1);;
