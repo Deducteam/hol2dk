@@ -18,8 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- output of hol2dk axm
 - README.md
+- output of hol2dk axm
+- output of hol2dk mk
 
 ## 0.0.0 (2023-11-08)
 

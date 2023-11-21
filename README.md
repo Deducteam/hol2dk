@@ -329,17 +329,17 @@ Multi-threaded translation to Lambdapi with `dg 100`:
   * lp files size: 1.9 Go
   * type abbrevs: 1.3 Mo
   * term abbrevs: 665 Mo
-  * verification by lambdapi with 64 Go RAM: 4h10
+  * verification by lambdapi: 4h10
   * translation to Coq: 30s 1.8 Go
-  * verification by Coq with 64 Go RAM: 6h
+  * verification by Coq: 6h
 
 Multi-threaded translation to Dedukti with `dg 100`:
-  * dk file generation time: 1m57s
-  * dk file size: 3 Go
+  * dk file generation time: 1m9s
+  * dk file size: 2.8 Go
   * type abbrevs: 1.3 Mo
-  * term abbrevs: 772 Mo
-  * kocheck with 32 Go RAM: 12m52s
-  * dkcheck with 64 Go RAM: 14m05s
+  * term abbrevs: 752 Mo
+  * kocheck: 6m19s
+  * dkcheck: 6m22s
 
 Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
   * proof dumping time: 12s 77 Mo
