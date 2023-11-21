@@ -318,7 +318,7 @@ Multi-threaded translation to Lambdapi with `dg 100`:
   * lp files size: 1.9 Go
   * type abbrevs: 1.3 Mo
   * term abbrevs: 665 Mo (35%)
-  * verification by lambdapi: 4h10
+  * verification by lambdapi: 4h10 on 28 processors Intel Core Haswell @ 2.3 GHz with 16 Mo cache
   * translation to Coq: 30s 1.8 Go
   * verification by Coq: 2h29
 
