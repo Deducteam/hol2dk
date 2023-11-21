@@ -237,8 +237,8 @@ let make b =
       done;
       out oc "\n"
     done;
-    out oc "%s_opam.%so: coq.%so theory_hol.%so %s_types.%so %s_terms.%so \
-            %s_axioms.%so\n" b e e e b e b e b e;
+    out oc "%s_opam.%so: theory_hol.%so %s_types.%so %s_terms.%so \
+            %s_axioms.%so\n" b e e b e b e b e;
     out oc "%%.%so: %%.%s\n\t%s $<\n" e e c;
     out oc
       ".PHONY: clean-%so\nclean-%so:\n\trm -f theory_hol.%so %s*.%so%a\n"

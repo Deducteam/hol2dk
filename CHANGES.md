@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - rename mk-part command into mk
 - the dump command now includes "hol.ml"
 - do not print ocaml warnings while dumping proofs
+- do not export unused proofs (about 7%)
+
+### Fixed
+
+- output of hol2dk axm
+- README.md
 
 ## 0.0.0 (2023-11-08)
 
