@@ -324,13 +324,13 @@ Single-threaded translation to Dedukti (data of 12 March 2023):
 Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
 Multi-threaded translation to Lambdapi with `dg 100`:
-  * hol2dk dg: 15s
-  * lp files generation time: 1m5s
-  * lp files size: 2.1 Go
+  * hol2dk dg: 14s
+  * lp files generation time: 41s
+  * lp files size: 1.9 Go
   * type abbrevs: 1.3 Mo
-  * term abbrevs: 681 Mo
+  * term abbrevs: 665 Mo
   * verification by lambdapi with 64 Go RAM: 4h10
-  * translation to Coq: 50s 1.9 Go
+  * translation to Coq: 30s 1.8 Go
   * verification by Coq with 64 Go RAM: 6h
 
 Multi-threaded translation to Dedukti with `dg 100`:
