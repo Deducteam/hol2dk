@@ -331,7 +331,7 @@ Multi-threaded translation to Lambdapi with `dg 100`:
   * term abbrevs: 665 Mo
   * verification by lambdapi: 4h10
   * translation to Coq: 30s 1.8 Go
-  * verification by Coq: 6h
+  * verification by Coq: 2h29
 
 Multi-threaded translation to Dedukti with `dg 100`:
   * dk file generation time: 1m9s
