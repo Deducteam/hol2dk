@@ -686,7 +686,9 @@ require open hol-light.theory_hol;\n
     theorem oc k p;
     close_out oc
   in
-  for k = x to y do theorem_file k (proof_at k) done
+  for k = x to y do
+    if Array.get !Xproof.last_use k >= 0 then theorem_file k (proof_at k)
+  done
 ;;
 
 (* [gen_lp_makefile_one_file_by_prf basename nb_proofs nb_parts] creates

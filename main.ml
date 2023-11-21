@@ -534,6 +534,7 @@ dump_map_thid_name "%s.thm" %a;;
      read_sig basename;
      read_pos basename;
      init_proof_reading basename;
+     read_use basename;
      Xlp.export_one_file_by_prf basename x y
 
   | ["mk-lp";nb_parts;basename] ->
@@ -570,6 +571,7 @@ dump_map_thid_name "%s.thm" %a;;
        end;
      read_pos basename;
      init_proof_reading basename;
+     read_use basename;
      if dk then
        begin
          Xdk.export_proofs basename r;
