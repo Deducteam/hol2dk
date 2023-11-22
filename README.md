@@ -173,15 +173,6 @@ hol2dk mk file
 ```
 where `$nb_parts` is the number of files in which you want to split the proofs.
 
-Add links to hol2dk files:
-```
-ln -s $HOL2DK_DIR/theory_hol.dk
-ln -s $HOL2DK_DIR/theory_hol.lp
-ln -s $HOL2DK_DIR/lambdapi.pkg
-ln -s $HOL2DK_DIR/coq.v
-ln -s $HOL2DK_DIR/_CoqProject
-```
-
 Then generate `file.dk` with:
 
 ```
@@ -197,7 +188,12 @@ make -j $jobs -f file.mk lp
 Checking the generated dk file
 ------------------------------
 
-**Requirement:** lambdapi >= 2.3.0, dedukti >= 2.7 or [kocheck](https://github.com/01mf02/kontroli-rs)
+**Requirement:** dedukti >= 2.7, [kocheck](https://github.com/01mf02/kontroli-rs), or lambdapi >= 2.3.0
+
+Add a link to the dk file defining the logic of HOL-Light:
+```
+ln -s $HOL2DK_DIR/theory_hol.dk
+```
 
 To check the generated dk file with dkcheck, do:
 ```
@@ -218,21 +214,14 @@ Checking the generated lp files
 
 **Requirement:** lambdapi >= 2.3.0 for single-threaded generated files, lambdapi master branch for multi-threaded generated files
 
+Add links to the following hol2dk files:
+```
+ln -s $HOL2DK_DIR/theory_hol.lp
+ln -s $HOL2DK_DIR/lambdapi.pkg
+```
+
 To check the generated lp files with
 [lambdapi](https://github.com/Deducteam/lambdapi), do:
-
-```
-lambdapi check --map-dir hol-light:. file.lp
-```
-
-or create a file `lambdapi.pkg`:
-```
-package_name = hol-light
-root_path = hol-light
-```
-
-and simply do:
-
 ```
 lambdapi check file.lp
 ```
@@ -257,7 +246,13 @@ eval `opam env`
 Translating lp files to Coq files
 ---------------------------------
 
-Requirement: lambdapi master branch
+**Requirement:** lambdapi >= 2.4.1
+
+Add links to the following hol2dk files:
+```
+ln -s $HOL2DK_DIR/coq.v
+ln -s $HOL2DK_DIR/_CoqProject
+```
 
 Once HOL-Light files have been translated to Lambdapi files, it is possible
 to translate Lambdapi files into [Coq](https://coq.inria.fr/) files
