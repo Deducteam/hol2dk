@@ -1,6 +1,8 @@
 TODO
 ----
 
+- add commands for patch/unpatch/add-links ?
+
 - use a filename different from "dump.ml" and "dump.prf" to allow parallel dumping
 
 - create doc on readthedocs.io
