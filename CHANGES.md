@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - the dump command now includes "hol.ml"
 - do not print ocaml warnings while dumping proofs
 - do not export unused proofs (about 7%)
+- make hol2dk stat give the number of unused proofs
 
 ### Fixed
 
