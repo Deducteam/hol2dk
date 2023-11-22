@@ -1,9 +1,15 @@
 #!/bin/sh
 
+if test -z "$HOL2DK_DIR"
+then
+    echo "HOL2DK_DIR is not set"
+    exit 1
+fi
+
 if test $# -ne 1
 then
     echo "wrong number of arguments"
-    echo "usage: `basename $0` hol-light-dir"
+    echo "usage: `basename $0` hol_light_dir"
     exit 1
 fi
 
@@ -18,7 +24,7 @@ patch() {
         echo "cp $dir/$1.ml $dir/$1-bak.ml"
         cp $dir/$1.ml $dir/$1-bak.ml
         echo "patch $dir/$1.ml"
-        sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' $1.ml > $dir/$1.ml
+        sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' $HOL2DK_DIR/$1.ml > $dir/$1.ml
     fi
 }
 
@@ -29,7 +35,7 @@ create() {
         exit 1
     else
         echo "create $dir/$1.ml"
-        sed -e 's/.*REMOVE.*//' -e 's/^open .*//' $1.ml > $dir/$1.ml
+        sed -e 's/.*REMOVE.*//' -e 's/^open .*//' $HOL2DK_DIR/$1.ml > $dir/$1.ml
     fi
 }
 
