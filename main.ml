@@ -237,8 +237,8 @@ let make b =
       done;
       out oc "\n"
     done;
-    out oc "%s_opam.%so: coq.%so theory_hol.%so %s_types.%so %s_terms.%so \
-            %s_axioms.%so\n" b e e e b e b e b e;
+    out oc "%s_opam.%so: theory_hol.%so %s_types.%so %s_terms.%so \
+            %s_axioms.%so\n" b e e b e b e b e;
     out oc "%%.%so: %%.%s\n\t%s $<\n" e e c;
     out oc
       ".PHONY: clean-%so\nclean-%so:\n\trm -f theory_hol.%so %s*.%so%a\n"
@@ -402,18 +402,18 @@ dump_map_thid_name "%s.thm" %a;;
      exit 0
 
   | ["use";basename] ->
-     (* The .use file records an array uses such that uses[i] = 0 if
-        i is a named theorem, the highest theorem index j>i using i if
-        there is one, and -1 otherwise. *)
+     (* The .use file records an array last_use such that last_use[i]
+        = 0 if i is a named theorem, the highest theorem index j using
+        i if there is one, and -1 otherwise. *)
      let nb_proofs = read_nb_proofs basename in
-     let uses = Array.make nb_proofs (-1) in
+     let last_use = Array.make nb_proofs (-1) in
      read_prf basename
-       (fun idx p -> List.iter (fun k -> Array.set uses k idx) (deps p));
-     MapInt.iter (fun k _ -> Array.set uses k 0) (read_thm basename);
+       (fun idx p -> List.iter (fun k -> Array.set last_use k idx) (deps p));
+     MapInt.iter (fun k _ -> Array.set last_use k 0) (read_thm basename);
      let dump_file = basename ^ ".use" in
      log "generate %s ...\n" dump_file;
      let oc = open_out_bin dump_file in
-     output_value oc uses;
+     output_value oc last_use;
      close_out oc;
      exit 0
 
@@ -510,6 +510,7 @@ dump_map_thid_name "%s.thm" %a;;
      read_pos basename;
      init_proof_reading basename;
      cur_part_max := (k * nb_proofs) / nb_parts;
+     read_use basename;
      if is_dk f then
        begin
          Xdk.export_proofs_part basename k x y;
@@ -519,7 +520,6 @@ dump_map_thid_name "%s.thm" %a;;
        end
      else
        begin
-         read_use basename;
          let dg = input_value ic in
          Xlp.export_proofs_part basename dg k x y;
          let suffix = "_part_" ^ string_of_int k in
@@ -534,6 +534,7 @@ dump_map_thid_name "%s.thm" %a;;
      read_sig basename;
      read_pos basename;
      init_proof_reading basename;
+     read_use basename;
      Xlp.export_one_file_by_prf basename x y
 
   | ["mk-lp";nb_parts;basename] ->
@@ -570,6 +571,7 @@ dump_map_thid_name "%s.thm" %a;;
        end;
      read_pos basename;
      init_proof_reading basename;
+     read_use basename;
      if dk then
        begin
          Xdk.export_proofs basename r;

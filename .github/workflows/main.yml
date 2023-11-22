@@ -53,12 +53,12 @@ jobs:
         run: |
           eval `opam env`
           hol2dk pos xci
+          hol2dk use xci
           hol2dk xci.dk
           dk check xci.dk
       - name: Generate and check single-threaded lp output
         run: |
           eval `opam env`
-          hol2dk pos xci
           hol2dk xci.lp
           lambdapi check xci.lp
       - name: Generate and check multi-threaded dk output

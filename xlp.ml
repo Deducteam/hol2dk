@@ -481,9 +481,8 @@ let decl_theorem oc k p d =
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
      let prv =
-       Array.length !Xproof.thm_uses > 0 &&
-       let l = Array.get !Xproof.thm_uses k in
-       l = -1 || (l > 0 && l < !cur_part_max)
+       let l = Array.get !Xproof.last_use k in
+       l > 0 && l < !cur_part_max
      in
      out oc "%s symbol thm_%d%a%a%a : Prf %a ≔ %a;\n"
        (if prv then "private" else "opaque") k
@@ -507,7 +506,7 @@ let decl_theorem oc k p d =
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     out oc "opaque symbol thm_%s%a%a%a : Prf %a;\n" n
+     out oc "symbol thm_%s%a%a%a : Prf %a;\n" n
        typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
 ;;
 
@@ -517,6 +516,13 @@ let theorem oc k p = decl_theorem oc k p Unnamed_thm;;
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
    [k] as an axiom. *)
 let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
+
+(* [proofs_in_interval oc x y] outputs on [oc] the proofs in interval
+   [x] .. [y]. *)
+let proofs_in_interval oc x y =
+  for k = x to y do
+    if Array.get !Xproof.last_use k >= 0 then theorem oc k (proof_at k)
+  done
 
 (* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
 let proofs_in_range oc = function
@@ -528,9 +534,9 @@ let proofs_in_range oc = function
 "flag \"print_implicits\" on;
 flag \"print_domains\" on;
 print thm_%d;\n" x*)
-  | Upto y -> for k = 0 to y do theorem oc k (proof_at k) done
   | All -> iter_proofs_at (theorem oc)
-  | Inter(x,y) -> for k = x to y do theorem oc k (proof_at k) done
+  | Upto y -> proofs_in_interval oc 0 y
+  | Inter(x,y) -> proofs_in_interval oc x y
 ;;
 
 (****************************************************************************)
@@ -628,7 +634,7 @@ let export_proofs_part =
       for i = 1 to k-1 do
         if dg.(k-1).(i-1) > 0 then require oc b ("_part_" ^ string_of_int i)
       done;
-      proofs_in_range oc (Inter(x,y)))
+      proofs_in_interval oc x y)
 ;;
 
 let export_theorems_part k b map_thid_name =
@@ -680,7 +686,9 @@ require open hol-light.theory_hol;\n
     theorem oc k p;
     close_out oc
   in
-  for k = x to y do theorem_file k (proof_at k) done
+  for k = x to y do
+    if Array.get !Xproof.last_use k >= 0 then theorem_file k (proof_at k)
+  done
 ;;
 
 (* [gen_lp_makefile_one_file_by_prf basename nb_proofs nb_parts] creates

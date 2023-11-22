@@ -497,8 +497,12 @@ let count_thm (uses : int array) (p : proof) : unit =
    are used i times, for each i from 0 to the maximum of [uses]. *)
 let print_histogram (uses : int array) : unit =
   (* compute max and argmax *)
-  let max = ref (-1) and argmax = ref (-1) in
-  Array.iteri (fun k n -> if n > !max then (max := n; argmax := k)) uses;
+  let max = ref (-1) and argmax = ref (-1) and unused = ref (-1) in
+  let f k n =
+    if n > !max then (max := n; argmax := k);
+    if n = 0 then unused := k
+  in
+  Array.iteri f  uses;
   let hist = Array.make (!max + 1) 0 in
   Array.iter (fun n -> Array.set hist n (Array.get hist n + 1)) uses;
   log "(* \"i: n\" means that n proofs are used i times *)\n";
@@ -506,7 +510,10 @@ let print_histogram (uses : int array) : unit =
   Array.iteri
     (fun i n -> if n > 0 then (incr nonzeros; log "%d: %d\n" i n)) hist;
   log "number of mappings: %d\n" !nonzeros;
-  log "most used theorem: %d\n" !argmax
+  log "most used theorem: %d\n" !argmax;
+  log "unused theorems: %d (%d%%)\n"
+    hist.(0) ((100 * hist.(0)) / Array.length uses);
+  log "last unused theorem: %d\n" !unused
 ;;
 
 (* [count_rule uses p] updates [uses] with the rule of [p]. *)

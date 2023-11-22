@@ -294,8 +294,9 @@ Results
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
-  * dumped files size: 3.1 Go
-  * number of proof steps: 8.9 M (2834 theorems)
+  * dumped files size: 3 Go
+  * number of named theorems: 2834
+  * number of proof steps: 8.5 M (8% unused) 
 
 | rule       |  % |
 |:-----------|---:|
@@ -309,45 +310,47 @@ Dumping of `hol.ml`:
 | abs        |  2 |
 | spec       |  2 |
 
-Single-threaded translation to Lambdapi:
+Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
+
+Multi-threaded translation to Lambdapi with `dg 100`:
+  * hol2dk dg: 14s
+  * lp files generation time: 41s
+  * lp files size: 1.9 Go
+  * type abbrevs: 1.3 Mo
+  * term abbrevs: 665 Mo (35%)
+  * verification by lambdapi: 4h10 on 28 processors Intel Core Haswell @ 2.3 GHz with 16 Mo cache
+  * translation to Coq: 30s 1.8 Go
+  * verification by Coq: 2h29
+
+Multi-threaded translation to Dedukti with `dg 100`:
+  * dk file generation time: 1m9s
+  * dk file size: 2.8 Go
+  * type abbrevs: 1.3 Mo
+  * term abbrevs: 752 Mo (27%)
+  * kocheck: 6m19s
+  * dkcheck: 6m22s
+
+Single-threaded translation to Lambdapi (data of 12 March 2023):
   * lp files generation time: 12m8s
   * lp files size: 2.5 Go
   * type abbreviations: 460 Ko
   * term abbreviations: 787 Mo (31%)
 
-Single-threaded translation to Dedukti:
+Single-threaded translation to Dedukti (data of 12 March 2023):
   * dk files generation time: 22m37s
   * dk files size: 3.6 Go
   * type abbreviations: 524 Ko
   * term abbreviations: 820 Mo (23%)
 
-Multi-threaded translation to Lambdapi with `mk 100` and `-j 28`:
-  * hol2dk dg: 15s
-  * lp files generation time: 1m5s
-  * lp files size: 2.1 Go
-  * type abbrevs: 1.3 Mo
-  * term abbrevs: 681 Mo
-  * verification by lambdapi with 64 Go RAM: 4h10
-  * translation to Coq: 50s 1.9 Go
-  * verification by Coq with 64 Go RAM: 6h
-
-Multi-threaded translation to Dedukti with `mk 100`:
-  * dk file generation time: 1m57s
-  * dk file size: 3 Go
-  * type abbrevs: 1.3 Mo
-  * term abbrevs: 772 Mo
-  * kocheck with 32 Go RAM: 12m52s
-  * dkcheck with 64 Go RAM: 14m05s
-
-Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `mk 7` and `-j 7` :
+Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
   * proof dumping time: 12s 77 Mo
-  * number of proof steps: 302 K
-  * dk file generation: 6s 76 Mo
-  * checking time with dk check: 13s
-  * lp file generation: 4s 52 Mo
-  * checking time with lambdapi: 1m22s (1m30s with `-c`)
-  * translation to Coq: 2.8s 52 Mo
-  * checking time for Coq 8.18.0: 4m34s
+  * number of proof steps: 302 K (10% unused)
+  * dk file generation: 3s 69 Mo
+  * checking time with dk check: 9s
+  * lp file generation: 2s 47 Mo
+  * checking time with lambdapi: 1m15s
+  * translation to Coq: 1s 45 Mo
+  * checking time for Coq 8.18.0: 3m12s
 
 Exporting pure Q0 proofs
 ------------------------
