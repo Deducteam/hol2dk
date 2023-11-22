@@ -44,7 +44,7 @@ jobs:
           git clone --depth 1 https://github.com/jrh13/hol-light
           eval `opam env`
           make -C hol-light
-	  export HOL2DK_DIR=.
+          export HOL2DK_DIR=.
           ./patch hol-light
       - name: Dump proofs
         run: |
