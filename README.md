@@ -72,13 +72,14 @@ cd hol2dk
 dune build && dune install
 ```
 
-Setting the environment variable `$HOL2DK_DIR`
-----------------------------------------------
+Setting the environment variables `$HOLLIGHT_DIR` and `$HOL2DK_DIR`
+----------------------------------------------------------------------
 
 For some commands to have access to files in hol2dk sources, you need
-to set the following environment variable:
+to set the following environment variables:
 ```
-export HOL2DK_DIR=   # absolute path to hol2dk source directory
+export HOLLIGHT_DIR=   # absolute path to hol-light source directory
+export HOL2DK_DIR=     # absolute path to hol2dk source directory
 ```
 
 In case you installed hol2dk using opam, write:
@@ -90,10 +91,10 @@ Patching HOL-Light sources
 --------------------------
 
 ```
-bash $HOL2DK_DIR/patch $HOL_LIGHT_DIR
+bash $HOL2DK_DIR/patch $HOLLIGHT_DIR
 ```
 
-where `$HOL_LIGHT_DIR` is the directory where are the sources of HOL-Light.
+where `$HOLLIGHT_DIR` is the directory where are the sources of HOL-Light.
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
 - `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
@@ -106,7 +107,7 @@ Before applying the patch, a copy of these files is created in `fusion-bak.ml`, 
 
 To restore HOL-Light files, simply do:
 ```
-bash $HOL2DK_DIR/unpatch $HOL_LIGHT_DIR
+bash $HOL2DK_DIR/unpatch $HOLLIGHT_DIR
 ```
 You can add the option `-y` to force file restoration.
 
@@ -119,7 +120,7 @@ Dumping HOL-Light proofs
 ------------------------
 
 ```
-cd $HOL_LIGHT_DIR
+cd $HOLLIGHT_DIR
 hol2dk dump file.ml
 ```
 
@@ -183,6 +184,19 @@ And `file.lp` with:
 
 ```
 make -j $jobs -f file.mk lp
+```
+
+Remark: for not cluttering your HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
+```
+cd $HOME
+mkdir output-hol2dk
+cd output-hol2dk
+bash $HOL2DK_DIR/add-links hol
+cd hol
+hol2dk dg 100 hol
+hol2dk mk hol
+ln -s hol.mk Makefile
+make -j32 lp
 ```
 
 Checking the generated dk file
@@ -355,7 +369,7 @@ proofs and proofs closer to natural deduction proofs. It is however
 possible to generate full Q0 proofs by doing after patching:
 
 ```
-cd $HOL_LIGHT_DIR
+cd $HOLLIGHT_DIR
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
 
