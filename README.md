@@ -90,11 +90,10 @@ Patching HOL-Light sources
 --------------------------
 
 ```
-cd ${HOL2DK_DIR}
-./patch ${HOL_LIGHT_DIR}
+bash $HOL2DK_DIR/patch $HOL_LIGHT_DIR
 ```
 
-where `${HOL_LIGHT_DIR}` is the directory where are the sources of HOL-Light.
+where `$HOL_LIGHT_DIR` is the directory where are the sources of HOL-Light.
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
 - `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
@@ -105,11 +104,11 @@ The patch also adds a file `xnames.ml`.
 
 Before applying the patch, a copy of these files is created in `fusion-bak.ml`, `bool-bak.ml`, etc.
 
-To unpatch HOL-Light, simply do:
+To restore HOL-Light files, simply do:
 ```
-cd ${HOL2DK_DIR}
-./unpatch -y ${HOL_LIGHT_DIR}
+bash $HOL2DK_DIR/unpatch $HOL_LIGHT_DIR
 ```
+You can add the option `-y` to force file restoration.
 
 Summary of hol2dk commands
 --------------------------
@@ -120,7 +119,7 @@ Dumping HOL-Light proofs
 ------------------------
 
 ```
-cd ${HOL_LIGHT_DIR}
+cd $HOL_LIGHT_DIR
 hol2dk dump file.ml
 ```
 
@@ -278,7 +277,7 @@ make -j $jobs -f file.mk LAMBAPI=$lambdapi v # to generate Coq files
 Otherwise, you need to translate Lambdapi files one by one by hand or
 using a script:
 ```
-lambdapi export -o stt_coq --encoding ${HOL2DK_DIR}/encoding.lp --erasing ${HOL2DK_DIR}/erasing.lp --renaming ${HOL2DK_DIR}/renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
+lambdapi export -o stt_coq --encoding $HOL2DK_DIR/encoding.lp --erasing $HOL2DK_DIR/erasing.lp --renaming $HOL2DK_DIR/renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
 ```
 
 You can then check the generated Coq files as follows:
@@ -361,7 +360,7 @@ proofs and proofs closer to natural deduction proofs. It is however
 possible to generate full Q0 proofs by doing after patching:
 
 ```
-cd ${HOL_LIGHT_DIR}
+cd $HOL_LIGHT_DIR
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
 

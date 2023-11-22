@@ -5,13 +5,7 @@
  (flags -w -27 -w -8))
 
 (install
- (files coq.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp erasing.lp)
+ (files coq.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp erasing.lp fusion.ml bool.ml equal.ml xnames.ml patch unpatch)
  (section share)
- (package hol2dk)
-)
-
-(install
- (files patch unpatch)
- (section libexec)
  (package hol2dk)
 )
