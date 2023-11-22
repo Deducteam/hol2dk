@@ -119,17 +119,22 @@ Get it by running `hol2dk` without arguments.
 Dumping HOL-Light proofs
 ------------------------
 
+For dumping a HOL-Light file depending on `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
 hol2dk dump file.ml
 ```
 
-generates the files `file.sig`, `file.prf` and `file.thm`.
-
-`file.ml` should at least require `hol.ml` until the line `loads
-"fusion.ml";;`.
+This will generate the files `file.sig`, `file.prf` and `file.thm`.
 
 WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
+
+For dumping a subset of `hol.ml` do:
+```
+cd $HOLLIGHT_DIR
+hol2dk dump-use file.ml
+```
+where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
 Generating dk/lp files from dumped files
 --------------------------------------
