@@ -141,6 +141,15 @@ Simplifying dumped proofs
 
 HOL-Light proofs are often overly complicated and can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
+Simplification rules currently implemented:
+- SYM(REFL(t)) --> REFL(t)
+- SYM(SYM(p)) --> p
+- TRANS(REFL(t),p) --> p
+- TRANS(p,REFL(t)) --> p
+- CONJUNCT1(CONJ(p,_)) --> p
+- CONJUNCT2(CONJ(_,p)) --> p
+- MKCOMB(REFL(t),REFL(u)) --> REFL(t(u))
+
 To generate a simplified proof file `file.prf` from `file-origin.prf` do:
 ```
 hol2dk simp file
@@ -351,15 +360,15 @@ Multi-threaded translation to Lambdapi with `dg 100`:
   * term abbrevs: 652 Mo (40%)
   * verification by lambdapi: 4h10 on 28 processors Intel Core Haswell @ 2.3 GHz with 16 Mo cache
   * translation to Coq: 28s 1.5 Go
-  * verification by Coq: 2h29
+  * verification by Coq: 1h52
 
 Multi-threaded translation to Dedukti with `dg 100`:
   * dk file generation time: 1m7s
   * dk file size: 2.3 Go
   * type abbrevs: 1.2 Mo
   * term abbrevs: 737 Mo (32%)
-  * kocheck: 6m19s
   * dkcheck: 5m23s
+  * kocheck: 5m54s
 
 Single-threaded translation to Lambdapi (data of 12 March 2023):
   * lp files generation time: 12m8s
@@ -374,13 +383,14 @@ Single-threaded translation to Dedukti (data of 12 March 2023):
   * term abbreviations: 820 Mo (23%)
 
 Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
-  * proof dumping time: 12s 77 Mo
-  * number of proof steps: 302 K (10% unused)
-  * dk file generation: 3s 69 Mo
-  * checking time with dk check: 9s
-  * lp file generation: 2s 47 Mo
-  * checking time with lambdapi: 1m15s
-  * translation to Coq: 1s 45 Mo
+  * proof dumping time: 11s 77 Mo (448 named theorems)
+  * number of proof steps: 302 K (9% useless)
+  * prf simplification: 2s 79 Mo (32% useless)
+  * dk file generation: 2s 55 Mo
+  * checking time with dk check: 7s
+  * lp file generation: 1s 38 Mo
+  * checking time with lambdapi: 61s
+  * translation to Coq: 1s 36 Mo
   * checking time for Coq 8.18.0: 3m12s
 
 Exporting pure Q0 proofs
