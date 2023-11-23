@@ -150,7 +150,7 @@ Simplification rules currently implemented:
 - CONJUNCT2(CONJ(_,p)) --> p
 - MKCOMB(REFL(t),REFL(u)) --> REFL(t(u))
 
-To generate a simplified proof file `file.prf` from `file-origin.prf` do:
+To simplify `file.prf` and recompute `file.pos` and `file.use` do:
 ```
 hol2dk simp file
 ```
@@ -391,7 +391,7 @@ Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the
   * lp file generation: 1s 38 Mo
   * checking time with lambdapi: 61s
   * translation to Coq: 1s 36 Mo
-  * checking time for Coq 8.18.0: 3m12s
+  * checking time for Coq 8.18.0: 2m4s
 
 Exporting pure Q0 proofs
 ------------------------
