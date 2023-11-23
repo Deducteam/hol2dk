@@ -49,7 +49,7 @@ jobs:
       - name: Dump proofs
         run: |
           eval `opam env`
-          cd hol-light; hol2dk dump-use ../xci.ml
+          cd hol-light; hol2dk dump-use ../xci.ml; cd ..
           hol2dk pos xci
           hol2dk use xci
           hol2dk simp xci
