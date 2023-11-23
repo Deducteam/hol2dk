@@ -125,7 +125,7 @@ cd $HOLLIGHT_DIR
 hol2dk dump file.ml
 ```
 
-This will generate the files `file.sig`, `file-origin.prf` and `file.thm`.
+This will generate the files `file.sig`, `file.prf` and `file.thm`.
 
 WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
 
