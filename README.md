@@ -308,7 +308,7 @@ Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
-  * number of named theorems: 2834
+  * number of named theorems: 2842
   * number of proof steps: 8.5 M (8% unused) 
 
 | rule       |  % |

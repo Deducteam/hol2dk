@@ -1,6 +1,8 @@
 TODO
 ----
 
+- put nb_proofs in a separate file
+
 - add commands for patch/unpatch/add-links ?
 
 - use a filename different from "dump.ml" and "dump.prf" to allow parallel dumping
@@ -20,7 +22,7 @@ TODO
     sym (refl x) --> refl x
     sym (sym p) --> p
     trans (sym p) (sym q) --> or <-- sym (trans q p) ?
-    
+	  
 - add v file checking in ci
 
 - instrument excluded middle in class.ml

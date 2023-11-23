@@ -424,6 +424,38 @@ let deps (Proof(_,content)) =
     -> []
 ;;
 
+(* [count_thm_uses a p] increments by 1 every [a.(i)] such that [i] is
+   a dependence of [p]. [a] must be an array of integers of size
+   [nb_proofs()]. *)
+let count_thm_uses (a : int array) (p : proof) : unit =
+  List.iter (fun k -> Array.set a k (Array.get a k + 1)) (deps p)
+;;
+
+(* [print_histogram a] prints on stdout the number of elements of [a]
+   that are used [i] times, for each [i] from 0 to the maximum of
+   [a]. *)
+let print_histogram (a : int array) : unit =
+  (* compute max and argmax *)
+  let max = ref (-1) and argmax = ref (-1) and unused = ref (-1) in
+  let f k n =
+    if n > !max then (max := n; argmax := k);
+    if n = 0 then unused := k
+  in
+  Array.iteri f a;
+  let hist = Array.make (!max + 1) 0 in
+  Array.iter (fun n -> Array.set hist n (Array.get hist n + 1)) a;
+  log "(* \"i: n\" means that n proofs are used i times *)\n";
+  let nonzeros = ref 0 in
+  Array.iteri
+    (fun i n -> if n > 0 then (incr nonzeros; log "%d: %d\n" i n)) hist;
+  log "number of mappings: %d\n" !nonzeros;
+  log "most used theorem: %d\n" !argmax;
+  log "unused theorems (including named theorems): %d (%d%%)\n"
+    hist.(0) ((100 * hist.(0)) / Array.length a);
+  log "last unused theorem: %d\n" !unused
+;;
+
+(* [code_of_proof p] maps every Proof constructor to a unique integer. *)
 let code_of_proof (Proof(_,c)) =
   match c with
   | Prefl _ -> 0
@@ -455,6 +487,8 @@ let code_of_proof (Proof(_,c)) =
   | Psym _ -> 26
 ;;
 
+(* [name_of_code k] maps every integer k in the image of
+   [code_of_proof] to a unique string. *)
 let name_of_code = function
   | 0 -> "refl"
   | 1 -> "trans"
@@ -486,48 +520,24 @@ let name_of_code = function
   | _ -> assert false
 ;;
 
+(* [nb_rules] is the total number of proof rules. *)
 let nb_rules = 27;;
 
-(* [count_thm uses p] updates [uses] with the dependencies of [p]. *)
-let count_thm (uses : int array) (p : proof) : unit =
-  List.iter (fun k -> Array.set uses k (Array.get uses k + 1)) (deps p)
+(* [count_rule_uses a p] increments [a.(code_of_proof p)] by 1. [a]
+   must be an array of integers of size [nb_rules]. *)
+let count_rule_uses (a : int array) (p : proof) : unit =
+  let i = code_of_proof p in Array.set a i (Array.get a i + 1)
 ;;
 
-(* [print_histogram uses] prints on stdout the number of theorems that
-   are used i times, for each i from 0 to the maximum of [uses]. *)
-let print_histogram (uses : int array) : unit =
-  (* compute max and argmax *)
-  let max = ref (-1) and argmax = ref (-1) and unused = ref (-1) in
-  let f k n =
-    if n > !max then (max := n; argmax := k);
-    if n = 0 then unused := k
-  in
-  Array.iteri f  uses;
-  let hist = Array.make (!max + 1) 0 in
-  Array.iter (fun n -> Array.set hist n (Array.get hist n + 1)) uses;
-  log "(* \"i: n\" means that n proofs are used i times *)\n";
-  let nonzeros = ref 0 in
-  Array.iteri
-    (fun i n -> if n > 0 then (incr nonzeros; log "%d: %d\n" i n)) hist;
-  log "number of mappings: %d\n" !nonzeros;
-  log "most used theorem: %d\n" !argmax;
-  log "unused theorems: %d (%d%%)\n"
-    hist.(0) ((100 * hist.(0)) / Array.length uses);
-  log "last unused theorem: %d\n" !unused
-;;
-
-(* [count_rule uses p] updates [uses] with the rule of [p]. *)
-let count_rule (uses : int array) (p : proof) : unit =
-  let i = code_of_proof p in Array.set uses i (Array.get uses i + 1)
-;;
-
-(* [print_rule uses nb_proofs] prints on stdout the array [uses] and
-   the corresponding percentages wrt [nb_proofs]. *)
-let print_stats (uses : int array) (nb_proofs : int) : unit =
+(* [print_rule_uses a nb_proofs] prints on stdout the array [a] of
+   integers of size [nb_rules] and the corresponding percentages wrt
+   [nb_proofs]. *)
+let print_rule_uses (a : int array) (nb_proofs : int) : unit =
   let total = float_of_int nb_proofs in
   let part n = float_of_int (100 * n) /. total in
   Array.iteri
-    (fun i n -> log "%10s %9d %2.0f%%\n" (name_of_code i) n (part n)) uses
+    (fun i n -> log "%10s %9d %2.0f%%\n" (name_of_code i) n (part n)) a;
+  log "truth counts the number of unused theorems + 1\n"
 ;;
 
 (****************************************************************************)
