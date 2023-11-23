@@ -53,6 +53,7 @@ jobs:
       - name: Generate and check single-threaded dk output
         run: |
           eval `opam env`
+	  hol2dk simp xci
           hol2dk pos xci
           hol2dk use xci
           hol2dk xci.dk

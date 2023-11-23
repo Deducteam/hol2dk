@@ -125,7 +125,7 @@ cd $HOLLIGHT_DIR
 hol2dk dump file.ml
 ```
 
-This will generate the files `file.sig`, `file.prf` and `file.thm`.
+This will generate the files `file.sig`, `file-origin.prf` and `file.thm`.
 
 WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
 
@@ -141,7 +141,7 @@ Simplifying dumped proofs
 
 HOL-Light proofs are often overly complicated and can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
-To generate a simplified proof file do:
+To generate a simplified proof file `file.prf` from `file-origin.prf` do:
 ```
 hol2dk simp file
 ```
@@ -359,7 +359,7 @@ Multi-threaded translation to Dedukti with `dg 100`:
   * type abbrevs: 1.2 Mo
   * term abbrevs: 737 Mo (32%)
   * kocheck: 6m19s
-  * dkcheck: 6m22s
+  * dkcheck: 5m23s
 
 Single-threaded translation to Lambdapi (data of 12 March 2023):
   * lp files generation time: 12m8s

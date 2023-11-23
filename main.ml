@@ -335,7 +335,8 @@ dump_signature "%s.sig";;
 dump_map_thid_name "%s.thm" %a;;
 |} f f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
         close_out oc;
-        exit (Sys.command ("ocaml -w -A dump.ml && mv -f dump.prf "^b^".prf"))
+        exit (Sys.command
+                ("ocaml -w -A dump.ml && mv -f dump.prf "^b^"-origin.prf"))
      | _ -> wrong_arg()
      end
 
@@ -439,11 +440,12 @@ dump_map_thid_name "%s.thm" %a;;
      let n = !n and total = nb_proofs() in
      log "%d simplifications (%d%%)\n" n ((100 * n) / total)
 
-  | ["simp";basename] ->
+  | ["simp";b] ->
+     let basename = b ^ "-origin" in
      read_pos basename;
      read_use basename;
      init_proof_reading basename;
-     let dump_file = basename ^ "-simp.prf" in
+     let dump_file = b ^ ".prf" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
      let n = ref 0 in
