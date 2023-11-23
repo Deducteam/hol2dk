@@ -136,6 +136,16 @@ hol2dk dump-use file.ml
 ```
 where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
+Once you have generate `file.prf`, you need to generate the files `file.pos` and `file.use` with:
+```
+hol2dk pos file
+hol2dk use file
+```
+
+`file.pos` contains the position in `file.prf` of each proof step.
+
+`file.use` contains data to know whether a proof step is actually useful and needs to be translated. Indeed, since HOL-Light tactics may fail, some proof steps are generated but are not used in the end. Therefore, they do not need to be translated.
+
 Simplifying dumped proofs
 -------------------------
 
@@ -160,16 +170,6 @@ Generating dk/lp files from dumped files
 
 The base theory in which HOL-Light proofs are translated is described in the files [theory_hol.lp](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.lp) and [theory_hol.dk](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.dk).
 
-You first need to generate `file.pos` and `file.use` with:
-```
-hol2dk pos file
-hol2dk use file
-```
-`file.pos` contains the position in `file.prf` of each proof step for fast access.
-
-`file.use` contains data to know whether a proof step is actually useful and needs to be translated. Indeed, since HOL-Light tactics may fail, some proof steps are generated but are not used in the end.
-
-Since HOL-Light tactics may fail, some proof steps may be useless.
 
 You can then generate `file.dk` with:
 ```
