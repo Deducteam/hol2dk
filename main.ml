@@ -394,52 +394,6 @@ dump_map_thid_name "%s.thm" %a;;
      print_histogram thm_uses;
      print_rule_uses rule_uses nb_proofs
 
-  | ["nb-simps";basename] ->
-     read_pos basename;
-     read_use basename;
-     init_proof_reading basename;
-     let n = ref 0 in
-     let simp k p =
-       if Array.get !last_use k >= 0 then
-       let Proof(_,c) = p in
-       match c with
-       | Ptrans(i,j) ->
-          begin match proof_at i with
-          | Proof(_,Prefl _) -> incr n
-          | _ ->
-             match proof_at j with
-             | Proof(_,Prefl _) -> incr n
-             | _ -> ()
-          end
-       | Psym i ->
-          let Proof(_,c) = proof_at i in
-          begin
-            match c with
-            | Prefl _
-            | Psym _
-            | Ptrans _ -> incr n
-            | _ -> ()
-          end
-       | Pconjunct1 i | Pconjunct2 i ->
-          begin match proof_at i with
-          | Proof(_,Pconj _) -> incr n
-          | _ -> ()
-          end
-       | Pmkcomb(i,j) ->
-          begin match proof_at i with
-          | Proof(_,Prefl _) ->
-             begin match proof_at j with
-             | Proof(_,Prefl _) -> incr n
-             | _ -> ()
-             end
-          | _ -> ()
-          end
-       | _ -> ()
-     in
-     iter_proofs_at simp;
-     let n = !n and total = nb_proofs() in
-     log "%d simplifications (%d%%)\n" n ((100 * n) / total)
-
   | ["simp";b] ->
      let basename = b ^ "-origin" in
      read_pos basename;
