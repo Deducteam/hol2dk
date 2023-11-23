@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - add-links script
+- command hol2dk simp to simplify prf files
 
 ## 0.0.1 (2023-11-22)
 

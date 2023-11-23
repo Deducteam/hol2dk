@@ -107,7 +107,7 @@ module type Hol_kernel =
       val hyp : thm -> term list
       val concl : thm -> term
       val index_of : thm -> int
-(*REMOVE
+      (*REMOVE
       val REFL : term -> thm
       val TRANS : thm -> thm -> thm
       val MK_COMB : thm * thm -> thm
@@ -137,10 +137,10 @@ module type Hol_kernel =
       val SYM : thm -> thm
       val BETA_CONV : term -> thm
       (*END_ND*)
-REMOVE*)
+
       val new_theorem : term list -> term -> proof_content -> thm
       val dump_signature : string -> unit
-
+      REMOVE*)
       val axioms : unit -> thm list
       val new_axiom : term -> thm
       val definitions : unit -> thm list

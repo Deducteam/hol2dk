@@ -116,8 +116,8 @@ Summary of hol2dk commands
 
 Get it by running `hol2dk` without arguments.
 
-Dumping HOL-Light proofs
-------------------------
+Dumping HOL-Light proof steps
+-----------------------------
 
 For dumping a HOL-Light file depending on `hol.ml` do:
 ```
@@ -136,6 +136,16 @@ hol2dk dump-use file.ml
 ```
 where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
+Simplifying dumped proofs
+-------------------------
+
+HOL-Light proofs are often overly complicated and can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
+
+To generate a simplified proof file do:
+```
+hol2dk simp file
+```
+
 Generating dk/lp files from dumped files
 --------------------------------------
 
@@ -146,6 +156,11 @@ You first need to generate `file.pos` and `file.use` with:
 hol2dk pos file
 hol2dk use file
 ```
+`file.pos` contains the position in `file.prf` of each proof step for fast access.
+
+`file.use` contains data to know whether a proof step is actually useful and needs to be translated. Indeed, since HOL-Light tactics may fail, some proof steps are generated but are not used in the end.
+
+Since HOL-Light tactics may fail, some proof steps may be useless.
 
 You can then generate `file.dk` with:
 ```
@@ -309,37 +324,40 @@ Dumping of `hol.ml`:
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
-  * number of proof steps: 8.5 M (8% unused) 
+  * number of proof steps: 8.5 M (8% useless)
+  * simplification time: 1m18s
+  * number of simplifications: 1.2 M
+  * useless proof steps after simplification: 28% 
 
 | rule       |  % |
 |:-----------|---:|
-| refl       | 29 |
-| eqmp       | 19 |
-| comb       | 17 |
-| term_subst | 12 |
-| trans      |  6 |
-| type_subst |  3 |
-| beta       |  3 |
-| abs        |  2 |
-| spec       |  2 |
+| `refl`       | 32 |
+| `eqmp`       | 14 |
+| `comb`       | 12 |
+| `term_subst` | 9 |
+| `trans`      |  5 |
+| `type_subst` |  3 |
+| `beta`       |  4 |
+| `abs`        |  2 |
+| `spec`       |  2 |
 
 Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
 Multi-threaded translation to Lambdapi with `dg 100`:
   * hol2dk dg: 14s
-  * lp files generation time: 41s
-  * lp files size: 1.9 Go
-  * type abbrevs: 1.3 Mo
-  * term abbrevs: 665 Mo (35%)
+  * lp files generation time: 36s
+  * lp files size: 1.6 Go
+  * type abbrevs: 1.1 Mo
+  * term abbrevs: 652 Mo (40%)
   * verification by lambdapi: 4h10 on 28 processors Intel Core Haswell @ 2.3 GHz with 16 Mo cache
-  * translation to Coq: 30s 1.8 Go
+  * translation to Coq: 28s 1.5 Go
   * verification by Coq: 2h29
 
 Multi-threaded translation to Dedukti with `dg 100`:
-  * dk file generation time: 1m9s
-  * dk file size: 2.8 Go
-  * type abbrevs: 1.3 Mo
-  * term abbrevs: 752 Mo (27%)
+  * dk file generation time: 1m7s
+  * dk file size: 2.3 Go
+  * type abbrevs: 1.2 Mo
+  * term abbrevs: 737 Mo (32%)
   * kocheck: 6m19s
   * dkcheck: 6m22s
 

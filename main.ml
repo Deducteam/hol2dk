@@ -443,72 +443,20 @@ dump_map_thid_name "%s.thm" %a;;
      read_pos basename;
      read_use basename;
      init_proof_reading basename;
-     (*let map = ref MapInt.empty in
-     let add i j = map := MapInt.add i j !map in
-     let find i = MapInt.find_opt i !map in
-     let update_cons v f i =
-       match find i with
-       | Some i -> f i
-       | None -> v
-     in
-     let update_cons2 v f i j =
-       match find i, find j with
-       | None, None -> v
-       | Some i, None -> f i j
-       | None, Some j -> f i j
-       | Some i, Some j -> f i j
-     in
-     let update_cons3 v f i j k =
-       match find i, find j, find k with
-       | None, None, None -> v
-       | None, None, Some k -> f i j k
-       | None, Some j, None -> f i j k
-       | None, Some j, Some k -> f i j k
-       | Some i, None, None -> f i j k
-       | Some i, None, Some k -> f i j k
-       | Some i, Some j, None -> f i j k
-       | Some i, Some j, Some k -> f i j k
-     in
-     let update_content c =
-       match c with
-       | Prefl _
-       | Pbeta _
-       | Passume _
-       | Paxiom _
-       | Pdef _
-       | Ptruth
-         -> c
-       | Ptrans(i,j) -> update_cons2 c (fun i j -> Ptrans(i,j)) i j
-       | Pmkcomb(i,j) -> update_cons2 c (fun i j -> Pmkcomb(i,j)) i j
-       | Pabs(i,t) -> update_cons c (fun i -> Pabs(i,t)) i
-       | Peqmp(i,j) -> update_cons2 c (fun i j -> Peqmp(i,j)) i j
-       | Pdeduct(i,j) -> update_cons2 c (fun i j -> Pdeduct(i,j)) i j
-       | Pinst(i,s) -> update_cons c (fun i -> Pinst(i,s)) i
-       | Pinstt(i,s) -> update_cons c (fun i -> Pinstt(i,s)) i
-       | Pdeft(i,t,s,b) -> update_cons c (fun i -> Pdeft(i,t,s,b)) i
-       | Pconj(i,j) -> update_cons2 c (fun i j -> Pconj(i,j)) i j
-       | Pconjunct1 i -> update_cons c (fun i -> Pconjunct1 i) i
-       | Pconjunct2 i -> update_cons c (fun i -> Pconjunct2 i) i
-       | Pmp(i,j) -> update_cons2 c (fun i j -> Pmp(i,j)) i j
-       | Pdisch(t,i) -> update_cons c (fun i -> Pdisch(t,i)) i
-       | Pspec(t,i) -> update_cons c (fun i -> Pspec(t,i)) i
-       | Pgen(t,i) -> update_cons c (fun i -> Pgen(t,i)) i
-       | Pexists(t,u,i) -> update_cons c (fun i -> Pexists(t,u,i)) i
-       | Pchoose(t,i,j) ->update_cons2 c (fun i j -> Pchoose(t,i,j)) i j
-       | Pdisj1(t,i) -> update_cons c (fun i -> Pdisj1(t,i)) i
-       | Pdisj2(t,i) -> update_cons c (fun i -> Pdisj2(t,i)) i
-       | Pdisj_cases(i,j,k) ->
-          update_cons3 c (fun i j k -> Pdisj_cases(i,j,k)) i j k
-       | Psym i -> update_cons c (fun i -> Psym i) i
-     in*)
      let dump_file = basename ^ "-simp.prf" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
      let n = ref 0 in
+     let map = ref MapInt.empty in
+     let add i p = map := MapInt.add i p !map in
+     let proof_at j = try MapInt.find j !map with Not_found -> proof_at j in
      let pc_at j = let Proof(_,c) = proof_at j in c in
      let simp k p =
        let default() = output_value oc p in
-       let out pc = incr n; output_value oc (change_proof_content p pc) in
+       let out pc =
+         let p = change_proof_content p pc in
+         incr n; add k p; output_value oc p
+       in
        if Array.get !last_use k < 0 then out Ptruth else
        let Proof(_,c) = p in
        match c with
@@ -570,7 +518,7 @@ dump_map_thid_name "%s.thm" %a;;
      output_value oc last_use;
      let unused = ref 0 in
      Array.iter (fun k -> if k < 0 then incr unused) last_use;
-     log "%d unused theorems (%d%%)\n" !unused ((100 * !unused) / nb_proofs)
+     log "%d useless steps (%d%%)\n" !unused ((100 * !unused) / nb_proofs)
 
   | ["dg";nb_parts;b] ->
      let nb_parts = integer nb_parts in

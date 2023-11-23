@@ -14,15 +14,6 @@ TODO
 
 - replace type variables like _1718 by better names like A
 
-- turn proof_content into a private data type so as to simplify proofs
-  on the fly with the following rules:
-
-    trans p (refl _) --> p
-    trans (refl _) p --> p
-    sym (refl x) --> refl x
-    sym (sym p) --> p
-    trans (sym p) (sym q) --> or <-- sym (trans q p) ?
-	  
 - add v file checking in ci
 
 - instrument excluded middle in class.ml
