@@ -233,7 +233,7 @@ let make b =
               %s_part_%d_term_abbrevs.%so %s_axioms.%so"
         b j e e b e b j e b e b j e b e;
       for j = 0 to i - 1 do
-        if dg.(i).(j) > 0 then out oc " %s_part_%d.%so" b (j+1) e
+        if dg.(i).(j) then out oc " %s_part_%d.%so" b (j+1) e
       done;
       out oc "\n"
     done;
@@ -504,24 +504,30 @@ dump_map_thid_name "%s.thm" %a;;
      let part idx =
        let k = idx / part_size in
        if k >= nb_parts - 1 then nb_parts - 1 else k in
-     let dg = Array.init nb_parts (fun i -> Array.make i 0) in
+     let dg = Array.init nb_parts (fun i -> Array.make i false) in
      let add_dep x =
        let px = part x in
        fun y ->
        let py = part y in
        if px <> py then
          begin
-           (*try*) dg.(px).(py) <- dg.(px).(py) + 1
+           (*try*) dg.(px).(py) <- true (*dg.(px).(py) + 1*)
            (*with (Invalid_argument _) as e ->
              log "x = %d, px = %d, y = %d, py = %d\n%!" x px y py;
              raise e*)
          end
      in
-     read_prf b (fun idx p -> List.iter (add_dep idx) (deps p));
+     read_use b;
+     let f k p =
+       if Array.get !Xproof.last_use k >= 0 then
+         List.iter (add_dep k) (deps p)
+     in
+     read_prf b f;
      for i = 1 to nb_parts - 1 do
        log "%d:" (i+1);
        for j = 0 to i - 1 do
-         if dg.(i).(j) > 0 then log " %d (%d)" (j+1) dg.(i).(j)
+         (*if dg.(i).(j) > 0 then log " %d (%d)" (j+1) dg.(i).(j)*)
+         if dg.(i).(j) then log " %d" (j+1)
        done;
        log "\n"
      done;
