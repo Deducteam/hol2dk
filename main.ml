@@ -393,11 +393,17 @@ dump_map_thid_name "%s.thm" %a;;
      let nb_proofs = read_nb_proofs b in
      let thm_uses = Array.make nb_proofs 0 in
      let rule_uses = Array.make nb_rules 0 in
-     read_prf b
-       (fun _ p -> count_thm_uses thm_uses p; count_rule_uses rule_uses p);
+     let unused = ref 0 in
+     read_use b;
+     let f k p =
+       if Array.get !Xproof.last_use k >= 0 then
+         (count_thm_uses thm_uses p; count_rule_uses rule_uses p)
+       else incr unused
+     in
+     read_prf b f;
      log "compute statistics ...\n";
      print_histogram thm_uses;
-     print_rule_uses rule_uses nb_proofs;
+     print_rule_uses rule_uses (nb_proofs - !unused);
      0
 
   | ["simp";b] ->

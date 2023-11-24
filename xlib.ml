@@ -536,8 +536,9 @@ let print_rule_uses (a : int array) (nb_proofs : int) : unit =
   let total = float_of_int nb_proofs in
   let part n = float_of_int (100 * n) /. total in
   Array.iteri
-    (fun i n -> log "%10s %9d %2.0f%%\n" (name_of_code i) n (part n)) a;
-  log "truth counts the number of unused theorems + 1\n"
+    (fun i n -> log "%10s %9d %3.0f%%\n" (name_of_code i) n (part n)) a;
+  let total = Array.fold_left (+) 0 a in
+  log "%10s %9d %3.0f%%\n" "TOTAL" total (part total)
 ;;
 
 (****************************************************************************)
