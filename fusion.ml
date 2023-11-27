@@ -26,33 +26,36 @@ module type Hol_kernel =
       type thm
 
       type proof_content =
-      | Prefl of term
-      | Ptrans of int * int
-      | Pmkcomb of int * int
-      | Pabs of int * term
-      | Pbeta of term
-      | Passume of term
-      | Peqmp of int * int
-      | Pdeduct of int * int
-      | Pinst of int * (term * term) list
-      | Pinstt of int * (hol_type * hol_type) list
-      | Paxiom of term
-      | Pdef of term * string * hol_type
-      | Pdeft of int * term * string * hol_type
-      | Ptruth
-      | Pconj of int * int
-      | Pconjunct1 of int
-      | Pconjunct2 of int
-      | Pmp of int * int
-      | Pdisch of term * int
-      | Pspec of term * int
-      | Pgen of term * int
-      | Pexists of term * term * int
-      | Pchoose of term * int * int
-      | Pdisj1 of term * int
-      | Pdisj2 of term * int
-      | Pdisj_cases of int * int * int
-      | Psym of int
+        | Prefl of term (* Prefl(t):t=t *)
+        | Ptrans of int * int (* i:t=u j:u=v ==> Ptrans(i,j):t=v *)
+        | Pmkcomb of int * int (* i:s=t j:u=v ==> Pmkcomb(i,j):s(u)=t(v) *)
+        | Pabs of int * term (* i:s=t ==> Pabs(i,x):\x,s=\x,t *)
+        | Pbeta of term (* Pbeta((\x,t)x):(\x,t)x=t *)
+        | Passume of term (* Passume(p): {p} |- p *)
+        | Peqmp of int * int (* i:p=q j:p ==> Peqmp(i,j):q *)
+        | Pdeduct of int * int (* i:p j:q ==> Pdeduct(i,j):p=q *)
+        | Pinst of int * (term * term) list (* i:p ==> Pinst(i,s):s(p) *)
+        | Pinstt of int * (hol_type * hol_type) list
+        (* i:p ==> Pinstt(i,s):s(p) *)
+        | Paxiom of term (* Paxiom(p):p *)
+        | Pdef of term * string * hol_type (* Pdef(t,n,b):n=t *)
+        | Pdeft of int * term * string * hol_type (* Pdeft(i,t,n,b):? *)
+        | Ptruth (* Ptruth:T *)
+        | Pconj of int * int (* i:p j:q ==> Pconj(i,j):p/\q *)
+        | Pconjunct1 of int (* i:p/\_ ==> Pconjunct1(i):p *)
+        | Pconjunct2 of int (* i:_/\q ==> Pconjunct2(i):q *)
+        | Pmp of int * int (* i:p=>q j:p ==> Pmp(i,j):q *)
+        | Pdisch of term * int (* i:q ==> Pdisch(p,i):p=>q *)
+        | Pspec of term * int (* i:∀p ==> Pspec(t,i):p(t) *)
+        | Pgen of term * int (* i:p ==> Pgen(x,i):∀x,p *)
+        | Pexists of term * term * int (* i:p(t) ==> Pexists(p,t,i):∃p *)
+        | Pchoose of term * int * int
+        (* i:∃p j:p(t)|-q ==> Pchoose(t,i,j):q *)
+        | Pdisj1 of term * int (* i:p ==> Pdisj1(q,i):p\/q *)
+        | Pdisj2 of term * int (* i:q ==> Pdisj2(p,i):p\/q *)
+        | Pdisj_cases of int * int * int
+        (* i:p\/q j:p|-r k:q|-r ==> Pdisj_cases(i,j,k):r *)
+        | Psym of int (* i:p=q ==> Psym(i):q=p *)
 
       type proof = Proof of (thm * proof_content)
 
