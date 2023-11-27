@@ -149,7 +149,7 @@ hol2dk use file
 Simplifying dumped proofs
 -------------------------
 
-HOL-Light proofs are often overly complicated and can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
+HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
 Simplification rules currently implemented:
 - SYM(REFL(t)) --> REFL(t)
@@ -329,13 +329,15 @@ make -j $jobs -f Makefile.coq
 Results
 -------
 
+Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
+
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
   * number of proof steps: 8.5 M (8% unused)
-  * simplification time: 1m50s
+  * simplification time: 1m51s
   * number of simplifications: 1.2 M (14%)
   * unused proof steps after simplification: 29% 
 
@@ -352,19 +354,19 @@ Dumping of `hol.ml`:
 | `spec`       |  3 |
 | `abs`        |  3 |
 | `disch`      |  3 |
+| `mp`         |  2 |
+| `conjunct2`  |  2 |
 | `assume`     |  2 |
 | `deduct`     |  2 |
 
-Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
-
 Multi-threaded translation to Lambdapi with `dg 100`:
   * hol2dk dg: 14s
-  * lp files generation time: 36s
+  * lp files generation time: 35s
   * lp files size: 1.6 Go
   * type abbrevs: 1.1 Mo
   * term abbrevs: 652 Mo (40%)
   * verification by lambdapi: fails (too big for lambdapi)
-  * translation to Coq: 28s 1.5 Go
+  * translation to Coq: 26s 1.5 Go
   * verification by Coq: 1h52
 
 Multi-threaded translation to Dedukti with `dg 100`:

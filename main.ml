@@ -498,23 +498,11 @@ dump_map_thid_name "%s.thm" %a;;
              end
           | _ -> default()
           end
-       (*| Peqmp(i,j) ->
+       | Peqmp(i,j) ->
           begin match proof_at i with
           | Proof(_,Prefl _) -> (* i:p=p j:p ==> k:p *) out (pc_at j)
           | _ -> default()
           end
-       | Pgen(_,j) ->
-          begin match proof_at j with
-          | Proof(_,Pspec(_,i)) -> (* i:∀p ==> j:p(x) ==> k:∀p *)
-             out (pc_at i)
-          | _ -> default()
-          end
-       | Pspec(_,j) ->
-          begin match proof_at j with
-          | Proof(_,Pgen(_,i)) -> (* i:p ==> j:∀x,p ==> k:p *)
-             out (pc_at i)
-          | _ -> default()
-          end*)
        | _ -> default()
      in
      iter_proofs_at simp;
