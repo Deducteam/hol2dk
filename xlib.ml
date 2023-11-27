@@ -381,6 +381,38 @@ let canonical_term =
 (* Functions on proofs. *)
 (****************************************************************************)
 
+(* [proof oc p] prints the proof [p] on out_channel [oc]. *)
+let proof oc (Proof(_,c)) =
+  match c with
+  | Prefl _ -> out oc "refl"
+  | Ptrans(i,j) -> out oc "trans %d %d" i j
+  | Pmkcomb(i,j) -> out oc "mkcomb %d %d" i j
+  | Pabs(i,_) -> out oc "abs %d" i
+  | Pbeta _ -> out oc "beta"
+  | Passume _ -> out oc "assume"
+  | Peqmp(i,j) -> out oc "eqmp %d %d" i j
+  | Pdeduct(i,j) -> out oc "deduct %d %d" i j
+  | Pinst(i,_) -> out oc "inst %d" i
+  | Pinstt(i,_) -> out oc "inst_type %d" i
+  | Paxiom _ -> out oc "axiom"
+  | Pdef _ -> out oc "def"
+  | Pdeft(i,_,_,_) -> out oc "def_type %d" i
+  | Ptruth -> out oc "truth"
+  | Pconj(i,j) -> out oc "conj %d %d" i j
+  | Pconjunct1 i -> out oc "conjunct1 %d" i
+  | Pconjunct2 i -> out oc "conjunct2 %d" i
+  | Pmp(i,j) -> out oc "mp %d %d" i j
+  | Pdisch(_,i) -> out oc "disch %d" i
+  | Pspec(_,i) -> out oc "spec %d" i
+  | Pgen(_,i) -> out oc "gen %d" i
+  | Pexists(_,_,i) -> out oc "exists %d" i
+  | Pdisj1(_,i) -> out oc "disj1 %d" i
+  | Pdisj2(_,i) -> out oc "disj2 %d" i
+  | Pdisj_cases(i,j,k) -> out oc "disj_cases %d %d %d" i j k
+  | Pchoose(_,i,j) -> out oc "choose %d %d" i j
+  | Psym i -> out oc "sym %d" i
+;;
+
 (* [get_eq_typ p] returns the type [b] of the terms t and u of the
    conclusion of the proof [p] assumed of the form [= t u]. *)
 let get_eq_typ p =

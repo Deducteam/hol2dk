@@ -406,25 +406,50 @@ dump_map_thid_name "%s.thm" %a;;
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
 
+  | ["proof";b;x;y] ->
+     let x = integer x and y = integer y in
+     let nb_proofs = read_nb_proofs b in
+     if x < 0 || y < x || y >= nb_proofs then wrong_arg();
+     read_pos b;
+     init_proof_reading b;
+     read_use b;
+     let map_thid_name = read_thm b in
+     init_proof_reading b;
+     for k = x to y do
+       log "%8d: %a" k proof (proof_at k);
+       begin match Array.get !Xproof.last_use k with
+       | 0 -> (try log " (named %s)" (MapInt.find k map_thid_name)
+               with Not_found -> assert false)
+       | n -> if n < 0 then log " (unused)"
+       end;
+       log "\n"
+     done;
+     0
+
   | ["simp";b] ->
      read_pos b;
-     read_use b;
      init_proof_reading b;
+     read_use b;
      let dump_file = b ^ "-simp.prf" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
+     (* count the number of simplications *)
      let n = ref 0 in
+     (* map from theorem indexes to their new proofs *)
      let map = ref MapInt.empty in
      let add i p = map := MapInt.add i p !map in
      let proof_at j = try MapInt.find j !map with Not_found -> proof_at j in
      let pc_at j = let Proof(_,c) = proof_at j in c in
+     (* simplification of proof p at index k *)
      let simp k p =
        let default() = output_value oc p in
        let out pc =
          let p = change_proof_content p pc in
          incr n; add k p; output_value oc p
        in
-       if Array.get !last_use k < 0 then out Ptruth else
+       if Array.get !last_use k < 0 then
+         output_value oc p (*(change_proof_content p Ptruth)*)
+       else
        let Proof(_,c) = p in
        match c with
        | Ptrans(i,j) ->
@@ -468,8 +493,10 @@ dump_map_thid_name "%s.thm" %a;;
      in
      iter_proofs_at simp;
      close_out oc;
-     let n = !n and total = nb_proofs() in
-     log "%d simplifications (%d%%)\n" n ((100 * n) / total);
+     let nb_proofs = nb_proofs() and n = !n  in
+     log "%d simplifications (%d%%)\n" n ((100 * n) / nb_proofs);
+     (* replace file.prf by file-simp.prf, and recompute file.pos and
+        file.use *)
      log "replace %s.prf by %s-simp.prf ...\n" b b;
      begin match Sys.command
              (Printf.sprintf
@@ -490,16 +517,31 @@ dump_map_thid_name "%s.thm" %a;;
      let nb_proofs = read_nb_proofs b in
      let last_use = Array.make nb_proofs (-1) in
      read_prf b
-       (fun idx p -> List.iter (fun k -> Array.set last_use k idx) (deps p));
+       (fun i p -> List.iter (fun k -> Array.set last_use k i) (deps p));
      MapInt.iter (fun k _ -> Array.set last_use k 0) (read_thm b);
      let dump_file = b ^ ".use" in
      log "generate %s ...\n" dump_file;
      let oc = open_out_bin dump_file in
      output_value oc last_use;
      let unused = ref 0 in
-     Array.iter (fun k -> if k < 0 then incr unused) last_use;
-     log "%d useless steps (%d%%)\n" !unused ((100 * !unused) / nb_proofs);
+     Array.iter (fun n -> if n < 0 then incr unused) last_use;
+     log "%d unused theorems (including named theorems) (%d%%)\n"
+       !unused ((100 * !unused) / nb_proofs);
      close_out oc;
+     let first = ref (-1) in
+     let exception Found in
+     (try Array.iteri
+            (fun i j -> if j < 0 then (first := i; raise Found)) last_use
+      with Found -> ());
+     log "first unused: %d\n" !first;
+     0
+
+  | ["print";"use";b;k] ->
+     let k = integer k in
+     let nb_proofs = read_nb_proofs b in
+     if k < 0 || k >= nb_proofs then wrong_arg();
+     read_use b;
+     log "%d\n" (Array.get !Xproof.last_use k);
      0
 
   | ["dg";nb_parts;b] ->

@@ -129,7 +129,7 @@ This will generate the files `file.sig`, `file.prf` and `file.thm`.
 
 WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
 
-For dumping a subset of `hol.ml` do:
+For dumping (a subset of) `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
 hol2dk dump-use file.ml
