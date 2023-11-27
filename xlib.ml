@@ -381,7 +381,8 @@ let canonical_term =
 (* Functions on proofs. *)
 (****************************************************************************)
 
-(* [proof oc p] prints the proof [p] on out_channel [oc]. *)
+(* [proof oc p] prints the proof [p] on out_channel [oc] in a user
+   readable format. *)
 let proof oc (Proof(_,c)) =
   match c with
   | Prefl _ -> out oc "refl"

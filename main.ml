@@ -29,6 +29,18 @@ hol2dk dump-use $file.[ml|hl]
 hol2dk pos $file
   generate $file.pos, the positions of proofs in $file.prf
 
+hol2dk use $file
+  generate $file.use, some data to know whether a theorem is used or not
+
+hol2dk simp $file
+  simplify $file.prf and recompute $file.pos and $file.use
+
+hol2dk proof $file $x $y
+  print proof steps between theorem indexes $x and $y
+
+hol2dk print use $file $x
+  print the contents of $file.use for theorem index $x
+
 Single-threaded dk/lp file generation:
 --------------------------------------
 
@@ -56,9 +68,6 @@ hol2dk thm $file.[dk|lp]
 
 hol2dk axm $file.[dk|lp]
   generate $file_opam.[dk|lp] from $file.thm
-
-hol2dk use $file
-  generate $file.use, the number of times each proof step is used
 
 hol2dk part $n $k $x $y $file.[dk|lp]
   generate dk/lp proof files of part $k in [1..$n]
