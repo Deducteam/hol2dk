@@ -341,15 +341,19 @@ Dumping of `hol.ml`:
 
 | rule       |  % |
 |:-----------|---:|
-| `refl`       | 32 |
-| `eqmp`       | 14 |
-| `comb`       | 12 |
-| `term_subst` | 9 |
-| `trans`      |  5 |
-| `type_subst` |  3 |
-| `beta`       |  4 |
-| `abs`        |  2 |
-| `spec`       |  2 |
+| `refl`       | 20 |
+| `comb`       | 17 |
+| `term_subst` | 13 |
+| `eqmp`       | 12 |
+| `trans`      |  6 |
+| `beta`       |  5 |
+| `type_subst` |  5 |
+| `conjunct1`  |  4 |
+| `spec`       |  3 |
+| `abs`        |  3 |
+| `disch`      |  3 |
+| `assume`     |  2 |
+| `deduct`     |  2 |
 
 Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
 

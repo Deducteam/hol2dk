@@ -566,10 +566,13 @@ let count_rule_uses (a : int array) (p : proof) : unit =
    integers of size [nb_rules] and the corresponding percentages wrt
    [nb_proofs]. *)
 let print_rule_uses (a : int array) (nb_proofs : int) : unit =
+  let l = ref [] in
+  Array.iteri (fun i n -> l := (name_of_code i,n)::!l) a;
+  let cmp (_,n1) (_,n2) = Stdlib.compare n2 n1 in
+  let l = List.sort cmp !l in
   let total = float_of_int nb_proofs in
   let part n = float_of_int (100 * n) /. total in
-  Array.iteri
-    (fun i n -> log "%10s %9d %3.0f%%\n" (name_of_code i) n (part n)) a;
+  List.iter (fun (s,n) -> log "%10s %9d %3.0f%%\n" s n (part n)) l;
   let total = Array.fold_left (+) 0 a in
   log "%10s %9d %3.0f%%\n" "TOTAL" total (part total)
 ;;
