@@ -333,10 +333,10 @@ Dumping of `hol.ml`:
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
-  * number of proof steps: 8.5 M (8% useless)
+  * number of proof steps: 8.5 M (8% unused)
   * simplification time: 1m18s
-  * number of simplifications: 1.2 M
-  * useless proof steps after simplification: 28% 
+  * number of simplifications: 462 K (5%)
+  * unused proof steps after simplification: 19% 
 
 | rule       |  % |
 |:-----------|---:|
@@ -358,7 +358,7 @@ Multi-threaded translation to Lambdapi with `dg 100`:
   * lp files size: 1.6 Go
   * type abbrevs: 1.1 Mo
   * term abbrevs: 652 Mo (40%)
-  * verification by lambdapi: 4h10 on 28 processors Intel Core Haswell @ 2.3 GHz with 16 Mo cache
+  * verification by lambdapi: fails (too big for lambdapi)
   * translation to Coq: 28s 1.5 Go
   * verification by Coq: 1h52
 
@@ -384,8 +384,9 @@ Single-threaded translation to Dedukti (data of 12 March 2023):
 
 Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
   * proof dumping time: 11s 77 Mo (448 named theorems)
-  * number of proof steps: 302 K (9% useless)
-  * prf simplification: 2s 79 Mo (32% useless)
+  * number of proof steps: 302 K (9% unused)
+  * prf simplification: 2s
+  * unused proofs after simplification: 20%
   * dk file generation: 2s 55 Mo
   * checking time with dk check: 7s
   * lp file generation: 1s 38 Mo
