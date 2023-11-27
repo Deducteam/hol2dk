@@ -3,7 +3,7 @@
 
 builtin "minus" ≔ -;
 builtin "minus_def" ≔ -_def;
-builtin "pair'" ≔ -';
+builtin "minus'" ≔ -';
 builtin "gt" ≔ >;
 builtin "gt_def" ≔ >_def;
 builtin "ge" ≔ >=;

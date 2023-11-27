@@ -534,7 +534,9 @@ let proofs_in_range oc = function
 "flag \"print_implicits\" on;
 flag \"print_domains\" on;
 print thm_%d;\n" x*)
-  | All -> iter_proofs_at (theorem oc)
+  | All ->
+     iter_proofs_at
+       (fun k p -> if Array.get !last_use k >= 0 then theorem oc k p)
   | Upto y -> proofs_in_interval oc 0 y
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;

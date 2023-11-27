@@ -116,8 +116,8 @@ Summary of hol2dk commands
 
 Get it by running `hol2dk` without arguments.
 
-Dumping HOL-Light proofs
-------------------------
+Dumping HOL-Light proof steps
+-----------------------------
 
 For dumping a HOL-Light file depending on `hol.ml` do:
 ```
@@ -129,23 +129,47 @@ This will generate the files `file.sig`, `file.prf` and `file.thm`.
 
 WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
 
-For dumping a subset of `hol.ml` do:
+For dumping (a subset of) `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
 hol2dk dump-use file.ml
 ```
 where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
+Once you have generate `file.prf`, you need to generate the files `file.pos` and `file.use` with:
+```
+hol2dk pos file
+hol2dk use file
+```
+
+`file.pos` contains the position in `file.prf` of each proof step.
+
+`file.use` contains data to know whether a proof step is actually useful and needs to be translated. Indeed, since HOL-Light tactics may fail, some proof steps are generated but are not used in the end. Therefore, they do not need to be translated.
+
+Simplifying dumped proofs
+-------------------------
+
+HOL-Light proofs are often overly complicated and can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
+
+Simplification rules currently implemented:
+- SYM(REFL(t)) --> REFL(t)
+- SYM(SYM(p)) --> p
+- TRANS(REFL(t),p) --> p
+- TRANS(p,REFL(t)) --> p
+- CONJUNCT1(CONJ(p,_)) --> p
+- CONJUNCT2(CONJ(_,p)) --> p
+- MKCOMB(REFL(t),REFL(u)) --> REFL(t(u))
+
+To simplify `file.prf` and recompute `file.pos` and `file.use` do:
+```
+hol2dk simp file
+```
+
 Generating dk/lp files from dumped files
 --------------------------------------
 
 The base theory in which HOL-Light proofs are translated is described in the files [theory_hol.lp](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.lp) and [theory_hol.dk](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.dk).
 
-You first need to generate `file.pos` and `file.use` with:
-```
-hol2dk pos file
-hol2dk use file
-```
 
 You can then generate `file.dk` with:
 ```
@@ -308,40 +332,43 @@ Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
-  * number of named theorems: 2834
-  * number of proof steps: 8.5 M (8% unused) 
+  * number of named theorems: 2842
+  * number of proof steps: 8.5 M (8% unused)
+  * simplification time: 1m18s
+  * number of simplifications: 462 K (5%)
+  * unused proof steps after simplification: 19% 
 
 | rule       |  % |
 |:-----------|---:|
-| refl       | 29 |
-| eqmp       | 19 |
-| comb       | 17 |
-| term_subst | 12 |
-| trans      |  6 |
-| type_subst |  3 |
-| beta       |  3 |
-| abs        |  2 |
-| spec       |  2 |
+| `refl`       | 32 |
+| `eqmp`       | 14 |
+| `comb`       | 12 |
+| `term_subst` | 9 |
+| `trans`      |  5 |
+| `type_subst` |  3 |
+| `beta`       |  4 |
+| `abs`        |  2 |
+| `spec`       |  2 |
 
 Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
 Multi-threaded translation to Lambdapi with `dg 100`:
   * hol2dk dg: 14s
-  * lp files generation time: 41s
-  * lp files size: 1.9 Go
-  * type abbrevs: 1.3 Mo
-  * term abbrevs: 665 Mo (35%)
-  * verification by lambdapi: 4h10 on 28 processors Intel Core Haswell @ 2.3 GHz with 16 Mo cache
-  * translation to Coq: 30s 1.8 Go
-  * verification by Coq: 2h29
+  * lp files generation time: 36s
+  * lp files size: 1.6 Go
+  * type abbrevs: 1.1 Mo
+  * term abbrevs: 652 Mo (40%)
+  * verification by lambdapi: fails (too big for lambdapi)
+  * translation to Coq: 28s 1.5 Go
+  * verification by Coq: 1h52
 
 Multi-threaded translation to Dedukti with `dg 100`:
-  * dk file generation time: 1m9s
-  * dk file size: 2.8 Go
-  * type abbrevs: 1.3 Mo
-  * term abbrevs: 752 Mo (27%)
-  * kocheck: 6m19s
-  * dkcheck: 6m22s
+  * dk file generation time: 1m7s
+  * dk file size: 2.3 Go
+  * type abbrevs: 1.2 Mo
+  * term abbrevs: 737 Mo (32%)
+  * dkcheck: 5m23s
+  * kocheck: 5m54s
 
 Single-threaded translation to Lambdapi (data of 12 March 2023):
   * lp files generation time: 12m8s
@@ -356,14 +383,16 @@ Single-threaded translation to Dedukti (data of 12 March 2023):
   * term abbreviations: 820 Mo (23%)
 
 Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
-  * proof dumping time: 12s 77 Mo
-  * number of proof steps: 302 K (10% unused)
-  * dk file generation: 3s 69 Mo
-  * checking time with dk check: 9s
-  * lp file generation: 2s 47 Mo
-  * checking time with lambdapi: 1m15s
-  * translation to Coq: 1s 45 Mo
-  * checking time for Coq 8.18.0: 3m12s
+  * proof dumping time: 11s 77 Mo (448 named theorems)
+  * number of proof steps: 302 K (9% unused)
+  * prf simplification: 2s
+  * unused proofs after simplification: 20%
+  * dk file generation: 2s 55 Mo
+  * checking time with dk check: 7s
+  * lp file generation: 1s 38 Mo
+  * checking time with lambdapi: 61s
+  * translation to Coq: 1s 36 Mo
+  * checking time for Coq 8.18.0: 2m4s
 
 Exporting pure Q0 proofs
 ------------------------

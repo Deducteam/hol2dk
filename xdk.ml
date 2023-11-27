@@ -642,7 +642,9 @@ let proofs_in_range oc = function
      let p = proof_at x in
      List.iter (fun k -> theorem_as_axiom oc k (proof_at k)) (deps p);
      theorem oc x p
-  | All -> iter_proofs_at (theorem oc)
+  | All ->
+     iter_proofs_at
+       (fun k p -> if Array.get !last_use k >= 0 then theorem oc k p)
   | Upto y -> proofs_in_interval oc 0 y
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;

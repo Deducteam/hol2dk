@@ -49,12 +49,13 @@ jobs:
       - name: Dump proofs
         run: |
           eval `opam env`
-          cd hol-light; hol2dk dump-use ../xci.ml
+          cd hol-light; hol2dk dump-use ../xci.ml; cd ..
+          hol2dk pos xci
+          hol2dk use xci
+          hol2dk simp xci
       - name: Generate and check single-threaded dk output
         run: |
           eval `opam env`
-          hol2dk pos xci
-          hol2dk use xci
           hol2dk xci.dk
           dk check xci.dk
       - name: Generate and check single-threaded lp output

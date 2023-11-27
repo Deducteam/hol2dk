@@ -381,6 +381,39 @@ let canonical_term =
 (* Functions on proofs. *)
 (****************************************************************************)
 
+(* [proof oc p] prints the proof [p] on out_channel [oc] in a user
+   readable format. *)
+let proof oc (Proof(_,c)) =
+  match c with
+  | Prefl _ -> out oc "refl"
+  | Ptrans(i,j) -> out oc "trans %d %d" i j
+  | Pmkcomb(i,j) -> out oc "mkcomb %d %d" i j
+  | Pabs(i,_) -> out oc "abs %d" i
+  | Pbeta _ -> out oc "beta"
+  | Passume _ -> out oc "assume"
+  | Peqmp(i,j) -> out oc "eqmp %d %d" i j
+  | Pdeduct(i,j) -> out oc "deduct %d %d" i j
+  | Pinst(i,_) -> out oc "inst %d" i
+  | Pinstt(i,_) -> out oc "inst_type %d" i
+  | Paxiom _ -> out oc "axiom"
+  | Pdef _ -> out oc "def"
+  | Pdeft(i,_,_,_) -> out oc "def_type %d" i
+  | Ptruth -> out oc "truth"
+  | Pconj(i,j) -> out oc "conj %d %d" i j
+  | Pconjunct1 i -> out oc "conjunct1 %d" i
+  | Pconjunct2 i -> out oc "conjunct2 %d" i
+  | Pmp(i,j) -> out oc "mp %d %d" i j
+  | Pdisch(_,i) -> out oc "disch %d" i
+  | Pspec(_,i) -> out oc "spec %d" i
+  | Pgen(_,i) -> out oc "gen %d" i
+  | Pexists(_,_,i) -> out oc "exists %d" i
+  | Pdisj1(_,i) -> out oc "disj1 %d" i
+  | Pdisj2(_,i) -> out oc "disj2 %d" i
+  | Pdisj_cases(i,j,k) -> out oc "disj_cases %d %d %d" i j k
+  | Pchoose(_,i,j) -> out oc "choose %d %d" i j
+  | Psym i -> out oc "sym %d" i
+;;
+
 (* [get_eq_typ p] returns the type [b] of the terms t and u of the
    conclusion of the proof [p] assumed of the form [= t u]. *)
 let get_eq_typ p =
@@ -424,6 +457,38 @@ let deps (Proof(_,content)) =
     -> []
 ;;
 
+(* [count_thm_uses a p] increments by 1 every [a.(i)] such that [i] is
+   a dependence of [p]. [a] must be an array of integers of size
+   [nb_proofs()]. *)
+let count_thm_uses (a : int array) (p : proof) : unit =
+  List.iter (fun k -> Array.set a k (Array.get a k + 1)) (deps p)
+;;
+
+(* [print_histogram a] prints on stdout the number of elements of [a]
+   that are used [i] times, for each [i] from 0 to the maximum of
+   [a]. *)
+let print_histogram (a : int array) : unit =
+  (* compute max and argmax *)
+  let max = ref (-1) and argmax = ref (-1) and unused = ref (-1) in
+  let f k n =
+    if n > !max then (max := n; argmax := k);
+    if n = 0 then unused := k
+  in
+  Array.iteri f a;
+  let hist = Array.make (!max + 1) 0 in
+  Array.iter (fun n -> Array.set hist n (Array.get hist n + 1)) a;
+  log "(* \"i: n\" means that n proofs are used i times *)\n";
+  let nonzeros = ref 0 in
+  Array.iteri
+    (fun i n -> if n > 0 then (incr nonzeros; log "%d: %d\n" i n)) hist;
+  log "number of mappings: %d\n" !nonzeros;
+  log "most used theorem: %d\n" !argmax;
+  log "unused theorems (including named theorems): %d (%d%%)\n"
+    hist.(0) ((100 * hist.(0)) / Array.length a);
+  log "last unused theorem: %d\n" !unused
+;;
+
+(* [code_of_proof p] maps every Proof constructor to a unique integer. *)
 let code_of_proof (Proof(_,c)) =
   match c with
   | Prefl _ -> 0
@@ -455,6 +520,8 @@ let code_of_proof (Proof(_,c)) =
   | Psym _ -> 26
 ;;
 
+(* [name_of_code k] maps every integer k in the image of
+   [code_of_proof] to a unique string. *)
 let name_of_code = function
   | 0 -> "refl"
   | 1 -> "trans"
@@ -486,48 +553,25 @@ let name_of_code = function
   | _ -> assert false
 ;;
 
+(* [nb_rules] is the total number of proof rules. *)
 let nb_rules = 27;;
 
-(* [count_thm uses p] updates [uses] with the dependencies of [p]. *)
-let count_thm (uses : int array) (p : proof) : unit =
-  List.iter (fun k -> Array.set uses k (Array.get uses k + 1)) (deps p)
+(* [count_rule_uses a p] increments [a.(code_of_proof p)] by 1. [a]
+   must be an array of integers of size [nb_rules]. *)
+let count_rule_uses (a : int array) (p : proof) : unit =
+  let i = code_of_proof p in Array.set a i (Array.get a i + 1)
 ;;
 
-(* [print_histogram uses] prints on stdout the number of theorems that
-   are used i times, for each i from 0 to the maximum of [uses]. *)
-let print_histogram (uses : int array) : unit =
-  (* compute max and argmax *)
-  let max = ref (-1) and argmax = ref (-1) and unused = ref (-1) in
-  let f k n =
-    if n > !max then (max := n; argmax := k);
-    if n = 0 then unused := k
-  in
-  Array.iteri f  uses;
-  let hist = Array.make (!max + 1) 0 in
-  Array.iter (fun n -> Array.set hist n (Array.get hist n + 1)) uses;
-  log "(* \"i: n\" means that n proofs are used i times *)\n";
-  let nonzeros = ref 0 in
-  Array.iteri
-    (fun i n -> if n > 0 then (incr nonzeros; log "%d: %d\n" i n)) hist;
-  log "number of mappings: %d\n" !nonzeros;
-  log "most used theorem: %d\n" !argmax;
-  log "unused theorems: %d (%d%%)\n"
-    hist.(0) ((100 * hist.(0)) / Array.length uses);
-  log "last unused theorem: %d\n" !unused
-;;
-
-(* [count_rule uses p] updates [uses] with the rule of [p]. *)
-let count_rule (uses : int array) (p : proof) : unit =
-  let i = code_of_proof p in Array.set uses i (Array.get uses i + 1)
-;;
-
-(* [print_rule uses nb_proofs] prints on stdout the array [uses] and
-   the corresponding percentages wrt [nb_proofs]. *)
-let print_stats (uses : int array) (nb_proofs : int) : unit =
+(* [print_rule_uses a nb_proofs] prints on stdout the array [a] of
+   integers of size [nb_rules] and the corresponding percentages wrt
+   [nb_proofs]. *)
+let print_rule_uses (a : int array) (nb_proofs : int) : unit =
   let total = float_of_int nb_proofs in
   let part n = float_of_int (100 * n) /. total in
   Array.iteri
-    (fun i n -> log "%10s %9d %2.0f%%\n" (name_of_code i) n (part n)) uses
+    (fun i n -> log "%10s %9d %3.0f%%\n" (name_of_code i) n (part n)) a;
+  let total = Array.fold_left (+) 0 a in
+  log "%10s %9d %3.0f%%\n" "TOTAL" total (part total)
 ;;
 
 (****************************************************************************)
