@@ -149,7 +149,7 @@ hol2dk use file
 Simplifying dumped proofs
 -------------------------
 
-HOL-Light proofs are often overly complicated and can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
+HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
 Simplification rules currently implemented:
 - SYM(REFL(t)) --> REFL(t)
@@ -159,6 +159,7 @@ Simplification rules currently implemented:
 - CONJUNCT1(CONJ(p,_)) --> p
 - CONJUNCT2(CONJ(_,p)) --> p
 - MKCOMB(REFL(t),REFL(u)) --> REFL(t(u))
+- EQMP(REFL _,p) --> p
 
 To simplify `file.prf` and recompute `file.pos` and `file.use` do:
 ```
@@ -328,38 +329,44 @@ make -j $jobs -f Makefile.coq
 Results
 -------
 
+Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
+
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
   * number of proof steps: 8.5 M (8% unused)
-  * simplification time: 1m18s
-  * number of simplifications: 462 K (5%)
-  * unused proof steps after simplification: 19% 
+  * simplification time: 1m51s
+  * number of simplifications: 1.2 M (14%)
+  * unused proof steps after simplification: 29% 
 
 | rule       |  % |
 |:-----------|---:|
-| `refl`       | 32 |
-| `eqmp`       | 14 |
-| `comb`       | 12 |
-| `term_subst` | 9 |
-| `trans`      |  5 |
-| `type_subst` |  3 |
-| `beta`       |  4 |
-| `abs`        |  2 |
-| `spec`       |  2 |
-
-Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
+| `refl`       | 20 |
+| `comb`       | 17 |
+| `term_subst` | 13 |
+| `eqmp`       | 12 |
+| `trans`      |  6 |
+| `beta`       |  5 |
+| `type_subst` |  5 |
+| `conjunct1`  |  4 |
+| `spec`       |  3 |
+| `abs`        |  3 |
+| `disch`      |  3 |
+| `mp`         |  2 |
+| `conjunct2`  |  2 |
+| `assume`     |  2 |
+| `deduct`     |  2 |
 
 Multi-threaded translation to Lambdapi with `dg 100`:
   * hol2dk dg: 14s
-  * lp files generation time: 36s
+  * lp files generation time: 35s
   * lp files size: 1.6 Go
   * type abbrevs: 1.1 Mo
   * term abbrevs: 652 Mo (40%)
   * verification by lambdapi: fails (too big for lambdapi)
-  * translation to Coq: 28s 1.5 Go
+  * translation to Coq: 26s 1.5 Go
   * verification by Coq: 1h52
 
 Multi-threaded translation to Dedukti with `dg 100`:
@@ -386,7 +393,7 @@ Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the
   * proof dumping time: 11s 77 Mo (448 named theorems)
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s
-  * unused proofs after simplification: 20%
+  * unused proofs after simplification: 31%
   * dk file generation: 2s 55 Mo
   * checking time with dk check: 7s
   * lp file generation: 1s 38 Mo
