@@ -159,6 +159,7 @@ Simplification rules currently implemented:
 - CONJUNCT1(CONJ(p,_)) --> p
 - CONJUNCT2(CONJ(_,p)) --> p
 - MKCOMB(REFL(t),REFL(u)) --> REFL(t(u))
+- EQMP(REFL _,p) --> p
 
 To simplify `file.prf` and recompute `file.pos` and `file.use` do:
 ```
@@ -333,10 +334,10 @@ Dumping of `hol.ml`:
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
-  * number of proof steps: 8.5 M (8% unused)
-  * simplification time: 1m18s
-  * number of simplifications: 462 K (5%)
-  * unused proof steps after simplification: 19% 
+  * number of proof steps: 8.5 M (19% unused)
+  * simplification time: 1m45s
+  * number of simplifications: 736 K (8%)
+  * unused proof steps after simplification: 29% 
 
 | rule       |  % |
 |:-----------|---:|
@@ -384,9 +385,9 @@ Single-threaded translation to Dedukti (data of 12 March 2023):
 
 Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
   * proof dumping time: 11s 77 Mo (448 named theorems)
-  * number of proof steps: 302 K (9% unused)
+  * number of proof steps: 302 K (20% unused)
   * prf simplification: 2s
-  * unused proofs after simplification: 20%
+  * unused proofs after simplification: 31%
   * dk file generation: 2s 55 Mo
   * checking time with dk check: 7s
   * lp file generation: 1s 38 Mo
