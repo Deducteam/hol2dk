@@ -334,9 +334,9 @@ Dumping of `hol.ml`:
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
-  * number of proof steps: 8.5 M (19% unused)
-  * simplification time: 1m45s
-  * number of simplifications: 736 K (8%)
+  * number of proof steps: 8.5 M (8% unused)
+  * simplification time: 1m50s
+  * number of simplifications: 1.2 M (14%)
   * unused proof steps after simplification: 29% 
 
 | rule       |  % |
@@ -389,7 +389,7 @@ Single-threaded translation to Dedukti (data of 12 March 2023):
 
 Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
   * proof dumping time: 11s 77 Mo (448 named theorems)
-  * number of proof steps: 302 K (20% unused)
+  * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s
   * unused proofs after simplification: 31%
   * dk file generation: 2s 55 Mo
