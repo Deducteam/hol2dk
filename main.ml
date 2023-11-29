@@ -113,6 +113,8 @@ hol2dk name
   in the working directory and all its subdirectories recursively
 %!"
 
+let percent k = (100 * k) / (nb_proofs())
+
 let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
 let read_nb_proofs b =
@@ -300,7 +302,10 @@ let range args =
      if x=0 then Upto y else Inter(x,y)
   | _ -> wrong_arg()
 
-let rec command = function
+let rec log_command l =
+  log "hol2dk"; List.iter (log " %s") l; log " ...\n"; command l
+
+and command = function
   | [] | ["-"|"--help"|"help"] -> usage(); 0
 
   | ["dep";f] ->
@@ -423,7 +428,6 @@ dump_map_thid_name "%s.thm" %a;;
      init_proof_reading b;
      read_use b;
      let map_thid_name = read_thm b in
-     init_proof_reading b;
      for k = x to y do
        log "%8d: %a" k proof (proof_at k);
        begin match Array.get !Xproof.last_use k with
@@ -433,9 +437,10 @@ dump_map_thid_name "%s.thm" %a;;
        end;
        log "\n"
      done;
+     close_in !Xproof.ic_prf;
      0
 
-  | ["simp";b] ->
+  | ["rewrite";b] ->
      read_pos b;
      init_proof_reading b;
      read_use b;
@@ -506,21 +511,56 @@ dump_map_thid_name "%s.thm" %a;;
        | _ -> default()
      in
      iter_proofs_at simp;
+     close_in !Xproof.ic_prf;
      close_out oc;
-     let nb_proofs = nb_proofs() and n = !n  in
-     log "%d simplifications (%d%%)\n" n ((100 * n) / nb_proofs);
+     log "%d simplifications (%d%%)\n" !n (percent !n);
      (* replace file.prf by file-simp.prf, and recompute file.pos and
         file.use *)
      log "replace %s.prf by %s-simp.prf ...\n" b b;
-     begin match Sys.command
-             (Printf.sprintf
-                "mv %s.prf %s-origin.prf && mv %s-simp.prf %s.prf"
-                b b b b) with
+     begin match Sys.command (Printf.sprintf "mv %s-simp.prf %s.prf" b b) with
      | 0 ->
-        begin match command ["pos";b] with
-        | 0 -> command ["use";b]
+        begin match log_command ["pos";b] with
+        | 0 -> log_command ["use";b]
         | e -> e
         end
+     | e -> e
+     end
+
+  | ["purge";b] ->
+     (* compute useful theorems *)
+     read_pos b;
+     init_proof_reading b;
+     let map_thid_name = read_thm b in
+     let nb_proofs = nb_proofs() in
+     let useful = Array.make nb_proofs false in
+     let rec mark_as_useful = function
+       | [] -> ()
+       | k::ks ->
+          if useful.(k) then mark_as_useful ks
+          else begin
+              useful.(k) <- true;
+              mark_as_useful (List.rev_append (deps (proof_at k)) ks)
+            end
+     in
+     MapInt.iter (fun k _ -> mark_as_useful [k]) map_thid_name;
+     close_in !Xproof.ic_prf;
+     (* update file.use *)
+     read_use b;
+     let nb_useless = ref nb_proofs in
+     Array.iteri
+       (fun k b ->
+         if b then decr nb_useless else Array.set !Xproof.last_use k (-1))
+       useful;
+     let dump_file = b ^ ".use" in
+     log "generate %s ...\n" dump_file;
+     let oc = open_out_bin dump_file in
+     output_value oc !Xproof.last_use;
+     log "%d useless theorems (%d%%)\n" !nb_useless (percent !nb_useless);
+     0
+
+  | ["simp";b] ->
+     begin match log_command ["rewrite";b] with
+     | 0 -> log_command ["purge";b]
      | e -> e
      end
 
@@ -540,7 +580,7 @@ dump_map_thid_name "%s.thm" %a;;
      let unused = ref 0 in
      Array.iter (fun n -> if n < 0 then incr unused) last_use;
      log "%d unused theorems (including named theorems) (%d%%)\n"
-       !unused ((100 * !unused) / nb_proofs);
+       !unused (percent !unused);
      close_out oc;
      let first = ref (-1) in
      let exception Found in
