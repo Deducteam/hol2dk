@@ -150,7 +150,8 @@ module type Hol_kernel =
       val new_basic_definition : term -> thm
       val new_basic_type_definition :
               string -> string * string -> thm -> thm * thm
-
+      val dump_filename : string
+      val oc_dump : out_channel
       (*REMOVE*)val the_type_constants : (string * int) list ref
       (*REMOVE*)val the_term_constants : (string * hol_type) list ref
       (*REMOVE*)val the_axioms : thm list ref
@@ -214,13 +215,14 @@ module Hol : Hol_kernel = struct
 
   let thm_index = ref (-1)
 
-  let oc_prf_dump = open_out "dump.prf"
+  let dump_filename = Printf.sprintf "/tmp/dump%d.prf" (Unix.getpid())
+  let oc_dump = open_out_bin dump_filename
 
   let new_theorem hyps concl proof_content =
     let k = !thm_index + 1 in
     thm_index := k;
     let thm = Sequent(hyps, concl, k) in
-    output_value oc_prf_dump (Proof(thm,proof_content));
+    output_value oc_dump (Proof(thm,proof_content));
     thm
   ;;
 
