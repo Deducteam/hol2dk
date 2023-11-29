@@ -35,6 +35,9 @@ hol2dk use $file
 hol2dk simp $file
   simplify $file.prf and recompute $file.pos and $file.use
 
+hol2dk purge $file
+  compute theorems that can be discarded in $file.use
+
 hol2dk proof $file $x $y
   print proof steps between theorem indexes $x and $y
 
