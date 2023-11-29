@@ -337,44 +337,49 @@ Dumping of `hol.ml`:
   * dumped files size: 3 Go
   * number of named theorems: 2842
   * number of proof steps: 8.5 M (8% unused)
-  * simplification time: 1m51s
+  * simplification time: 2m06s
   * number of simplifications: 1.2 M (14%)
-  * unused proof steps after simplification: 29% 
+  * unused proof steps after simplification: 29%
+  * purge time: 12s
+  * unused proof steps after purge: 60%
 
-| rule       |  % |
-|:-----------|---:|
-| `refl`       | 20 |
-| `comb`       | 17 |
-| `term_subst` | 13 |
-| `eqmp`       | 12 |
-| `trans`      |  6 |
-| `beta`       |  5 |
-| `type_subst` |  5 |
-| `conjunct1`  |  4 |
-| `spec`       |  3 |
+| rule         |  % |
+|:-------------|---:|
+| `comb`       | 20 |
+| `term_subst` | 17 |
+| `refl`       | 16 |
+| `eqmp`       | 11 |
+| `trans`      |  9 |
+| `conjunct1`  |  5 |
 | `abs`        |  3 |
-| `disch`      |  3 |
-| `mp`         |  2 |
-| `conjunct2`  |  2 |
-| `assume`     |  2 |
+| `beta`       |  3 |
+| `mp`         |  3 |
+| `sym`        |  2 |
 | `deduct`     |  2 |
+| `type_subst` |  2 |
+| `assume`     |  1 |
+| `conjunct2`  |  1 |
+| `disch`      |  1 |
+| `spec`       |  1 |
+| `disj_cases` |  1 |
+| `conj`       |  1 |
 
 Multi-threaded translation to Lambdapi with `dg 100`:
   * hol2dk dg: 14s
-  * lp files generation time: 35s
-  * lp files size: 1.6 Go
-  * type abbrevs: 1.1 Mo
-  * term abbrevs: 652 Mo (40%)
+  * lp files generation time: 31s
+  * lp files size: 1.1 Go
+  * type abbrevs: 796 Ko
+  * term abbrevs: 583 Mo (53%)
   * verification by lambdapi: fails (too big for lambdapi)
-  * translation to Coq: 26s 1.5 Go
-  * verification by Coq: 1h52
+  * translation to Coq: 24s 1 Go
+  * verification by Coq: 64m13s
 
 Multi-threaded translation to Dedukti with `dg 100`:
-  * dk file generation time: 1m7s
-  * dk file size: 2.3 Go
-  * type abbrevs: 1.2 Mo
-  * term abbrevs: 737 Mo (32%)
-  * dkcheck: 5m23s
+  * dk file generation time: 49s
+  * dk file size: 1.5 Go
+  * type abbrevs: 876 Ko
+  * term abbrevs: 660 Mo (44%)
+  * dkcheck: 3m31s
   * kocheck: 5m54s
 
 Single-threaded translation to Lambdapi (data of 12 March 2023):
