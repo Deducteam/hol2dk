@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - add-links script
 - command hol2dk simp to simplify prf files
+- command purge to compute useless theorems
+  these two commands greatly reduce the size of generated proofs
 
 ## 0.0.1 (2023-11-22)
 
