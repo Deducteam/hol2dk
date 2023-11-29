@@ -18,13 +18,20 @@ hol2dk [-h|--help]
 Dumping commands:
 -----------------
 
+hol2dk dump-and-simp $file.[ml|hl]
+  compose the commands dump, pos, use, simp and purge
+  for $file depending on hol.ml
+
+hol2dk dump-use-and-simp $file.[ml|hl]
+  same as hol2dk dump except that hol.ml is not loaded first
+
 hol2dk dump $file.[ml|hl]
   run OCaml toplevel to check $file.[ml|hl] and generate
   $file.sig (type and term constants), $file.prf (proof steps)
   and $file.thm (named theorems)
 
 hol2dk dump-use $file.[ml|hl]
-  same as hol2dk dump except that \"hol.ml\" is not loaded first
+  same as hol2dk dump except that hol.ml is not loaded first
 
 hol2dk pos $file
   generate $file.pos, the positions of proofs in $file.prf
@@ -305,8 +312,47 @@ let range args =
      if x=0 then Upto y else Inter(x,y)
   | _ -> wrong_arg()
 
+let dump after_hol f b =
+  log "generate dump.ml ...\n%!";
+  let oc = open_out "dump.ml" in
+  let use oc after_hol =
+    if after_hol then out oc {|#use "hol.ml";;\nneeds "%s";;|} b
+    else out oc {|#use "%s";;|} f
+  in
+  out oc
+{|(* file generated with: hol2dk dump %s *)
+#use "topfind";;
+#require "camlp5";;
+#load "camlp5o.cma";;
+%a
+dump_signature "%s.sig";;
+#load "str.cma";;
+#use "xnames.ml";;
+dump_map_thid_name "%s.thm" %a;;
+|} f use after_hol b b
+(olist ostring) (trans_file_deps (dep_graph (files())) f);
+  close_out oc;
+  Sys.command ("ocaml -w -A dump.ml && mv -f dump.prf "^b^".prf")
+
+let basename_ml f =
+  match Filename.extension f with
+  | ".ml" | ".hl" -> Filename.chop_extension f
+  | _ -> wrong_arg()
+
 let rec log_command l =
-  log "hol2dk"; List.iter (log " %s") l; log " ...\n"; command l
+  log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
+
+and dump_and_simp after_hol f =
+  let b = basename_ml f in
+  match dump after_hol f b with
+  | 0 -> begin match command ["pos";b] with
+         | 0 -> begin match command ["use";b] with
+                | 0 -> command ["simp";b]
+                | e -> e
+                end
+         | e -> e
+         end
+  | e -> e
 
 and command = function
   | [] | ["-"|"--help"|"help"] -> usage(); 0
@@ -337,50 +383,10 @@ and command = function
        (files());
      0
 
-  | ["dump";f] ->
-     begin match Filename.extension f with
-     | ".ml" | ".hl" ->
-        let b = Filename.chop_extension f in
-        log "generate dump.ml ...\n%!";
-        let oc = open_out "dump.ml" in
-        out oc
-{|(* file generated with: hol2dk dump %s *)
-#use "topfind";;
-#require "camlp5";;
-#load "camlp5o.cma";;
-#use "hol.ml";;
-needs "%s";;
-dump_signature "%s.sig";;
-#load "str.cma";;
-#use "xnames.ml";;
-dump_map_thid_name "%s.thm" %a;;
-|} f f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
-        close_out oc;
-        Sys.command ("ocaml -w -A dump.ml && mv -f dump.prf "^b^".prf")
-     | _ -> wrong_arg()
-     end
-
-  | ["dump-use";f] ->
-     begin match Filename.extension f with
-     | ".ml" | ".hl" ->
-        let b = Filename.chop_extension f in
-        log "generate dump.ml ...\n%!";
-        let oc = open_out "dump.ml" in
-        out oc
-{|(* file generated with: hol2dk dump-use %s *)
-#use "topfind";;
-#require "camlp5";;
-#load "camlp5o.cma";;
-#use "%s";;
-dump_signature "%s.sig";;
-#load "str.cma";;
-#use "xnames.ml";;
-dump_map_thid_name "%s.thm" %a;;
-|} f f b b (olist ostring) (trans_file_deps (dep_graph (files())) f);
-        close_out oc;
-        Sys.command ("ocaml -w -A dump.ml && mv -f dump.prf "^b^".prf")
-     | _ -> wrong_arg()
-     end
+  | ["dump";f] -> dump true f (basename_ml f)
+  | ["dump-use";f] -> dump false f (basename_ml f)
+  | ["dump-and-simp";f] -> dump_and_simp true f
+  | ["dump-and-simp-use";f] -> dump_and_simp false f
 
   | ["pos";b] ->
      let nb_proofs = read_nb_proofs b in

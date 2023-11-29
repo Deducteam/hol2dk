@@ -122,36 +122,30 @@ Dumping HOL-Light proof steps
 For dumping a HOL-Light file depending on `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump file.ml
+hol2dk dump-and-simp file.ml
 ```
 
-This will generate the files `file.sig`, `file.prf` and `file.thm`.
+This will generate the following files:
+- `file.sig`: constants
+- `file.prf`: theorems (proof steps)
+- `file.thm`: named theorems
+- `file.pos`: positions of proof steps in `file.prf`
+- `file.use`: data about the use of theorems
 
-WARNING: it is important to run `hol2dk dump` in the HOL-Light directory so as to compute the list of named theorems properly.
+WARNING: it is important to the command in the HOL-Light directory so as to compute the list of named theorems properly.
 
 For dumping (a subset of) `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump-use file.ml
+hol2dk dump-use-and-simp file.ml
 ```
 where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
-Once you have generate `file.prf`, you need to generate the files `file.pos` and `file.use` with:
-```
-hol2dk pos file
-hol2dk use file
-```
+The command `dump-and-simp` (and similarly for `dump-use-and-simp`) are actually the sequential composition of various lower level commands: `pos`, `use`, `rewrite` and `purge`:
 
-`file.pos` contains the position in `file.prf` of each proof step.
+**Simplifying dumped proofs** HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
-`file.use` contains data to know whether a proof step is actually useful and needs to be translated. Indeed, since HOL-Light tactics may fail, some proof steps are generated but are not used in the end. Therefore, they do not need to be translated.
-
-Simplifying dumped proofs
--------------------------
-
-HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
-
-Simplification rules currently implemented:
+The command `rewrite` implements the following simplification rules:
 - SYM(REFL(t)) --> REFL(t)
 - SYM(SYM(p)) --> p
 - TRANS(REFL(t),p) --> p
@@ -161,10 +155,11 @@ Simplification rules currently implemented:
 - MKCOMB(REFL(t),REFL(u)) --> REFL(t(u))
 - EQMP(REFL _,p) --> p
 
-To simplify `file.prf` and recompute `file.pos` and `file.use` do:
-```
-hol2dk simp file
-```
+**Purging dumped proofs** Because HOL-Light tactics may fail, some theorems are generated but not used in the end, especially after simplification. Therefore, they do not need to be translated.
+
+The command `purge` compute in `file.use` all the theorems that do not need to be translated.
+
+The command `simp` is the sequential composition of `rewrite` and `purge`.
 
 Generating dk/lp files from dumped files
 --------------------------------------
@@ -382,29 +377,30 @@ Multi-threaded translation to Dedukti with `dg 100`:
   * dkcheck: 3m31s
   * kocheck: 5m54s
 
-Single-threaded translation to Lambdapi (data of 12 March 2023):
-  * lp files generation time: 12m8s
-  * lp files size: 2.5 Go
-  * type abbreviations: 460 Ko
-  * term abbreviations: 787 Mo (31%)
+Single-threaded translation to Lambdapi:
+  * lp files generation time: 4m49s
+  * lp files size: 1.1 Go
+  * type abbreviations: 308 Ko
+  * term abbreviations: 525 Mo (48%)
 
-Single-threaded translation to Dedukti (data of 12 March 2023):
-  * dk files generation time: 22m37s
-  * dk files size: 3.6 Go
-  * type abbreviations: 524 Ko
-  * term abbreviations: 820 Mo (23%)
+Single-threaded translation to Dedukti:
+  * dk files generation time: 7m12s
+  * dk files size: 1.4 Go
+  * type abbreviations: 348 Ko
+  * term abbreviations: 590 Mo (42%)
 
 Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
   * proof dumping time: 11s 77 Mo (448 named theorems)
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s
   * unused proofs after simplification: 31%
-  * dk file generation: 2s 55 Mo
-  * checking time with dk check: 7s
-  * lp file generation: 1s 38 Mo
-  * checking time with lambdapi: 61s
-  * translation to Coq: 1s 36 Mo
-  * checking time for Coq 8.18.0: 2m4s
+  * unused proofs after purge: 66%
+  * dk file generation: 1s 29 Mo
+  * checking time with dk check: 4s
+  * lp file generation: 1s 21 Mo
+  * checking time with lambdapi: 31s
+  * translation to Coq: 1s 20 Mo
+  * checking time for Coq 8.18.0: 1m7s
 
 Exporting pure Q0 proofs
 ------------------------

@@ -1,8 +1,6 @@
 TODO
 ----
 
-- compute useful theorems from named theorems and remove useless theorems
-
 - put nb_proofs in a separate file
 
 - add commands for patch/unpatch/add-links ?
