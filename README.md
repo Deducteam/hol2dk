@@ -122,7 +122,7 @@ Dumping HOL-Light proof steps
 For dumping a HOL-Light file depending on `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump-and-simp file.ml
+hol2dk dump-simp file.ml
 ```
 
 This will generate the following files:
@@ -137,11 +137,11 @@ WARNING: it is important to the command in the HOL-Light directory so as to comp
 For dumping (a subset of) `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump-use-and-simp file.ml
+hol2dk dump-use-simp file.ml
 ```
 where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
-The command `dump-and-simp` (and similarly for `dump-use-and-simp`) are actually the sequential composition of various lower level commands: `pos`, `use`, `rewrite` and `purge`:
+The command `dump-simp` (and similarly for `dump-use-simp`) are actually the sequential composition of various lower level commands: `dump`, `pos`, `use`, `rewrite` and `purge`:
 
 **Simplifying dumped proofs** HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 

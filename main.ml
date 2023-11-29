@@ -18,11 +18,11 @@ hol2dk [-h|--help]
 Dumping commands:
 -----------------
 
-hol2dk dump-and-simp $file.[ml|hl]
-  compose the commands dump, pos, use, simp and purge
+hol2dk dump-simp $file.[ml|hl]
+  compose the commands dump, pos, use, rewrite and purge
   for $file depending on hol.ml
 
-hol2dk dump-use-and-simp $file.[ml|hl]
+hol2dk dump-use-simp $file.[ml|hl]
   same as hol2dk dump except that hol.ml is not loaded first
 
 hol2dk dump $file.[ml|hl]
@@ -39,8 +39,8 @@ hol2dk pos $file
 hol2dk use $file
   generate $file.use, some data to know whether a theorem is used or not
 
-hol2dk simp $file
-  simplify $file.prf and recompute $file.pos and $file.use
+hol2dk rewrite $file
+  simplify $file.prf and update $file.pos and $file.use
 
 hol2dk purge $file
   compute theorems that can be discarded in $file.use
@@ -313,26 +313,32 @@ let range args =
   | _ -> wrong_arg()
 
 let dump after_hol f b =
-  log "generate dump.ml ...\n%!";
-  let oc = open_out "dump.ml" in
+  let ml_file = Printf.sprintf "/tmp/dump%d.ml" (Unix.getpid()) in
+  log "generate %s ...\n%!" ml_file;
+  let oc = open_out ml_file in
   let use oc after_hol =
     if after_hol then out oc {|#use "hol.ml";;\nneeds "%s";;|} b
     else out oc {|#use "%s";;|} f
   in
+  let cmd oc after_hol =
+    if after_hol then out oc " dump" else out oc " dump-use" in
   out oc
-{|(* file generated with: hol2dk dump %s *)
+{|(* file generated with: hol2dk%a %s *)
 #use "topfind";;
 #require "camlp5";;
 #load "camlp5o.cma";;
+#require "unix";;
 %a
+close_out oc_dump;;
+Sys.command ("mv "^dump_filename^" %s.prf");;
 dump_signature "%s.sig";;
 #load "str.cma";;
 #use "xnames.ml";;
 dump_map_thid_name "%s.thm" %a;;
-|} f use after_hol b b
+|} cmd after_hol f use after_hol b b b
 (olist ostring) (trans_file_deps (dep_graph (files())) f);
   close_out oc;
-  Sys.command ("ocaml -w -A dump.ml && mv -f dump.prf "^b^".prf")
+  Sys.command ("ocaml -w -A -I . "^ml_file)
 
 let basename_ml f =
   match Filename.extension f with
@@ -385,8 +391,8 @@ and command = function
 
   | ["dump";f] -> dump true f (basename_ml f)
   | ["dump-use";f] -> dump false f (basename_ml f)
-  | ["dump-and-simp";f] -> dump_and_simp true f
-  | ["dump-and-simp-use";f] -> dump_and_simp false f
+  | ["dump-simp";f] -> dump_and_simp true f
+  | ["dump-use-simp";f] -> dump_and_simp false f
 
   | ["pos";b] ->
      let nb_proofs = read_nb_proofs b in

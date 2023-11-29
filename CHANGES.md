@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command purge to compute useless theorems
   these two commands greatly reduce the size of generated proofs
 - command simp is equivalent to rewrite and purge
-- command dump-and-simp is equivalent to dump, pos, use and simp
+- command dump-simp is equivalent to dump, pos, use and simp
 
 ## 0.0.1 (2023-11-22)
 
