@@ -113,7 +113,7 @@ hol2dk name
   in the working directory and all its subdirectories recursively
 %!"
 
-let percent k = (100 * k) / (nb_proofs())
+let percent k n = (100 * k) / n
 
 let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
@@ -513,7 +513,7 @@ dump_map_thid_name "%s.thm" %a;;
      iter_proofs_at simp;
      close_in !Xproof.ic_prf;
      close_out oc;
-     log "%d simplifications (%d%%)\n" !n (percent !n);
+     log "%d simplifications (%d%%)\n" !n (percent !n (nb_proofs()));
      (* replace file.prf by file-simp.prf, and recompute file.pos and
         file.use *)
      log "replace %s.prf by %s-simp.prf ...\n" b b;
@@ -555,7 +555,8 @@ dump_map_thid_name "%s.thm" %a;;
      log "generate %s ...\n" dump_file;
      let oc = open_out_bin dump_file in
      output_value oc !Xproof.last_use;
-     log "%d useless theorems (%d%%)\n" !nb_useless (percent !nb_useless);
+     log "%d useless theorems (%d%%)\n"
+       !nb_useless (percent !nb_useless nb_proofs);
      0
 
   | ["simp";b] ->
@@ -580,7 +581,7 @@ dump_map_thid_name "%s.thm" %a;;
      let unused = ref 0 in
      Array.iter (fun n -> if n < 0 then incr unused) last_use;
      log "%d unused theorems (including named theorems) (%d%%)\n"
-       !unused (percent !unused);
+       !unused (percent !unused nb_proofs);
      close_out oc;
      let first = ref (-1) in
      let exception Found in
