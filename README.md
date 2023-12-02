@@ -324,7 +324,26 @@ make -j $jobs -f Makefile.coq
 Results
 -------
 
-Results on a machine with 32 processors i9-13950HX and 64 Go RAM:
+`hol.ml` can be exported and translated to Dedukti, Lambdapi and Coq
+in a few minutes. It is possible to export other subsequent theories
+as well. Below, you will find some data for `hol.ml`. We will soon
+provide data for other libraries.
+
+While it takes only a few minutes to check the Dedukti output, it
+takes hours for Coq and require too much memory for Lambdapi.
+
+While it is possible to translate all HOL-Light proofs to Coq, the
+translated proofs may not be directly usable by Coq users because
+HOL-Light types and functions may not be aligned with those of the Coq
+standard library yet. Currently, only the type of natural numbers and
+various functions on natural numbers have been aligned. We gathered
+the obtained 448 lemmas in the Opam package
+[coq-hol-light](https://github.com/Deducteam/coq-hol-light).
+
+Performance
+-----------
+
+Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
