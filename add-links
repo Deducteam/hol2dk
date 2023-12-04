@@ -29,4 +29,4 @@ do
     ln -f -s $HOL2DK_DIR/$f
 done
 
-ln -f -s $1.mk Makefile
+ln -f -s `basename $1`.mk Makefile

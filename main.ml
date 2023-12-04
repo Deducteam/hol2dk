@@ -317,7 +317,7 @@ let dump after_hol f b =
   log "generate %s ...\n%!" ml_file;
   let oc = open_out ml_file in
   let use oc after_hol =
-    if after_hol then out oc "#use \"hol.ml\";;\nneeds \"%s\";;" b
+    if after_hol then out oc "#use \"hol.ml\";;\nneeds \"%s\";;" f
     else out oc "#use \"%s\";;" f
   in
   let cmd oc after_hol =
