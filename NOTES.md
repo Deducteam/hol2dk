@@ -2,6 +2,7 @@ NOTES
 -----
 
 - dumping files after hol.ml:
+  * Library/analysis: ocaml 1m10s dump-simp 3m58s 9 M steps +485 named theorems
   * 100/bertrand: 2m13s 14M steps 4.8 Go
   * 100/isoperimetric:
 
