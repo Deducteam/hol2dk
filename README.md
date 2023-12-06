@@ -330,7 +330,7 @@ as well. Below, you will find some data for `hol.ml`. We will soon
 provide data for other libraries.
 
 While it takes only a few minutes to check the Dedukti output, it
-takes hours for Coq and require too much memory for Lambdapi.
+currently takes hours for Coq and require too much memory for Lambdapi.
 
 While it is possible to translate all HOL-Light proofs to Coq, the
 translated proofs may not be directly usable by Coq users because
@@ -345,7 +345,11 @@ Performance
 
 Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
-Dumping of `hol.ml`:
+Dumping and translation of `Logic/make.ml` with `dg 32`:
+  * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
+  * dk 1m13s dko 4m15s lp 42s v 12s vo 
+  
+Dumping and translation of `hol.ml` with `dg 100`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
@@ -408,8 +412,8 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 348 Ko
   * term abbreviations: 590 Mo (42%)
 
-Results for `hol.ml` up to `arith.ml` (by commenting from `loads "wf.ml"` to the end) with `dg 7`:
-  * proof dumping time: 11s 77 Mo (448 named theorems)
+Dumping and translation of `arith.ml` with `dg 7`:
+  * proof dumping time: 11s 77 Mo 448 named theorems
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s
   * unused proofs after simplification: 31%

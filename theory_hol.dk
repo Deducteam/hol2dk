@@ -32,7 +32,7 @@ def SYM : a : Set -> x : El a -> y : El a -> Prf (eq a x y) -> Prf (eq a y x) :=
 [p,q] Prf (imp p q) --> Prf p -> Prf q.
 [a,p] Prf (all a p) --> x : El a -> Prf (p x).
 
-def top : Prf T.
+def top_intro : Prf T.
 def and_intro : p : El bool -> Prf p -> q : El bool -> Prf q -> Prf (and p q).
 def and_elim1 : p : El bool -> q : El bool -> Prf (and p q) -> Prf p.
 def and_elim2 : p : El bool -> q : El bool -> Prf (and p q) -> Prf q.

@@ -39,7 +39,7 @@ builtin "ex1" ≔ ∃!;
 builtin "ex1_def" ≔ ∃!_def;
 
 // natural deduction rules
-builtin "Logic.I" ≔ top;
+builtin "Logic.I" ≔ top_intro;
 builtin "conj" ≔ ∧ᵢ;
 builtin "proj1" ≔ ∧ₑ₁;
 builtin "proj2" ≔ ∧ₑ₂;
