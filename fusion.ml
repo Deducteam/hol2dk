@@ -1,4 +1,5 @@
 (* Slight modification of fusion.ml to dump proofs. *)
+(*REMOVE*)module [@warning "-8-32-27"] M = struct
 
 (* ========================================================================= *)
 (* Complete HOL kernel of types, terms and theorems.                         *)
@@ -937,3 +938,5 @@ let aconv s t = alphaorder s t = 0;;
 (* ------------------------------------------------------------------------- *)
 
 let equals_thm th th' = dest_thm th = dest_thm th';;
+
+(*REMOVE*)end include M

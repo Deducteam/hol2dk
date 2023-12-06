@@ -1,4 +1,5 @@
 (* Slight modification of lib.ml. *)
+module [@warning "-27-39"] M = struct
 
 (* ========================================================================= *)
 (* Convenient library functions.                                             *)
@@ -86,7 +87,7 @@ let rec map2 f l1 l2 =
 (* Attempting function or predicate applications.                            *)
 (* ------------------------------------------------------------------------- *)
 
-let can f x = try (f x; true) with Failure _ -> false;;
+let can f x = try (ignore(f x); true) with Failure _ -> false;;
 
 let check p x = if p x then x else failwith "check";;
 
@@ -847,3 +848,6 @@ let string_of_file filename =
 let file_of_string filename s =
   let fd = Stdlib.open_out filename in
   output_string fd s; close_out fd;;
+
+end
+include M

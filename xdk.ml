@@ -533,7 +533,7 @@ let proof tvs rmap =
 (****************************************************************************)
 
 let typ_arity oc k =
-  for i = 1 to k do out oc "%a -> " typ_name "Set" done; typ_name oc "Set";;
+  for _ = 1 to k do out oc "%a -> " typ_name "Set" done; typ_name oc "Set";;
 
 let decl_typ oc (n,k) =
   out oc "%a : %a.\n" typ_name n typ_arity k;;
@@ -588,7 +588,7 @@ type decl =
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k],
    proof [p] and name [n] as declaration type [d]. *)
 let decl_theorem oc k p d =
-  let Proof(thm,content) = p in
+  let Proof(thm,_) = p in
   (*incr counter;
   if !counter = 1000 then (log "theorem %d ...\n%!" k; counter := 0);*)
   let ts,t = dest_thm thm in

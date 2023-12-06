@@ -21,7 +21,7 @@ let string_of_file f =
 REMOVE*)
 
 (* [eval code] evaluates [code] in the OCaml toplevel. *)
-let eval (code : string) : unit =
+let [@warning "-27"] eval (code : string) : unit =
   () (*REMOVE
   let as_buf = Lexing.from_string code in
   let parsed = !Toploop.parse_toplevel_phrase as_buf in
@@ -77,7 +77,7 @@ let thms_of_file =
         let _ = Str.search_forward re content start in
         let matches = [Str.matched_group 2 content] in
         search (matches @ acc) (Str.match_end())
-      with e -> (acc)
+      with _ -> acc
     in
     search [] 0
   in
@@ -99,7 +99,7 @@ let thms_of_file =
           [Str.matched_group 2 content
           ;Str.matched_group 3 content] in
         search (matches @ acc) (Str.match_end())
-      with e -> acc
+      with _ -> acc
     in search [] 0
   in
   let search_3 =
@@ -122,7 +122,7 @@ let thms_of_file =
           ;Str.matched_group 4 content]
         in
         search (matches @ acc) (Str.match_end())
-      with e -> acc
+      with _ -> acc
     in search [] 0
   in
   fun f -> let s = string_of_file f in search_1 s @ search_2 s @ search_3 s
