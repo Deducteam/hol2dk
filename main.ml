@@ -466,61 +466,52 @@ and command = function
      let n = ref 0 in
      (* map from theorem indexes to their new proofs *)
      let map = ref MapInt.empty in
-     let add i p = map := MapInt.add i p !map in
-     let proof_at j = try MapInt.find j !map with Not_found -> proof_at j in
-     let pc_at j = let Proof(_,c) = proof_at j in c in
+     let add i c = map := MapInt.add i c !map in
+     let pc_at j =
+       try MapInt.find j !map with Not_found -> content_of (proof_at j) in
      (* simplification of proof p at index k *)
      let simp k p =
        let default() = output_value oc p in
-       let out pc =
-         let p = change_proof_content p pc in
-         incr n; add k p; output_value oc p
-       in
-       if Array.get !last_use k < 0 then
-         output_value oc p (*(change_proof_content p Ptruth)*)
-       else
-       let Proof(_,c) = p in
-       match c with
+       let out pc = incr n; add k pc; output_value oc (change_content p pc) in
+       if Array.get !last_use k < 0 then default() else
+       match content_of p with
        | Ptrans(i,j) ->
-          let pi = proof_at i and pj = proof_at j in
-          let Proof(_,ci) = pi and Proof(_,cj) = pj in
+          let ci = pc_at i and cj = pc_at j in
           begin match ci, cj with
           | Prefl _, _ -> (* i:t=t j:t=u ==> k:t=u *) out cj
           | _, Prefl _ -> (* i:t=u j:u=u ==> k:t=u *) out ci
           | _ -> default()
           end
        | Psym i ->
-          let pi = proof_at i in
-          let Proof(_,ci) = pi in
-          begin
-            match ci with
-            | Prefl _ -> (* i:t=t ==> k:t=t *) out ci
-            | Psym j -> (* j:t=u ==> i:u=t ==> k:t=u *) out (pc_at j)
-            | _ -> default()
+          let ci = pc_at i in
+          begin match ci with
+          | Prefl _ -> (* i:t=t ==> k:t=t *) out ci
+          | Psym j -> (* j:t=u ==> i:u=t ==> k:t=u *) out (pc_at j)
+          | _ -> default()
           end
        | Pconjunct1 i ->
-          begin match proof_at i with
-          | Proof(_,Pconj(j,_)) -> (* j:p ==> i:p/\q ==> k:p *) out (pc_at j)
+          begin match pc_at i with
+          | Pconj(j,_) -> (* j:p ==> i:p/\q ==> k:p *) out (pc_at j)
           | _ -> default()
           end
        | Pconjunct2 i ->
-          begin match proof_at i with
-          | Proof(_,Pconj(_,j)) -> (* j:q ==> i:p/\q ==> k:q *) out (pc_at j)
+          begin match pc_at i with
+          | Pconj(_,j) -> (* j:q ==> i:p/\q ==> k:q *) out (pc_at j)
           | _ -> default()
           end
        | Pmkcomb(i,j) ->
-          begin match proof_at i with
-          | Proof(_,Prefl t) ->
-             begin match proof_at j with
-             | Proof(_,Prefl u) -> (* i:t=t j:u=u ==> k:tu=tu *)
+          begin match pc_at i with
+          | Prefl t ->
+             begin match pc_at j with
+             | Prefl u -> (* i:t=t j:u=u ==> k:tu=tu *)
                 out (Prefl(mk_comb(t,u)))
              | _ -> default()
              end
           | _ -> default()
           end
        | Peqmp(i,j) ->
-          begin match proof_at i with
-          | Proof(_,Prefl _) -> (* i:p=p j:p ==> k:p *) out (pc_at j)
+          begin match pc_at i with
+          | Prefl _ -> (* i:p=p j:p ==> k:p *) out (pc_at j)
           | _ -> default()
           end
        | _ -> default()
