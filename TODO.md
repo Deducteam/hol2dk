@@ -1,6 +1,8 @@
 TODO
 ----
 
+- proofs can be simplified in parallel by working on the proof of each named theorem separately
+
 - put nb_proofs in a separate file
 
 - add commands for patch/unpatch/add-links ?

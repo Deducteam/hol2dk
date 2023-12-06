@@ -7,12 +7,8 @@ NOTES
   * dump 44m23s 153 Go 223 M steps +17166 named theorems (half of HOL-Light)
   * pos 13m51s 1.9 Go
   * use 13m54s 1 Go
-  * rewrite killed
-  * pos
-  * use
-  * purge
-  * dk
-  * dko
+  * rewrite 77m9s simplifications 14% unused 29%
+  * purge 21m31s 59% useless
 
 - Logic/make:
   * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
@@ -21,6 +17,8 @@ NOTES
 - Library/analysis:
   * ocaml 1m10s
   * dump-simp 3m58s 9 M steps +485 named theorems
+
+## 27/11/23
 
 - results on new computer with 32 * 13th Gen Intel(R) Core(TM) i9-13950HX:
   * hol.ml dg 100 j 32: lp 48s v 39s vo 175m18s

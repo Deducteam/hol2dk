@@ -340,17 +340,24 @@ Performance
 
 Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
-Dumping and translation of `Logic/make.ml` with `dg 32`:
+Translation of `100/isoperimetric.ml`:
+  * dump 44m23s 153 Go 223 M steps +17166 named theorems (half of all HOL-Light named theorems)
+  * pos 13m51s 1.9 Go
+  * use 13m54s 1 Go
+  * rewrite 1h17m - pos&use = 49m simplifications 14% unused 29%
+  * purge 21m31s 59% useless
+
+Translation of `Logic/make.ml` with `dg 32`:
   * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
   * dk 1m13s dko 4m15s lp 42s v 12s vo 71m48s
   
-Dumping and translation of `hol.ml` with `dg 100`:
+Translation of `hol.ml` with `dg 100`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
   * number of proof steps: 8.5 M (8% unused)
-  * simplification time: 1m38s
+  * simplification time: 1m22s
   * number of simplifications: 1.2 M (14%)
   * unused proof steps after simplification: 29%
   * purge time: 11s
@@ -407,7 +414,7 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 348 Ko
   * term abbreviations: 590 Mo (42%)
 
-Dumping and translation of `arith.ml` with `dg 7`:
+Translation of `arith.ml` with `dg 7`:
   * proof dumping time: 11s 77 Mo 448 named theorems
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s

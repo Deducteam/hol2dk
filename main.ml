@@ -465,16 +465,20 @@ and command = function
      (* count the number of simplications *)
      let n = ref 0 in
      (* map from theorem indexes to their new proofs *)
-     let map = Array.make (nb_proofs()) None in
-     let add i c = map.(i) <- Some c in
+     let map = ref MapInt.empty in
+     let add i c = map := MapInt.add i c !map in
      let pc_at j =
-       match map.(j) with Some c -> c | None -> content_of (proof_at j) in
+       match MapInt.find_opt j !map with
+       | Some c -> c
+       | None -> content_of (proof_at j)
+     in
      (* simplification of proof p at index k *)
      let simp k p =
        let default() = output_value oc p in
+       let l = Array.get !last_use k in
+       if l < 0 then default() else
        let out c = incr n; add k c; output_value oc (change_content p c) in
-       if Array.get !last_use k < 0 then default() else
-       match content_of p with
+       begin match content_of p with
        | Ptrans(i,j) ->
           let ci = pc_at i and cj = pc_at j in
           begin match ci, cj with
@@ -515,6 +519,10 @@ and command = function
           | _ -> default()
           end
        | _ -> default()
+       end;
+       (* we can empty the map since the proofs coming after a named
+          theorem cannot refer to proofs coming before it *)
+       if l = 0 then map := MapInt.empty
      in
      iter_proofs_at simp;
      close_in !Xproof.ic_prf;
