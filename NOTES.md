@@ -16,8 +16,7 @@ NOTES
 
 - Logic/make:
   * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
-  * dk 1m13s
-  * dko 4m15s
+  * dk 1m13s dko 4m15s lp 42s v 12s vo 
 
 - Library/analysis:
   * ocaml 1m10s
