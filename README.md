@@ -1,9 +1,7 @@
 Export HOL-Light proofs to Dedukti, Lambdapi and Coq
 ====================================================
 
-This project provides several things:
-- scripts `patch` and `unpatch` to (un)patch HOL-Light to dump proofs
-- a program `hol2dk` with commands for dumping proofs from HOL-Light, translate those proofs to Dedukti and Lambdapi, and generate Makefile's to translation those proofs to Coq using lambdapi.
+This project provides a tool to translate [HOL-Light](https://github.com/jrh13/hol-light) proofs to [Dedukti](https://github.com/Deducteam/Dedukti/), [Lambdapi](https://github.com/Deducteam/lambdapi) and [Coq](https://coq.inria.fr/).
 
 [HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
 based on higher-order logic, aka simple type theory.
@@ -19,6 +17,27 @@ Dedukti proofs.
 
 [Coq](https://coq.inria.fr/) is a proof assistant based on the
 Calculus of Inductive Constructions.
+
+Results
+-------
+
+The HOL-Light base library `hol.ml` or the library `Logic/make.ml`
+formalizing the metatheory of first-order logic can be exported and
+translated to Dedukti, Lambdapi and Coq in a few minutes. It is
+possible to export other theories as well. Below, you will find some
+data.
+
+However, it may take hours for Coq and require too much memory for
+Lambdapi to check the translated files.
+
+Moreover, while it is possible to translate all HOL-Light proofs to
+Coq, the translated proofs may not be directly usable by Coq users
+because HOL-Light types and functions may not be aligned with those of
+the Coq standard library yet. Currently, only the type of natural
+numbers and various functions on natural numbers have been aligned. We
+gathered the obtained 448 lemmas in the package
+[coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
+in the Coq Opam repository [released](https://github.com/coq/opam).
 
 Installing HOL-Light sources
 ----------------------------
@@ -57,13 +76,10 @@ Installing hol2dk
 - ocaml >= 4.13
 - dune >= 3.7
 
-hol2dk is now available on Opam. To install it, simply do:
+hol2dk is now available on [Opam](https://opam.ocaml.org/). To install it, simply do:
 ```
 opam install hol2dk
 ```
-
-For the moment, we however need hol2dk sources to run some commands
-(checking dk/lp files or translating them to coq).
 
 You can also install hol2dk from its sources as follows:
 ```
@@ -91,10 +107,8 @@ Patching HOL-Light sources
 --------------------------
 
 ```
-bash $HOL2DK_DIR/patch $HOLLIGHT_DIR
+$HOL2DK_DIR/patch $HOLLIGHT_DIR
 ```
-
-where `$HOLLIGHT_DIR` is the directory where are the sources of HOL-Light.
 
 This script slightly modifies a few HOL-Light files in order to dump proofs:
 - `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
@@ -107,7 +121,7 @@ Before applying the patch, a copy of these files is created in `fusion-bak.ml`, 
 
 To restore HOL-Light files, simply do:
 ```
-bash $HOL2DK_DIR/unpatch $HOLLIGHT_DIR
+$HOL2DK_DIR/unpatch $HOLLIGHT_DIR
 ```
 You can add the option `-y` to force file restoration.
 
@@ -116,10 +130,10 @@ Summary of hol2dk commands
 
 Get it by running `hol2dk` without arguments.
 
-Dumping HOL-Light proof steps
------------------------------
+Dumping HOL-Light proofs
+------------------------
 
-For dumping a HOL-Light file depending on `hol.ml` do:
+For dumping the proofs of a HOL-Light file depending on `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
 hol2dk dump-simp file.ml
@@ -132,7 +146,7 @@ This will generate the following files:
 - `file.pos`: positions of proof steps in `file.prf`
 - `file.use`: data about the use of theorems
 
-WARNING: it is important to the command in the HOL-Light directory so as to compute the list of named theorems properly.
+WARNING: it is important to run the command in the HOL-Light directory so as to compute the list of named theorems properly.
 
 For dumping (a subset of) `hol.ml` do:
 ```
@@ -143,19 +157,19 @@ where `file.ml` should at least contain the contents of `hol.ml` until the line 
 
 The command `dump-simp` (and similarly for `dump-use-simp`) are actually the sequential composition of various lower level commands: `dump`, `pos`, `use`, `rewrite` and `purge`:
 
-**Simplifying dumped proofs** HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) can be derived by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
+**Simplifying dumped proofs.** HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) is sometimes proved by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
 The command `rewrite` implements the following simplification rules:
-- SYM(REFL(t)) --> REFL(t)
-- SYM(SYM(p)) --> p
-- TRANS(REFL(t),p) --> p
-- TRANS(p,REFL(t)) --> p
-- CONJUNCT1(CONJ(p,_)) --> p
-- CONJUNCT2(CONJ(_,p)) --> p
-- MKCOMB(REFL(t),REFL(u)) --> REFL(t(u))
-- EQMP(REFL _,p) --> p
+- SYM(REFL(t)) ⟶ REFL(t)
+- SYM(SYM(p)) ⟶ p
+- TRANS(REFL(t),p) ⟶ p
+- TRANS(p,REFL(t)) ⟶ p
+- CONJUNCT1(CONJ(p,_)) ⟶ p
+- CONJUNCT2(CONJ(_,p)) ⟶ p
+- MKCOMB(REFL(t),REFL(u)) ⟶ REFL(t(u))
+- EQMP(REFL _,p) ⟶ p
 
-**Purging dumped proofs** Because HOL-Light tactics may fail, some theorems are generated but not used in the end, especially after simplification. Therefore, they do not need to be translated.
+**Purging dumped proofs.** Because HOL-Light tactics may fail, some theorems are generated but not used in the end, especially after simplification. Therefore, they do not need to be translated.
 
 The command `purge` compute in `file.use` all the theorems that do not need to be translated.
 
@@ -164,8 +178,7 @@ The command `simp` is the sequential composition of `rewrite` and `purge`.
 Generating dk/lp files from dumped files
 --------------------------------------
 
-The base theory in which HOL-Light proofs are translated is described in the files [theory_hol.lp](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.lp) and [theory_hol.dk](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.dk).
-
+The base Dedukti/Lambdapi theories in which HOL-Light proofs are translated is described in the files [theory_hol.lp](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.lp) and [theory_hol.dk](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.dk) respectively.
 
 You can then generate `file.dk` with:
 ```
@@ -213,14 +226,15 @@ make -j $jobs -f file.mk lp
 
 Remark: for not cluttering your HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
 ```
+cd $HOLLIGHT_DIR
+hol2dk dump-use-simp hol.ml
 cd $HOME
 mkdir output-hol2dk
 cd output-hol2dk
-bash $HOL2DK_DIR/add-links hol
+$HOL2DK_DIR/add-links hol
 cd hol
 hol2dk dg 100 hol
 hol2dk mk hol
-ln -s hol.mk Makefile
 make -j32 lp
 ```
 
@@ -265,7 +279,7 @@ To check the generated lp files with
 lambdapi check file.lp
 ```
 
-**Remark:** In case hol-light and dkcheck/lambdapi do not use the same
+**Remark:** In case hol-light and lambdapi do not use the same
 ocaml versions, it is convenient to use different switches in each
 directory:
 
@@ -282,8 +296,8 @@ opam switch link 4.14.1
 eval `opam env`
 ```
 
-Translating lp files to Coq files
----------------------------------
+Translating lp files to Coq
+---------------------------
 
 **Requirement:** lambdapi >= 2.4.1
 
@@ -294,10 +308,10 @@ ln -s $HOL2DK_DIR/_CoqProject
 ```
 
 Once HOL-Light files have been translated to Lambdapi files, it is possible
-to translate Lambdapi files into [Coq](https://coq.inria.fr/) files
-using the Coq export feature of Lambdapi.
+to translate the obtained Lambdapi files into [Coq](https://coq.inria.fr/) files
+using the Coq [export](https://lambdapi.readthedocs.io/en/latest/options.html#export) feature of Lambdapi.
 
-If your Lambdapi files have been generated using `file.mk`, you can simply do:
+If the Lambdapi files have been generated using `file.mk`, you can simply do:
 ```
 make -j $jobs -f file.mk v # to generate Coq files
 make -j $jobs -f file.mk vo # to check the generated Coq files
@@ -305,11 +319,11 @@ make -j $jobs -f file.mk vo # to check the generated Coq files
 
 To indicate a specific `lambdapi` command, do:
 ```
-make -j $jobs -f file.mk LAMBAPI=$lambdapi v # to generate Coq files
+make -j $jobs -f file.mk LAMBAPI=$lambdapi v
 ```
 
 Otherwise, you need to translate Lambdapi files one by one by hand or
-using a script:
+by using a script:
 ```
 lambdapi export -o stt_coq --encoding $HOL2DK_DIR/encoding.lp --erasing $HOL2DK_DIR/erasing.lp --renaming $HOL2DK_DIR/renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
 ```
@@ -320,25 +334,6 @@ echo coq.v theory_hol.v file*.v > _CoqProject
 coq_makefile -f _CoqProject -o Makefile.coq
 make -j $jobs -f Makefile.coq
 ```
-
-Results
--------
-
-`hol.ml` can be exported and translated to Dedukti, Lambdapi and Coq
-in a few minutes. It is possible to export other subsequent theories
-as well. Below, you will find some data for `hol.ml`. We will soon
-provide data for other libraries.
-
-While it takes only a few minutes to check the Dedukti output, it
-currently takes hours for Coq and require too much memory for Lambdapi.
-
-While it is possible to translate all HOL-Light proofs to Coq, the
-translated proofs may not be directly usable by Coq users because
-HOL-Light types and functions may not be aligned with those of the Coq
-standard library yet. Currently, only the type of natural numbers and
-various functions on natural numbers have been aligned. We gathered
-the obtained 448 lemmas in the Opam package
-[coq-hol-light](https://github.com/Deducteam/coq-hol-light).
 
 Performance
 -----------
