@@ -2,7 +2,7 @@
  (public_name hol2dk)
  (name main)
  (libraries str unix)
- (flags -w -27 -w -8))
+)
 
 (install
  (files coq.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp erasing.lp fusion.ml bool.ml equal.ml xnames.ml patch unpatch add-links)

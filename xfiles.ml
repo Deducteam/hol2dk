@@ -1,6 +1,5 @@
 open Xprelude;;
 open Xlib;;
-open Xnames;;
 
 (* [files()] computes the list of HOL-Light files in the current
    directory and its subdirectories recursively. *)

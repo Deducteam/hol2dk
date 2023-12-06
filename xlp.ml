@@ -244,7 +244,7 @@ let abbrev_term =
    constant [el]. *)
 let rec rename rmap t =
   match t with
-  | Var(n,b) -> (try mk_var(List.assoc t rmap,b) with Not_found -> mk_el b)
+  | Var(_,b) -> (try mk_var(List.assoc t rmap,b) with Not_found -> mk_el b)
   | Const(_,_) -> t
   | Comb(u,v) -> mk_comb(rename rmap u, rename rmap v)
   | Abs(u,v) ->
@@ -333,7 +333,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
    with type variables [tvs] and free variables renaming map [rmap]. *)
 let proof tvs rmap =
   let term = term rmap in
-  let rec proof oc p =
+  let proof oc p =
     let Proof(thm,content) = p in
     let ts = hyp thm in
     let sub = subproof tvs rmap [] [] ts in
@@ -408,7 +408,7 @@ let proof tvs rmap =
 (* Translation of type declarations and axioms. *)
 (****************************************************************************)
 
-let typ_arity oc k = for i = 1 to k do out oc "Set → " done; out oc "Set";;
+let typ_arity oc k = for _ = 1 to k do out oc "Set → " done; out oc "Set";;
 
 let decl_typ oc (n,k) =
   out oc "constant symbol %a : %a;\n" typ_name n typ_arity k;;
@@ -482,7 +482,7 @@ type decl =
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k]
    and proof [p] as declaration type [d]. *)
 let decl_theorem oc k p d =
-  let Proof(thm,content) = p in
+  let Proof(thm,_) = p in
   (*log "theorem %d ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in

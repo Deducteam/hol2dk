@@ -211,7 +211,7 @@ let typ_vars_pos b =
     match l with
     | [] -> acc
     | (Tyvar n, p)::l -> aux ((n, List.rev p)::acc) l
-    | (Tyapp(n,bs), p)::l ->
+    | (Tyapp(_,bs), p)::l ->
        aux acc
          (let k = ref (-1) in
           List.fold_left
