@@ -37,7 +37,7 @@ constant symbol T : El bool;
 /* Natural deduction rules */
 rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
 rule Prf (∀ $p) ↪ Π x, Prf ($p x);
-symbol top : Prf T;
+symbol Tᵢ : Prf T;
 symbol ∧ᵢ [p : El bool] : Prf p → Π [q : El bool], Prf q → Prf (∧ p q);
 symbol ∧ₑ₁ [p q : El bool] : Prf (∧ p q) → Prf p;
 symbol ∧ₑ₂ [p q : El bool] : Prf (∧ p q) → Prf q;

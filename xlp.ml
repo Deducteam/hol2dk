@@ -12,12 +12,19 @@ open Xproof
 (****************************************************************************)
 
 (* Rename HOL-Light names to valid (and sometimes nicer) identifiers. *)
-let name oc n =
+let name =
+  let prefixes = (* the order is important *)
+    [ "|----", "vdash4"
+    ; "|---", "vdash3"
+    ; "|--", "vdash2"
+    ; "|-", "vdash" ]
+  in
+  fun oc n ->
   string oc
     begin match n with
-    | "," -> "̦‚" (* low single comma quotation mark
-                    https://unicode-table.com/en/201A/ *)
-    | "@" -> "ε" (* Hilbert choice operator *)
+    | "" -> assert false
+    | "," -> "̦‚" (* 201A *)
+    | "@" -> "ε"
     | "\\/" -> "∨"
     | "/\\" -> "∧"
     | "==>" -> "⇒"
@@ -25,11 +32,16 @@ let name oc n =
     | "?" -> "∃"
     | "?!" -> "∃!"
     | "~" -> "¬"
+    | "-->" -> "⟶" (* 27F6 *)
+    | "<->" -> "↔" (* 2194 *)
     (* invalid Lambdapi identifiers *)
-    | "$" -> "dollar"
-    | ".." -> "dotdot"
-    | "" -> assert false
-    | _ -> Xlib.replace '%' '_' n (* for Coq *)
+    | "$" -> "﹩" (* FE69 *)
+    | ".." -> "…" (* 2026 *)
+    | "|" -> "¦" (* 00A6 *)
+    | "||" -> "¦¦"
+    | "open" | "as" -> n ^ "_"
+    | _ -> (* for Coq *)
+       Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
     end
 ;;
 
@@ -43,7 +55,8 @@ let typ_name oc n =
   string oc
     begin match n with
      | "" -> assert false
-     | "sum" -> "sum_type" (* sum is also a term constant *)
+       (* type names used also as constant names are capitalized *)
+     | "sum" | "topology" | "metric" | "multiset" -> String.capitalize_ascii n
      | n ->
         if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
         else n
@@ -356,7 +369,7 @@ let proof tvs rmap =
        out oc "axiom_%d%a"
          (pos_first (fun th -> concl th = t) (axioms()))
          (list_prefix " " term) (frees t)
-    | Ptruth -> out oc "top"
+    | Ptruth -> out oc "Tᵢ"
     | Pconj(k1,k2) -> out oc "∧ᵢ %a %a" sub_at k1 sub_at k2
     | Pconjunct1 k -> out oc "∧ₑ₁ %a" sub_at k
     | Pconjunct2 k -> out oc "∧ₑ₂ %a" sub_at k

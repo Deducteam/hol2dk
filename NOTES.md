@@ -1,13 +1,31 @@
 NOTES
 -----
 
-- dumping files after hol.ml:
-  * Library/analysis: ocaml 1m10s dump-simp 3m58s 9 M steps +485 named theorems
-  * 100/bertrand: 2m13s 14M steps 4.8 Go
-  * 100/isoperimetric:
+## 06/12/23
+
+- 100/isoperimetric:
+  * dump 44m23s 153 Go 223 M steps +17166 named theorems (half of HOL-Light)
+  * pos 13m51s 1.9 Go
+  * use 13m54s 1 Go
+  * rewrite killed
+  * pos
+  * use
+  * purge
+  * dk
+  * dko
+
+- Logic/make:
+  * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
+  * dk 1m13s dko 4m15s lp 42s v 12s vo 71m48s
+
+- Library/analysis:
+  * ocaml 1m10s
+  * dump-simp 3m58s 9 M steps +485 named theorems
 
 - results on new computer with 32 * 13th Gen Intel(R) Core(TM) i9-13950HX:
   * hol.ml dg 100 j 32: lp 48s v 39s vo 175m18s
+
+## before 14/10/23
 
 - instrumenting BETA_CONV reduces the number of proof steps of `hol.ml` by 0.1% only
 

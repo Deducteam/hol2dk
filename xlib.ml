@@ -76,6 +76,41 @@ let replace c1 c2 s =
   done;
   String.of_bytes b
 
+(* [starts_with p s] says if the string [s] starts by [p]. *)
+let starts_with p s =
+  let n = String.length p in String.length s >= n && p = String.sub s 0 n
+
+let _ =
+  assert (starts_with "a" "" = false);
+  assert (starts_with "a" "a" = true);
+  assert (starts_with "a" "b" = false);
+  assert (starts_with "a" "ab" = true);
+  assert (starts_with "" "a" = true)
+
+(* [change_prefix p q s] returns a string equal to [s] except if [s]
+   starts with [p], in which case [p] is replaced by [q]. *)
+let change_prefix p q s =
+  let n = String.length p in
+  if starts_with p s then q ^ String.sub s n (String.length s - n) else s
+
+let _ =
+  assert (change_prefix "a" "b" "" = "");
+  assert (change_prefix "a" "b" "a" = "b");
+  assert (change_prefix "a" "b" "c" = "c");
+  assert (change_prefix "a" "b" "cd" = "cd");
+  assert (change_prefix "a" "b" "ac" = "bc")
+
+(* [change_prefixes l s] returns [s] if [s] starts with no string in
+   [List.map fst l]. Otherwise it returns [change_prefix p q s] where
+   [(p,q)] is the first element of [l] such that [starts_with p s]. *)
+let rec change_prefixes l s =
+  match l with
+  | [] -> s
+  | (p,q)::l ->
+     let n = String.length p in
+     if starts_with p s then q ^ String.sub s n (String.length s - n)
+     else change_prefixes l s
+
 (****************************************************************************)
 (* Printing functions. *)
 (****************************************************************************)

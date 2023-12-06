@@ -41,7 +41,8 @@ let name oc n = string oc (valid_name n);;
 let typ_name oc n =
   string oc
     (match n with
-     | "sum" -> "sum_type" (* sum is also a term constant *)
+       (* type names used also as constant names are capitalized *)
+     | "sum" | "topology" | "metric" | "multiset" -> String.capitalize_ascii n
      | n -> valid_name n)
   (*match !stage with
   | Types | No_abbrev -> name oc n
@@ -470,7 +471,7 @@ let proof tvs rmap =
        out oc "axiom_%d%a%a" k
          (list_prefix " " typ) (type_vars_in_term t)
          (list_prefix " " term) (frees t)
-    | Ptruth -> out oc "top"
+    | Ptruth -> out oc "top_intro"
     | Pconj(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let Proof(th1,_) = p1 and Proof(th2,_) = p2 in
