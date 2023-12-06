@@ -350,10 +350,10 @@ Dumping and translation of `hol.ml` with `dg 100`:
   * dumped files size: 3 Go
   * number of named theorems: 2842
   * number of proof steps: 8.5 M (8% unused)
-  * simplification time: 2m06s
+  * simplification time: 1m38s
   * number of simplifications: 1.2 M (14%)
   * unused proof steps after simplification: 29%
-  * purge time: 12s
+  * purge time: 11s
   * unused proof steps after purge: 60%
 
 | rule         |  % |

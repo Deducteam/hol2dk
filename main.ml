@@ -465,14 +465,14 @@ and command = function
      (* count the number of simplications *)
      let n = ref 0 in
      (* map from theorem indexes to their new proofs *)
-     let map = ref MapInt.empty in
-     let add i c = map := MapInt.add i c !map in
+     let map = Array.make (nb_proofs()) None in
+     let add i c = map.(i) <- Some c in
      let pc_at j =
-       try MapInt.find j !map with Not_found -> content_of (proof_at j) in
+       match map.(j) with Some c -> c | None -> content_of (proof_at j) in
      (* simplification of proof p at index k *)
      let simp k p =
        let default() = output_value oc p in
-       let out pc = incr n; add k pc; output_value oc (change_content p pc) in
+       let out c = incr n; add k c; output_value oc (change_content p c) in
        if Array.get !last_use k < 0 then default() else
        match content_of p with
        | Ptrans(i,j) ->
