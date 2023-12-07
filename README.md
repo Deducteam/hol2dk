@@ -21,17 +21,16 @@ Calculus of Inductive Constructions.
 Results
 -------
 
-The HOL-Light base library `hol.ml` or the library `Logic/make.ml`
+The HOL-Light base library `hol.ml` and the library `Logic/make.ml`
 formalizing the metatheory of first-order logic can be exported and
-translated to Dedukti, Lambdapi and Coq in a few minutes. It is
-possible to export other theories as well. Below, you will find some
-data.
+translated to Dedukti, Lambdapi and Coq in a few minutes. However, it
+may take hours for Coq and require too much memory for Lambdapi to
+check the translated files. Bigger libraries like
+`Multivariate/make.ml` requires too much memory for the moment. But we
+will fix this soon.
 
-However, it may take hours for Coq and require too much memory for
-Lambdapi to check the translated files.
-
-Moreover, while it is possible to translate all HOL-Light proofs to
-Coq, the translated proofs may not be directly usable by Coq users
+Moreover, while it is possible to translate any HOL-Light proof to
+Coq, the translated theorem may not be directly usable by Coq users
 because HOL-Light types and functions may not be aligned with those of
 the Coq standard library yet. Currently, only the type of natural
 numbers and various functions on natural numbers have been aligned. We
@@ -340,17 +339,9 @@ Performance
 
 Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
-Translation of `100/isoperimetric.ml`:
-  * dump 44m23s 153 Go 223 M steps +17166 named theorems (half of all HOL-Light named theorems)
-  * pos 13m51s 1.9 Go
-  * use 13m54s 1 Go
-  * rewrite 1h17m - pos&use = 49m simplifications 14% unused 29%
-  * purge 21m31s 59% useless
-  * dg 100 15m5s
-
-Translation of `Logic/make.ml` with `dg 32`:
-  * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
-  * dk 1m13s dko 4m15s lp 42s v 12s vo 71m48s
+Translation of `Logic/make.ml` with `dg 32` (includes `Library/analysis`):
+  * dump-simp 11m42s 10 Go 21.2 M steps (83% unused including hol.ml) +1729 named theorems
+  * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11ms
   
 Translation of `hol.ml` with `dg 100`:
   * checking time without proof dumping: 1m14s

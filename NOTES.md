@@ -3,22 +3,27 @@ NOTES
 
 ## 06/12/23
 
-- 100/isoperimetric:
-  * dump 44m23s 153 Go 223 M steps +17166 named theorems (half of HOL-Light)
+Translation of `100/isoperimetric.ml`:
+  * dump 44m23s 153 Go 223 M steps +17166 named theorems (half of all HOL-Light named theorems)
   * pos 13m51s 1.9 Go
-  * use 13m54s 1 Go
-  * rewrite 77m9s simplifications 14% unused 29%
+  * use 13m54s 1 Go 7% unused
+  * rewrite 1h17m - pos&use = 49m 14% simplifications 29% unused
   * purge 21m31s 59% useless
-  * dg 100 15m5s dg 300 16m2s
-  * make -j8 dk killed
+  * dg 100 15m5s
+  * too big to be translated to dk/lp
 
-- Logic/make:
-  * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
-  * dk 1m13s dko 4m15s lp 42s v 12s vo 71m48s
+Translation of `Multivariate/make.ml`:
+  * dump 35m52s 120 Go +16646 named theorems
 
-- Library/analysis:
-  * ocaml 1m10s
-  * dump-simp 3m58s 9 M steps +485 named theorems
+Translation of `Multivariate/make_upto_derivatives.ml`:
+  * dump 27m46s 91 Go + 14901 named theorems
+
+Translation of `Multivariate/make_upto_topology.ml`:
+  * dump 15m55s 48 Go +11987 named theorems 89 M steps
+  * pos 4m15s, use 4m18s 7% unused
+  * rewrite 24m43s -pos&use = 16m 14% simplifications 28% unused
+  * purge 3m37 58% useless, dg 100 4m55s
+  * too big to be translated to dk/lp
 
 ## 27/11/23
 
