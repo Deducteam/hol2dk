@@ -9,6 +9,8 @@ NOTES
   * use 13m54s 1 Go
   * rewrite 77m9s simplifications 14% unused 29%
   * purge 21m31s 59% useless
+  * dg 100 15m5s dg 300 16m2s
+  * make -j8 dk killed
 
 - Logic/make:
   * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems

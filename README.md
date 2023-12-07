@@ -346,6 +346,7 @@ Translation of `100/isoperimetric.ml`:
   * use 13m54s 1 Go
   * rewrite 1h17m - pos&use = 49m simplifications 14% unused 29%
   * purge 21m31s 59% useless
+  * dg 100 15m5s
 
 Translation of `Logic/make.ml` with `dg 32`:
   * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
