@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Modified
 
 - identifier renamings
+- merged the command dg in the command mk
 
 ## 0.0.1 (2023-11-22)
 
