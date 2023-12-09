@@ -206,10 +206,9 @@ using `make`.
 
 First generate `file.dg` and `file.mk` with:
 ```
-hol2dk dg $nb_parts file
-hol2dk mk file
+hol2dk mk $nb_parts file
 ```
-where `$nb_parts` is the number of files in which you want to split the proofs.
+where `$nb_parts` is the number of files in which you want to split proofs.
 
 Then generate `file.dk` with:
 
@@ -232,8 +231,7 @@ mkdir output-hol2dk
 cd output-hol2dk
 $HOL2DK_DIR/add-links hol
 cd hol
-hol2dk dg 100 hol
-hol2dk mk hol
+hol2dk mk 100 hol
 make -j32 lp
 ```
 
@@ -339,11 +337,11 @@ Performance
 
 Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
-Translation of `Logic/make.ml` with `dg 32` (includes `Library/analysis`):
+Translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
   * dump-simp 11m42s 10 Go 21.2 M steps (83% unused including hol.ml) +1729 named theorems
   * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11ms
   
-Translation of `hol.ml` with `dg 100`:
+Translation of `hol.ml` with `mk 100`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
@@ -376,8 +374,8 @@ Translation of `hol.ml` with `dg 100`:
 | `disj_cases` |  1 |
 | `conj`       |  1 |
 
-Multi-threaded translation to Lambdapi with `dg 100`:
-  * hol2dk dg: 14s
+Multi-threaded translation to Lambdapi with `mk 100`:
+  * hol2dk mk: 14s
   * lp files generation time: 31s
   * lp files size: 1.1 Go
   * type abbrevs: 796 Ko
@@ -386,7 +384,7 @@ Multi-threaded translation to Lambdapi with `dg 100`:
   * translation to Coq: 24s 1 Go
   * verification by Coq: 64m13s
 
-Multi-threaded translation to Dedukti with `dg 100`:
+Multi-threaded translation to Dedukti with `mk 100`:
   * dk file generation time: 49s
   * dk file size: 1.5 Go
   * type abbrevs: 876 Ko
@@ -406,7 +404,7 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 348 Ko
   * term abbreviations: 590 Mo (42%)
 
-Translation of `arith.ml` with `dg 7`:
+Translation of `arith.ml` with `mk 7`:
   * proof dumping time: 11s 77 Mo 448 named theorems
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s

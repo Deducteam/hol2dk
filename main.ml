@@ -63,12 +63,9 @@ hol2dk $file.[dk|lp] $thm_id
 Multi-threaded dk/lp file generation:
 -------------------------------------
 
-hol2dk dg $n $file
-  generate $file.dg, the dependency graph of parts
-  when $file.prf is split in $n parts
-
-hol2dk mk $file
-  generate $file.mk to generate, translate and check files in parallel
+hol2dk mk $n $file
+  generate $file.dg, the dependency graph between parts when $file.prf is
+  split in $n parts, and $file.mk for handling parts in parallel
 
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
@@ -163,18 +160,11 @@ let read_thm b =
 
 let integer s = try int_of_string s with Failure _ -> wrong_arg()
 
-(* [make b] generates a makefile for handling the proofs of [b] in
-   parallel, according to the file [b.dg]. *)
-let make b =
-  let nb_proofs = read_nb_proofs b in
-
-  let dump_file = b ^ ".dg" in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
-  let nb_parts = input_value ic in
-  let dg = input_value ic in
-  close_in ic;
-
+(* [make nb_proofs dg b] generates a makefile for translating the
+   proofs of [b] in parallel, according to the dependency graph
+   between parts [dg]. *)
+let make nb_proofs dg b =
+  let nb_parts = Array.length dg in
   let dump_file = b ^ ".mk" in
   log "generate %s ...\n%!" dump_file;
   let oc = open_out dump_file in
@@ -613,7 +603,7 @@ and command = function
      log "%d\n" (Array.get !Xproof.last_use k);
      0
 
-  | ["dg";nb_parts;b] ->
+  | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
      if nb_parts < 2 then wrong_arg();
      let nb_proofs = read_nb_proofs b in
@@ -654,9 +644,7 @@ and command = function
      output_value oc nb_parts;
      output_value oc dg;
      close_out oc;
-     0
-
-  | ["mk";b] -> make b
+     make nb_proofs dg b
 
   | ["sig";f] ->
      let dk = is_dk f in
