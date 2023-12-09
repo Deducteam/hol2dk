@@ -21,17 +21,16 @@ Calculus of Inductive Constructions.
 Results
 -------
 
-The HOL-Light base library `hol.ml` or the library `Logic/make.ml`
+The HOL-Light base library `hol.ml` and the library `Logic/make.ml`
 formalizing the metatheory of first-order logic can be exported and
-translated to Dedukti, Lambdapi and Coq in a few minutes. It is
-possible to export other theories as well. Below, you will find some
-data.
+translated to Dedukti, Lambdapi and Coq in a few minutes. However, it
+may take hours for Coq and require too much memory for Lambdapi to
+check the translated files. Bigger libraries like
+`Multivariate/make.ml` requires too much memory for the moment. But we
+will fix this soon.
 
-However, it may take hours for Coq and require too much memory for
-Lambdapi to check the translated files.
-
-Moreover, while it is possible to translate all HOL-Light proofs to
-Coq, the translated proofs may not be directly usable by Coq users
+Moreover, while it is possible to translate any HOL-Light proof to
+Coq, the translated theorem may not be directly usable by Coq users
 because HOL-Light types and functions may not be aligned with those of
 the Coq standard library yet. Currently, only the type of natural
 numbers and various functions on natural numbers have been aligned. We
@@ -340,20 +339,20 @@ Performance
 
 Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
 
-Dumping and translation of `Logic/make.ml` with `dg 32`:
-  * dump-simp 11m42s 21.2 M steps (83% unused including hol.ml) +1729 named theorems
-  * dk 1m13s dko 4m15s lp 42s v 12s vo 71m48s
+Translation of `Logic/make.ml` with `dg 32` (includes `Library/analysis`):
+  * dump-simp 11m42s 10 Go 21.2 M steps (83% unused including hol.ml) +1729 named theorems
+  * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11ms
   
-Dumping and translation of `hol.ml` with `dg 100`:
+Translation of `hol.ml` with `dg 100`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
   * dumped files size: 3 Go
   * number of named theorems: 2842
   * number of proof steps: 8.5 M (8% unused)
-  * simplification time: 2m06s
+  * simplification time: 1m22s
   * number of simplifications: 1.2 M (14%)
   * unused proof steps after simplification: 29%
-  * purge time: 12s
+  * purge time: 11s
   * unused proof steps after purge: 60%
 
 | rule         |  % |
@@ -407,7 +406,7 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 348 Ko
   * term abbreviations: 590 Mo (42%)
 
-Dumping and translation of `arith.ml` with `dg 7`:
+Translation of `arith.ml` with `dg 7`:
   * proof dumping time: 11s 77 Mo 448 named theorems
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s

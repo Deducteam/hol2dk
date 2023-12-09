@@ -111,6 +111,8 @@ module type Hol_kernel =
       val hyp : thm -> term list
       val concl : thm -> term
       val index_of : thm -> int
+      val content_of : proof -> proof_content
+      val change_content : proof -> proof_content -> proof
       (*REMOVE
       val REFL : term -> thm
       val TRANS : thm -> thm -> thm
@@ -157,7 +159,6 @@ module type Hol_kernel =
       (*REMOVE*)val the_term_constants : (string * hol_type) list ref
       (*REMOVE*)val the_axioms : thm list ref
       (*REMOVE*)val the_definitions : thm list ref
-      (*REMOVE*)val change_proof_content : proof -> proof_content -> proof
 end;;
 
 (* ------------------------------------------------------------------------- *)
@@ -212,7 +213,8 @@ module Hol : Hol_kernel = struct
 
   type proof = Proof of (thm * proof_content)
 
-  let change_proof_content p c = let Proof(th,_) = p in Proof(th,c)
+  let content_of (Proof(_,c)) = c
+  let change_content p c = let Proof(th,_) = p in Proof(th,c)
 
   let thm_index = ref (-1)
 
@@ -615,7 +617,7 @@ module Hol : Hol_kernel = struct
 
   let concl (Sequent(asl,c,_)) = c
 
-  let index_of(Sequent(_,_,k)) = k
+  let index_of (Sequent(_,_,k)) = k
 
 (* ------------------------------------------------------------------------- *)
 (* Basic equality properties; TRANS is derivable but included for efficiency *)

@@ -1,6 +1,12 @@
 TODO
 ----
 
+- create a pos file for each part
+
+- get rid of use file? in pos files, set pos to -1 for unused theorems
+
+- proofs can be simplified in parallel by working on the proof of each named theorem separately
+
 - put nb_proofs in a separate file
 
 - add commands for patch/unpatch/add-links ?
@@ -13,8 +19,6 @@ TODO
 - replace type variables like _1718 by better names like A
 
 - add v file checking in ci
-
-- instrument excluded middle in class.ml
 
 - make export incremental (1 lp file for each ml file)
 

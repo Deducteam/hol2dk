@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   these two commands greatly reduce the size of generated proofs
 - command simp is equivalent to rewrite and purge
 - command dump-simp is equivalent to dump, pos, use and simp
+- allow simultaneous dumping
+
+### Modified
+
+- identifier renamings
 
 ## 0.0.1 (2023-11-22)
 
