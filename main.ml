@@ -517,7 +517,8 @@ and command = function
      iter_proofs_at simp;
      close_in !Xproof.ic_prf;
      close_out oc;
-     log "%d simplifications (%d%%)\n" !n (percent !n (nb_proofs()));
+     let nb_proofs = Array.length !prf_pos in
+     log "%d simplifications (%d%%)\n" !n (percent !n nb_proofs);
      (* replace file.prf by file-simp.prf, and recompute file.pos and
         file.use *)
      log "replace %s.prf by %s-simp.prf ...\n" b b;
@@ -535,7 +536,7 @@ and command = function
      read_pos b;
      init_proof_reading b;
      let map_thid_name = read_thm b in
-     let nb_proofs = nb_proofs() in
+     let nb_proofs = Array.length !prf_pos in
      let useful = Array.make nb_proofs false in
      let rec mark_as_useful = function
        | [] -> ()
@@ -701,26 +702,25 @@ and command = function
      let ic = open_in_bin dump_file in
      let nb_parts = input_value ic in
 
-     let k = integer k and x = integer x and y = integer y
-     and nb_proofs = nb_proofs() in
+     let k = integer k and x = integer x and y = integer y in
      if k < 1 || k > nb_parts || x < 0 || y < x then wrong_arg();
      read_sig b;
+     let suffix = "_part_" ^ string_of_int k in
      read_pos b;
      init_proof_reading b;
-     cur_part_max := (k * nb_proofs) / nb_parts;
      read_use b;
      if is_dk f then
        begin
          Xdk.export_proofs_part b k x y;
-         let suffix = "_part_" ^ string_of_int k in
          Xdk.export_term_abbrevs b suffix;
          Xdk.export_type_abbrevs b suffix
        end
      else
        begin
+         (* used in xlp to know whether a theorem can be declared as private *)
+         cur_part_max := y;
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         let suffix = "_part_" ^ string_of_int k in
          Xlp.export_term_abbrevs b suffix;
          Xlp.export_type_abbrevs b suffix
        end;
@@ -729,10 +729,12 @@ and command = function
      0
 
   | ["prf";x;y;b] ->
-     let x = integer x and y = integer y and n = nb_proofs() in
-     if x < 0 || y < 0 || x > y || x >= n || y >= n then wrong_arg();
      read_sig b;
      read_pos b;
+     let x = integer x and y = integer y
+         and nb_proofs = Array.length !prf_pos in
+     if x < 0 || y < 0 || x > y || x >= nb_proofs || y >= nb_proofs then
+       wrong_arg();
      init_proof_reading b;
      read_use b;
      Xlp.export_one_file_by_prf b x y;
@@ -743,8 +745,9 @@ and command = function
      let nb_parts = integer nb_parts in
      if nb_parts < 1 then wrong_arg();
      read_pos b;
+     let nb_proofs = Array.length !prf_pos in
      init_proof_reading b;
-     Xlp.gen_lp_makefile_one_file_by_prf b (nb_proofs()) nb_parts;
+     Xlp.gen_lp_makefile_one_file_by_prf b nb_proofs nb_parts;
      close_in !Xproof.ic_prf;
      0
 
@@ -752,8 +755,9 @@ and command = function
      let nb_parts = integer nb_parts in
      if nb_parts < 1 then wrong_arg();
      read_pos b;
+     let nb_proofs = Array.length !prf_pos in
      init_proof_reading b;
-     Xlp.gen_coq_makefile_one_file_by_prf b (nb_proofs()) nb_parts;
+     Xlp.gen_coq_makefile_one_file_by_prf b nb_proofs nb_parts;
      close_in !Xproof.ic_prf;
      0
 

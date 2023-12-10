@@ -25,9 +25,6 @@ let read_pos basename =
   prf_pos := input_value ic;
   close_in ic
 
-(* Can be used after [read_pos] only. *)
-let nb_proofs() = Array.length !prf_pos;;
-
 let ic_prf : in_channel ref = ref stdin;;
 
 let init_proof_reading basename =
@@ -53,13 +50,14 @@ let read_use basename = last_use := read_val (basename ^ ".use");;
 let cur_part_max : int ref = ref (-1);;
 
 (* [iter_proofs_at f] runs [f k (proof_at k)] on all proof index [k]
-   from 0 to [nb_proofs() - 1] (including unused proofs). Can be used
-   after [read_pos] and [init_proof_reading] only. *)
+   from 0 to [nb_proofs - 1] (including unused proofs), where
+   [nb_proofs = Array.length !prf_pos]. Can be used after [read_pos]
+   and [init_proof_reading] only. *)
 let iter_proofs_at (f : int -> proof -> unit) =
   let idx = ref 0 in
-  let n = nb_proofs() in
+  let nb_proofs = Array.length !prf_pos in
   try
-    while !idx < n do
+    while !idx < nb_proofs do
       let k = !idx in
       f k (proof_at k);
       idx := k + 1

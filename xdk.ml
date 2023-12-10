@@ -792,8 +792,7 @@ let export_theorems_as_axioms b map_thid_name =
 
 let export_proofs_part b k x y =
   part := Some k;
-  export b ("_part_" ^ string_of_int k)
-    (fun oc -> proofs_in_range oc (Inter(x,y)))
+  export b ("_part_" ^ string_of_int k) (fun oc -> proofs_in_interval oc x y)
 ;;
 
 (****************************************************************************)
