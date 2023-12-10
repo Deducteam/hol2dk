@@ -493,8 +493,7 @@ let deps (Proof(_,content)) =
 ;;
 
 (* [count_thm_uses a p] increments by 1 every [a.(i)] such that [i] is
-   a dependence of [p]. [a] must be an array of integers of size
-   [nb_proofs()]. *)
+   a dependence of [p]. *)
 let count_thm_uses (a : int array) (p : proof) : unit =
   List.iter (fun k -> Array.set a k (Array.get a k + 1)) (deps p)
 ;;
