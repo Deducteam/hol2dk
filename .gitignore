@@ -1,21 +1,5 @@
 _build/
 \#*
-*.lp
-!encoding.lp
-!erasing.lp
-!renaming.lp
-*.dk
-*.prf
-*.sig
-*.lpo
-*.dko
-*.pos
-*.thm
-*.use
-*.mk
-*.dg
-*.v
-!coq.v
 *.vo
 *.conf
 *.d
@@ -26,3 +10,5 @@ _build/
 .nia.cache
 .*.aux
 *.glob
+*.lpo
+*.dko
