@@ -846,28 +846,79 @@ Proof. (*thm_1046684*)
   destruct j as [j1 j2]. auto.
 Qed.
 
-Definition NUMFST_pred :=  fun X : nat -> nat => exists Y : nat -> nat, forall x : nat, forall y : nat, ((X (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y).
+Definition NUMFST0_pred :=  fun X : nat -> nat => exists Y : nat -> nat, forall x : nat, forall y : nat, ((X (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y).
 
-Definition NUMFST := ε NUMFST_pred.
+Definition NUMFST0 := ε NUMFST0_pred.
 
-Lemma NUMFST_NUMPAIR x y : NUMFST (NUMPAIR x y) = x.
+Lemma NUMFST0_NUMPAIR x y : NUMFST0 (NUMPAIR x y) = x.
 Proof.
   destruct (INJ_INVERSE2 _ NUMPAIR_INJ) as [fst [snd h]].
-  assert (i : exists q, NUMFST_pred q). exists fst. exists snd. assumption.
-  generalize (ε_spec i). fold NUMFST. unfold NUMFST_pred.
+  assert (i : exists q, NUMFST0_pred q). exists fst. exists snd. assumption.
+  generalize (ε_spec i). fold NUMFST0. unfold NUMFST0_pred.
   intros [snd' h']. destruct (h' x y) as [j k]. assumption.
 Qed.
 
-Definition NUMSND_pred :=  fun Y : nat -> nat => exists X : nat -> nat, forall x : nat, forall y : nat, ((X (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y).
+Definition NUMSND0_pred :=  fun Y : nat -> nat => exists X : nat -> nat, forall x : nat, forall y : nat, ((X (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y).
 
-Definition NUMSND := ε NUMSND_pred.
+Definition NUMSND0 := ε NUMSND0_pred.
+
+Lemma NUMSND0_NUMPAIR x y : NUMSND0 (NUMPAIR x y) = y.
+Proof.
+  destruct (INJ_INVERSE2 _ NUMPAIR_INJ) as [fst [snd h]].
+  assert (i : exists x, NUMSND0_pred x). exists snd. exists fst. assumption.
+  generalize (ε_spec i). fold NUMSND0. unfold NUMSND0_pred.
+  intros [fst' h']. destruct (h' x y) as [j k]. assumption.
+Qed.
+
+Definition NUMFST := @ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> nat -> nat) (fun X : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> nat -> nat => forall _17340 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), exists Y : nat -> nat, forall x : nat, forall y : nat, ((X _17340 (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y)) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))))).
+
+Lemma NUMFST_NUMPAIR x y : NUMFST (NUMPAIR x y) = x.
+Proof.
+  unfold NUMFST.
+  generalize (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+     (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+      (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+       (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))),
+        (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+          NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
+  generalize (prod nat (prod nat (prod nat (prod nat (prod nat nat))))); intros A a.
+  match goal with |- ε ?x _ _ = _ => set (Q := x); set (fst := ε Q) end.
+  assert (i: exists x, Q x). exists (fun _ => NUMFST0). unfold Q. intros _. exists NUMSND0.
+  intros x' y'. rewrite NUMFST0_NUMPAIR, NUMSND0_NUMPAIR. auto.
+  generalize (ε_spec i). change (Q fst -> fst a (NUMPAIR x y) = x). intro h.
+  destruct (h a) as [snd j]. destruct (j x y) as [j1 j2]. exact j1.
+Qed.
+
+Definition NUMSND1_pred :=  fun Y : nat -> nat => forall x : nat, forall y : nat, ((NUMFST (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y).
+
+Definition NUMSND1 := ε NUMSND1_pred.
+
+Lemma NUMSND1_NUMPAIR x y : NUMSND1 (NUMPAIR x y) = y.
+Proof.
+  destruct (INJ_INVERSE2 _ NUMPAIR_INJ) as [fst [snd h]].
+  assert (i : exists x, NUMSND1_pred x). exists snd. unfold NUMSND1_pred.
+  intros x' y'. rewrite NUMFST_NUMPAIR. destruct (h x' y') as [h1 h2]. auto.
+  generalize (ε_spec i). fold NUMSND1. unfold NUMSND1_pred. intro j.
+  destruct (j x y) as [j1 j2]. exact j2.
+Qed.
+
+Definition NUMSND := @ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> nat -> nat) (fun Y : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> nat -> nat => forall _17341 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), forall x : nat, forall y : nat, ((NUMFST (NUMPAIR x y)) = x) /\ ((Y _17341 (NUMPAIR x y)) = y)) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))))))).
 
 Lemma NUMSND_NUMPAIR x y : NUMSND (NUMPAIR x y) = y.
 Proof.
-  destruct (INJ_INVERSE2 _ NUMPAIR_INJ) as [fst [snd h]].
-  assert (i : exists q, NUMSND_pred q). exists snd. exists fst. assumption.
-  generalize (ε_spec i). fold NUMSND. unfold NUMSND_pred.
-  intros [fst' h']. destruct (h' x y) as [j k]. assumption.
+  unfold NUMSND.
+  generalize  (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+     (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+      (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+       (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+        (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+         NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))))).
+  generalize (prod nat (prod nat (prod nat (prod nat (prod nat nat))))); intros A a.
+  match goal with |- ε ?x _ _ = _ => set (Q := x); set (snd := ε Q) end.
+  assert (i: exists x, Q x). exists (fun _ => NUMSND1). unfold Q. intros _.
+  intros x' y'. rewrite NUMFST_NUMPAIR, NUMSND1_NUMPAIR. auto.
+  generalize (ε_spec i). change (Q snd -> snd a (NUMPAIR x y) = y). intro h.
+  destruct (h a x y) as [h1 h2]. exact h2.
 Qed.
 
 (****************************************************************************)

@@ -161,5 +161,5 @@ builtin "axiom_13" ≔ axiom_13;
 builtin "axiom_14" ≔ axiom_14;
 builtin "None" ≔ NONE;
 builtin "NONE_def" ≔ NONE_def;
-builtin "Some" ≔ Some;
+builtin "Some" ≔ SOME;
 builtin "SOME_def" ≔ SOME_def;
