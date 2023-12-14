@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command simp is equivalent to rewrite and purge
 - command dump-simp is equivalent to dump, pos, use and simp
 - allow simultaneous dumping
+- Coq mapping for the option type
 
 ### Modified
 

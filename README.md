@@ -332,6 +332,37 @@ coq_makefile -f _CoqProject -o Makefile.coq
 make -j $jobs -f Makefile.coq
 ```
 
+Coq axioms used to encode HOL-Light proofs
+------------------------------------------
+
+HOL-Light is based on classical higher-order logic with functional and propositional extensionality. We use the following Coq axioms to encode them:
+```
+Axiom classic : forall P:Prop, P \/ ~ P.
+Axiom constructive_indefinite_description : forall (A : Type) (P : A->Prop), (exists x, P x) -> { x : A | P x }.
+Axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
+Axiom prop_ext : forall {P Q : Prop}, (P -> Q) -> (Q -> P) -> P = Q.
+Axiom proof_irrelevance : forall (P:Prop) (p1 p2:P), p1 = p2.
+```
+
+Alignments of HOL-Light types and definitions with those of Coq
+---------------------------------------------------------------
+
+While it is a priori possible to translate any HOL-Light proof to Coq, the
+obtained theorems may not be directly usable by Coq users because
+HOL-Light types and functions may not be aligned with those of the Coq
+standard library yet. Currently, only the following types and
+functions have been aligned with those of Coq:
+
+- unit type
+- product type constructor
+- type of natural numbers
+- functions and predicates on natural numbers: addition, multiplication, order, power, maximum, minimum, substraction, factorial, division, division remainder, parity
+- option type constructor
+
+The part of HOL-Light that is aligned with Coq is gathered in the package
+[coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
+in the Coq Opam repository [released](https://github.com/coq/opam).
+
 Performance
 -----------
 
