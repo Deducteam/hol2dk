@@ -386,24 +386,24 @@ Translation of `hol.ml` with `mk 100`:
 
 | rule         |  % |
 |:-------------|---:|
-| `comb`       | 20 |
-| `term_subst` | 17 |
-| `refl`       | 16 |
-| `eqmp`       | 11 |
-| `trans`      |  9 |
-| `conjunct1`  |  5 |
-| `abs`        |  3 |
-| `beta`       |  3 |
-| `mp`         |  3 |
-| `sym`        |  2 |
-| `deduct`     |  2 |
-| `type_subst` |  2 |
-| `assume`     |  1 |
-| `conjunct2`  |  1 |
-| `disch`      |  1 |
-| `spec`       |  1 |
-| `disj_cases` |  1 |
-| `conj`       |  1 |
+| comb       | 20 |
+| term_subst | 17 |
+| refl       | 16 |
+| eqmp       | 11 |
+| trans      |  9 |
+| conjunct1  |  5 |
+| abs        |  3 |
+| beta       |  3 |
+| mp         |  3 |
+| sym        |  2 |
+| deduct     |  2 |
+| type_subst |  2 |
+| assume     |  1 |
+| conjunct2  |  1 |
+| disch      |  1 |
+| spec       |  1 |
+| disj_cases |  1 |
+| conj       |  1 |
 
 Multi-threaded translation to Lambdapi with `mk 100`:
   * hol2dk mk: 14s
