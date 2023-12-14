@@ -141,3 +141,25 @@ builtin "Coq.Arith.PeanoNat.Nat.Even" ≔ EVEN;
 builtin "EVEN_def" ≔ EVEN_def;
 builtin "Coq.Arith.PeanoNat.Nat.Odd" ≔ ODD;
 builtin "ODD_def" ≔ ODD_def;
+
+// indtypes
+builtin "NUMLEFT" ≔ NUMLEFT; // not mandatory
+builtin "NUMLEFT_def" ≔ NUMLEFT_def; // not mandatory
+builtin "NUMRIGHT" ≔ NUMRIGHT; // not mandatory
+builtin "NUMRIGHT_def" ≔ NUMRIGHT_def; // not mandatory
+builtin "ZRECSPACE" ≔ ZRECSPACE;
+builtin "ZRECSPACE_def" ≔ ZRECSPACE_def;
+builtin "recspace" ≔ recspace;
+builtin "_mk_rec" ≔ _mk_rec;
+builtin "_dest_rec" ≔ _dest_rec;
+builtin "axiom_9" ≔ axiom_9;
+builtin "axiom_10" ≔ axiom_10;
+builtin "option" ≔ option;
+builtin "_mk_option" ≔ _mk_option;
+builtin "_dest_option" ≔ _dest_option;
+builtin "axiom_13" ≔ axiom_13;
+builtin "axiom_14" ≔ axiom_14;
+builtin "None" ≔ NONE;
+builtin "NONE_def" ≔ NONE_def;
+builtin "Some" ≔ Some;
+builtin "SOME_def" ≔ SOME_def;

@@ -11,6 +11,9 @@ Proof. intros fg x. rewrite fg. reflexivity. Qed.
 
 Record Type' := { type :> Type; el : type }.
 
+Definition bool' := {| type := bool; el := true |}.
+Canonical bool'.
+
 Definition Prop' : Type' := {| type := Prop; el := True |}.
 Canonical Prop'.
 
@@ -59,7 +62,7 @@ Require Import Coq.Logic.ClassicalEpsilon.
 
 Definition ε : forall {A : Type'}, (type A -> Prop) -> type A := fun A P => epsilon (inhabits (el A)) P.
 
-Lemma ε_spec {A : Type'} (P : type A -> Prop) : (exists x, P x) -> P (ε P).
+Lemma ε_spec {A : Type'} {P : type A -> Prop} : (exists x, P x) -> P (ε P).
 Proof. intro h. unfold ε. apply epsilon_spec. exact h. Qed.
 
 Axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
@@ -99,6 +102,12 @@ Proof. apply prop_ext; intro e; symmetry; exact e. Qed.
 
 Lemma True_and_True : (True /\ True) = True.
 Proof. rewrite is_True. tauto. Qed.
+
+Lemma not_forall_eq A (P : A -> Prop) : (~ forall x, P x) = exists x, ~ (P x).
+Proof. apply prop_ext; intro h. apply not_all_ex_not. exact h. apply ex_not_not_all. exact h. Qed.
+
+Lemma not_exists_eq A (P : A -> Prop) : (~ exists x, P x) = forall x, ~ (P x).
+Proof. apply prop_ext; intro h. apply not_ex_all_not. exact h. apply all_not_not_ex. exact h. Qed.
 
 (****************************************************************************)
 (* Proof of HOL-Light axioms. *)
@@ -222,7 +231,7 @@ Proof.
   unfold ABS_prod. match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
   rewrite (surjective_pairing q).
   assert (i : exists q, Q q). exists (x,y). reflexivity.
-  generalize (ε_spec Q i); fold q; unfold Q; intro h.
+  generalize (ε_spec i); fold q; unfold Q; intro h.
   apply mk_pair_inj in h. destruct h as [h1 h2]. rewrite h1, h2. reflexivity.
 Qed.
 
@@ -231,7 +240,7 @@ Proof.
   unfold ABS_prod. match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
   rewrite (surjective_pairing q).
   assert (i : exists q, Q q). exists (x,y). reflexivity.
-  generalize (ε_spec Q i); fold q; unfold Q; intro h.
+  generalize (ε_spec i); fold q; unfold Q; intro h.
   apply mk_pair_inj in h. destruct h as [h1 h2]. rewrite h1, h2. reflexivity.
 Qed.
 
@@ -245,7 +254,7 @@ Proof.
   apply fun_ext; intros [x y]. simpl.
   match goal with [|- _ = ε ?x] => set (Q := x); set (q := ε Q) end.
   assert (i : exists x, Q x). exists x. exists y. reflexivity.
-  generalize (ε_spec Q i); fold q; intros [x' h']. inversion h'. reflexivity.
+  generalize (ε_spec i); fold q; intros [x' h']. inversion h'. reflexivity.
 Qed.
 
 Lemma SND_def {A B : Type'} : (@snd A B) = (fun p : prod A B => @ε B (fun y : B => exists x : A, p = (@pair A B x y))).
@@ -253,7 +262,7 @@ Proof.
   apply fun_ext; intros [x y]. simpl.
   match goal with [|- _ = ε ?x] => set (Q := x); set (q := ε Q) end.
   assert (i : exists x, Q x). exists y. exists x. reflexivity.
-  generalize (ε_spec Q i); fold q; intros [x' h]. inversion h. reflexivity.
+  generalize (ε_spec i); fold q; intros [x' h]. inversion h. reflexivity.
 Qed.
 
 Lemma axiom_4 : forall {A B : Type'} (a : prod A B), (@ABS_prod A B (@REP_prod A B a)) = a.
@@ -267,7 +276,7 @@ Proof.
 Qed.
 
 (****************************************************************************)
-(* HOL-Light type ind. *)
+(* HOL-Light infinite type ind. *)
 (****************************************************************************)
 
 Definition nat' := {| type := nat; el := 0 |}.
@@ -285,12 +294,6 @@ Proof. exists S. split. exact eq_add_S. intro h. generalize (h 0). intros [x hx]
 Definition IND_SUC_pred := fun f : ind -> ind => exists z : ind, (forall x1 : ind, forall x2 : ind, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((f x) = z)).
 
 Definition IND_SUC := ε IND_SUC_pred.
-
-Lemma not_forall_eq A (P : A -> Prop) : (~ forall x, P x) = exists x, ~ (P x).
-Proof. apply prop_ext; intro h. apply not_all_ex_not. exact h. apply ex_not_not_all. exact h. Qed.
-
-Lemma not_exists_eq A (P : A -> Prop) : (~ exists x, P x) = forall x, ~ (P x).
-Proof. apply prop_ext; intro h. apply not_ex_all_not. exact h. apply all_not_not_ex. exact h. Qed.
 
 Lemma IND_SUC_ex : exists f, IND_SUC_pred f.
 Proof.
@@ -398,7 +401,7 @@ Proof.
 Qed.
 
 Lemma mk_num_prop i : NUM_REP i -> dest_num (mk_num i) = i.
-Proof. intro hi. symmetry. apply (ε_spec (mk_num_pred i) (mk_num_ex i hi)). Qed.
+Proof. intro hi. symmetry. apply (ε_spec (mk_num_ex i hi)). Qed.
 
 Notation dest_num_mk_num := mk_num_prop.
 
@@ -415,7 +418,7 @@ Lemma mk_num_0 : mk_num IND_0 = 0.
 Proof.
   unfold mk_num. set (P := mk_num_pred IND_0).
   assert (h: exists n, P n). exists 0. reflexivity.
-  generalize (ε_spec P h). set (i := ε P). unfold P, mk_num_pred. intro e.
+  generalize (ε_spec h). set (i := ε P). unfold P, mk_num_pred. intro e.
   apply dest_num_inj. simpl. symmetry. exact e.
 Qed.
 
@@ -435,8 +438,67 @@ Proof.
 Qed.
 
 (****************************************************************************)
+(* Useful lemmas on booleans and natural numbers. *)
+(****************************************************************************)
+
+Require Import Lia PeanoNat. Import Nat.
+
+Lemma eq_false_negb_true b : b = false -> negb b = true.
+Proof. intro e. subst. reflexivity. Qed.
+
+Lemma plus_1_minus_1 x : x + 1 - 1 = x.
+Proof. lia. Qed.
+
+Lemma S_minus_1 x : S x - 1 = x.
+Proof. lia. Qed.
+
+Lemma add_sub a b : a + b - a = b.
+Proof. lia. Qed.
+
+Lemma swap_add_sub a a' b : a' <= a -> a + b - a' = a - a' + b.
+Proof. lia. Qed.
+
+Lemma le_eq_lt x y : x <= y -> x = y \/ x < y.
+Proof. lia. Qed.
+
+Lemma ge_is_add {a b} : a >= b -> exists c, a = b + c.
+Proof. intro h. exists (a - b). lia. Qed.
+
+Lemma _0_le_nat_is_True y : (0 <= y) = True.
+Proof. apply prop_ext; intro h. exact I. lia. Qed.
+
+Lemma S_le_0_is_False y : (S y <= 0) = False.
+Proof. apply prop_ext; lia. Qed.
+
+Lemma S_eq_0_is_False y : (S y = 0) = False.
+Proof. apply prop_ext; lia. Qed.
+
+Lemma S_le_S x y : (S x <= S y) = (x <= y).
+Proof. apply prop_ext; lia. Qed.
+
+Lemma DIV_MULT m n : m <> 0 -> (m * n) / m = n.
+Proof. (*thm_170547*) intro h. rewrite mul_comm. apply div_mul. exact h. Qed.
+
+Lemma divmod_unicity k k' q r r' : r < q -> r' < q -> k * q + r = k' * q + r' -> k = k' /\ r = r'.
+Proof.
+  intros h h' e.
+  destruct (Compare_dec.lt_eq_lt_dec k k') as [[i|i]|i].
+  apply False_rec.
+  assert (e2 : k * q + r - k * q = k' * q + r' - k * q). lia.
+  rewrite add_sub, swap_add_sub, <- PeanoNat.Nat.mul_sub_distr_r in e2. nia. nia. lia.
+  apply False_rec.
+  assert (e2 : k * q + r - k' * q = k' * q + r' - k' * q). lia.
+  rewrite add_sub, swap_add_sub, <- PeanoNat.Nat.mul_sub_distr_r in e2. nia. nia.
+Qed.
+
+Lemma pow_add {x y z} : x ^ (y + z) = (x ^ y) * (x ^ z).
+Proof. induction y. simpl. lia. simpl. rewrite IHy. lia. Qed.
+
+(****************************************************************************)
 (* Mapping of usual mathematical functions on natural numbers. *)
 (****************************************************************************)
+
+Definition NUMERAL (x : nat) := x.
 
 Fixpoint BIT0 n :=
   match n with
@@ -447,11 +509,11 @@ Fixpoint BIT0 n :=
 Lemma BIT0_def : BIT0 =
          (@ε (arr nat nat')
             (fun fn : forall _ : nat, nat =>
-               and (@eq nat (fn O) O) (forall n : nat, @eq nat (fn (S n)) (S (S (fn n)))))).
+               and (@Logic.eq nat (fn O) O) (forall n : nat, @Logic.eq nat (fn (S n)) (S (S (fn n)))))).
 Proof.
   match goal with [|- _ = ε ?x] => set (Q := x) end.
   assert (i : exists q, Q q). exists BIT0. split; reflexivity.
-  generalize (ε_spec Q i). intros [h0 hs].
+  generalize (ε_spec i). intros [h0 hs].
   apply fun_ext; intro n. induction n; simpl.
   rewrite h0. reflexivity. rewrite hs, IHn. reflexivity.
 Qed.
@@ -471,7 +533,7 @@ Proof.
   intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => pred). split; reflexivity.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro n. induction n; simpl.
   rewrite h0. reflexivity. rewrite hs. reflexivity.
 Qed.
@@ -481,7 +543,7 @@ Proof.
   generalize ( (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))). intro a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Nat.add). split; reflexivity.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
   induction x; simpl. rewrite h0. reflexivity. rewrite hs, IHx. reflexivity.
 Qed.
@@ -492,7 +554,7 @@ Proof.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Nat.mul). split; simpl. reflexivity.
   intros m n. rewrite PeanoNat.Nat.add_comm. reflexivity.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
   induction x; simpl. rewrite h0. reflexivity. rewrite hs, IHx, PeanoNat.Nat.add_comm. reflexivity.
 Qed.
@@ -502,12 +564,10 @@ Proof.
   generalize (@pair nat (prod nat nat) (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))) (@pair nat nat (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0))))))) (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))); generalize (@prod nat (prod nat nat)); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Nat.pow). split; simpl; intro x; reflexivity.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
   induction y; simpl. rewrite h0. reflexivity. rewrite hs, IHy. reflexivity.
 Qed.
-
-Require Import Lia.
 
 Lemma le_def : le = (@ε (arr (prod nat nat) (arr nat (arr nat Prop'))) (fun le' : (prod nat nat) -> nat -> nat -> Prop => forall _2241 : prod nat nat, (forall m : nat, (le' _2241 m ( 0)) = (m = ( 0))) /\ (forall m : nat, forall n : nat, (le' _2241 m (S n)) = ((m = (S n)) \/ (le' _2241 m n)))) (@pair nat nat ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))) ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))))).
 Proof.
@@ -518,7 +578,7 @@ Proof.
     symmetry. apply Arith_prebase.le_n_0_eq_stt. exact h.
     rewrite h. reflexivity.
   intro n. apply prop_ext; lia.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
   apply prop_ext.
   induction 1.
@@ -529,22 +589,19 @@ Proof.
     rewrite hs. intros [h|h]. rewrite h. reflexivity. apply le_S. apply IHy. exact h.
 Qed.
 
-Lemma le_eq_lt x y : x <= y -> x = y \/ x < y.
-Proof. lia. Qed.
-
 Lemma lt_def : lt = (@ε (arr nat (arr nat (arr nat Prop'))) (fun lt : nat -> nat -> nat -> Prop => forall _2248 : nat, (forall m : nat, (lt _2248 m ( 0)) = False) /\ (forall m : nat, forall n : nat, (lt _2248 m (S n)) = ((m = n) \/ (lt _2248 m n)))) ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0)))))))).
 Proof.
   generalize ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0))))))); intro a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => lt). split; intro x. apply prop_ext; lia. intro n. apply prop_ext; lia.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
   apply prop_ext.
     induction y. lia. rewrite hs. intro h. apply le_S_n in h. apply le_eq_lt in h. destruct h as [h|h].
     left. exact h. right. apply IHy. exact h.
   induction y.
     rewrite h0. lia.
-    rewrite hs. intros [h|h]. rewrite h. unfold lt. reflexivity. generalize (IHy h). lia.
+    rewrite hs. intros [h|h]. rewrite h. unfold lt. lia. generalize (IHy h). lia.
 Qed.
 
 Lemma ge_def : ge = (fun _2249 : nat => fun _2250 : nat => le _2250 _2249).
@@ -559,29 +616,17 @@ Lemma COND_True (A : Type') (x y : A) : COND True x y = x.
 Proof.
   unfold COND. match goal with [|- ε ?x = _] => set (Q := x) end.
   assert (i : exists q, Q q). exists x. split; intro h. reflexivity. apply False_rec. rewrite <- h. exact I.
-  generalize (ε_spec Q i). intros [h1 h2]. apply h1. reflexivity.
+  generalize (ε_spec i). intros [h1 h2]. apply h1. reflexivity.
 Qed.
 
 Lemma COND_False (A : Type') (x y : A) : COND False x y = y.
 Proof.
   unfold COND. match goal with [|- ε ?x = _] => set (Q := x) end.
   assert (i : exists q, Q q). exists y. split; intro h. apply False_rec. rewrite h. exact I. reflexivity.
-  generalize (ε_spec Q i). intros [h1 h2]. apply h2. reflexivity.
+  generalize (ε_spec i). intros [h1 h2]. apply h2. reflexivity.
 Qed.
 
-Lemma _0_le_nat_is_True y : (0 <= y) = True.
-Proof. apply prop_ext; intro h. exact I. lia. Qed.
-
-Lemma S_le_0_is_False y : (S y <= 0) = False.
-Proof. apply prop_ext; lia. Qed.
-
-Lemma S_eq_0_is_False y : (S y = 0) = False.
-Proof. apply prop_ext; lia. Qed.
-
-Lemma S_le_S x y : (S x <= S y) = (x <= y).
-Proof. apply prop_ext; lia. Qed.
-
-Lemma MAX_def : max = (fun _2273 : nat => fun _2274 : nat => @COND nat (le _2273 _2274) _2274 _2273).
+Lemma MAX_def : max = (fun _2273 : nat => fun _2274 : nat => @COND nat (Peano.le _2273 _2274) _2274 _2273).
 Proof.
   apply fun_ext; intro x. apply fun_ext. induction x; intro y; induction y.
   rewrite _0_le_nat_is_True, COND_True. reflexivity.
@@ -591,7 +636,7 @@ Proof.
   rewrite! COND_True. reflexivity. rewrite! COND_False. reflexivity.
 Qed.
 
-Lemma MIN_def : min = (fun _2285 : nat => fun _2286 : nat => @COND nat (le _2285 _2286) _2285 _2286).
+Lemma MIN_def : min = (fun _2285 : nat => fun _2286 : nat => @COND nat (Peano.le _2285 _2286) _2285 _2286).
 Proof.
   apply fun_ext; intro x. apply fun_ext. induction x; intro y; induction y.
   rewrite _0_le_nat_is_True, COND_True. reflexivity.
@@ -606,7 +651,7 @@ Proof.
   generalize ( (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 0))))))); intro a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => minus). split; lia.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext. induction x.
   intro y. induction y; simpl.
   rewrite h0. reflexivity. rewrite hs, <- IHy. reflexivity.
@@ -618,26 +663,8 @@ Proof.
   generalize (@pair nat (prod nat (prod nat nat)) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) ( (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))); generalize (prod nat (prod nat (prod nat nat))); intros A a.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Factorial.fact). split; reflexivity.
-  generalize (ε_spec Q i a). intros [h0 hs].
+  generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. induction x. rewrite h0. reflexivity. rewrite hs, <- IHx. reflexivity.
-Qed.
-
-Lemma add_sub a b : a + b - a = b.
-Proof. lia. Qed.
-
-Lemma swap_add_sub a a' b : a' <= a -> a + b - a' = a - a' + b.
-Proof. lia. Qed.
-
-Lemma divmod_unicity k k' q r r' : r < q -> r' < q -> k * q + r = k' * q + r' -> k = k' /\ r = r'.
-Proof.
-  intros h h' e.
-  destruct (Compare_dec.lt_eq_lt_dec k k') as [[i|i]|i].
-  apply False_rec.
-  assert (e2 : k * q + r - k * q = k' * q + r' - k * q). lia.
-  rewrite add_sub, swap_add_sub, <- PeanoNat.Nat.mul_sub_distr_r in e2. nia. nia. lia.
-  apply False_rec.
-  assert (e2 : k * q + r - k' * q = k' * q + r' - k' * q). lia.
-  rewrite add_sub, swap_add_sub, <- PeanoNat.Nat.mul_sub_distr_r in e2. nia. nia.
 Qed.
 
 Lemma DIV_def : Nat.div = (@ε (arr (prod nat (prod nat nat)) (arr nat (arr nat nat'))) (fun q : (prod nat (prod nat nat)) -> nat -> nat -> nat => forall _3086 : prod nat (prod nat nat), exists r : nat -> nat -> nat, forall m : nat, forall n : nat, @COND Prop (n = ( 0)) (((q _3086 m n) = ( 0)) /\ ((r m n) = m)) ((m = (Nat.add (Nat.mul (q _3086 m n) n) (r m n))) /\ (lt (r m n) n))) (@pair nat (prod nat nat) ( (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat ( (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) ( (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))).
@@ -649,7 +676,7 @@ Proof.
   rewrite COND_True. rewrite is_True in h. rewrite h. simpl. split; reflexivity.
   rewrite COND_False. rewrite (PeanoNat.Nat.div_mod_eq m n) at 1. split. lia.
   rewrite is_False in h. apply PeanoNat.Nat.mod_bound_pos. lia. lia.
-  generalize (ε_spec Q i a). intros [mod h].
+  generalize (ε_spec i a). intros [mod' h].
   apply fun_ext; intro x. apply fun_ext; intro y.
   revert x. induction y.
   intro x. generalize (h x 0). rewrite refl_is_True, COND_True. intros [h1 h2].
@@ -660,7 +687,7 @@ Proof.
   rewrite PeanoNat.Nat.sub_diag, PeanoNat.Nat.mul_0_r, !PeanoNat.Nat.add_0_r. rewrite h1 at 1.
   intros [i1 i2]. assert (h3 : y - r < S y). lia.
   assert (e : q * S y = q + y * q). lia. rewrite <- e in i1.
-  generalize (divmod_unicity (ε Q a x (S y)) q (S y) (mod x (S y)) (y - r) h2 h3 i1).
+  generalize (divmod_unicity (ε Q a x (S y)) q (S y) (mod' x (S y)) (y - r) h2 h3 i1).
   intros [j1 j2]. symmetry. exact j1.
 Qed.
 
@@ -673,7 +700,7 @@ Proof.
   rewrite S_eq_0_is_False, COND_False. split.
   rewrite PeanoNat.Nat.mul_comm. apply Coq.Arith.PeanoNat.Nat.div_mod_eq.
   apply PeanoNat.Nat.mod_bound_pos. lia. lia.
-  generalize (ε_spec Q i a). intro h.
+  generalize (ε_spec i a). intro h.
   apply fun_ext; intro x. apply fun_ext; intro y.
   revert x. induction y.
   intro x. generalize (h x 0). rewrite refl_is_True, COND_True. intros [h1 h2]. symmetry. exact h2.
@@ -687,7 +714,17 @@ Proof.
   intros [j1 j2]. symmetry. exact j2.
 Qed.
 
+(****************************************************************************)
+(* Mapping of the Even and Odd predicates. *)
+(****************************************************************************)
+
 Import PeanoNat.Nat Private_Parity.
+
+Lemma odd_double n : odd (2 * n) = false.
+Proof. rewrite odd_mul, odd_2. reflexivity. Qed.
+
+Lemma even_double n : even (2 * n) = true.
+Proof. rewrite even_spec. exists n. reflexivity. Qed.
 
 Lemma Even_or_Odd x : Even x \/ Odd x.
 Proof.
@@ -730,7 +767,7 @@ Proof.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Even). intro x. split.
   rewrite is_True. exact Even_0. intro n. rewrite not_Even_is_Odd. apply Even_S.
-  generalize (ε_spec Q i a). intros [h1 h2].
+  generalize (ε_spec i a). intros [h1 h2].
   apply fun_ext; intro x. induction x.
   apply prop_ext; intro h. rewrite h1. exact I. exact Even_0.
   rewrite h2, <- IHx, not_Even_is_Odd. apply Even_S.
@@ -742,9 +779,400 @@ Proof.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => Odd). intro x. split.
   rewrite is_False. exact Odd_0. intro n. rewrite not_Odd_is_Even. apply Odd_S.
-  generalize (ε_spec Q i a). intros [h1 h2].
+  generalize (ε_spec i a). intros [h1 h2].
   apply fun_ext; intro x. induction x.
   apply prop_ext; intro h. rewrite h1. apply Odd_0. exact h.
   apply False_rec. rewrite <- h1. exact h.
   rewrite h2, <- IHx, not_Odd_is_Even. apply Odd_S.
+Qed.
+
+(****************************************************************************)
+(* NUMPAIR(x,y) = 2^x(2y+1): bijection between N² and N-{0}. *)
+(****************************************************************************)
+
+Definition NUMPAIR := fun _17324 : nat => fun _17325 : nat => Nat.mul (Nat.pow (NUMERAL (BIT0 (BIT1 0))) _17324) (Nat.add (Nat.mul (NUMERAL (BIT0 (BIT1 0))) _17325) (NUMERAL (BIT1 0))).
+
+Lemma NUMPAIR_INJ : forall x1 : nat, forall y1 : nat, forall x2 : nat, forall y2 : nat, ((NUMPAIR x1 y1) = (NUMPAIR x2 y2)) = ((x1 = x2) /\ (y1 = y2)).
+Proof. (*thm_1052244*)
+  intros x1 y1 x2 y2. apply prop_ext. 2: intros [e1 e2]; subst; reflexivity.
+  unfold NUMPAIR, NUMERAL, BIT1, BIT0. intro e.
+  
+  destruct (Compare_dec.lt_eq_lt_dec x1 x2) as [[h|h]|h].
+  apply False_rec. destruct (ge_is_add h) as [k hk]. subst x2.  
+  generalize (f_equal (fun x => div x (2 ^ x1)) e).
+  rewrite DIV_MULT, pow_add, pow_succ_r, (mul_comm 2 (2 ^ x1)), <- !mul_assoc,
+    DIV_MULT. lia.
+  apply pow_nonzero. lia.
+  lia.
+  apply pow_nonzero. lia.
+
+  subst x2. split. reflexivity.
+  generalize (f_equal (fun x => div x (2 ^ x1)) e). rewrite !DIV_MULT. lia.
+  apply pow_nonzero. lia.
+  apply pow_nonzero. lia.
+  
+  apply False_rec. destruct (ge_is_add h) as [k hk]. subst x1.  
+  generalize (f_equal (fun x => div x (2 ^ x2)) e).
+  rewrite DIV_MULT, pow_add, pow_succ_r, (mul_comm 2 (2 ^ x2)), <- !mul_assoc,
+    DIV_MULT. lia.
+  apply pow_nonzero. lia.
+  lia.
+  apply pow_nonzero. lia.
+Qed.
+
+Lemma NUMPAIR_nonzero x y : NUMPAIR x y <> 0.
+Proof.
+  unfold NUMPAIR, NUMERAL, BIT1, BIT0. rewrite mul_add_distr_l, mul_1_r.
+  assert (h: 2 ^ x <> 0). apply pow_nonzero. lia. lia.
+Qed.
+
+(****************************************************************************)
+(* Definition of the inverse of NUMPAIR like in HOL-Light. *)
+(****************************************************************************)
+
+Lemma INJ_INVERSE2 {A B C : Type'} : forall P : A -> B -> C, (forall x1 : A, forall y1 : B, forall x2 : A, forall y2 : B, ((P x1 y1) = (P x2 y2)) = ((x1 = x2) /\ (y1 = y2))) -> exists X : C -> A, exists Y : C -> B, forall x : A, forall y : B, ((X (P x y)) = x) /\ ((Y (P x y)) = y).
+Proof. (*thm_1046684*)
+  intros f h.
+  exists (fun c => ε (fun a => exists b, f a b = c)).
+  exists (fun c => ε (fun b => exists a, f a b = c)).
+  intros a b. split.
+  match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
+  assert (i : exists a, Q a). exists a. exists b. reflexivity.
+  generalize (ε_spec i). fold q. unfold Q. intros [b' j]. rewrite h in j.
+  destruct j as [j1 j2]. auto.
+  match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
+  assert (i : exists b, Q b). exists b. exists a. reflexivity.
+  generalize (ε_spec i). fold q. unfold Q. intros [a' j]. rewrite h in j.
+  destruct j as [j1 j2]. auto.
+Qed.
+
+Definition NUMFST_pred :=  fun X : nat -> nat => exists Y : nat -> nat, forall x : nat, forall y : nat, ((X (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y).
+
+Definition NUMFST := ε NUMFST_pred.
+
+Lemma NUMFST_NUMPAIR x y : NUMFST (NUMPAIR x y) = x.
+Proof.
+  destruct (INJ_INVERSE2 _ NUMPAIR_INJ) as [fst [snd h]].
+  assert (i : exists q, NUMFST_pred q). exists fst. exists snd. assumption.
+  generalize (ε_spec i). fold NUMFST. unfold NUMFST_pred.
+  intros [snd' h']. destruct (h' x y) as [j k]. assumption.
+Qed.
+
+Definition NUMSND_pred :=  fun Y : nat -> nat => exists X : nat -> nat, forall x : nat, forall y : nat, ((X (NUMPAIR x y)) = x) /\ ((Y (NUMPAIR x y)) = y).
+
+Definition NUMSND := ε NUMSND_pred.
+
+Lemma NUMSND_NUMPAIR x y : NUMSND (NUMPAIR x y) = y.
+Proof.
+  destruct (INJ_INVERSE2 _ NUMPAIR_INJ) as [fst [snd h]].
+  assert (i : exists q, NUMSND_pred q). exists snd. exists fst. assumption.
+  generalize (ε_spec i). fold NUMSND. unfold NUMSND_pred.
+  intros [fst' h']. destruct (h' x y) as [j k]. assumption.
+Qed.
+
+(****************************************************************************)
+(* Explicit definition of the inverse of NUMSUM. *)
+(****************************************************************************)
+
+Definition NUMSUM := fun _17342 : Prop => fun _17343 : nat => @COND nat _17342 (S (Nat.mul (NUMERAL (BIT0 (BIT1 0))) _17343)) (Nat.mul (NUMERAL (BIT0 (BIT1 0))) _17343).
+
+Definition NUMLEFT n := if even n then False else True.
+
+Definition NUMRIGHT n := if even n then n / 2 else (n - 1) / 2.
+
+Lemma NUMLEFT_NUMSUM b n : NUMLEFT (NUMSUM b n) = b.
+Proof.
+  unfold NUMSUM, NUMERAL, BIT1, BIT0, NUMLEFT. destruct (prop_degen b); subst.
+  rewrite COND_True, even_succ, odd_mul, odd_2. reflexivity.
+  rewrite COND_False, even_double. reflexivity.
+Qed.
+
+Lemma NUMRIGHT_NUMSUM b n : NUMRIGHT (NUMSUM b n) = n.
+Proof.
+  unfold NUMSUM, NUMERAL, BIT1, BIT0, NUMRIGHT. destruct (prop_degen b); subst.
+  rewrite COND_True, even_succ, odd_mul, odd_2, S_minus_1, DIV_MULT. reflexivity. lia.
+  rewrite COND_False, even_double, DIV_MULT. reflexivity. lia.
+Qed.
+
+Lemma NUMSUM_surjective n : exists b x, n = NUMSUM b x.
+Proof.
+  exists (NUMLEFT n). exists (NUMRIGHT n). unfold NUMSUM, NUMLEFT, NUMRIGHT, NUMERAL, BIT1, BIT0.
+  case_eq (even n); intro h.
+  rewrite COND_False. rewrite even_spec in h. destruct h as [k h]. subst n.
+  rewrite DIV_MULT. reflexivity. lia.
+  rewrite COND_True. apply eq_false_negb_true in h. change (odd n = true) in h.
+  rewrite odd_spec in h. destruct h as [k h]. subst. rewrite plus_1_minus_1.
+  rewrite DIV_MULT. lia. lia.
+Qed.
+
+Lemma NUMLEFT_def : NUMLEFT = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))) -> nat -> Prop) (fun X : (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))) -> nat -> Prop => forall _17372 : prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))), exists Y : nat -> nat, forall x : Prop, forall y : nat, ((X _17372 (NUMSUM x y)) = x) /\ ((Y (NUMSUM x y)) = y)) (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))))))).
+Proof.
+  generalize (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+     (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+      (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+       (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+        (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))),
+         (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))),
+           NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))))).
+  generalize (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))); intros A a.
+  match goal with |- _ = ε ?x _ => set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _ => NUMLEFT). intros _. exists NUMRIGHT.
+  intros b x. rewrite NUMLEFT_NUMSUM, NUMRIGHT_NUMSUM. auto.
+  generalize (ε_spec i); intro h. destruct (h a) as [snd j].
+  apply fun_ext; intro n. destruct (NUMSUM_surjective n) as [b [x k]]. subst.
+  rewrite NUMLEFT_NUMSUM. destruct (j b x) as [j1 j2]. auto.
+Qed.
+
+Lemma NUMRIGHT_def : NUMRIGHT = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))))) -> nat -> nat) (fun Y : (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))))) -> nat -> nat => forall _17373 : prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))), forall x : Prop, forall y : nat, ((NUMLEFT (NUMSUM x y)) = x) /\ ((Y _17373 (NUMSUM x y)) = y)) (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))))))).
+Proof.
+  generalize (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+     (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+      (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+       (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+        (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+         (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))),
+          (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))),
+           NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))))).
+  generalize (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))));
+    intros A a.
+  match goal with |- _ = ε ?x _ => set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _ => NUMRIGHT). intros _ b x.
+  rewrite NUMLEFT_NUMSUM, NUMRIGHT_NUMSUM. auto.
+  generalize (ε_spec i); intro h.
+  apply fun_ext; intro n. destruct (NUMSUM_surjective n) as [b [x k]]. subst.
+  rewrite NUMRIGHT_NUMSUM. destruct (h a b x) as [j1 j2]. auto.
+Qed.
+
+(****************************************************************************)
+(* Alignment of ZRECSPACE. *)
+(****************************************************************************)
+
+Definition INJN {A : Type'} := fun _17374 : nat => fun n : nat => fun a : A => n = _17374.
+
+Definition INJA {A : Type'} := fun _17379 : A => fun n : nat => fun b : A => b = _17379.
+
+Definition INJF {A : Type'} := fun _17386 : nat -> nat -> A -> Prop => fun n : nat => _17386 (NUMFST n) (NUMSND n).
+
+Definition INJP {A : Type'} := fun _17391 : nat -> A -> Prop => fun _17392 : nat -> A -> Prop => fun n : nat => fun a : A => @COND Prop (NUMLEFT n) (_17391 (NUMRIGHT n) a) (_17392 (NUMRIGHT n) a).
+
+Definition ZCONSTR {A : Type'} := fun _17403 : nat => fun _17404 : A => fun _17405 : nat -> nat -> A -> Prop => @INJP A (@INJN A (S _17403)) (@INJP A (@INJA A _17404) (@INJF A _17405)).
+
+Definition ZBOT {A : Type'} := @INJP A (@INJN A (NUMERAL 0)) (@ε (nat -> A -> Prop) (fun z : nat -> A -> Prop => True)).
+
+Inductive ZRECSPACE {A : Type'} : (nat -> A -> Prop) -> Prop :=
+| ZRECSPACE0 : ZRECSPACE ZBOT
+| ZRECSPACE1 c i r : (forall n, ZRECSPACE (r n)) -> ZRECSPACE (ZCONSTR c i r).
+
+Lemma ZRECSPACE_def {A : Type'} : (@ZRECSPACE A) = (fun a : nat -> A -> Prop => forall ZRECSPACE' : (nat -> A -> Prop) -> Prop, (forall a' : nat -> A -> Prop, ((a' = (@ZBOT A)) \/ (exists c : nat, exists i : A, exists r : nat -> nat -> A -> Prop, (a' = (@ZCONSTR A c i r)) /\ (forall n : nat, ZRECSPACE' (r n)))) -> ZRECSPACE' a') -> ZRECSPACE' a).
+Proof.
+  apply fun_ext; intro a. apply prop_ext.
+  induction 1; intros a h; apply h. left. reflexivity.
+  right. exists c. exists i. exists r. split. reflexivity. intro n. apply (H0 n a h).
+  intro h. apply h. intros a' [e|[c [i [r [e j]]]]]; subst.
+  apply ZRECSPACE0. apply ZRECSPACE1. exact j.
+Qed.
+
+(****************************************************************************)
+(* Alignment of recspace. Uses proof irrelevance. *)
+(****************************************************************************)
+
+Require Import ProofIrrelevance.
+
+Definition recspace' : Type' -> Type := fun A => {f : nat -> A -> Prop | ZRECSPACE f}.
+
+Definition ZBOT' {A : Type'} : recspace' A := exist _ _ ZRECSPACE0.
+
+Definition recspace : Type' -> Type' := fun A => {| type := recspace' A; el := ZBOT' |}.
+Canonical recspace.
+
+Definition _dest_rec : forall {A : Type'}, (recspace A) -> nat -> A -> Prop :=
+  fun A r => proj1_sig r.
+
+Definition _mk_rec_pred {A : Type'} (f : nat -> A -> Prop) (g : recspace A) :=
+  _dest_rec g = f.
+
+Definition _mk_rec : forall {A : Type'}, (nat -> A -> Prop) -> recspace A :=
+  fun A f => ε (_mk_rec_pred f).
+
+Lemma eq_recspace {A : Type'} : forall (f g : recspace A), _dest_rec f = _dest_rec g -> f = g.
+Proof.
+  intros [f hf] [g hg]. simpl. intro e. subst g. apply subset_eq_compat. reflexivity.
+Qed.
+
+Lemma axiom_10 : forall {A : Type'} (r : nat -> A -> Prop), (@ZRECSPACE A r) = ((@_dest_rec A (@_mk_rec A r)) = r).
+Proof.
+  intros A f. apply prop_ext.
+  intro h. apply (@ε_spec _ (_mk_rec_pred f)). exists (exist _ _ h). reflexivity.
+  intro e. rewrite <- e. destruct (_mk_rec f) as [g h]. simpl. exact h.
+Qed.
+
+Lemma axiom_9 : forall {A : Type'} (a : recspace A), (@_mk_rec A (@_dest_rec A a)) = a.
+Proof.
+  intros A [f h]. simpl. apply eq_recspace. simpl. rewrite <- axiom_10. exact h.
+Qed.
+
+Definition BOTTOM {A : Type'} := @_mk_rec A (@ZBOT A).
+
+Definition CONSTR {A : Type'} := fun _17428 : nat => fun _17429 : A => fun _17430 : nat -> recspace A => @_mk_rec A (@ZCONSTR A _17428 _17429 (fun n : nat => @_dest_rec A (_17430 n))).
+
+Lemma NUMSUM_INJ : forall b1 : Prop, forall x1 : nat, forall b2 : Prop, forall x2 : nat, ((NUMSUM b1 x1) = (NUMSUM b2 x2)) = ((b1 = b2) /\ (x1 = x2)).
+Proof. (*thm_1054531*)
+  intros b1 x1 b2 x2. apply prop_ext. 2: intros [e1 e2]; subst; reflexivity.
+  unfold NUMSUM. unfold NUMERAL, BIT1, BIT0.
+  destruct (prop_degen b1); destruct (prop_degen b2); subst; try rewrite !COND_True; try rewrite !COND_False; intro e.
+  split. auto. lia.
+  apply False_rec. lia.
+  apply False_rec. lia.
+  split. auto. lia.
+Qed.
+
+Lemma INJN_INJ {A : Type'} : forall n1 : nat, forall n2 : nat, ((@INJN A n1) = (@INJN A n2)) = (n1 = n2).
+Proof. (*thm_1055675*)
+  intros n1 n2. apply prop_ext. 2: intro e; subst; reflexivity.
+  intro e. generalize (ext_fun e n1); clear e; intro e.
+  generalize (ext_fun e (el A)); clear e. unfold INJN.
+  rewrite refl_is_True, sym, is_True. auto.
+Qed.
+
+Lemma INJA_INJ {A : Type'} : forall a1 : A, forall a2 : A, ((@INJA A a1) = (@INJA A a2)) = (a1 = a2).
+Proof. (*thm_1056246*)
+  intros a1 a2. apply prop_ext. 2: intro e; subst; reflexivity.
+  intro e. generalize (ext_fun e 0); clear e; intro e.
+  generalize (ext_fun e a2); clear e. unfold INJA.
+  rewrite refl_is_True, is_True. auto.
+Qed.
+
+Lemma INJF_INJ {A : Type'} : forall f1 : nat -> nat -> A -> Prop, forall f2 : nat -> nat -> A -> Prop, ((@INJF A f1) = (@INJF A f2)) = (f1 = f2).
+Proof. (*thm_1056768*)
+  intros f1 f2. apply prop_ext. 2: intro e; subst; reflexivity.
+  intro e. apply fun_ext; intro x. apply fun_ext; intro y. apply fun_ext; intro a.
+  generalize (ext_fun e (NUMPAIR x y)); clear e; intro e.
+  generalize (ext_fun e a); clear e. unfold INJF.
+  rewrite NUMFST_NUMPAIR, NUMSND_NUMPAIR. auto.
+Qed.
+
+Lemma INJP_INJ {A : Type'} : forall f1 : nat -> A -> Prop, forall f1' : nat -> A -> Prop, forall f2 : nat -> A -> Prop, forall f2' : nat -> A -> Prop, ((@INJP A f1 f2) = (@INJP A f1' f2')) = ((f1 = f1') /\ (f2 = f2')).
+Proof. (*thm_1057673*)
+  intros f1 f1' f2 f2'. apply prop_ext. 2: intros [e1 e2]; subst; reflexivity. intro e.
+  assert (e1: forall x a, INJP f1 f2 x a = INJP f1' f2' x a).
+  intros x a. rewrite e. reflexivity.
+  split; apply fun_ext; intro x; apply fun_ext; intro a.
+  generalize (e1 (S (2 * x)) a). unfold INJP, NUMLEFT, NUMRIGHT.
+  rewrite even_succ, odd_double, !COND_True, S_minus_1, DIV_MULT. auto. lia.
+  generalize (e1 (2 * x) a). unfold INJP, NUMLEFT, NUMRIGHT.
+  rewrite even_double, !COND_False, DIV_MULT. auto. lia.
+Qed.
+
+Lemma ZCONSTR_INJ {A : Type'} c1 i1 r1 c2 i2 r2 : @ZCONSTR A c1 i1 r1 = ZCONSTR c2 i2 r2 -> c1 = c2 /\ i1 = i2 /\ r1 = r2.
+Proof.
+  unfold ZCONSTR. intro e.
+  rewrite INJP_INJ in e. destruct e as [e1 e2].
+  rewrite INJN_INJ in e1. rewrite INJP_INJ in e2. destruct e2 as [e2 e3].
+  rewrite INJA_INJ in e2. rewrite INJF_INJ in e3. auto.
+Qed.
+
+Lemma MK_REC_INJ {A : Type'} : forall x : nat -> A -> Prop, forall y : nat -> A -> Prop, ((@_mk_rec A x) = (@_mk_rec A y)) -> ((@ZRECSPACE A x) /\ (@ZRECSPACE A y)) -> x = y.
+Proof. (*thm_1059803*)
+  intros x y e [hx hy]. rewrite axiom_10 in hx. rewrite axiom_10 in hy.
+  rewrite <- hx, <- hy, e. reflexivity.
+Qed.
+
+Lemma CONSTR_INJ : forall {A : Type'}, forall c1 : nat, forall i1 : A, forall r1 : nat -> recspace A, forall c2 : nat, forall i2 : A, forall r2 : nat -> recspace A, ((@CONSTR A c1 i1 r1) = (@CONSTR A c2 i2 r2)) = ((c1 = c2) /\ ((i1 = i2) /\ (r1 = r2))).
+Proof. (*thm_1060744*)
+  intros A c1 i1 r1 c2 i2 r2. apply prop_ext. 2: intros [e1 [e2 e3]]; subst; reflexivity.
+  unfold CONSTR. intro e. apply MK_REC_INJ in e. apply ZCONSTR_INJ in e.
+  destruct e as [e1 [e2 e3]]. split. auto. split. auto. apply fun_ext; intro x.
+  apply eq_recspace. generalize (ext_fun e3 x). auto.
+  split; apply ZRECSPACE1; intro n. destruct (r1 n). auto. destruct (r2 n). auto.
+Qed.
+
+(****************************************************************************)
+(* Alignement of the option type. *)
+(****************************************************************************)
+
+Definition option' (A : Type') := {| type := option A; el := None |}.
+Canonical option'.
+
+Definition _dest_option : forall {A : Type'}, (option A) -> recspace A :=
+  fun A o =>
+    match o with
+    | None => @CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A)
+    | Some a => (fun a' : A => @CONSTR A (S (NUMERAL 0)) a' (fun n : nat => @BOTTOM A)) a
+    end.
+
+Lemma _dest_option_inj {A : Type'} (o1 o2 : option A) :
+  _dest_option o1 = _dest_option o2 -> o1 = o2.
+Proof.
+  induction o1; induction o2; simpl; rewrite (@CONSTR_INJ A); intros [e1 [e2 e3]].
+  rewrite e2. reflexivity. discriminate. discriminate. reflexivity.
+Qed.
+
+Definition _mk_option_pred {A : Type'} (r : recspace A) : option A -> Prop :=
+  fun o => _dest_option o = r.
+
+Definition _mk_option : forall {A : Type'}, (recspace A) -> option A :=
+  fun A r => ε (_mk_option_pred r).
+
+(* axiom_13 is equivalent to say that _dest_option is injective. *)
+Lemma axiom_13 : forall {A : Type'} (a : option A), (@_mk_option A (@_dest_option A a)) = a.
+Proof.
+  intros A o. unfold _mk_option.
+  match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
+  assert (i : exists q, Q q). exists o. reflexivity.
+  generalize (ε_spec i). fold q. unfold Q, _mk_option_pred. apply _dest_option_inj.
+Qed.
+
+Definition option_pred {A : Type'} (r : recspace A) := forall option' : recspace A -> Prop,
+      (forall a' : recspace A,
+       a' = CONSTR (NUMERAL 0) (ε (fun _ : A => True)) (fun _ : nat => BOTTOM) \/
+       (exists a'' : A, a' = CONSTR (S (NUMERAL 0)) a'' (fun _ : nat => BOTTOM)) ->
+       option' a') -> option' r.
+
+Inductive option_ind {A : Type'} : recspace A -> Prop :=
+| option_ind0 : option_ind (CONSTR (NUMERAL 0) (ε (fun _ : A => True)) (fun _ : nat => BOTTOM))
+| option_ind1 a'' : option_ind (CONSTR (S (NUMERAL 0)) a'' (fun _ : nat => BOTTOM)).
+
+Lemma option_eq {A : Type'} : @option_pred A = @option_ind A.
+Proof.
+  apply fun_ext; intro r. apply prop_ext.
+  intro h. apply h. intros r' [i|[a'' i]]; subst. apply option_ind0. apply option_ind1.
+  induction 1; unfold option_pred; intros r h; apply h.
+  left. reflexivity. right. exists a''. reflexivity.
+Qed.
+
+Lemma axiom_14' : forall {A : Type'} (r : recspace A), (option_pred r) = ((@_dest_option A (@_mk_option A r)) = r).
+Proof.
+  intros A r. apply prop_ext.
+  
+  intro h. apply (@ε_spec _ (_mk_option_pred r)).
+  rewrite option_eq in h. induction h.
+  exists None. reflexivity. exists (Some a''). reflexivity.
+
+  intro e. rewrite <- e. intros P h. apply h. destruct (_mk_option r); simpl.
+  right. exists t0. reflexivity. left. reflexivity.
+Qed.
+
+Lemma axiom_14 : forall {A : Type'} (r : recspace A), ((fun a : recspace A => forall option' : (recspace A) -> Prop, (forall a' : recspace A, ((a' = (@CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A))) \/ (exists a'' : A, a' = ((fun a''' : A => @CONSTR A (S (NUMERAL 0)) a''' (fun n : nat => @BOTTOM A)) a''))) -> option' a') -> option' a) r) = ((@_dest_option A (@_mk_option A r)) = r).
+Proof. intros A r. apply axiom_14'. Qed.
+
+Lemma NONE_def {A : Type'} : (@None A) = (@_mk_option A (@CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A))).
+Proof.
+  apply _dest_option_inj. simpl.
+  match goal with [|- ?x = _] => set (r := x) end.
+  (* rewrite <- axiom_14'. doesn't work *)
+  unfold _mk_option.
+  assert (h: exists o, @_mk_option_pred A r o). exists None. reflexivity.
+  generalize (ε_spec h).
+  set (o := ε (_mk_option_pred r)). unfold _mk_option_pred. auto.
+Qed.
+
+Lemma SOME_def {A : Type'} : (@Some A) = (fun a : A => @_mk_option A ((fun a' : A => @CONSTR A (S (NUMERAL 0)) a' (fun n : nat => @BOTTOM A)) a)).
+Proof.
+  apply fun_ext; intro a. apply _dest_option_inj. simpl.
+  match goal with [|- ?x = _] => set (r := x) end.
+  (* rewrite <- axiom_14'. doesn't work *)
+  unfold _mk_option.
+  assert (h: exists o, @_mk_option_pred A r o). exists (Some a). reflexivity.
+  generalize (ε_spec h).
+  set (o := ε (_mk_option_pred r)). unfold _mk_option_pred. auto.  
 Qed.
