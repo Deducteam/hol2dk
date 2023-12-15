@@ -1137,6 +1137,71 @@ Proof. (*thm_1060744*)
   split; apply ZRECSPACE1; intro n. destruct (r1 n). auto. destruct (r2 n). auto.
 Qed.
 
+
+(****************************************************************************)
+(* Mapping of sum_type. *)
+(****************************************************************************)
+
+Definition sum' (A B : Type') : Type' := {| type:= sum A B; el := inl (el A)|}.
+
+Definition sum_type := sum'.
+
+Definition _dest_sum : forall {A B : Type'}, sum_type A B -> recspace (prod A B) := 
+fun A B p => match p with 
+| inl(a) => CONSTR (NUMERAL 0) (a , ε (fun _: B => True)) (fun n => BOTTOM)
+| inr(b) => CONSTR (S (NUMERAL 0)) (ε (fun _: A => True) , b) (fun n => BOTTOM)
+end.
+
+Definition _mk_sum : forall {A B : Type'}, (recspace (prod A B)) -> sum_type A B :=
+fun A B f => ε (fun p => f = _dest_sum p).
+
+Lemma _dest_sum_inj : forall {A B : Type'} (f g : sum_type A B), _dest_sum f = _dest_sum g -> f = g. 
+Proof. 
+  intros.
+  induction f; induction g; unfold _dest_sum in H; rewrite (@CONSTR_INJ (prod A B)) in H; destruct H. destruct H0.
+  apply pair_equal_spec in H0. destruct H0. rewrite H0. reflexivity. discriminate. discriminate. 
+  destruct H0. apply pair_equal_spec in H0. destruct H0. rewrite H2. reflexivity.
+Qed.
+
+Lemma axiom_11 : forall {A B : Type'} (a : sum_type A B), (@_mk_sum A B (@_dest_sum A B a)) = a.
+Proof.
+  intros.
+  unfold _mk_sum.
+  apply _dest_sum_inj.
+  rewrite sym.
+  apply (@ε_spec (sum_type A B)). 
+  exists a.
+  reflexivity.
+Qed.
+
+Lemma axiom_12 : forall {A B : Type'} (r : recspace (prod A B)), 
+  ((fun a : recspace (prod A B) => 
+  forall sum' : (recspace (prod A B)) -> Prop, 
+  (forall a' : recspace (prod A B), 
+  (
+  (exists a'' : A, a' = ((fun a''' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a''' (@ε B (fun v : B => True))) (fun n : nat => @BOTTOM (prod A B))) a'')) 
+  \/ 
+  (exists a'' : B, a' = ((fun a''' : B => @CONSTR (prod A B) (S (NUMERAL 0)) (@pair A B (@ε A (fun v : A => True)) a''') (fun n : nat => @BOTTOM (prod A B))) a''))
+  ) -> sum' a'
+  ) 
+  -> sum' a) r) 
+  = ((@_dest_sum A B (@_mk_sum A B r)) = r).
+Proof.
+intros. 
+apply prop_ext.
+intro h.
+unfold _mk_sum.
+rewrite sym.
+apply (@ε_spec (sum_type A B)).
+apply (h (fun r : recspace (prod A B) => exists x : sum_type A B, r = _dest_sum x)).
+intros. destruct H. destruct H.
+exists (inl(x)). simpl. exact H.
+
+destruct H. exists (inr(x)). simpl. exact H. 
+
+intro e. rewrite <- e. intros P h. apply h. destruct (_mk_sum r). simpl. left. exists t0. reflexivity. right. exists t0. reflexivity.
+Qed.
+
 (****************************************************************************)
 (* Alignement of the option type. *)
 (****************************************************************************)
