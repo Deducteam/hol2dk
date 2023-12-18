@@ -1142,9 +1142,7 @@ Qed.
 (* Mapping of sum_type. *)
 (****************************************************************************)
 
-Definition sum' (A B : Type') : Type' := {| type:= sum A B; el := inl (el A)|}.
-
-Definition sum_type := sum'.
+Definition sum_type (A B : Type') : Type' := {| type:= sum A B; el := inl (el A)|}.
 
 Definition _dest_sum : forall {A B : Type'}, sum_type A B -> recspace (prod A B) := 
 fun A B p => match p with 
@@ -1165,13 +1163,9 @@ Qed.
 
 Lemma axiom_11 : forall {A B : Type'} (a : sum_type A B), (@_mk_sum A B (@_dest_sum A B a)) = a.
 Proof.
-  intros.
-  unfold _mk_sum.
-  apply _dest_sum_inj.
-  rewrite sym.
-  apply (@ε_spec (sum_type A B)). 
-  exists a.
-  reflexivity.
+  intros. unfold _mk_sum. apply _dest_sum_inj.
+  rewrite sym. apply (@ε_spec (sum_type A B)). 
+  exists a. reflexivity.
 Qed.
 
 Lemma axiom_12 : forall {A B : Type'} (r : recspace (prod A B)), 
@@ -1187,19 +1181,36 @@ Lemma axiom_12 : forall {A B : Type'} (r : recspace (prod A B)),
   -> sum' a) r) 
   = ((@_dest_sum A B (@_mk_sum A B r)) = r).
 Proof.
-intros. 
-apply prop_ext.
-intro h.
-unfold _mk_sum.
-rewrite sym.
-apply (@ε_spec (sum_type A B)).
+intros. apply prop_ext.
+intro h. unfold _mk_sum. rewrite sym. apply (@ε_spec (sum_type A B)).
 apply (h (fun r : recspace (prod A B) => exists x : sum_type A B, r = _dest_sum x)).
-intros. destruct H. destruct H.
-exists (inl(x)). simpl. exact H.
+intros. destruct H. destruct H. exists (inl(x)). simpl. exact H.
 
 destruct H. exists (inr(x)). simpl. exact H. 
 
 intro e. rewrite <- e. intros P h. apply h. destruct (_mk_sum r). simpl. left. exists t0. reflexivity. right. exists t0. reflexivity.
+Qed.
+
+Lemma INL_def {A B : Type'} : (@inl A B) = (fun a : A => @_mk_sum A B ((fun a' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a' (@ε B (fun v : B => True))) (fun n : nat => @BOTTOM (prod A B))) a)).
+Proof.
+  apply fun_ext. intro a. apply _dest_sum_inj. simpl.
+  match goal with [|- ?x = _] => set (r := x) end. 
+  (* rewrite sym. rewrite <- axiom_12. doesn't work *)
+  unfold _mk_sum. assert (h: exists p, r = _dest_sum p).
+  exists (inl(a)). simpl. reflexivity.
+  generalize (ε_spec h). set (o := ε (fun p : sum_type A B => _dest_sum p = r)).
+  auto. 
+Qed.
+
+Lemma INR_def {A B : Type'} : (@inr A B) = (fun a : B => @_mk_sum A B ((fun a' : B => @CONSTR (prod A B) (S (NUMERAL 0)) (@pair A B (@ε A (fun v : A => True)) a') (fun n : nat => @BOTTOM (prod A B))) a)).
+Proof.
+  apply fun_ext. intro b. apply _dest_sum_inj. simpl.
+  match goal with [|- ?x = _] => set (r := x) end. 
+  (* rewrite sym. rewrite <- axiom_12. doesn't work *)
+  unfold _mk_sum. assert (h: exists p, r = _dest_sum p).
+  exists (inr(b)). simpl. reflexivity.
+  generalize (ε_spec h). set (o := ε (fun p : sum_type A B => _dest_sum p = r)).
+  auto. 
 Qed.
 
 (****************************************************************************)

@@ -168,3 +168,7 @@ builtin "_mk_sum" := _mk_sum;
 builtin "_dest_sum" := _dest_sum;
 builtin "axiom_11" := axiom_11;
 builtin "axiom 12" := axiom_12;
+builtin "inl" ≔ INL;
+builtin "INL_def" ≔ INL_def;
+builtin "inr" ≔ INR;
+builtin "INR_def" ≔ INR_def;
