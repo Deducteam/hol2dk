@@ -19,7 +19,7 @@ then
     exit 1
 fi
 
-for ext in prf sig thm stp pos use
+for ext in prf sig thm pos use
 do
    ln -f -s $HOLLIGHT_DIR/$1.$ext
 done
