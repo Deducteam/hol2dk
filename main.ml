@@ -728,6 +728,19 @@ and command = function
      close_in !Xproof.ic_prf;
      0
 
+  | ["split";b] ->
+     read_pos b;
+     let start_pos = ref (-1) in
+     let f end_pos n =
+       assert (end_pos > !start_pos);
+       let oc = open_out_bin (n ^ ".pos") in
+       output_value oc
+         (Array.sub !prf_pos (!start_pos + 1) (end_pos - !start_pos));
+       close_out oc
+     in
+     MapInt.iter f (read_thm b);
+     0
+
   | ["prf";x;y;b] ->
      read_sig b;
      read_pos b;
