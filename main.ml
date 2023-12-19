@@ -731,18 +731,57 @@ and command = function
 
   | ["split";b] ->
      prf_pos := read_val (b ^ ".pos");
+     read_use b;
      let map = ref MapInt.empty in
      let start_pos = ref 0 in
      let f end_pos n =
        assert (end_pos >= !start_pos);
-       map := MapInt.add end_pos (Array.get !prf_pos end_pos) !map;
+       map := MapInt.add end_pos (n, Array.get !prf_pos end_pos) !map;
        write_val (n ^ ".stp") !start_pos;
        write_val (n ^ ".pos")
          (Array.sub !prf_pos !start_pos (end_pos - !start_pos + 1));
+       write_val (n ^ ".use")
+         (Array.sub !last_use !start_pos (end_pos - !start_pos + 1));
        start_pos := end_pos + 1
      in
      MapInt.iter f (read_thm b);
      write_val (b ^ ".thp") !map;
+     0
+
+  | ["theorem";b;f] ->
+     read_sig b;
+     map_thid_pos := read_val (b ^ ".thp");
+     let _dk = is_dk f in
+     let n = Filename.chop_extension f in
+     read_pos n;
+     read_use n;
+     log "prf_pos length = %d\n%!" (Array.length !prf_pos);
+     start_pos := read_val (n ^ ".stp");
+     log "start_pos = %d\n%!" !start_pos;
+     init_proof_reading b;
+     (*if dk then
+       begin
+         Xdk.export_proofs n All;
+         Xdk.export_term_abbrevs n "";
+         Xdk.export_type_abbrevs n "";
+         log "generate %s.dk ...\n%!" b;
+         let infiles =
+           List.map (fun s -> b ^ "_" ^ s ^ ".dk")
+             ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
+              ;"proofs";"theorems"]
+         in
+         exit
+           (Sys.command
+              ("cat theory_hol.dk " ^ String.concat " " infiles
+               ^ " > " ^ b ^ ".dk"))
+       end
+     else*)
+       begin
+         Xlp.export_proofs n All;
+         Xlp.export_term_abbrevs n "";
+         Xlp.export_type_abbrevs n ""
+       end;
+     close_in !Xproof.ic_prf;
      0
 
   | ["prf";x;y;b] ->

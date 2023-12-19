@@ -493,10 +493,7 @@ let decl_theorem oc k p d =
      let term = term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     let prv =
-       let l = Array.get !Xproof.last_use k in
-       l > 0 && l < !cur_part_max
-     in
+     let prv = let l = get_use k in l > 0 && l < !cur_part_max in
      out oc "%s symbol thm_%d%a%a%a : Prf %a ≔ %a;\n"
        (if prv then "private" else "opaque") k
        typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
@@ -534,7 +531,7 @@ let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
    [x] .. [y]. *)
 let proofs_in_interval oc x y =
   for k = x to y do
-    if Array.get !Xproof.last_use k >= 0 then theorem oc k (proof_at k)
+    if get_use k >= 0 then theorem oc k (proof_at k)
   done
 
 (* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
@@ -547,9 +544,7 @@ let proofs_in_range oc = function
 "flag \"print_implicits\" on;
 flag \"print_domains\" on;
 print thm_%d;\n" x*)
-  | All ->
-     iter_proofs_at
-       (fun k p -> if Array.get !last_use k >= 0 then theorem oc k p)
+  | All -> iter_proofs_at (fun k p -> if get_use k >= 0 then theorem oc k p)
   | Upto y -> proofs_in_interval oc 0 y
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
@@ -702,7 +697,7 @@ require open hol-light.theory_hol;\n
     close_out oc
   in
   for k = x to y do
-    if Array.get !Xproof.last_use k >= 0 then theorem_file k (proof_at k)
+    if get_use k >= 0 then theorem_file k (proof_at k)
   done
 ;;
 

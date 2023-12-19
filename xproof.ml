@@ -21,8 +21,8 @@ let ic_prf : in_channel ref = ref stdin;;
 
 let init_proof_reading b =
   let dump_file = b ^ ".prf" in
-  log "read %s ...\n%!" dump_file;
-  ic_prf := open_in_bin dump_file
+  log "open %s ...\n%!" dump_file;
+  ic_prf := open_in_bin dump_file;;
 
 (* [!start_pos] is the starting proof index of the current pos file. *)
 let start_pos : int ref = ref 0;;
@@ -31,32 +31,36 @@ let start_pos : int ref = ref 0;;
    index [!start_pos + i]. *)
 let prf_pos : int array ref = ref [||];;
 
-(* [!map_thid_pos] maps proof indexes to positions. *)
-let map_thid_pos = ref MapInt.empty;;
+let read_pos b = prf_pos := read_val (b ^ ".pos");;
 
-let read_pos b =
-  start_pos := read_val (b ^ ".stp");
-  map_thid_pos := read_val (b ^ ".thp");
-  prf_pos := read_val (b ^ ".pos");;
+(* [!map_thid_pos] maps proof indexes to positions. *)
+let map_thid_pos : (string * int) MapInt.t ref = ref MapInt.empty;;
+
+let thdeps = ref [];;
 
 let get_pos k =
+  log "get_pos %d\n%!" k;
   let k' = k - !start_pos in
   if k' >= 0 then Array.get !prf_pos k'
-  else MapInt.find k !map_thid_pos
-;;
+  else let n,p = MapInt.find k !map_thid_pos in
+       thdeps := n::!thdeps; p;;
 
 (* [proof_at k] returns the proof of index [k]. Can be used after
-   [read_pos], [read_thid_pos] and [init_proof_reading] only. *)
+   [read_pos] and [init_proof_reading] only. *)
 let proof_at k =
   let ic = !ic_prf in
-  seek_in ic (get_pos k);
+  let p = get_pos k in
+  log "get_pos %d = %d\n%!" k p;
+  seek_in ic p;
   input_value ic;;
 
-(* [!last_use.(i) = 0] if [i] is a named theorem, the highest theorem
-   index using [i] if there is one, and -1 otherwise. *)
+(* [(!last_use).(i) = 0] if [i] is a named theorem, the highest
+   theorem index using [i] if there is one, and -1 otherwise. *)
 let last_use : int array ref = ref [||];;
 
 let read_use b = last_use := read_val (b ^ ".use");;
+
+let get_use k = Array.get !last_use (k - !start_pos);;
 
 (* [!cur_part_max] indicates the maximal index of the current part. *)
 let cur_part_max : int ref = ref (-1);;
