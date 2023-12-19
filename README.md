@@ -58,8 +58,7 @@ install them by using the following commands:
 
 ```
 cd $HOME
-sudo apt-get install -y libipc-system-simple-perl libstring-shellquote
--perl opam
+sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl opam
 opam init
 opam switch create ocaml.4.14.1
 eval `opam env`
