@@ -731,12 +731,12 @@ and command = function
   | ["split";b] ->
      prf_pos := read_val (b ^ ".pos");
      read_use b;
-     let map = ref MapInt.empty in
-     let start_pos = ref 0 in
      let dump_file = b ^ "_theorems.mk" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out dump_file in
      out oc ".SUFFIXES:\n.PHONY: default\ndefault:";
+     let map = ref MapInt.empty in
+     let start_pos = ref 0 in
      let f end_pos n =
        assert (end_pos >= !start_pos);
        let p = Array.get !prf_pos end_pos in
@@ -750,7 +750,24 @@ and command = function
        start_pos := end_pos + 1;
        out oc " %s.lp" n;
      in
-     MapInt.iter f (read_thm b);
+     let map_thid_name = read_thm b in
+     MapInt.iter f map_thid_name;
+     (* find unnamed theorems that are used later *)
+     start_pos := 0;
+     while !start_pos < Array.length !last_use do
+       let l = Array.get !last_use !start_pos in
+       if l <= 0 then incr start_pos
+       else
+         begin
+           let end_pos = ref (!start_pos + 1) in
+           while Array.get !last_use !end_pos <> 0 do incr end_pos done;
+           for k = !start_pos to !end_pos - 1 do
+             let l = Array.get !last_use k in
+             if l > !end_pos then f k (string_of_int k)
+           done;
+           start_pos := !end_pos + 1
+         end
+     done;
      out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
      close_out oc;
      write_val (b ^ ".thp") !map;
