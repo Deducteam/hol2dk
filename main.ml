@@ -744,35 +744,32 @@ and command = function
        let p = Array.get !prf_pos end_pos in
        (*log "map %d -> %s, %d\n%!" end_pos n p;*)
        map := MapInt.add end_pos (n,p) !map;
+       out oc " %s.lp" n;
        write_val (n ^ ".stp") !start_pos;
        write_val (n ^ ".pos")
          (Array.sub !prf_pos !start_pos (end_pos - !start_pos + 1));
        write_val (n ^ ".use")
          (Array.sub !last_use !start_pos (end_pos - !start_pos + 1));
-       start_pos := end_pos + 1;
-       out oc " %s.lp" n;
+       start_pos := end_pos + 1
      in
      let map_thid_name = read_thm b in
      MapInt.iter f map_thid_name;
-     (* find unnamed theorems that are used later *)
-     (*start_pos := 0;
-     while !start_pos < Array.length !last_use do
-       let l = Array.get !last_use !start_pos in
-       if l <= 0 then incr start_pos
-       else
+     (* add in [!map] the unnamed theorems that are used later *)
+     let end_pos = ref (Array.length !prf_pos - 1) in
+     for k = Array.length !prf_pos - 2 downto 0 do
+       let l = Array.get !last_use k in
+       if l > 0 then
          begin
-           let end_pos = ref (!start_pos + 1) in
-           while Array.get !last_use !end_pos <> 0 do incr end_pos done;
-           for k = !start_pos to !end_pos - 1 do
-             let l = Array.get !last_use k in
-             if l > !end_pos then
-               begin f k (string_of_int k); start_pos := k+1 end
-           done;
-           start_pos := !end_pos + 1
+           if l > !end_pos then
+             let n = string_of_int k and p = Array.get !prf_pos k in
+             map := MapInt.add k (n,p) !map;
+             out oc " %s.lp" n
          end
-     done;*)
+       else if l = 0 then end_pos := k
+     done;
      out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
      close_out oc;
+     MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;
      write_val (b ^ ".thp") !map;
      0
 
