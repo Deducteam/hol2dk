@@ -733,6 +733,10 @@ and command = function
      read_use b;
      let map = ref MapInt.empty in
      let start_pos = ref 0 in
+     let dump_file = b ^ "_theorems.mk" in
+     log "generate %s ...\n%!" dump_file;
+     let oc = open_out dump_file in
+     out oc ".SUFFIXES:\n.PHONY: default\ndefault:";
      let f end_pos n =
        assert (end_pos >= !start_pos);
        let p = Array.get !prf_pos end_pos in
@@ -743,9 +747,12 @@ and command = function
          (Array.sub !prf_pos !start_pos (end_pos - !start_pos + 1));
        write_val (n ^ ".use")
          (Array.sub !last_use !start_pos (end_pos - !start_pos + 1));
-       start_pos := end_pos + 1
+       start_pos := end_pos + 1;
+       out oc " %s.lp" n;
      in
      MapInt.iter f (read_thm b);
+     out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
+     close_out oc;
      write_val (b ^ ".thp") !map;
      0
 
@@ -756,9 +763,8 @@ and command = function
      let n = Filename.chop_extension f in
      read_pos n;
      read_use n;
-     log "prf_pos length = %d\n%!" (Array.length !prf_pos);
      start_pos := read_val (n ^ ".stp");
-     log "start_pos = %d\n%!" !start_pos;
+     (*log "start_pos = %d\n%!" !start_pos;*)
      init_proof_reading b;
      (*if dk then
        begin
