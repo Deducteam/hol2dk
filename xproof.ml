@@ -24,11 +24,11 @@ let init_proof_reading b =
   log "open %s ...\n%!" dump_file;
   ic_prf := open_in_bin dump_file;;
 
-(* [!start_pos] is the starting proof index of the current pos file. *)
-let start_pos : int ref = ref 0;;
+(* [!the_start_pos] is the starting proof index of the current pos file. *)
+let the_start_pos : int ref = ref 0;;
 
 (* [(!prf_pos).(i)] gives the position in [!ic_prf] of the proof of
-   index [!start_pos + i]. *)
+   index [!the_start_pos + i]. *)
 let prf_pos : int array ref = ref [||];;
 
 let read_pos b = prf_pos := read_val (b ^ ".pos");;
@@ -36,15 +36,15 @@ let read_pos b = prf_pos := read_val (b ^ ".pos");;
 (* [!map_thid_pos] maps proof indexes to positions. *)
 let map_thid_pos : (string * int) MapInt.t ref = ref MapInt.empty;;
 
-let thdeps = ref [];;
+let thdeps = ref SetStr.empty;;
 
 let get_pos k =
-  let k' = k - !start_pos in
-  (*log "get_pos %d - %d = %d\n%!" k !start_pos k';*)
+  let k' = k - !the_start_pos in
+  (*log "get_pos %d - %d = %d\n%!" k !the_start_pos k';*)
   if k' >= 0 then Array.get !prf_pos k' else
     try
       let n,p = MapInt.find k !map_thid_pos in
-      thdeps := n::!thdeps; p
+      thdeps := SetStr.add n !thdeps; p
     with Not_found -> log "theorem %d not found\n%!" k; raise Not_found;;
 
 (* [proof_at k] returns the proof of index [k]. Can be used after
@@ -63,8 +63,8 @@ let last_use : int array ref = ref [||];;
 let read_use b = last_use := read_val (b ^ ".use");;
 
 let get_use k =
-  let k' = k - !start_pos in
-  (*log "get_use %d - %d = %d\n%!" k !start_pos k';*)
+  let k' = k - !the_start_pos in
+  (*log "get_use %d - %d = %d\n%!" k !the_start_pos k';*)
   Array.get !last_use k';;
 
 (* [!cur_part_max] indicates the maximal index of the current part. *)

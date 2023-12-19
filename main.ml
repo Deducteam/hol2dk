@@ -445,6 +445,8 @@ and command = function
      close_in !Xproof.ic_prf;
      0
 
+  | ["proof";b;x] -> command ["proof";b;x;x]
+
   | ["rewrite";b] ->
      read_pos b;
      init_proof_reading b;
@@ -763,7 +765,8 @@ and command = function
            while Array.get !last_use !end_pos <> 0 do incr end_pos done;
            for k = !start_pos to !end_pos - 1 do
              let l = Array.get !last_use k in
-             if l > !end_pos then f k (string_of_int k)
+             if l > !end_pos then
+               begin f k (string_of_int k); start_pos := k+1 end
            done;
            start_pos := !end_pos + 1
          end
@@ -780,8 +783,8 @@ and command = function
      let n = Filename.chop_extension f in
      read_pos n;
      read_use n;
-     start_pos := read_val (n ^ ".stp");
-     (*log "start_pos = %d\n%!" !start_pos;*)
+     the_start_pos := read_val (n ^ ".stp");
+     log "the_start_pos = %d\n%!" !the_start_pos;
      init_proof_reading b;
      (*if dk then
        begin
@@ -801,6 +804,7 @@ and command = function
        end
      else*)
        begin
+         cur_part_max := !the_start_pos + Array.length !prf_pos - 1;
          Xlp.export_proofs b n All;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs b n "";
@@ -808,7 +812,7 @@ and command = function
          let dump_file = n ^ "_deps.lp" in
          log "generate %s ...\n%!" dump_file;
          let oc = open_out dump_file in
-         List.iter (out oc "require open hol-light.%s;\n") !thdeps;
+         SetStr.iter (out oc "require open hol-light.%s;\n") !thdeps;
          close_out oc;
          log "generate %s.lp ...\n%!" n;
          Sys.command (Printf.sprintf "cat %s %s > %s"

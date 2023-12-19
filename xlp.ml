@@ -493,7 +493,7 @@ let decl_theorem oc k p d =
      let term = term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     let prv = let l = get_use k in l > 0 && l < !cur_part_max in
+     let prv = let l = get_use k in l > 0 && l <= !cur_part_max in
      out oc "%s symbol thm_%d%a%a%a : Prf %a ≔ %a;\n"
        (if prv then "private" else "opaque") k
        typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
@@ -546,7 +546,8 @@ let proofs_in_range oc = function
 flag \"print_domains\" on;
 print thm_%d;\n" x*)
   | All ->
-     proofs_in_interval oc !start_pos (!start_pos + Array.length !prf_pos - 1)
+     proofs_in_interval oc !the_start_pos
+       (!the_start_pos + Array.length !prf_pos - 1)
   | Upto y -> proofs_in_interval oc 0 y
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
