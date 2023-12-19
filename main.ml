@@ -328,6 +328,7 @@ dump_map_thid_name "%s.thm" %a;;
 |} cmd after_hol f use after_hol b b b
 (olist ostring) (trans_file_deps (dep_graph (files())) f);
   close_out oc;
+  write_val (b ^ ".stp") 0;
   Sys.command ("ocaml -w -A -I . "^ml_file)
 
 let basename_ml f =
@@ -730,13 +731,13 @@ and command = function
 
   | ["split";b] ->
      read_pos b;
-     let start_pos = ref (-1) in
+     let start_pos = ref 0 in
      let f end_pos n =
-       assert (end_pos > !start_pos);
-       let oc = open_out_bin (n ^ ".pos") in
-       output_value oc
-         (Array.sub !prf_pos (!start_pos + 1) (end_pos - !start_pos));
-       close_out oc
+       assert (end_pos >= !start_pos);
+       write_val (n ^ ".stp") !start_pos;
+       write_val (n ^ ".pos")
+         (Array.sub !prf_pos !start_pos (end_pos - !start_pos + 1));
+       start_pos := end_pos + 1
      in
      MapInt.iter f (read_thm b);
      0

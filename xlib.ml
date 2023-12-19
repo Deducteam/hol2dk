@@ -67,6 +67,13 @@ let read_val dump_file =
   close_in ic;
   v
 
+(* [write_val f v] write [v] in file [f]. *)
+let write_val dump_file v =
+  log "write %s ...\n%!" dump_file;
+  let oc = open_out_bin dump_file in
+  output_value oc v;
+  close_out oc
+
 (* [replace c1 c2 s] returns a new string identical to [s] but with
    every character [c1] replaced by [c2]. *)
 let replace c1 c2 s =
