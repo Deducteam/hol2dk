@@ -41,11 +41,14 @@ let thdeps = ref SetStr.empty;;
 let get_pos k =
   let k' = k - !the_start_pos in
   (*log "get_pos %d - %d = %d\n%!" k !the_start_pos k';*)
-  if k' >= 0 then Array.get !prf_pos k' else
+  if k' >= 0 then Array.get !prf_pos k'
+  else
     try
       let n,p = MapInt.find k !map_thid_pos in
       thdeps := SetStr.add n !thdeps; p
-    with Not_found -> log "theorem %d not found\n%!" k; raise Not_found;;
+    with Not_found ->
+      log "theorem %d not found\n%!" k; raise Not_found
+;;
 
 (* [proof_at k] returns the proof of index [k]. Can be used after
    [read_pos] and [init_proof_reading] only. *)

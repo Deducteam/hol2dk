@@ -731,7 +731,7 @@ and command = function
      0
 
   | ["split";b] ->
-     prf_pos := read_val (b ^ ".pos");
+     read_pos b;
      read_use b;
      let dump_file = b ^ "_theorems.mk" in
      log "generate %s ...\n%!" dump_file;
@@ -755,7 +755,7 @@ and command = function
      let map_thid_name = read_thm b in
      MapInt.iter f map_thid_name;
      (* find unnamed theorems that are used later *)
-     start_pos := 0;
+     (*start_pos := 0;
      while !start_pos < Array.length !last_use do
        let l = Array.get !last_use !start_pos in
        if l <= 0 then incr start_pos
@@ -770,7 +770,7 @@ and command = function
            done;
            start_pos := !end_pos + 1
          end
-     done;
+     done;*)
      out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
      close_out oc;
      write_val (b ^ ".thp") !map;
