@@ -328,7 +328,6 @@ dump_map_thid_name "%s.thm" %a;;
 |} cmd after_hol f use after_hol b b b
 (olist ostring) (trans_file_deps (dep_graph (files())) f);
   close_out oc;
-  write_val (b ^ ".stp") 0;
   Sys.command ("ocaml -w -A -I . "^ml_file)
 
 let basename_ml f =
@@ -515,7 +514,7 @@ and command = function
           theorem cannot refer to proofs coming before it *)
        if l = 0 then map := MapInt.empty
      in
-     iter_proofs_at simp;
+     for k = 0 to Array.length !prf_pos - 1 do simp k (proof_at k) done;
      close_in !Xproof.ic_prf;
      close_out oc;
      let nb_proofs = Array.length !prf_pos in
@@ -736,7 +735,9 @@ and command = function
      let start_pos = ref 0 in
      let f end_pos n =
        assert (end_pos >= !start_pos);
-       map := MapInt.add end_pos (n, Array.get !prf_pos end_pos) !map;
+       let p = Array.get !prf_pos end_pos in
+       (*log "map %d -> %s, %d\n%!" end_pos n p;*)
+       map := MapInt.add end_pos (n,p) !map;
        write_val (n ^ ".stp") !start_pos;
        write_val (n ^ ".pos")
          (Array.sub !prf_pos !start_pos (end_pos - !start_pos + 1));
@@ -778,12 +779,18 @@ and command = function
      else*)
        begin
          Xlp.export_proofs b n All;
+         close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs b n "";
          Xlp.export_type_abbrevs b n "";
-         let oc = open_out_gen 
-       end;
-     close_in !Xproof.ic_prf;
-     0
+         let dump_file = n ^ "_deps.lp" in
+         log "generate %s ...\n%!" dump_file;
+         let oc = open_out dump_file in
+         List.iter (out oc "require open hol-light.%s;\n") !thdeps;
+         close_out oc;
+         log "generate %s.lp ...\n%!" n;
+         Sys.command (Printf.sprintf "cat %s %s > %s"
+                        (n^"_deps.lp") (n^"_proofs.lp") (n^".lp"))
+       end
 
   | ["prf";x;y;b] ->
      read_sig b;

@@ -40,9 +40,12 @@ let thdeps = ref [];;
 
 let get_pos k =
   let k' = k - !start_pos in
-  if k' >= 0 then Array.get !prf_pos k'
-  else let n,p = MapInt.find k !map_thid_pos in
-       thdeps := n::!thdeps; p;;
+  (*log "get_pos %d - %d = %d\n%!" k !start_pos k';*)
+  if k' >= 0 then Array.get !prf_pos k' else
+    try
+      let n,p = MapInt.find k !map_thid_pos in
+      thdeps := n::!thdeps; p
+    with Not_found -> log "theorem %d not found\n%!" k; raise Not_found;;
 
 (* [proof_at k] returns the proof of index [k]. Can be used after
    [read_pos] and [init_proof_reading] only. *)
@@ -59,25 +62,10 @@ let last_use : int array ref = ref [||];;
 
 let read_use b = last_use := read_val (b ^ ".use");;
 
-let get_use k = Array.get !last_use (k - !start_pos);;
+let get_use k =
+  let k' = k - !start_pos in
+  (*log "get_use %d - %d = %d\n%!" k !start_pos k';*)
+  Array.get !last_use k';;
 
 (* [!cur_part_max] indicates the maximal index of the current part. *)
 let cur_part_max : int ref = ref (-1);;
-
-(* [iter_proofs_at f] runs [f k (proof_at k)] on all proof index [k]
-   from 0 to [nb_proofs - 1] (including unused proofs), where
-   [nb_proofs = Array.length !prf_pos]. Can be used after [read_pos]
-   and [init_proof_reading] only. *)
-let iter_proofs_at (f : int -> proof -> unit) =
-  let idx = ref 0 in
-  let nb_proofs = Array.length !prf_pos in
-  try
-    while !idx < nb_proofs do
-      let k = !idx in
-      f k (proof_at k);
-      idx := k + 1
-    done
-  with Failure _ as e ->
-    log "proof %d\n%!" !idx;
-    raise e
-;;

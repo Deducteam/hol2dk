@@ -531,6 +531,7 @@ let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
    [x] .. [y]. *)
 let proofs_in_interval oc x y =
   for k = x to y do
+    (*log "proof %d\n%!" k;*)
     if get_use k >= 0 then theorem oc k (proof_at k)
   done
 
@@ -544,7 +545,8 @@ let proofs_in_range oc = function
 "flag \"print_implicits\" on;
 flag \"print_domains\" on;
 print thm_%d;\n" x*)
-  | All -> iter_proofs_at (fun k p -> if get_use k >= 0 then theorem oc k p)
+  | All ->
+     proofs_in_interval oc !start_pos (!start_pos + Array.length !prf_pos - 1)
   | Upto y -> proofs_in_interval oc 0 y
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
