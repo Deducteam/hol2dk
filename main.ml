@@ -722,8 +722,8 @@ and command = function
          cur_part_max := y;
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         Xlp.export_term_abbrevs b suffix;
-         Xlp.export_type_abbrevs b suffix
+         Xlp.export_term_abbrevs b b suffix;
+         Xlp.export_type_abbrevs b b suffix
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
@@ -777,9 +777,10 @@ and command = function
        end
      else*)
        begin
-         Xlp.export_proofs n All;
-         Xlp.export_term_abbrevs n "";
-         Xlp.export_type_abbrevs n ""
+         Xlp.export_proofs b n All;
+         Xlp.export_term_abbrevs b n "";
+         Xlp.export_type_abbrevs b n "";
+         let oc = open_out_gen 
        end;
      close_in !Xproof.ic_prf;
      0
@@ -857,10 +858,10 @@ and command = function
        end
      else
        begin
-         Xlp.export_proofs b r;
+         Xlp.export_proofs b b r;
          if r = All then Xlp.export_theorems b (read_thm b);
-         Xlp.export_term_abbrevs b "";
-         Xlp.export_type_abbrevs b ""
+         Xlp.export_term_abbrevs b b "";
+         Xlp.export_type_abbrevs b b ""
        end;
      close_in !Xproof.ic_prf;
      0

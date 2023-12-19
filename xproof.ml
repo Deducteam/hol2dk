@@ -39,7 +39,6 @@ let map_thid_pos : (string * int) MapInt.t ref = ref MapInt.empty;;
 let thdeps = ref [];;
 
 let get_pos k =
-  log "get_pos %d\n%!" k;
   let k' = k - !start_pos in
   if k' >= 0 then Array.get !prf_pos k'
   else let n,p = MapInt.find k !map_thid_pos in
@@ -50,7 +49,7 @@ let get_pos k =
 let proof_at k =
   let ic = !ic_prf in
   let p = get_pos k in
-  log "get_pos %d = %d\n%!" k p;
+  (*log "get_pos %d = %d\n%!" k p;*)
   seek_in ic p;
   input_value ic;;
 
