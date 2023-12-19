@@ -730,16 +730,19 @@ and command = function
      0
 
   | ["split";b] ->
-     read_pos b;
+     prf_pos := read_val (b ^ ".pos");
+     let map = ref MapInt.empty in
      let start_pos = ref 0 in
      let f end_pos n =
        assert (end_pos >= !start_pos);
+       map := MapInt.add end_pos (Array.get !prf_pos end_pos) !map;
        write_val (n ^ ".stp") !start_pos;
        write_val (n ^ ".pos")
          (Array.sub !prf_pos !start_pos (end_pos - !start_pos + 1));
        start_pos := end_pos + 1
      in
      MapInt.iter f (read_thm b);
+     write_val (b ^ ".thp") !map;
      0
 
   | ["prf";x;y;b] ->

@@ -24,19 +24,33 @@ let init_proof_reading b =
   log "read %s ...\n%!" dump_file;
   ic_prf := open_in_bin dump_file
 
-(* [!prf_pos] gives the position in [!ic_prf] of each proof. *)
-let prf_pos : int array ref = ref [||];;
+(* [!start_pos] is the starting proof index of the current pos file. *)
 let start_pos : int ref = ref 0;;
+
+(* [(!prf_pos).(i)] gives the position in [!ic_prf] of the proof of
+   index [!start_pos + i]. *)
+let prf_pos : int array ref = ref [||];;
+
+(* [!map_thid_pos] maps proof indexes to positions. *)
+let map_thid_pos = ref MapInt.empty;;
 
 let read_pos b =
   start_pos := read_val (b ^ ".stp");
+  map_thid_pos := read_val (b ^ ".thp");
   prf_pos := read_val (b ^ ".pos");;
 
-let get_pos k = Array.get !prf_pos (k - !start_pos);;
+let get_pos k =
+  let k' = k - !start_pos in
+  if k' >= 0 then Array.get !prf_pos k'
+  else MapInt.find k !map_thid_pos
+;;
 
 (* [proof_at k] returns the proof of index [k]. Can be used after
-   [read_pos] and [init_proof_reading] only. *)
-let proof_at k = let ic = !ic_prf in seek_in ic (get_pos k); input_value ic;;
+   [read_pos], [read_thid_pos] and [init_proof_reading] only. *)
+let proof_at k =
+  let ic = !ic_prf in
+  seek_in ic (get_pos k);
+  input_value ic;;
 
 (* [!last_use.(i) = 0] if [i] is a named theorem, the highest theorem
    index using [i] if there is one, and -1 otherwise. *)
