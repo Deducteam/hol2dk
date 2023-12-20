@@ -734,39 +734,34 @@ and command = function
      read_pos b;
      read_use b;
      let dump_file = b ^ "_theorems.mk" in
-     log "generate %s ...\n%!" dump_file;
      let oc = open_out dump_file in
      out oc ".SUFFIXES:\n.PHONY: default\ndefault:";
-     let map = ref MapInt.empty in
-     let start_pos = ref 0 in
-     let f end_pos n =
-       assert (end_pos >= !start_pos);
-       let p = Array.get !prf_pos end_pos in
-       (*log "map %d -> %s, %d\n%!" end_pos n p;*)
-       map := MapInt.add end_pos (n,p) !map;
-       out oc " %s.lp" n;
-       write_val (n ^ ".stp") !start_pos;
-       write_val (n ^ ".pos")
-         (Array.sub !prf_pos !start_pos (end_pos - !start_pos + 1));
-       write_val (n ^ ".use")
-         (Array.sub !last_use !start_pos (end_pos - !start_pos + 1));
-       start_pos := end_pos + 1
-     in
      let map_thid_name = read_thm b in
-     MapInt.iter f map_thid_name;
-     (* add in [!map] the unnamed theorems that are used later *)
-     let end_pos = ref (Array.length !prf_pos - 1) in
-     for k = Array.length !prf_pos - 2 downto 0 do
+     let map = ref MapInt.empty in
+     let create_segment start_index end_index =
+       let n = try MapInt.find end_index map_thid_name
+               with Not_found -> string_of_int end_index in
+       write_val (n ^ ".stp") start_index;
+       let len = end_index - start_index + 1 in
+       write_val (n ^ ".pos") (Array.sub !prf_pos start_index len);
+       write_val (n ^ ".use") (Array.sub !last_use start_index len);
+       let p = Array.get !prf_pos end_index in
+       map := MapInt.add end_index (n,p) !map;
+       out oc " %s.lp" n
+     in
+     let end_idx = ref (Array.length !prf_pos - 1) in
+     while Array.get !last_use !end_idx < 0 do decr end_idx done;
+     for k = !end_idx - 1 downto 0 do
        let l = Array.get !last_use k in
-       if l > 0 then
+       if l = 0 || l > !end_idx then
          begin
-           if l > !end_pos then
-             let n = string_of_int k and p = Array.get !prf_pos k in
-             map := MapInt.add k (n,p) !map;
-             out oc " %s.lp" n
+           (*log "%d %d\n%!" k l;*)
+           create_segment (k+1) !end_idx;
+           end_idx := k
          end
-       else if l = 0 then end_pos := k
      done;
+     create_segment 0 !end_idx;
+     log "generate %s ...\n%!" dump_file;
      out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
      close_out oc;
      MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;
@@ -781,7 +776,7 @@ and command = function
      read_pos n;
      read_use n;
      the_start_pos := read_val (n ^ ".stp");
-     log "the_start_pos = %d\n%!" !the_start_pos;
+     (*log "the_start_pos = %d\n%!" !the_start_pos;*)
      init_proof_reading b;
      (*if dk then
        begin
