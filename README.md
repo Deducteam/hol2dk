@@ -434,7 +434,7 @@ Single-threaded translation to Dedukti:
   * type abbreviations: 348 Ko
   * term abbreviations: 590 Mo (42%)
 
-Translation of `arith.ml` with `mk 7`:
+Translation of `hol.ml` upto `arith.ml` with `mk 7`:
   * proof dumping time: 11s 77 Mo 448 named theorems
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s

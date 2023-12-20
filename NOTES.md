@@ -1,6 +1,20 @@
 NOTES
 -----
 
+## 20/12/23
+
+Some theorems are created with no name but are used later. See for instance `pth` in `bool.ml`:
+```
+let EQT_INTRO =
+  let t = `t:bool` in
+  let pth =
+    let th1 = DEDUCT_ANTISYM_RULE (ASSUME t) TRUTH in
+    let th2 = EQT_ELIM(ASSUME(concl th1)) in
+    DEDUCT_ANTISYM_RULE th2 th1 in
+  (*REMOVE pth: |- t = (t = T) *)
+  fun th -> EQ_MP (INST[concl th,t] pth) th;;
+```
+
 ## 06/12/23
 
 Translation of `100/isoperimetric.ml`:

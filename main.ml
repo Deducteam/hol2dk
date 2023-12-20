@@ -733,21 +733,21 @@ and command = function
   | ["split";b] ->
      read_pos b;
      read_use b;
-     let dump_file = b ^ "_theorems.mk" in
+     (*let dump_file = b ^ "_theorems.mk" in
      let oc = open_out dump_file in
-     out oc ".SUFFIXES:\n.PHONY: default\ndefault:";
+     out oc ".SUFFIXES:\n.PHONY: default\ndefault:";*)
      let map_thid_name = read_thm b in
      let map = ref MapInt.empty in
      let create_segment start_index end_index =
        let n = try MapInt.find end_index map_thid_name
-               with Not_found -> string_of_int end_index in
+               with Not_found -> "thm" ^ string_of_int end_index in
        write_val (n ^ ".stp") start_index;
        let len = end_index - start_index + 1 in
        write_val (n ^ ".pos") (Array.sub !prf_pos start_index len);
        write_val (n ^ ".use") (Array.sub !last_use start_index len);
        let p = Array.get !prf_pos end_index in
        map := MapInt.add end_index (n,p) !map;
-       out oc " %s.lp" n
+       (*out oc " %s.lp" n*)
      in
      let end_idx = ref (Array.length !prf_pos - 1) in
      while Array.get !last_use !end_idx < 0 do decr end_idx done;
@@ -761,9 +761,9 @@ and command = function
          end
      done;
      create_segment 0 !end_idx;
-     log "generate %s ...\n%!" dump_file;
+     (*log "generate %s ...\n%!" dump_file;
      out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
-     close_out oc;
+     close_out oc;*)
      MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;
      write_val (b ^ ".thp") !map;
      0
@@ -807,8 +807,9 @@ and command = function
          SetStr.iter (out oc "require open hol-light.%s;\n") !thdeps;
          close_out oc;
          log "generate %s.lp ...\n%!" n;
-         Sys.command (Printf.sprintf "cat %s %s > %s"
-                        (n^"_deps.lp") (n^"_proofs.lp") (n^".lp"))
+         Sys.command (Printf.sprintf "cat %s %s > %s && rm -f %s %s"
+                        (n^"_deps.lp") (n^"_proofs.lp") (n^".lp")
+                        (n^"_deps.lp") (n^"_proofs.lp"))
        end
 
   | ["prf";x;y;b] ->
