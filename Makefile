@@ -1,12 +1,12 @@
 .SUFFIXES:
 
-BASE=hol_upto_arith
+BASE = hol
 
 STP_FILES := $(wildcard *.stp)
 
 .PHONY: default
 default:
-	@echo targets: stp lp dep lpo v vo
+	@echo targets: stp lp mklp lpo v mkv vo
 
 .PHONY: stp
 stp:
@@ -14,7 +14,7 @@ stp:
 
 .PHONY: clean-stp
 clean-stp:
-	rm -f $(STP_FILES) $(STP_FILES:%.stp=%.pos) $(STP_FILES:%.stp=%.use)
+	find . -name '*.stp' -exec rm -f {} `basename {}`.pos `basename {}`.use \;
 
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 
@@ -29,7 +29,7 @@ lp: $(BASE_FILES:%=%.lp) $(STP_FILES:%.stp=%.lp)
 
 .PHONY: clean-lp
 clean-lp:
-	rm -f `ls *.lp | grep -v theory_hol.lp`
+	find . -name '*.lp' -a ! -name theory_hol.lp -delete
 
 .PHONY: lpo
 lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STP_FILES:%.stp=%.lpo) $(STP_FILES:%.stp=%_type_abbrevs.lpo) $(STP_FILES:%.stp=%_term_abbrevs.lpo)
@@ -39,7 +39,7 @@ lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STP_FILES:%.stp=%.lpo) $(STP_FILES:%
 
 .PHONY: clean-lpo
 clean-lpo:
-	rm -f *.lpo
+	find . -name '*.lpo' -delete
 
 .PHONY: v
 v: theory_hol.v $(BASE_FILES:%=%.v) $(STP_FILES:%.stp=%.v) $(STP_FILES:%.stp=%_type_abbrevs.v) $(STP_FILES:%.stp=%_term_abbrevs.v)
@@ -49,13 +49,19 @@ v: theory_hol.v $(BASE_FILES:%=%.v) $(STP_FILES:%.stp=%.v) $(STP_FILES:%.stp=%_t
 
 .PHONY: clean-v
 clean-v:
-	rm -f `ls *.v | grep -v coq.v`
+	find . -name '*.v' -a ! -name coq.v -delete
 
-.PHONY: dep
-dep coq.mk:
-	$(HOL2DK_DIR)/coqdep.sh theory_hol.v $(BASE_FILES:%=%.v) $(STP_FILES:%.stp=%.v) $(STP_FILES:%.stp=%_type_abbrevs.v) $(STP_FILES:%.stp=%_term_abbrevs.v) > coq.mk
+.PHONY: mkv
+mkv coq.mk:
+	find . -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
 
 include coq.mk
+
+.PHONY: mklp
+mklp lp.mk:
+	find . -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lp.mk
+
+include lp.mk
 
 .PHONY: vo
 vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STP_FILES:%.stp=%.vo) $(STP_FILES:%.stp=%_type_abbrevs.vo) $(STP_FILES:%.stp=%_term_abbrevs.vo)
@@ -65,7 +71,10 @@ vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STP_FILES:%.stp=%.vo) $(STP_FILE
 
 .PHONY: clean-vo
 clean-vo:
-	rm -f *.vo* *.glob .lia.cache .nia.cache .*.aux
+	find . -name '*.vo*' -delete
+	find . -name '*.glob' -delete
+	find . -name '.*.aux' -delete
+	rm -f .lia.cache .nia.cache
 
 .PHONY: clean-all
 clean-all: clean-stp clean-lp clean-lpo clean-v clean-vo

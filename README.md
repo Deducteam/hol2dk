@@ -370,7 +370,7 @@ Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
 Translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
   * dump-simp 11m42s 10 Go 21.2 M steps (83% unused including hol.ml) +1729 named theorems
   * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11ms
-  
+
 Translation of `hol.ml` with `mk 100`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)

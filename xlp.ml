@@ -366,8 +366,9 @@ let proof tvs rmap =
          (list_prefix " " term) (frees t)
     | Pdef(_,n,_) -> out oc "%a_def" cst_name n
     | Pdeft(_,t,_,_) ->
-       out oc "axiom_%d%a"
+       out oc "@axiom_%d%a%a"
          (pos_first (fun th -> concl th = t) (axioms()))
+         (list_prefix " " typ) (type_vars_in_term t)
          (list_prefix " " term) (frees t)
     | Ptruth -> out oc "Tᵢ"
     | Pconj(k1,k2) -> out oc "∧ᵢ %a %a" sub_at k1 sub_at k2
