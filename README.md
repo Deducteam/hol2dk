@@ -404,35 +404,32 @@ Translation of `hol.ml` with `mk 100`:
 | disj_cases |  1 |
 | conj       |  1 |
 
-Multi-threaded translation to Lambdapi with `mk 100`:
-  * hol2dk mk: 14s
-  * lp files generation time: 31s
-  * lp files size: 1.1 Go
-  * type abbrevs: 796 Ko
-  * term abbrevs: 583 Mo (53%)
-  * verification by lambdapi: fails (too big for lambdapi)
-  * translation to Coq: 24s 1 Go
-  * verification by Coq: 64m13s
+Multi-threaded translation to Lambdapi and Coq with `mk 100`:
+  * hol2dk mk 100: 14s
+  * make -j32 lp: 31s 1.1G type abbrevs 796K term abbrevs 583M (53%)
+  * make -j32 lpo: fails (too big for lambdapi)
+  * make -j32 v: 24s 1G
+  * make -j32 vo: 1h4m
 
 Multi-threaded translation to Dedukti with `mk 100`:
-  * dk file generation time: 49s
-  * dk file size: 1.5 Go
-  * type abbrevs: 876 Ko
-  * term abbrevs: 660 Mo (44%)
+  * make -j32 dk: 49s 1.5G type abbrevs 876K term abbrevs 660M (44%)
   * dkcheck: 3m31s
   * kocheck: 5m54s
 
+Multi-threaded translation to Lambdapi and Coq with `split`:
+  * make stp: <1s
+  * make -j32 lp: 32s 1.1G
+  * make -j32 v: 43s 1.1G
+  * make mkv: 51s 2.7M
+  * make -j20 vo: 28m 3.1G
+  * make mklp: 47s 2.7M
+  * make -j32 lpo: 1h36m 0.9G
+
 Single-threaded translation to Lambdapi:
-  * lp files generation time: 4m49s
-  * lp files size: 1.1 Go
-  * type abbreviations: 308 Ko
-  * term abbreviations: 525 Mo (48%)
+  * lp files generation: 4m49s 1.1G type abbrevs 308K term abbrevs 525M (48%)
 
 Single-threaded translation to Dedukti:
-  * dk files generation time: 7m12s
-  * dk files size: 1.4 Go
-  * type abbreviations: 348 Ko
-  * term abbreviations: 590 Mo (42%)
+  * dk files generation: 7m12s 1.4G type abbrevs 348K term abbrevs 590M (42%)
 
 Translation of `hol.ml` upto `arith.ml` with `mk 7`:
   * proof dumping time: 11s 77 Mo 448 named theorems

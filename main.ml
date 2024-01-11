@@ -9,14 +9,14 @@ open Xnames
 
 let usage() =
   log
-"hol2dk uses:
+"hol2dk uses
 ------------
 
 hol2dk [-h|--help]
   print this help
 
-Dumping commands:
------------------
+Dumping commands
+----------------
 
 hol2dk dump-simp $file.[ml|hl]
   compose the commands dump, pos, use, rewrite and purge
@@ -51,8 +51,8 @@ hol2dk proof $file $x $y
 hol2dk print use $file $x
   print the contents of $file.use for theorem index $x
 
-Single-threaded dk/lp file generation:
---------------------------------------
+Single-threaded dk/lp file generation
+-------------------------------------
 
 hol2dk $file.[dk|lp]
   generate $file.[dk|lp]
@@ -60,12 +60,15 @@ hol2dk $file.[dk|lp]
 hol2dk $file.[dk|lp] $thm_id
   generate $file.[dk|lp] but with theorem index $thm_id only (for debug)
 
-Multi-threaded dk/lp file generation:
--------------------------------------
+Multi-threaded dk/lp file generation by splitting proofs in $n parts
+--------------------------------------------------------------------
 
 hol2dk mk $n $file
   generate $file.dg, the dependency graph between parts when $file.prf is
   split in $n parts, and $file.mk for handling parts in parallel
+
+hol2dk part $k $x $y $file.[dk|lp]
+  generate dk/lp proof files of part $k from proof index $x to proof index $y
 
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
@@ -74,14 +77,20 @@ hol2dk thm $file.[dk|lp]
   generate $file.[dk|lp] from $file.thm
 
 hol2dk axm $file.[dk|lp]
-  generate $file_opam.[dk|lp] from $file.thm
+  generate $file_opam.[dk|lp] from $file.thm (same as thm but without proofs)
 
-hol2dk part $n $k $x $y $file.[dk|lp]
-  generate dk/lp proof files of part $k in [1..$n]
-  from proof index $x to proof index $y using type and term abbreviations
+Multi-threaded lp file generation by having a file for each named theorem
+-------------------------------------------------------------------------
 
-Experimental (not efficient):
------------------------------
+hol2dk split $file
+  generate $file.thp and the files $t.stp, $t.pos and $t.use
+  for each named theorem $t
+
+hol2dk theorem $file $t.lp
+  generate the lp proof of the theorem named $t
+
+Experimental (not efficient)
+----------------------------
 
 hol2dk prf $x $y $file
   generate a lp file for each proof from index $x to index $y in $file.prf
@@ -95,8 +104,8 @@ hol2dk mk-coq $n $file
   generate a Makefile for translating to Coq each lp file generated
   by Makefile.lp and check them by using $n sequential calls to make
 
-Other commands:
----------------
+Other commands
+--------------
 
 hol2dk stat $file
   print statistics on $file.prf
@@ -771,30 +780,17 @@ and command = function
   | ["theorem";b;f] ->
      read_sig b;
      map_thid_pos := read_val (b ^ ".thp");
-     let _dk = is_dk f in
      let n = Filename.chop_extension f in
      read_pos n;
      read_use n;
      the_start_pos := read_val (n ^ ".stp");
      (*log "the_start_pos = %d\n%!" !the_start_pos;*)
      init_proof_reading b;
-     (*if dk then
+     if is_dk f then
        begin
-         Xdk.export_proofs n All;
-         Xdk.export_term_abbrevs n "";
-         Xdk.export_type_abbrevs n "";
-         log "generate %s.dk ...\n%!" b;
-         let infiles =
-           List.map (fun s -> b ^ "_" ^ s ^ ".dk")
-             ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
-              ;"proofs";"theorems"]
-         in
-         exit
-           (Sys.command
-              ("cat theory_hol.dk " ^ String.concat " " infiles
-               ^ " > " ^ b ^ ".dk"))
+         log "dk output not available for this command"; 1
        end
-     else*)
+     else
        begin
          cur_part_max := !the_start_pos + Array.length !prf_pos - 1;
          Xlp.export_proofs b n All;
