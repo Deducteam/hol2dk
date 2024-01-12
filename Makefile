@@ -29,7 +29,7 @@ lp: $(BASE_FILES:%=%.lp) $(STP_FILES:%.stp=%.lp)
 
 .PHONY: clean-lp
 clean-lp:
-	find . -maxdepth 0 -name '*.lp' -a ! -name theory_hol.lp -delete
+	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
 .PHONY: lpo
 lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STP_FILES:%.stp=%.lpo) $(STP_FILES:%.stp=%_type_abbrevs.lpo) $(STP_FILES:%.stp=%_term_abbrevs.lpo)
@@ -39,7 +39,7 @@ lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STP_FILES:%.stp=%.lpo) $(STP_FILES:%
 
 .PHONY: clean-lpo
 clean-lpo:
-	find . -maxdepth 0 -name '*.lpo' -delete
+	find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: v
 v: theory_hol.v $(BASE_FILES:%=%.v) $(STP_FILES:%.stp=%.v) $(STP_FILES:%.stp=%_type_abbrevs.v) $(STP_FILES:%.stp=%_term_abbrevs.v)
@@ -49,17 +49,17 @@ v: theory_hol.v $(BASE_FILES:%=%.v) $(STP_FILES:%.stp=%.v) $(STP_FILES:%.stp=%_t
 
 .PHONY: clean-v
 clean-v:
-	find . -maxdepth 0 -name '*.v' -a ! -name coq.v -delete
+	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
 .PHONY: mkv
 mkv coq.mk:
-	find . -maxdepth 0 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
+	find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
 
 include coq.mk
 
 .PHONY: mklp
 mklp lp.mk:
-	find . -maxdepth 0 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lp.mk
+	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lp.mk
 
 include lp.mk
 
@@ -71,11 +71,11 @@ vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STP_FILES:%.stp=%.vo) $(STP_FILE
 
 .PHONY: clean-vo
 clean-vo:
-	find . -maxdepth 0 -name '*.vo*' -delete
-	find . -maxdepth 0 -name '*.glob' -delete
-	find . -maxdepth 0 -name '.*.aux' -delete
+	find . -maxdepth 1 -name '*.vo*' -delete
+	find . -maxdepth 1 -name '*.glob' -delete
+	find . -maxdepth 1 -name '.*.aux' -delete
 	rm -f .lia.cache .nia.cache
 
 .PHONY: clean-all
 clean-all: clean-stp clean-lp clean-lpo clean-v clean-vo
-	rm -f coq.mk
+	rm -f lp.mk coq.mk

@@ -75,22 +75,21 @@ jobs:
           export HOL2DK_DIR=.
           cd hol-light
           hol2dk mk 3 xci
-          make -f xci.mk -j 3 dk
+          make -f xci.mk -j3 dk
           dk check xci.dk
       - name: Generate and check multi-threaded lp output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=.
           cd hol-light
-          make -f xci.mk -j 3 lp
-          make -f xci.mk -j 3 lpo
-          #lambdapi check xci.lp
+          make -f xci.mk -j3 lp
+          make -f xci.mk -j3 lpo
       - name: Generate and check multi-threaded lp output with split
         run: |
           eval `opam env`
           export HOL2DK_DIR=.
           cd hol-light
-          make -f ../Makefile BASE=xci -j 3 stp
-          make -f ../Makefile BASE=xci -j 3 lp
-          make -f ../Makefile BASE=xci -j 3 mklp
-          make -f ../Makefile BASE=xci -j 3 lpo
+          make -f ../Makefile BASE=xci -j3 stp
+          make -f ../Makefile BASE=xci -j3 lp
+          make -f ../Makefile BASE=xci -j3 mklp
+          make -f ../Makefile BASE=xci -j3 lpo
