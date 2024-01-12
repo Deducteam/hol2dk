@@ -91,5 +91,5 @@ jobs:
           cd hol-light
           make -f ../Makefile BASE=xci -j3 stp
           make -f ../Makefile BASE=xci -j3 lp
-          make -f ../Makefile BASE=xci -j3 mklp
+          make -f ../Makefile BASE=xci mklp
           make -f ../Makefile BASE=xci lpo

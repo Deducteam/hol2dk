@@ -226,12 +226,12 @@ generates file.thp and files t.stp, t.pos and t.use for each named theorem t.
 
 You can then generate and check the lp and coq files as follows:
 ```
-make -j $jobs BASE=file lp # generate lp files
-make -j $jobs BASE=file mklp # generate lp.mk (lp files dependencies)
-make -j $jobs BASE=file lpo # check lp files
-make -j $jobs BASE=file v # generate v files
-make -j $jobs BASE=file mkv # generate coq.mk (v files dependencies)
-make -j $jobs BASE=file vo # check v files
+make BASE=file -j $jobs lp # generate lp files
+make BASE=file mklp # generate lp.mk (lp files dependencies)
+make BASE=file -j $jobs lpo # check lp files
+make BASE=file -j $jobs v # generate v files
+make BASE=file mkv # generate coq.mk (v files dependencies)
+make BASE=file -j $jobs vo # check v files
 ```
 
 **By splitting proofs in several parts: command `mk`**
