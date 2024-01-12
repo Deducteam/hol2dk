@@ -63,16 +63,25 @@ jobs:
           eval `opam env`
           hol2dk xci.lp
           lambdapi check xci.lp
-      - name: Generate and check multi-threaded dk output
+      - name: Generate and check multi-threaded dk output with mk
         run: |
           eval `opam env`
           hol2dk mk 3 xci
           export HOL2DK_DIR=.
-          make -j 3 -f xci.mk dk
+          make -f xci.mk -j 3 dk
           dk check xci.dk
-      - name: Generate and check multi-threaded lp output
+      - name: Generate and check multi-threaded lp output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=.
-          make -j 3 -f xci.mk lp
-          lambdapi check xci.lp
+          make -f xci.mk -j 3 lp
+          make -f xci.mk -j 3 lpo
+          #lambdapi check xci.lp
+      - name: Generate and check multi-threaded lp output with split
+        run: |
+          eval `opam env`
+          export HOL2DK_DIR=.
+          make -j 3 stp
+          make -j 3 lp
+          make -j 3 mklp
+          make -j 3 lpo
