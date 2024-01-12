@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command dump-simp is equivalent to dump, pos, use and simp
 - allow simultaneous dumping
 - Coq mapping for the option type
+- command split to generate a pos/use/stp file for each named theorem
+  (an stp file contains the starting position of the corresponding proof)
+- command theorem to generate the lp files corresponding to a named theorem
+- Makefile to generate and check lp and coq files generated with split
 
 ### Modified
 
