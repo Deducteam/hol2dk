@@ -81,7 +81,7 @@ jobs:
         run: |
           eval `opam env`
           export HOL2DK_DIR=.
-          make -j 3 stp
-          make -j 3 lp
-          make -j 3 mklp
-          make -j 3 lpo
+          make BASE=xci -j 3 stp
+          make BASE=xci -j 3 lp
+          make BASE=xci -j 3 mklp
+          make BASE=xci -j 3 lpo
