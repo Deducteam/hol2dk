@@ -57,8 +57,8 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=.
           cd hol-light
-          hol2dk xci.dk
           ln -s ../theory_hol.dk
+          hol2dk xci.dk
           dk check xci.dk
       - name: Generate and check single-threaded lp output
         run: |
