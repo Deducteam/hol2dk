@@ -67,6 +67,7 @@ jobs:
           cd hol-light
           hol2dk xci.lp
           ln -s ../theory_hol.lp
+          ln -s ../lambdapi.pkg
           lambdapi check xci.lp
       - name: Generate and check multi-threaded dk output with mk
         run: |
