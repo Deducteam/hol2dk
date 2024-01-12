@@ -58,6 +58,7 @@ jobs:
           export HOL2DK_DIR=.
           cd hol-light
           hol2dk xci.dk
+          ln -s ../theory_hol.dk
           dk check xci.dk
       - name: Generate and check single-threaded lp output
         run: |
@@ -65,6 +66,7 @@ jobs:
           export HOL2DK_DIR=.
           cd hol-light
           hol2dk xci.lp
+          ln -s ../theory_hol.lp
           lambdapi check xci.lp
       - name: Generate and check multi-threaded dk output with mk
         run: |
