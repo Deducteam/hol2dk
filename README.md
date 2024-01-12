@@ -386,20 +386,20 @@ in the Coq Opam repository [released](https://github.com/coq/opam).
 Performance
 -----------
 
-Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
+Performance on a machine with 32 processors i9-13950HX and 64G RAM:
 
 Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
-  * dump-simp 11m42s 10 Go 21.2 M steps (83% unused including hol.ml) +1729 named theorems
+  * dump-simp 11m42s 10G 21.2M steps (83% unused including hol.ml) +1729 named theorems
   * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11m
 
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
-  * dumped file size: 3 Go
+  * dumped file size: 3G
   * number of named theorems: 2842
-  * number of proof steps: 8.5 M (8% unused)
+  * number of proof steps: 8.5M (8% unused)
   * simplification time: 1m22s
-  * number of simplifications: 1.2 M (14%)
+  * number of simplifications: 1.2M (14%)
   * unused proof steps after simplification: 29%
   * purge time: 11s
   * unused proof steps after purge: 60%
@@ -428,11 +428,11 @@ Dumping of `hol.ml`:
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make stp: <1s
   * make -j32 lp: 32s 1.1G
+  * make mklp: 47s 2.7M
+  * make -j32 lpo: 1h36m 0.9G
   * make -j32 v: 43s 1.1G
   * make mkv: 51s 2.7M
   * make -j20 vo: 28m 3.1G
-  * make mklp: 47s 2.7M
-  * make -j32 lpo: 1h36m 0.9G
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
   * hol2dk mk 100: 14s
@@ -453,16 +453,16 @@ Single-threaded translation of `hol.ml` to Dedukti:
   * dk files generation: 7m12s 1.4G type abbrevs 348K term abbrevs 590M (42%)
 
 Dumping and translation of `hol.ml` upto `arith.ml` with `mk 7`:
-  * proof dumping time: 11s 77 Mo 448 named theorems
+  * proof dumping time: 11s 77M 448 named theorems
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s
   * unused proofs after simplification: 31%
   * unused proofs after purge: 66%
-  * dk file generation: 1s 29 Mo
+  * dk file generation: 1s 29M
   * checking time with dk check: 4s
-  * lp file generation: 1s 21 Mo
+  * lp file generation: 1s 21M
   * checking time with lambdapi: 31s
-  * translation to Coq: 1s 20 Mo
+  * translation to Coq: 1s 20M
   * checking time for Coq 8.18.0: 1m7s
 
 Exporting pure Q0 proofs
@@ -481,8 +481,8 @@ sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml e
 Dumping of `hol.ml`:
   * ocaml cheking without proof dumping: 1m14s
   * ocaml proof dumping: 2m9s (+74%)
-  * proof size file: 5.5 Go
-  * number of proof steps: 14.3 M
+  * proof size file: 5.5G
+  * number of proof steps: 14.3M
 
 | rule       |  % |
 |:-----------|---:|
@@ -500,11 +500,11 @@ Dumping of `hol.ml`:
 Dumping of `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
   * ocaml proof dumping: 13.2s
   * number of proof steps: 564351
-  * proof dumping: 1.4s 157 Mo
-  * dk file generation: 45s 153 Mo
+  * proof dumping: 1.4s 157M
+  * dk file generation: 45s 153M
   * checking time with dk check: 26s
   * checking time with kocheck -j 7: 22s
-  * lp file generation: 29s 107 Mo
+  * lp file generation: 29s 107M
   * checking time with lambdapi: 2m49s
 
 Source files
