@@ -200,38 +200,55 @@ Generating dk/lp files in parallel
 ----------------------------------------
 
 Dk/lp file generation is linear in the size of dumped files. For big
-dumped files, we provide a command to do file generation in parallel
-using `make`.
+dumped files, we provide two different commands to do file generation
+in parallel using `make`: `mk` and `split`. Currently, only `mk`
+allows to generate dk files, but `split` generate lp and coq files
+that are faster to check.
 
-First generate `file.dg` and `file.mk` with:
+Remark: for not cluttering HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
+```
+cd $HOLLIGHT_DIR
+hol2dk dump-use-simp hol.ml
+mkdir -p ~/output-hol2dk/hol
+cd ~/output-hol2dk/hol
+$HOL2DK_DIR/add-links hol
+```
+This will add links to files that are needed to generate, translate and check proofs.
+
+**By generating a lp file for each named theorem: command `split`**
+
+```
+hol2dk split file
+```
+generates file.thp and files t.stp, t.pos and t.use for each named theorem t.
+
+You can then generate and check the lp and coq files as follows:
+```
+make -j $jobs BASE=file lp # generate lp files
+make -j $jobs BASE=file mklp # generate lp.mk (lp files dependencies)
+make -j $jobs BASE=file lpo # check lp files
+make -j $jobs BASE=file v # generate v files
+make -j $jobs BASE=file mkv # generate coq.mk (v files dependencies)
+make -j $jobs BASE=file vo # check v files
+```
+
+**By splitting proofs in several parts: command `mk`**
+
 ```
 hol2dk mk $nb_parts file
 ```
-where `$nb_parts` is the number of files in which you want to split proofs.
+generates `file.dg` and `file.mk`.
 
 Then generate `file.dk` with:
 
 ```
-make -j $jobs -f file.mk dk
+make -f file.mk -j $jobs -f file.mk dk
 ```
 
 And `file.lp` with:
 
 ```
-make -j $jobs -f file.mk lp
-```
-
-Remark: for not cluttering your HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
-```
-cd $HOLLIGHT_DIR
-hol2dk dump-use-simp hol.ml
-cd $HOME
-mkdir output-hol2dk
-cd output-hol2dk
-$HOL2DK_DIR/add-links hol
-cd hol
-hol2dk mk 100 hol
-make -j32 lp
+make -f file.mk -j $jobs -f file.mk lp
 ```
 
 Checking the generated dk file

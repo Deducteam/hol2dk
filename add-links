@@ -28,5 +28,3 @@ for f in theory_hol.dk theory_hol.lp lambdapi.pkg coq.v _CoqProject Makefile
 do
     ln -f -s $HOL2DK_DIR/$f
 done
-
-#ln -f -s `basename $1`.mk Makefile
