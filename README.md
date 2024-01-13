@@ -409,9 +409,9 @@ Dumping of `hol.ml`:
 | comb       | 20 |
 | term_subst | 17 |
 | refl       | 16 |
-| eqmp       | 11 |
+| eqmp       | 12 |
 | trans      |  9 |
-| conjunct1  |  5 |
+| conjunct1  |  6 |
 | abs        |  3 |
 | beta       |  3 |
 | mp         |  3 |

@@ -685,11 +685,11 @@ module Hol : Hol_kernel = struct
 (* Type and term instantiation.                                              *)
 (* ------------------------------------------------------------------------- *)
 
-  let INST_TYPE theta (Sequent(asl,c,k)) =
+  let INST_TYPE theta (Sequent(asl,c,k) as th) = if theta = [] then th else
     let inst_fn = inst theta in
     new_theorem (term_image inst_fn asl) (inst_fn c) (Pinstt(k,theta))
 
-  let INST theta (Sequent(asl,c,k)) =
+  let INST theta (Sequent(asl,c,k) as th) = if theta = [] then th else
     let inst_fun = vsubst theta in
     new_theorem (term_image inst_fun asl) (inst_fun c) (Pinst(k,theta))
 

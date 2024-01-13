@@ -14,7 +14,8 @@ stp:
 
 .PHONY: clean-stp
 clean-stp:
-	find . -name '*.stp' -exec rm -f {} `basename {}`.pos `basename {}`.use \;
+	find . -maxdepth 1 -name '*.stp' -exec rm -f {} `basename {}`.pos `basename {}`.use \;
+	rm -f $(BASE).thp
 
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 

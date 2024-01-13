@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (an stp file contains the starting position of the corresponding proof)
 - command theorem to generate the lp files corresponding to a named theorem
 - Makefile to generate and check lp and coq files generated with split
+- fusion.ml: do not generate new theorems for empty instantiations
 
 ### Modified
 
