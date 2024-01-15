@@ -6,9 +6,9 @@ open Fusion
 open Xlib
 open Xprelude
 
-(* [read_prf basename f] runs [f] on every proof of [basename.prf]. *)
-let read_prf (basename : string) (f : int -> proof -> unit) =
-  let dump_file = basename ^ ".prf" in
+(* [read_prf b f] runs [f] on every proof of [b.prf]. *)
+let read_prf (b : string) (f : int -> proof -> unit) =
+  let dump_file = b ^ ".prf" in
   log "read %s ...\n%!" dump_file;
   let ic = open_in_bin dump_file in
   let idx = ref 0 in
@@ -16,53 +16,59 @@ let read_prf (basename : string) (f : int -> proof -> unit) =
   with End_of_file -> close_in ic
 ;;
 
-let prf_pos : int array ref = ref [||];;
-
-let read_pos basename =
-  let dump_file = basename ^ ".pos" in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
-  prf_pos := input_value ic;
-  close_in ic
-
+(* [!ic_prf] is the input channel used to read proofs. *)
 let ic_prf : in_channel ref = ref stdin;;
 
-let init_proof_reading basename =
-  let dump_file = basename ^ ".prf" in
-  log "read %s ...\n%!" dump_file;
-  ic_prf := open_in_bin dump_file
+let init_proof_reading b =
+  let dump_file = b ^ ".prf" in
+  log "open %s ...\n%!" dump_file;
+  ic_prf := open_in_bin dump_file;;
+
+(* [!the_start_pos] is the starting proof index of the current pos file. *)
+let the_start_pos : int ref = ref 0;;
+
+(* [(!prf_pos).(i)] gives the position in [!ic_prf] of the proof of
+   index [!the_start_pos + i]. *)
+let prf_pos : int array ref = ref [||];;
+
+let read_pos b = prf_pos := read_val (b ^ ".pos");;
+
+(* [!map_thid_pos] maps proof indexes to positions. *)
+let map_thid_pos : (string * int) MapInt.t ref = ref MapInt.empty;;
+
+let thdeps = ref SetStr.empty;;
+
+let get_pos k =
+  let k' = k - !the_start_pos in
+  (*log "get_pos %d - %d = %d\n%!" k !the_start_pos k';*)
+  if k' >= 0 then Array.get !prf_pos k'
+  else
+    try
+      let n,p = MapInt.find k !map_thid_pos in
+      thdeps := SetStr.add n !thdeps; p
+    with Not_found ->
+      log "theorem %d not found\n%!" k; raise Not_found
+;;
 
 (* [proof_at k] returns the proof of index [k]. Can be used after
    [read_pos] and [init_proof_reading] only. *)
 let proof_at k =
   let ic = !ic_prf in
-  seek_in ic (Array.get !prf_pos k);
-  input_value ic
-;;
+  let p = get_pos k in
+  (*log "get_pos %d = %d\n%!" k p;*)
+  seek_in ic p;
+  input_value ic;;
 
-(* [!last_use.(i) = 0] if [i] is a named theorem, the highest theorem
-   index using [i] if there is one, and -1 otherwise. *)
+(* [(!last_use).(i) = 0] if [i] is a named theorem, the highest
+   theorem index using [i] if there is one, and -1 otherwise. *)
 let last_use : int array ref = ref [||];;
 
-let read_use basename = last_use := read_val (basename ^ ".use");;
+let read_use b = last_use := read_val (b ^ ".use");;
+
+let get_use k =
+  let k' = k - !the_start_pos in
+  (*log "get_use %d - %d = %d\n%!" k !the_start_pos k';*)
+  Array.get !last_use k';;
 
 (* [!cur_part_max] indicates the maximal index of the current part. *)
 let cur_part_max : int ref = ref (-1);;
-
-(* [iter_proofs_at f] runs [f k (proof_at k)] on all proof index [k]
-   from 0 to [nb_proofs - 1] (including unused proofs), where
-   [nb_proofs = Array.length !prf_pos]. Can be used after [read_pos]
-   and [init_proof_reading] only. *)
-let iter_proofs_at (f : int -> proof -> unit) =
-  let idx = ref 0 in
-  let nb_proofs = Array.length !prf_pos in
-  try
-    while !idx < nb_proofs do
-      let k = !idx in
-      f k (proof_at k);
-      idx := k + 1
-    done
-  with Failure _ as e ->
-    log "proof %d\n%!" !idx;
-    raise e
-;;

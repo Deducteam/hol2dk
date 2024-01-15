@@ -9,14 +9,14 @@ open Xnames
 
 let usage() =
   log
-"hol2dk uses:
+"hol2dk uses
 ------------
 
 hol2dk [-h|--help]
   print this help
 
-Dumping commands:
------------------
+Dumping commands
+----------------
 
 hol2dk dump-simp $file.[ml|hl]
   compose the commands dump, pos, use, rewrite and purge
@@ -51,8 +51,8 @@ hol2dk proof $file $x $y
 hol2dk print use $file $x
   print the contents of $file.use for theorem index $x
 
-Single-threaded dk/lp file generation:
---------------------------------------
+Single-threaded dk/lp file generation
+-------------------------------------
 
 hol2dk $file.[dk|lp]
   generate $file.[dk|lp]
@@ -60,12 +60,15 @@ hol2dk $file.[dk|lp]
 hol2dk $file.[dk|lp] $thm_id
   generate $file.[dk|lp] but with theorem index $thm_id only (for debug)
 
-Multi-threaded dk/lp file generation:
--------------------------------------
+Multi-threaded dk/lp file generation by splitting proofs in $n parts
+--------------------------------------------------------------------
 
 hol2dk mk $n $file
   generate $file.dg, the dependency graph between parts when $file.prf is
   split in $n parts, and $file.mk for handling parts in parallel
+
+hol2dk part $k $x $y $file.[dk|lp]
+  generate dk/lp proof files of part $k from proof index $x to proof index $y
 
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
@@ -74,14 +77,20 @@ hol2dk thm $file.[dk|lp]
   generate $file.[dk|lp] from $file.thm
 
 hol2dk axm $file.[dk|lp]
-  generate $file_opam.[dk|lp] from $file.thm
+  generate $file_opam.[dk|lp] from $file.thm (same as thm but without proofs)
 
-hol2dk part $n $k $x $y $file.[dk|lp]
-  generate dk/lp proof files of part $k in [1..$n]
-  from proof index $x to proof index $y using type and term abbreviations
+Multi-threaded lp file generation by having a file for each named theorem
+-------------------------------------------------------------------------
 
-Experimental (not efficient):
------------------------------
+hol2dk split $file
+  generate $file.thp and the files $t.stp, $t.pos and $t.use
+  for each named theorem $t
+
+hol2dk theorem $file $t.lp
+  generate the lp proof of the theorem named $t
+
+Experimental (not efficient)
+----------------------------
 
 hol2dk prf $x $y $file
   generate a lp file for each proof from index $x to index $y in $file.prf
@@ -95,8 +104,8 @@ hol2dk mk-coq $n $file
   generate a Makefile for translating to Coq each lp file generated
   by Makefile.lp and check them by using $n sequential calls to make
 
-Other commands:
----------------
+Other commands
+--------------
 
 hol2dk stat $file
   print statistics on $file.prf
@@ -445,6 +454,8 @@ and command = function
      close_in !Xproof.ic_prf;
      0
 
+  | ["proof";b;x] -> command ["proof";b;x;x]
+
   | ["rewrite";b] ->
      read_pos b;
      init_proof_reading b;
@@ -514,7 +525,7 @@ and command = function
           theorem cannot refer to proofs coming before it *)
        if l = 0 then map := MapInt.empty
      in
-     iter_proofs_at simp;
+     for k = 0 to Array.length !prf_pos - 1 do simp k (proof_at k) done;
      close_in !Xproof.ic_prf;
      close_out oc;
      let nb_proofs = Array.length !prf_pos in
@@ -721,12 +732,81 @@ and command = function
          cur_part_max := y;
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         Xlp.export_term_abbrevs b suffix;
-         Xlp.export_type_abbrevs b suffix
+         Xlp.export_term_abbrevs b b suffix;
+         Xlp.export_type_abbrevs b b suffix
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
      0
+
+  | ["split";b] ->
+     read_pos b;
+     read_use b;
+     (*let dump_file = b ^ "_theorems.mk" in
+     let oc = open_out dump_file in
+     out oc ".SUFFIXES:\n.PHONY: default\ndefault:";*)
+     let map_thid_name = read_thm b in
+     let map = ref MapInt.empty in
+     let create_segment start_index end_index =
+       let n = try MapInt.find end_index map_thid_name
+               with Not_found -> "thm" ^ string_of_int end_index in
+       write_val (n ^ ".stp") start_index;
+       let len = end_index - start_index + 1 in
+       write_val (n ^ ".pos") (Array.sub !prf_pos start_index len);
+       write_val (n ^ ".use") (Array.sub !last_use start_index len);
+       let p = Array.get !prf_pos end_index in
+       map := MapInt.add end_index (n,p) !map;
+       (*out oc " %s.lp" n*)
+     in
+     let end_idx = ref (Array.length !prf_pos - 1) in
+     while Array.get !last_use !end_idx < 0 do decr end_idx done;
+     for k = !end_idx - 1 downto 0 do
+       let l = Array.get !last_use k in
+       if l = 0 || l > !end_idx then
+         begin
+           (*log "%d %d\n%!" k l;*)
+           create_segment (k+1) !end_idx;
+           end_idx := k
+         end
+     done;
+     create_segment 0 !end_idx;
+     (*log "generate %s ...\n%!" dump_file;
+     out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
+     close_out oc;*)
+     MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;
+     write_val (b ^ ".thp") !map;
+     0
+
+  | ["theorem";b;f] ->
+     read_sig b;
+     map_thid_pos := read_val (b ^ ".thp");
+     let n = Filename.chop_extension f in
+     read_pos n;
+     read_use n;
+     the_start_pos := read_val (n ^ ".stp");
+     (*log "the_start_pos = %d\n%!" !the_start_pos;*)
+     init_proof_reading b;
+     if is_dk f then
+       begin
+         log "dk output not available for this command"; 1
+       end
+     else
+       begin
+         cur_part_max := !the_start_pos + Array.length !prf_pos - 1;
+         Xlp.export_proofs b n All;
+         close_in !Xproof.ic_prf;
+         Xlp.export_term_abbrevs b n "";
+         Xlp.export_type_abbrevs b n "";
+         let dump_file = n ^ "_deps.lp" in
+         log "generate %s ...\n%!" dump_file;
+         let oc = open_out dump_file in
+         SetStr.iter (out oc "require open hol-light.%s;\n") !thdeps;
+         close_out oc;
+         log "generate %s.lp ...\n%!" n;
+         Sys.command (Printf.sprintf "cat %s %s > %s && rm -f %s %s"
+                        (n^"_deps.lp") (n^"_proofs.lp") (n^".lp")
+                        (n^"_deps.lp") (n^"_proofs.lp"))
+       end
 
   | ["prf";x;y;b] ->
      read_sig b;
@@ -801,10 +881,10 @@ and command = function
        end
      else
        begin
-         Xlp.export_proofs b r;
+         Xlp.export_proofs b b r;
          if r = All then Xlp.export_theorems b (read_thm b);
-         Xlp.export_term_abbrevs b "";
-         Xlp.export_type_abbrevs b ""
+         Xlp.export_term_abbrevs b b "";
+         Xlp.export_type_abbrevs b b ""
        end;
      close_in !Xproof.ic_prf;
      0
