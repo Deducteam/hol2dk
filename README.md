@@ -26,8 +26,8 @@ formalizing the metatheory of first-order logic can be exported and
 translated to Dedukti, Lambdapi and Coq in a few minutes. However, it
 may take hours for Coq and require too much memory for Lambdapi to
 check the translated files. Bigger libraries like
-`Multivariate/make.ml` requires too much memory for the moment. But we
-will fix this soon.
+`Multivariate/make.ml` requires too much memory for the moment. We
+hope to fix this soon.
 
 Moreover, while it is possible to translate any HOL-Light proof to
 Coq, the translated theorem may not be directly usable by Coq users
