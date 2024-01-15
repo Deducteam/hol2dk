@@ -24,11 +24,11 @@ let init_proof_reading b =
   log "open %s ...\n%!" dump_file;
   ic_prf := open_in_bin dump_file;;
 
-(* [!the_start_pos] is the starting proof index of the current pos file. *)
-let the_start_pos : int ref = ref 0;;
+(* [!the_start_idx] is the starting proof index of the current pos file. *)
+let the_start_idx : int ref = ref 0;;
 
 (* [(!prf_pos).(i)] gives the position in [!ic_prf] of the proof of
-   index [!the_start_pos + i]. *)
+   index [!the_start_idx + i]. *)
 let prf_pos : int array ref = ref [||];;
 
 let read_pos b = prf_pos := read_val (b ^ ".pos");;
@@ -39,8 +39,8 @@ let map_thid_pos : (string * int) MapInt.t ref = ref MapInt.empty;;
 let thdeps = ref SetStr.empty;;
 
 let get_pos k =
-  let k' = k - !the_start_pos in
-  (*log "get_pos %d - %d = %d\n%!" k !the_start_pos k';*)
+  let k' = k - !the_start_idx in
+  (*log "get_pos %d - %d = %d\n%!" k !the_start_idx k';*)
   if k' >= 0 then Array.get !prf_pos k'
   else
     try
@@ -66,8 +66,8 @@ let last_use : int array ref = ref [||];;
 let read_use b = last_use := read_val (b ^ ".use");;
 
 let get_use k =
-  let k' = k - !the_start_pos in
-  (*log "get_use %d - %d = %d\n%!" k !the_start_pos k';*)
+  let k' = k - !the_start_idx in
+  (*log "get_use %d - %d = %d\n%!" k !the_start_idx k';*)
   Array.get !last_use k';;
 
 (* [!cur_part_max] indicates the maximal index of the current part. *)

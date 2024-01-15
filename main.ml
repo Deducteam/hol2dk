@@ -83,7 +83,7 @@ Multi-threaded lp file generation by having a file for each named theorem
 -------------------------------------------------------------------------
 
 hol2dk split $file
-  generate $file.thp and the files $t.stp, $t.pos and $t.use
+  generate $file.thp and the files $t.sti, $t.pos and $t.use
   for each named theorem $t
 
 hol2dk theorem $file $t.lp
@@ -133,14 +133,6 @@ let percent k n = (100 * k) / n
 
 let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
-let read_nb_proofs b =
-  let dump_file = b ^ ".sig" in
-  let ic = open_in_bin dump_file in
-  let nb_proofs = input_value ic in
-  log "%d proof steps\n%!" nb_proofs;
-  close_in ic;
-  nb_proofs
-
 let is_dk filename =
   match Filename.extension filename with
   | ".dk"  -> true
@@ -151,8 +143,6 @@ let read_sig b =
   let dump_file = b ^ ".sig" in
   let ic = open_in_bin dump_file in
   log "read %s ...\n%!" dump_file;
-  let nb_proofs = input_value ic in
-  log "%d proof steps\n%!" nb_proofs;
   the_type_constants := List.rev (input_value ic);
   (* we add "el" to use mk_const without failing *)
   the_term_constants := ("el",aty)::List.rev (input_value ic);
@@ -330,11 +320,12 @@ let dump after_hol f b =
 %a
 close_out oc_dump;;
 Sys.command ("mv "^dump_filename^" %s.prf");;
+dump_nb_proofs "%s.nbp";;
 dump_signature "%s.sig";;
 #load "str.cma";;
 #use "xnames.ml";;
 dump_map_thid_name "%s.thm" %a;;
-|} cmd after_hol f use after_hol b b b
+|} cmd after_hol f use after_hol b b b b
 (olist ostring) (trans_file_deps (dep_graph (files())) f);
   close_out oc;
   Sys.command ("ocaml -w -A -I . "^ml_file)
@@ -394,7 +385,7 @@ and command = function
   | ["dump-use-simp";f] -> dump_and_simp false f
 
   | ["pos";b] ->
-     let nb_proofs = read_nb_proofs b in
+     let nb_proofs = read_val (b ^ ".nbp") in
      let pos = Array.make nb_proofs 0 in
      let dump_file = b ^ ".prf" in
      log "read %s ...\n%!" dump_file;
@@ -418,7 +409,7 @@ and command = function
      0
 
   | ["stat";b] ->
-     let nb_proofs = read_nb_proofs b in
+     let nb_proofs = read_val (b ^ ".nbp") in
      let thm_uses = Array.make nb_proofs 0 in
      let rule_uses = Array.make nb_rules 0 in
      let unused = ref 0 in
@@ -434,9 +425,33 @@ and command = function
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
 
+  | ["stat";b;s] ->
+     let nb_proofs = read_val (s ^ ".nbp") in
+     let thm_uses = Array.make nb_proofs 0 in
+     let rule_uses = Array.make nb_rules 0 in
+     let unused = ref 0 in
+     read_use s;
+     let dump_file = b ^ ".prf" in
+     log "read %s ...\n%!" dump_file;
+     let ic = open_in_bin dump_file in
+     the_start_idx := read_val (s ^ ".sti");
+     read_pos b;
+     seek_in ic (get_pos !the_start_idx);
+     let f k p =
+       if Array.get !Xproof.last_use k >= 0 then
+         (count_thm_uses thm_uses p; count_rule_uses rule_uses p)
+       else incr unused
+     in
+     for k = 0 to nb_proofs - 1 do f k (input_value ic) done;
+     close_in ic;
+     log "compute statistics ...\n";
+     print_histogram thm_uses;
+     print_rule_uses rule_uses (nb_proofs - !unused);
+     0
+
   | ["proof";b;x;y] ->
      let x = integer x and y = integer y in
-     let nb_proofs = read_nb_proofs b in
+     let nb_proofs = read_val (b ^ ".nbp") in
      if x < 0 || y < x || y >= nb_proofs then wrong_arg();
      read_pos b;
      init_proof_reading b;
@@ -585,7 +600,7 @@ and command = function
      (* The .use file records an array [last_use] such that
         [last_use.(i) = 0] if [i] is a named theorem, the highest
         theorem index using [i] if there is one, and -1 otherwise. *)
-     let nb_proofs = read_nb_proofs b in
+     let nb_proofs = read_val (b ^ ".nbp") in
      let last_use = Array.make nb_proofs (-1) in
      read_prf b
        (fun i p -> List.iter (fun k -> Array.set last_use k i) (deps p));
@@ -609,7 +624,7 @@ and command = function
 
   | ["print";"use";b;k] ->
      let k = integer k in
-     let nb_proofs = read_nb_proofs b in
+     let nb_proofs = read_val (b ^ ".nbp") in
      if k < 0 || k >= nb_proofs then wrong_arg();
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k);
@@ -618,7 +633,7 @@ and command = function
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
      if nb_parts < 2 then wrong_arg();
-     let nb_proofs = read_nb_proofs b in
+     let nb_proofs = read_val (b ^ ".nbp") in
      let part_size = nb_proofs / nb_parts in
      let part idx =
        let k = idx / part_size in
@@ -742,21 +757,18 @@ and command = function
   | ["split";b] ->
      read_pos b;
      read_use b;
-     (*let dump_file = b ^ "_theorems.mk" in
-     let oc = open_out dump_file in
-     out oc ".SUFFIXES:\n.PHONY: default\ndefault:";*)
      let map_thid_name = read_thm b in
      let map = ref MapInt.empty in
      let create_segment start_index end_index =
        let n = try MapInt.find end_index map_thid_name
                with Not_found -> "thm" ^ string_of_int end_index in
-       write_val (n ^ ".stp") start_index;
        let len = end_index - start_index + 1 in
+       write_val (n ^ ".nbp") len;
+       write_val (n ^ ".sti") start_index;
        write_val (n ^ ".pos") (Array.sub !prf_pos start_index len);
        write_val (n ^ ".use") (Array.sub !last_use start_index len);
        let p = Array.get !prf_pos end_index in
        map := MapInt.add end_index (n,p) !map;
-       (*out oc " %s.lp" n*)
      in
      let end_idx = ref (Array.length !prf_pos - 1) in
      while Array.get !last_use !end_idx < 0 do decr end_idx done;
@@ -764,15 +776,11 @@ and command = function
        let l = Array.get !last_use k in
        if l = 0 || l > !end_idx then
          begin
-           (*log "%d %d\n%!" k l;*)
            create_segment (k+1) !end_idx;
            end_idx := k
          end
      done;
      create_segment 0 !end_idx;
-     (*log "generate %s ...\n%!" dump_file;
-     out oc "\n%%.lp: %%.stp\n\thol2dk theorem %s $@\n" b;
-     close_out oc;*)
      MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;
      write_val (b ^ ".thp") !map;
      0
@@ -783,8 +791,8 @@ and command = function
      let n = Filename.chop_extension f in
      read_pos n;
      read_use n;
-     the_start_pos := read_val (n ^ ".stp");
-     (*log "the_start_pos = %d\n%!" !the_start_pos;*)
+     the_start_idx := read_val (n ^ ".sti");
+     (*log "the_start_idx = %d\n%!" !the_start_idx;*)
      init_proof_reading b;
      if is_dk f then
        begin
@@ -792,7 +800,7 @@ and command = function
        end
      else
        begin
-         cur_part_max := !the_start_pos + Array.length !prf_pos - 1;
+         cur_part_max := !the_start_idx + Array.length !prf_pos - 1;
          Xlp.export_proofs b n All;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs b n "";
