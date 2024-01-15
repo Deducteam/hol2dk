@@ -44,35 +44,53 @@ jobs:
           git clone --depth 1 https://github.com/jrh13/hol-light
           eval `opam env`
           make -C hol-light
-          export HOL2DK_DIR=.
+          export HOL2DK_DIR=`pwd`
           ./patch hol-light
       - name: Dump proofs
         run: |
           eval `opam env`
-          cd hol-light; hol2dk dump-use-simp ../xci.ml; cd ..
-          #hol2dk pos xci
-          #hol2dk use xci
-          #hol2dk simp xci
+          cp xci.ml hol-light/
+          cd hol-light
+          hol2dk dump-use-simp xci.ml
       - name: Generate and check single-threaded dk output
         run: |
           eval `opam env`
+          export HOL2DK_DIR=`pwd`
+          cd hol-light
+          ln -s ../theory_hol.dk
           hol2dk xci.dk
           dk check xci.dk
       - name: Generate and check single-threaded lp output
         run: |
           eval `opam env`
+          export HOL2DK_DIR=`pwd`
+          cd hol-light
           hol2dk xci.lp
+          ln -s ../theory_hol.lp
+          ln -s ../lambdapi.pkg
           lambdapi check xci.lp
-      - name: Generate and check multi-threaded dk output
+      - name: Generate and check multi-threaded dk output with mk
         run: |
           eval `opam env`
+          export HOL2DK_DIR=`pwd`
+          cd hol-light
           hol2dk mk 3 xci
-          export HOL2DK_DIR=.
-          make -j 3 -f xci.mk dk
+          make -f xci.mk -j3 dk
           dk check xci.dk
-      - name: Generate and check multi-threaded lp output
+      - name: Generate and check multi-threaded lp output with mk
         run: |
           eval `opam env`
-          export HOL2DK_DIR=.
-          make -j 3 -f xci.mk lp
-          lambdapi check xci.lp
+          export HOL2DK_DIR=`pwd`
+          cd hol-light
+          make -f xci.mk -j3 lp
+          make -f xci.mk -j3 lpo
+      - name: Generate and check multi-threaded lp output with split
+        run: |
+          eval `opam env`
+          export HOL2DK_DIR=`pwd`
+          cd hol-light
+          make -f ../Makefile BASE=xci clean-all
+          make -f ../Makefile BASE=xci -j3 sti
+          make -f ../Makefile BASE=xci -j3 lp
+          make -f ../Makefile BASE=xci mklp
+          make -f ../Makefile BASE=xci -j3 lpo

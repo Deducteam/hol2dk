@@ -145,6 +145,7 @@ module type Hol_kernel =
       (*END_ND*)
 
       val new_theorem : term list -> term -> proof_content -> thm
+      val dump_nb_proofs : string -> unit
       val dump_signature : string -> unit
       REMOVE*)
       val axioms : unit -> thm list
@@ -685,11 +686,11 @@ module Hol : Hol_kernel = struct
 (* Type and term instantiation.                                              *)
 (* ------------------------------------------------------------------------- *)
 
-  let INST_TYPE theta (Sequent(asl,c,k)) =
+  let INST_TYPE theta (Sequent(asl,c,k) as th) = if theta = [] then th else
     let inst_fn = inst theta in
     new_theorem (term_image inst_fn asl) (inst_fn c) (Pinstt(k,theta))
 
-  let INST theta (Sequent(asl,c,k)) =
+  let INST theta (Sequent(asl,c,k) as th) = if theta = [] then th else
     let inst_fun = vsubst theta in
     new_theorem (term_image inst_fun asl) (inst_fun c) (Pinst(k,theta))
 
@@ -891,17 +892,23 @@ REMOVE*)
 (* Function to dump types, constants and axioms.                             *)
 (* ------------------------------------------------------------------------- *)
 
-  let dump_signature filename =
+  let dump_nb_proofs filename =
     Printf.printf "generate %s ...\n%!" filename;
     let oc = open_out filename in
     let nb_proofs = !thm_index + 1 in
     output_value oc nb_proofs;
+    close_out oc;
+    Printf.printf "%d proof steps\n%!" nb_proofs
+  ;;
+
+  let dump_signature filename =
+    Printf.printf "generate %s ...\n%!" filename;
+    let oc = open_out filename in
     output_value oc (types());
     output_value oc (constants());
     output_value oc (axioms());
     output_value oc (definitions());
-    close_out oc;
-    Printf.printf "%d proof steps\n%!" nb_proofs
+    close_out oc
   ;;
 
 end;;

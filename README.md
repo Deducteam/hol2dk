@@ -3,7 +3,7 @@ Export HOL-Light proofs to Dedukti, Lambdapi and Coq
 
 This project provides a tool to translate [HOL-Light](https://github.com/jrh13/hol-light) proofs to [Dedukti](https://github.com/Deducteam/Dedukti/), [Lambdapi](https://github.com/Deducteam/lambdapi) and [Coq](https://coq.inria.fr/).
 
-[HOL-Light](https://github.com/jrh13/hol-light) is proof assistant
+[HOL-Light](https://github.com/jrh13/hol-light) is a proof assistant
 based on higher-order logic, aka simple type theory.
 
 [Dedukti](https://github.com/Deducteam/Dedukti/) is a proof format
@@ -26,8 +26,8 @@ formalizing the metatheory of first-order logic can be exported and
 translated to Dedukti, Lambdapi and Coq in a few minutes. However, it
 may take hours for Coq and require too much memory for Lambdapi to
 check the translated files. Bigger libraries like
-`Multivariate/make.ml` requires too much memory for the moment. But we
-will fix this soon.
+`Multivariate/make.ml` requires too much memory for the moment. We
+hope to fix this soon.
 
 Moreover, while it is possible to translate any HOL-Light proof to
 Coq, the translated theorem may not be directly usable by Coq users
@@ -58,8 +58,7 @@ install them by using the following commands:
 
 ```
 cd $HOME
-sudo apt-get install -y libipc-system-simple-perl libstring-shellquote
--perl opam
+sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl opam
 opam init
 opam switch create ocaml.4.14.1
 eval `opam env`
@@ -104,6 +103,8 @@ export HOL2DK_DIR=$OPAM_SWITCH_PREFIX/share/hol2dk
 
 Patching HOL-Light sources
 --------------------------
+
+By default, HOL-Light does not generate proofs that can be checked independently. Therefore, it must be patched so that proof steps are recorded:
 
 ```
 $HOL2DK_DIR/patch $HOLLIGHT_DIR
@@ -198,41 +199,58 @@ hol2dk file.lp $theorem_number
 ```
 
 Generating dk/lp files in parallel
-----------------------------------------
+----------------------------------
 
 Dk/lp file generation is linear in the size of dumped files. For big
-dumped files, we provide a command to do file generation in parallel
-using `make`.
+dumped files, we provide two different commands to do file generation
+in parallel using `make`: `mk` and `split`. Currently, only `mk`
+allows to generate dk files, but `split` generate lp and coq files
+that are faster to check.
 
-First generate `file.dg` and `file.mk` with:
+Remark: for not cluttering HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
+```
+cd $HOLLIGHT_DIR
+hol2dk dump-use-simp hol.ml
+mkdir -p ~/output-hol2dk/hol
+cd ~/output-hol2dk/hol
+$HOL2DK_DIR/add-links hol
+```
+This will add links to files that are needed to generate, translate and check proofs.
+
+**By generating a lp file for each named theorem: command `split`**
+
+```
+hol2dk split file
+```
+generates file.thp and files t.sti, t.pos and t.use for each named theorem t.
+
+You can then generate and check the lp and coq files as follows:
+```
+make BASE=file -j $jobs lp # generate lp files
+make BASE=file mklp # generate lp.mk (lp files dependencies)
+make BASE=file -j $jobs lpo # check lp files
+make BASE=file -j $jobs v # generate v files
+make BASE=file mkv # generate coq.mk (v files dependencies)
+make BASE=file -j $jobs vo # check v files
+```
+
+**By splitting proofs in several parts: command `mk`**
+
 ```
 hol2dk mk $nb_parts file
 ```
-where `$nb_parts` is the number of files in which you want to split proofs.
+generates `file.dg` and `file.mk`.
 
-Then generate `file.dk` with:
+Then generate and check `file.dk` with:
 
 ```
-make -j $jobs -f file.mk dk
+make -f file.mk -j $jobs dk
 ```
 
 And `file.lp` with:
 
 ```
-make -j $jobs -f file.mk lp
-```
-
-Remark: for not cluttering your HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
-```
-cd $HOLLIGHT_DIR
-hol2dk dump-use-simp hol.ml
-cd $HOME
-mkdir output-hol2dk
-cd output-hol2dk
-$HOL2DK_DIR/add-links hol
-cd hol
-hol2dk mk 100 hol
-make -j32 lp
+make -f file.mk -j $jobs lp
 ```
 
 Checking the generated dk file
@@ -271,10 +289,11 @@ ln -s $HOL2DK_DIR/lambdapi.pkg
 ```
 
 To check the generated lp files with
-[lambdapi](https://github.com/Deducteam/lambdapi), do:
+[lambdapi](https://github.com/Deducteam/lambdapi), you can do:
 ```
 lambdapi check file.lp
 ```
+It is however more efficient to use `make` as explained above.
 
 **Remark:** In case hol-light and lambdapi do not use the same
 ocaml versions, it is convenient to use different switches in each
@@ -308,15 +327,13 @@ Once HOL-Light files have been translated to Lambdapi files, it is possible
 to translate the obtained Lambdapi files into [Coq](https://coq.inria.fr/) files
 using the Coq [export](https://lambdapi.readthedocs.io/en/latest/options.html#export) feature of Lambdapi.
 
-If the Lambdapi files have been generated using `file.mk`, you can simply do:
+If the lp files have been generated using `split`, simply do:
 ```
-make -j $jobs -f file.mk v # to generate Coq files
-make -j $jobs -f file.mk vo # to check the generated Coq files
+make -j $jobs v
 ```
-
-To indicate a specific `lambdapi` command, do:
+If the lp files have been generated using `mk`, simply do:
 ```
-make -j $jobs -f file.mk LAMBAPI=$lambdapi v
+make -f file.mk -j $jobs v
 ```
 
 Otherwise, you need to translate Lambdapi files one by one by hand or
@@ -325,11 +342,14 @@ by using a script:
 lambdapi export -o stt_coq --encoding $HOL2DK_DIR/encoding.lp --erasing $HOL2DK_DIR/erasing.lp --renaming $HOL2DK_DIR/renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
 ```
 
-You can then check the generated Coq files as follows:
+You can then check the generated Coq files as follows.
+If the lp files have been generated with `split`, simply do:
 ```
-echo coq.v theory_hol.v file*.v > _CoqProject
-coq_makefile -f _CoqProject -o Makefile.coq
-make -j $jobs -f Makefile.coq
+make -j $jobs vo
+```
+If the lp files have been generated using `mk`, simply do:
+```
+make -f file.mk -j $jobs vo
 ```
 
 Coq axioms used to encode HOL-Light proofs
@@ -366,20 +386,20 @@ in the Coq Opam repository [released](https://github.com/coq/opam).
 Performance
 -----------
 
-Performance on a machine with 32 processors i9-13950HX and 64 Go RAM:
+Performance on a machine with 32 processors i9-13950HX and 64G RAM:
 
-Translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
-  * dump-simp 11m42s 10 Go 21.2 M steps (83% unused including hol.ml) +1729 named theorems
-  * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11ms
-  
-Translation of `hol.ml` with `mk 100`:
+Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
+  * dump-simp 11m42s 10G 21.2M steps (83% unused including hol.ml) +1729 named theorems
+  * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11m
+
+Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
   * checking time with proof dumping: 1m44s (+40%)
-  * dumped files size: 3 Go
+  * dumped file size: 3G
   * number of named theorems: 2842
-  * number of proof steps: 8.5 M (8% unused)
+  * number of proof steps: 8.5M (8% unused)
   * simplification time: 1m22s
-  * number of simplifications: 1.2 M (14%)
+  * number of simplifications: 1.2M (14%)
   * unused proof steps after simplification: 29%
   * purge time: 11s
   * unused proof steps after purge: 60%
@@ -389,9 +409,9 @@ Translation of `hol.ml` with `mk 100`:
 | comb       | 20 |
 | term_subst | 17 |
 | refl       | 16 |
-| eqmp       | 11 |
+| eqmp       | 12 |
 | trans      |  9 |
-| conjunct1  |  5 |
+| conjunct1  |  6 |
 | abs        |  3 |
 | beta       |  3 |
 | mp         |  3 |
@@ -405,47 +425,44 @@ Translation of `hol.ml` with `mk 100`:
 | disj_cases |  1 |
 | conj       |  1 |
 
-Multi-threaded translation to Lambdapi with `mk 100`:
-  * hol2dk mk: 14s
-  * lp files generation time: 31s
-  * lp files size: 1.1 Go
-  * type abbrevs: 796 Ko
-  * term abbrevs: 583 Mo (53%)
-  * verification by lambdapi: fails (too big for lambdapi)
-  * translation to Coq: 24s 1 Go
-  * verification by Coq: 64m13s
+Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
+  * make sti: <1s
+  * make -j32 lp: 32s 1.1G
+  * make mklp: 47s 2.7M
+  * make -j32 lpo: 1h36m 0.9G
+  * make -j32 v: 43s 1.1G
+  * make mkv: 51s 2.7M
+  * make -j20 vo: 28m 3.1G
 
-Multi-threaded translation to Dedukti with `mk 100`:
-  * dk file generation time: 49s
-  * dk file size: 1.5 Go
-  * type abbrevs: 876 Ko
-  * term abbrevs: 660 Mo (44%)
+Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
+  * hol2dk mk 100: 14s
+  * make -j32 lp: 31s 1.1G type abbrevs 796K term abbrevs 583M (53%)
+  * make -j32 lpo: fails (too big for lambdapi)
+  * make -j32 v: 24s 1G
+  * make -j32 vo: 1h4m
+
+Multi-threaded translation of `hol.ml` to Dedukti with `mk 100`:
+  * make -j32 dk: 49s 1.5G type abbrevs 876K term abbrevs 660M (44%)
   * dkcheck: 3m31s
   * kocheck: 5m54s
 
-Single-threaded translation to Lambdapi:
-  * lp files generation time: 4m49s
-  * lp files size: 1.1 Go
-  * type abbreviations: 308 Ko
-  * term abbreviations: 525 Mo (48%)
+Single-threaded translation of `hol.ml` to Lambdapi:
+  * lp files generation: 4m49s 1.1G type abbrevs 308K term abbrevs 525M (48%)
 
-Single-threaded translation to Dedukti:
-  * dk files generation time: 7m12s
-  * dk files size: 1.4 Go
-  * type abbreviations: 348 Ko
-  * term abbreviations: 590 Mo (42%)
+Single-threaded translation of `hol.ml` to Dedukti:
+  * dk files generation: 7m12s 1.4G type abbrevs 348K term abbrevs 590M (42%)
 
-Translation of `arith.ml` with `mk 7`:
-  * proof dumping time: 11s 77 Mo 448 named theorems
+Dumping and translation of `hol.ml` upto `arith.ml` with `mk 7`:
+  * proof dumping time: 11s 77M 448 named theorems
   * number of proof steps: 302 K (9% unused)
   * prf simplification: 2s
   * unused proofs after simplification: 31%
   * unused proofs after purge: 66%
-  * dk file generation: 1s 29 Mo
+  * dk file generation: 1s 29M
   * checking time with dk check: 4s
-  * lp file generation: 1s 21 Mo
+  * lp file generation: 1s 21M
   * checking time with lambdapi: 31s
-  * translation to Coq: 1s 20 Mo
+  * translation to Coq: 1s 20M
   * checking time for Coq 8.18.0: 1m7s
 
 Exporting pure Q0 proofs
@@ -461,21 +478,11 @@ cd $HOLLIGHT_DIR
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
 
-Results on `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
-  * ocaml proof dumping: 13.2s
-  * number of proof steps: 564351
-  * proof dumping: 1.4s 157 Mo
-  * dk file generation: 45s 153 Mo
-  * checking time with dk check: 26s
-  * checking time with kocheck -j 7: 22s
-  * lp file generation: 29s 107 Mo
-  * checking time with lambdapi: 2m49s
-
-Results on `hol.ml`:
+Dumping of `hol.ml`:
   * ocaml cheking without proof dumping: 1m14s
   * ocaml proof dumping: 2m9s (+74%)
-  * proof size file: 5.5 Go
-  * number of proof steps: 14.3 M
+  * proof size file: 5.5G
+  * number of proof steps: 14.3M
 
 | rule       |  % |
 |:-----------|---:|
@@ -489,6 +496,16 @@ Results on `hol.ml`:
 | abs        |  2 |
 | beta       |  2 |
 | assume     |  2 |
+
+Dumping of `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
+  * ocaml proof dumping: 13.2s
+  * number of proof steps: 564351
+  * proof dumping: 1.4s 157M
+  * dk file generation: 45s 153M
+  * checking time with dk check: 26s
+  * checking time with kocheck -j 7: 22s
+  * lp file generation: 29s 107M
+  * checking time with lambdapi: 2m49s
 
 Source files
 ------------

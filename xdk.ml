@@ -634,7 +634,7 @@ let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
    [x] .. [y]. *)
 let proofs_in_interval oc x y =
   for k = x to y do
-    if Array.get !Xproof.last_use k >= 0 then theorem oc k (proof_at k)
+    if get_use k >= 0 then theorem oc k (proof_at k)
   done
 
 (* [proofs_in_range oc r] outputs on [oc] the theorems in range [r]. *)
@@ -643,9 +643,7 @@ let proofs_in_range oc = function
      let p = proof_at x in
      List.iter (fun k -> theorem_as_axiom oc k (proof_at k)) (deps p);
      theorem oc x p
-  | All ->
-     iter_proofs_at
-       (fun k p -> if Array.get !last_use k >= 0 then theorem oc k p)
+  | All -> proofs_in_interval oc 0 (Array.length !prf_pos - 1)
   | Upto y -> proofs_in_interval oc 0 y
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
