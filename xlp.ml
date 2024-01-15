@@ -547,8 +547,8 @@ let proofs_in_range oc = function
 flag \"print_domains\" on;
 print thm_%d;\n" x*)
   | All ->
-     proofs_in_interval oc !the_start_pos
-       (!the_start_pos + Array.length !prf_pos - 1)
+     proofs_in_interval oc !the_start_idx
+       (!the_start_idx + Array.length !prf_pos - 1)
   | Upto y -> proofs_in_interval oc 0 y
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;

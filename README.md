@@ -222,7 +222,7 @@ This will add links to files that are needed to generate, translate and check pr
 ```
 hol2dk split file
 ```
-generates file.thp and files t.stp, t.pos and t.use for each named theorem t.
+generates file.thp and files t.sti, t.pos and t.use for each named theorem t.
 
 You can then generate and check the lp and coq files as follows:
 ```
@@ -426,7 +426,7 @@ Dumping of `hol.ml`:
 | conj       |  1 |
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
-  * make stp: <1s
+  * make sti: <1s
   * make -j32 lp: 32s 1.1G
   * make mklp: 47s 2.7M
   * make -j32 lpo: 1h36m 0.9G
