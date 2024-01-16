@@ -369,7 +369,7 @@ let add_var rmap v =
 (* [renaming_map tvs vs] returns an association list giving names to
    the term variables in [vs] that are distinct to one another and
    distinct from the type variables in [tvs]. This is needed to
-   include type variables because HOL-Light may ave type variables and
+   include type variables because HOL-Light may have type variables and
    term variables with the same name. *)
 let renaming_map =
   let tyvar = function Tyvar n -> mk_var(n,bool_ty),n | _ -> assert false in
@@ -380,7 +380,6 @@ let el b =
   mk_comb(mk_const("@",[b,aty]),mk_abs(mk_var("_",b),mk_const("T",[])))
 *)
 (*if not(!el_added) then (new_constant("el",aty); el_added := true);;*)
-
 let mk_el b = mk_const("el",[b,aty]);;
 
 (* [canonical_term t] returns the type variables and term variables of
