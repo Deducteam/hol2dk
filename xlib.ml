@@ -382,39 +382,112 @@ let el b =
 (*if not(!el_added) then (new_constant("el",aty); el_added := true);;*)
 let mk_el b = mk_const("el",[b,aty]);;
 
-(* [canonical_term t] returns the type variables and term variables of
-   [t] together with a term alpha-equivalent to any term
-   alpha-equivalent to [t]. *)
+(****************************************************************************)
+(* Sharing of strings, types and terms. *)
+(****************************************************************************)
+
+(*let hmap_string = ref MapStr.empty;;
+
+let share_string x =
+  try MapStr.find x !hmap_string
+  with Not_found -> hmap_string := MapStr.add x x !hmap_string; x;;*)
+
+let hmap_string : (string,string) Hashtbl.t = Hashtbl.create 100000;;
+
+let share_string x =
+  try Hashtbl.find hmap_string x
+  with Not_found -> Hashtbl.add hmap_string x x; x;;
+
+(*let hmap_type = ref MapTyp.empty;;
+
+let share_type x =
+  try MapTyp.find x !hmap_type
+  with Not_found -> hmap_type := MapTyp.add x x !hmap_type; x;;*)
+
+let hmap_type : (hol_type,hol_type) Hashtbl.t = Hashtbl.create 100000;;
+
+let share_type x =
+  try Hashtbl.find hmap_type x
+  with Not_found -> Hashtbl.add hmap_type x x; x;;
+
+let hmk_tyvar s = share_type (Tyvar(share_string s));;
+let hmk_tyapp(s,bs) = share_type (Tyapp(share_string s,bs));;
+
+let rec htype = function
+  | Tyvar s -> hmk_tyvar s
+  | Tyapp(s,bs) -> hmk_tyapp(s, List.map htype bs);;
+
+(*let hmap_term = ref MapTrm.empty;;
+
+let share_term x =
+  try MapTrm.find x !hmap_term
+  with Not_found -> hmap_term := MapTrm.add x x !hmap_term; x;;*)
+
+let hmap_term : (term,term) Hashtbl.t = Hashtbl.create 1000000;;
+
+let share_term x =
+  try Hashtbl.find hmap_term x
+  with Not_found -> Hashtbl.add hmap_term x x; x;;
+
+let hmk_var(s,b) = share_term (Var(share_string s, htype b));;
+let hmk_const(s,b) = share_term (Const(share_string s, htype b));;
+let hmk_comb(t,u) = share_term (Comb(t,u));;
+let hmk_abs(t,u) = share_term (Abs(t,u));;
+
+let rec hterm = function
+  | Var(s,b) -> hmk_var(s,b)
+  | Const(s,b) -> hmk_const(s,b)
+  | Comb(t,u) -> hmk_comb(hterm t, hterm u)
+  | Abs(t,u) -> hmk_abs(hterm t, hterm u);;
+
+(* [canonical_term t] returns the free type and term variables of [t]
+   together with a term alpha-equivalent to [t] so that
+   [canonical_term t = canonical_term u] if [t] and [u] are
+   alpha-equivalent. *)
 let canonical_term =
-  let type_var i tv = mk_vartype ("a" ^ string_of_int i), tv in
+  (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
+  let va = Array.init 20 (fun i -> hmk_tyvar ("a" ^ string_of_int i))
+  and sx = Array.init 50 (fun i -> "x" ^ string_of_int i)
+  and sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
+  let get_type = function Var(_,b) -> b | _ -> assert false in
+  let type_var i tv =
+    (*if i > !a_max then begin a_max := i; log "a_max = %d\n%!" i end;*)
+    let v =
+      if i < Array.length va then va.(i)
+      else hmk_tyvar ("a" ^ string_of_int i)
+    in v, tv
+  in
   let term_var i v =
+    (*if i > !x_max then begin x_max := i; log "x_max = %d\n%!" i end;*)
     match v with
-    | Var(_,b) -> v, mk_var ("x" ^ string_of_int i, b)
+    | Var(_,b) ->
+       let s = if i < Array.length sx then sx.(i) else "x" ^ string_of_int i in
+       v, hmk_var(s,b)
     | _ -> assert false
   in
   (* [subst i su t] applies [su] on [t] and rename abstracted
-     variables as well by using [i]. *)
+     variables as well by incrementing the integer [i]. *)
   let rec subst i su t =
     (*log "subst %d %a %a\n%!" i (olist (opair oterm oterm)) su oterm t;*)
     match t with
     | Var _ -> (try List.assoc t su with Not_found -> assert false)
-    | Const _ -> t
-    | Comb(u,v) -> mk_comb(subst i su u, subst i su v)
+    | Const(s,b) -> hmk_const(s,b)
+    | Comb(u,v) -> hmk_comb(subst i su u, subst i su v)
     | Abs(u,v) ->
        match u with
        | Var(_,b) ->
-          let u' = mk_var ("y" ^ string_of_int i, b) in
-          mk_abs(u', subst (i+1) ((u,u')::su) v)
+          (*if i > !y_max then begin y_max := i; log "y_max = %d\n%!" i end;*)
+          let s =
+            if i < Array.length sy then sy.(i) else "y" ^ string_of_int i in
+          let u' = hmk_var(s,b) in
+          hmk_abs(u', subst (i+1) ((u,u')::su) v)
        | _ -> assert false
   in
   fun t ->
   let tvs = type_vars_in_term t and vs = frees t in
   let su = List.mapi type_var tvs in
-  let t' = inst su t in
-  let vs' = List.map (inst su) vs in
-  let get_type = function Var(_,b) -> b | _ -> assert false in
-  let bs = List.map get_type vs' in
-  let su' = List.mapi term_var vs' in
+  let t' = inst su t and vs' = List.map (inst su) vs in
+  let bs = List.map get_type vs' and su' = List.mapi term_var vs' in
   tvs, vs, bs, subst 0 su' t'
 ;;
 
