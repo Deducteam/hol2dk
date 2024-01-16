@@ -209,6 +209,7 @@ let unabbrev_term =
 ;;
 
 let abbrev_term =
+  (*let oc_abbrevs = open_out "term_abbrevs" in*)
   let idx = ref (-1) in
   let abbrev oc t =
     (* check whether the term is already abbreviated; add a new
@@ -219,6 +220,8 @@ let abbrev_term =
       | Some (k,_,_) -> k
       | None ->
          let k = !idx + 1 in
+         (*if k mod 1000 = 0 then log "term abbrev %d\n%!" k;*)
+         (*out oc_abbrevs "%a\n\n" raw_term t;*)
          idx := k;
          let x = (k, List.length tvs, bs) in
          map_term := MapTrm.add t x !map_term;
@@ -532,8 +535,8 @@ let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
    [x] .. [y]. *)
 let proofs_in_interval oc x y =
   for k = x to y do
-    (*log "proof %d\n%!" k;*)
-    if get_use k >= 0 then theorem oc k (proof_at k)
+    if get_use k >= 0 then
+      begin (*log "proof %d ...\n%!" k;*) theorem oc k (proof_at k) end
   done
 
 (* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
