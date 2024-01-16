@@ -174,6 +174,7 @@ builtin "inr" ≔ INR;
 builtin "INR_def" ≔ INR_def;
 builtin "nil" ≔ NIL;
 builtin "cons" ≔ CONS;
+builtin "list" ≔ list;
 builtin "_dest_list" ≔ dest_list;
 builtin "_mk_list" ≔ _mk_list;
 builtin "axiom_15" ≔ axiom_15;
@@ -191,7 +192,15 @@ builtin "LAST_def" ≔ LAST_def;
 builtin "ALLPAIRS_def" ≔ ALLPAIRS_def;
 builtin "PAIRWISE_def" ≔ PAIRWISE_def;
 builtin "nil" ≔ NIL;
+builtin "char" ≔ char;
 builtin "_dest_char" ≔ _dest_char;
 builtin "_mk_char" ≔ _mk_char;
 builtin "axiom_17" ≔ axiom_17;
 builtin "axiom_18" ≔ axiom_18;
+
+// type nadd of nearly-additive sequences of natural numbers
+builtin "nadd" ≔ nadd;
+builtin "dest_nadd" ≔ dest_nadd;
+builtin "mk_nadd" ≔ mk_nadd;
+builtin "axiom_19" ≔ axiom_19;
+builtin "axiom_20" ≔ axiom_20;
