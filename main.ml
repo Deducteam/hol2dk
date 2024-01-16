@@ -752,7 +752,7 @@ and command = function
   | ["split";b] ->
      read_pos b;
      read_use b;
-     init_proof_reading b;
+     (*init_proof_reading b;*)
      let map_thid_name = read_val (b ^ ".thm") in
      let map = ref MapInt.empty in
      let create_segment start_index end_index =
@@ -903,5 +903,5 @@ and command = function
      0
 
 let _ =
-  Memtrace.trace_if_requested ();
+  (*Memtrace.trace_if_requested ();*)
   exit (command (List.tl (Array.to_list Sys.argv)))
