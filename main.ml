@@ -336,8 +336,8 @@ let rec log_command l =
 and dump_and_simp after_hol f =
   let b = basename_ml f in
   match dump after_hol f b with
-  | 0 -> begin match command ["pos";b] with
-         | 0 -> begin match command ["use";b] with
+  | 0 -> begin match log_command ["pos";b] with
+         | 0 -> begin match log_command ["use";b] with
                 | 0 -> command ["simp";b]
                 | e -> e
                 end
