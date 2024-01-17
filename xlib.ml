@@ -253,6 +253,12 @@ let arity =
 (* Functions on terms. *)
 (****************************************************************************)
 
+let rec size = function
+  | Var _ | Const _ -> 1
+  | Comb(u,v) -> 1 + size u + size v
+  | Abs(_,v) -> 2 + size v
+;;
+
 (* Printing function for debug. *)
 let rec oterm oc t =
   match t with
@@ -454,15 +460,17 @@ let canonical_term =
     (*if i > !a_max then begin a_max := i; log "a_max = %d\n%!" i end;*)
     let v =
       if i < Array.length va then va.(i)
-      else hmk_tyvar ("a" ^ string_of_int i)
+      else (log "a_max = %d\n%!" i; hmk_tyvar ("a" ^ string_of_int i))
     in v, tv
   in
   let term_var i v =
     (*if i > !x_max then begin x_max := i; log "x_max = %d\n%!" i end;*)
     match v with
     | Var(_,b) ->
-       let s = if i < Array.length sx then sx.(i) else "x" ^ string_of_int i in
-       v, hmk_var(s,b)
+       let s =
+         if i < Array.length sx then sx.(i)
+         else (log "x_max = %d\n%!" i; "x" ^ string_of_int i)
+       in v, hmk_var(s,b)
     | _ -> assert false
   in
   (* [subst i su t] applies [su] on [t] and rename abstracted
@@ -478,7 +486,9 @@ let canonical_term =
        | Var(_,b) ->
           (*if i > !y_max then begin y_max := i; log "y_max = %d\n%!" i end;*)
           let s =
-            if i < Array.length sy then sy.(i) else "y" ^ string_of_int i in
+            if i < Array.length sy then sy.(i)
+            else (log "y_max = %d\n%!" i; "y" ^ string_of_int i)
+          in
           let u' = hmk_var(s,b) in
           hmk_abs(u', subst (i+1) ((u,u')::su) v)
        | _ -> assert false

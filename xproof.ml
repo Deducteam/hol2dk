@@ -21,7 +21,6 @@ let ic_prf : in_channel ref = ref stdin;;
 
 let init_proof_reading b =
   let dump_file = b ^ ".prf" in
-  log "open %s ...\n%!" dump_file;
   ic_prf := open_in_bin dump_file;;
 
 (* [!the_start_idx] is the starting proof index of the current pos file. *)
