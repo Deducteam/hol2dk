@@ -427,7 +427,7 @@ Dumping of `hol.ml`:
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make sti: <1s
-  * make -j32 lp: 32s 1.1G
+  * make -j32 lp: 32s 1.1G, 48s with sharing
   * make mklp: 47s 2.7M
   * make -j32 lpo: 1h36m 0.9G
   * make -j32 v: 43s 1.1G
@@ -447,7 +447,7 @@ Multi-threaded translation of `hol.ml` to Dedukti with `mk 100`:
   * kocheck: 5m54s
 
 Single-threaded translation of `hol.ml` to Lambdapi:
-  * lp files generation: 4m49s 1.1G type abbrevs 308K term abbrevs 525M (48%)
+  * lp files generation: 4m7s 1.1G type abbrevs 308K term abbrevs 524M (48%)
 
 Single-threaded translation of `hol.ml` to Dedukti:
   * dk files generation: 7m12s 1.4G type abbrevs 348K term abbrevs 590M (42%)

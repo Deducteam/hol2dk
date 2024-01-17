@@ -1,6 +1,22 @@
 NOTES
 -----
 
+## 17/01/24
+
+the generation of Multivariate/make_upto_topology/GRASSMANN_PLUCKER_4.lp takes too much memory
+
+the problem comes from the fact that the term abbreviations in this file are too big
+
+a solution is to use (maximal) sharing when building the map of term abbreviations
+
+but sharing increases generation time significantly
+
+GRASSMANN_PLUCKER_4.lp can be generated in 116 minutes
+
+hol.lp is generated in 7m17s instead of 4m7s (+77%)
+
+with split and -j32, hol.lp is generated in 48s instead of 32s (+50%)
+
 ## 11/01/24
 
 Translation of `hol.ml` with splitting: stp <1s lp 32s 1.1G v 43s 1.1G mkv 51s 2.7M vo (-j20) 28m 3.1G mklp 47s 2.7M lpo (-j32) 96m 0.9G

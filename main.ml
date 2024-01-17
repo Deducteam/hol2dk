@@ -15,6 +15,8 @@ let usage() =
 hol2dk [-h|--help]
   print this help
 
+hol2dk [--sharing] command ...
+
 Dumping commands
 ----------------
 
@@ -351,6 +353,8 @@ and dump_and_simp after_hol f =
 
 and command = function
   | [] | ["-"|"--help"|"help"] -> usage(); 0
+
+  | "--sharing"::args -> sharing := true; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
