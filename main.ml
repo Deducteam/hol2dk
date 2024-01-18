@@ -15,7 +15,13 @@ let usage() =
 hol2dk [-h|--help]
   print this help
 
-hol2dk [--sharing] command ...
+hol2dk options command arguments
+
+Options
+-------
+
+--sharing: use sharing for recording term abbreviations
+--hstats: print statistics on hash tables at exit
 
 Dumping commands
 ----------------
@@ -134,8 +140,6 @@ hol2dk mk-coq $n $file
   generate a Makefile for translating to Coq each lp file generated
   by Makefile.lp and check them by using $n sequential calls to make
 %!"
-
-let percent k n = (100 * k) / n
 
 let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
@@ -356,6 +360,8 @@ and command = function
 
   | "--sharing"::args -> sharing := true; command args
 
+  | "--hstats"::args -> at_exit print_hstats; command args
+
   | ["dep";f] ->
      let dg = dep_graph (files()) in
      log "%a\n" (list_sep " " string) (trans_file_deps dg f);
@@ -475,7 +481,7 @@ and command = function
          end
      in
      read_prf b handle_proof;
-     log "%#d terms, term size average = %d, max = %#d, \
+     log "%#d terms, average size = %#d, max size = %#d, \
           %#d terms of size >%#d (%d%%)\n"
        !nb_terms (!sum_size / !nb_terms) !max_size
        !nb_terms_gtl l (percent !nb_terms_gtl !nb_terms);

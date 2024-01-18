@@ -38,6 +38,8 @@ let iter_parts nb_proofs nb_parts f =
 (* Functions on basic data structures. *)
 (****************************************************************************)
 
+let percent k n = (100 * k) / n
+
 (* [pos_first f l] returns the position (counting from 0) of the first
    element of [l] satisfying [f]. Raises Not_found if there is no such
    element. *)
@@ -146,10 +148,23 @@ let olist elt oc xs = out oc "[%a]" (list_sep "; " elt) xs;;
 
 let list_prefix p elt oc xs = list (prefix p elt) oc xs;;
 
-let hstats oc ht =
-  let open Hashtbl in let s = stats ht in
-  out oc "{ num_bindings = %d; num_buckets = %d; max_bucket_length = %d }\n"
-    s.num_bindings s.num_buckets s.max_bucket_length
+let hstats oc hs =
+  let open Hashtbl in
+  let avg = float_of_int hs.num_bindings /. float_of_int hs.num_buckets in
+  out oc "%#d bindings, %#d buckets, %.2f bindings/bucket, max %#d\n"
+    hs.num_bindings hs.num_buckets avg hs.max_bucket_length;
+  let histo = hs.bucket_histogram in
+  out oc "buckets with 0 bindings: %#d (%d%% of buckets)\n"
+    histo.(0) (percent histo.(0) hs.num_buckets);
+  out oc "bindings | buckets |    %% | cumulated | %% bindings\n";
+  let sum = ref 0 in
+  for i = 1 to min 10 hs.max_bucket_length do
+    let n = i * histo.(i) in
+    sum := !sum + n;
+    out oc "%8d | %#7d | %3d%% | %#9d | %2d%%\n"
+      i histo.(i) (percent n hs.num_bindings)
+      !sum (percent !sum hs.num_bindings)
+  done
 ;;
 
 (****************************************************************************)
@@ -459,11 +474,11 @@ end;;
 
 module StrHashtbl = Hashtbl.Make(StrHash);;
 
-let hmap_string : string StrHashtbl.t = StrHashtbl.create 100_000;;
+let htbl_string : string StrHashtbl.t = StrHashtbl.create 100_000;;
 
 let share_string x =
-  try StrHashtbl.find hmap_string x
-  with Not_found -> StrHashtbl.add hmap_string x x; x;;
+  try StrHashtbl.find htbl_string x
+  with Not_found -> StrHashtbl.add htbl_string x x; x;;
 
 module TypHash = struct
   type t = hol_type
@@ -473,11 +488,11 @@ end;;
 
 module TypHashtbl = Hashtbl.Make(TypHash);;
 
-let hmap_type : hol_type TypHashtbl.t = TypHashtbl.create 100_000;;
+let htbl_type : hol_type TypHashtbl.t = TypHashtbl.create 100_000;;
 
 let share_type x =
-  try TypHashtbl.find hmap_type x
-  with Not_found -> TypHashtbl.add hmap_type x x; x;;
+  try TypHashtbl.find htbl_type x
+  with Not_found -> TypHashtbl.add htbl_type x x; x;;
 
 let hmk_tyvar s = share_type (Tyvar(share_string s));;
 let hmk_tyapp(s,bs) = share_type (Tyapp(share_string s,bs));;
@@ -500,16 +515,22 @@ end;;
 
 module TrmHashtbl = Hashtbl.Make(TrmHash);;
 
-let hmap_term : term TrmHashtbl.t = TrmHashtbl.create 1_000_000;;
+let htbl_term : term TrmHashtbl.t = TrmHashtbl.create 1_000_000;;
 
 let share_term x =
-  try TrmHashtbl.find hmap_term x
-  with Not_found -> TrmHashtbl.add hmap_term x x; x;;
+  try TrmHashtbl.find htbl_term x
+  with Not_found -> TrmHashtbl.add htbl_term x x; x;;
 
 let hmk_var(s,b) = share_term (Var(share_string s, htype b));;
 let hmk_const(s,b) = share_term (Const(share_string s, htype b));;
 let hmk_comb(t,u) = share_term (Comb(t,u));;
 let hmk_abs(t,u) = share_term (Abs(t,u));;
+
+let print_hstats() =
+  log "\nhstring: %a\nhtype: %a\nhterm: %a"
+    hstats (StrHashtbl.stats htbl_string)
+    hstats (TypHashtbl.stats htbl_type)
+    hstats (TrmHashtbl.stats htbl_term)
 
 (****************************************************************************)
 (* Canonical term for alpha-equivalence with sharing. *)

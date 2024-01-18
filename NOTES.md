@@ -15,7 +15,7 @@ with split and -j32, hol.lp is generated in 42s instead of 32s (+31%)
 
 in singly-threaded mode, hol.lp is generated in 5m56s instead of 4m7s (+44%)
 
-however GRASSMANN_PLUCKER_4.lp can now be generated in 397 minutes
+however GRASSMANN_PLUCKER_4.lp can now be generated in 128 minutes
 
 ## 11/01/24
 
