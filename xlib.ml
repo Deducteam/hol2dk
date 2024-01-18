@@ -168,6 +168,78 @@ let hstats oc hs =
 ;;
 
 (****************************************************************************)
+(* Sharing of strings, types and terms. *)
+(****************************************************************************)
+
+let sharing = ref false;;
+
+module StrHash = struct
+  type t = string
+  let equal x1 x2 = x1 == x2 || x1 = x2
+  let hash x = Hashtbl.hash x
+end;;
+
+module StrHashtbl = Hashtbl.Make(StrHash);;
+
+let htbl_string : string StrHashtbl.t = StrHashtbl.create 10_000;;
+
+let share_string x =
+  try StrHashtbl.find htbl_string x
+  with Not_found -> StrHashtbl.add htbl_string x x; x;;
+
+module TypHash = struct
+  type t = hol_type
+  let equal x1 x2 =
+    x1 == x2 ||
+      match x1, x2 with
+      | Tyvar s1, Tyvar s2 -> s1 == s2
+      | Tyapp(s1,bs1), Tyapp(s2,bs2) -> s1 == s2 && List.for_all2 (==) bs1 bs2
+      | _ -> false
+  let hash x = Hashtbl.hash x
+end;;
+
+module TypHashtbl = Hashtbl.Make(TypHash);;
+
+let htbl_type : hol_type TypHashtbl.t = TypHashtbl.create 100_000;;
+
+let share_type x =
+  try TypHashtbl.find htbl_type x
+  with Not_found -> TypHashtbl.add htbl_type x x; x;;
+
+let hmk_vartype s = share_type (Tyvar(share_string s));;
+let hmk_tyapp(s,bs) = share_type (Tyapp(share_string s,bs));;
+
+let rec htype = function
+  | Tyvar s -> hmk_vartype s
+  | Tyapp(s,bs) -> hmk_tyapp(s, List.map htype bs);;
+
+module TrmHash = struct
+  type t = term
+  let equal x1 x2 =
+    x1 == x2 ||
+      match x1,x2 with
+      | Var(s1,b1), Var(s2,b2)
+        | Const(s1,b1), Const(s2,b2) -> s1 == s2 && b1 == b2
+      | Comb(t1,u1), Comb(t2,u2)
+        | Abs(t1,u1), Abs(t2,u2) -> t1 == t2 && u1 == u2
+      | _ -> false
+  let hash x = Hashtbl.hash x
+end;;
+
+module TrmHashtbl = Hashtbl.Make(TrmHash);;
+
+let htbl_term : term TrmHashtbl.t = TrmHashtbl.create 1_000_000;;
+
+let share_term x =
+  try TrmHashtbl.find htbl_term x
+  with Not_found -> TrmHashtbl.add htbl_term x x; x;;
+
+let hmk_var(s,b) = share_term (Var(share_string s, htype b));;
+let hmk_const(s,b) = share_term (Const(share_string s, htype b));;
+let hmk_comb(t,u) = share_term (Comb(t,u));;
+let hmk_abs(t,u) = share_term (Abs(t,u));;
+
+(****************************************************************************)
 (* Functions on types. *)
 (****************************************************************************)
 
@@ -207,14 +279,41 @@ let missing_as_bool tvs =
   in typ
 ;;
 
-(* [canonical_typ b] returns the type variables of [b] together with a
-   type alpha-equivalent to any type alpha-equivalent to [b]. *)
-let canonical_typ =
-  let type_var i tv = mk_vartype ("a" ^ string_of_int i), tv in
-  fun b ->
-  let tvs = tyvars b in
-  tvs, type_subst (List.mapi type_var tvs) b
+(* [type_var i tv] returns [v, tv] where [v] is the type variable of
+   name ["a" ^ string_of_int i]. *)
+let type_var =
+  let va = Array.init 20 (fun i -> hmk_vartype ("a" ^ string_of_int i)) in
+  fun i tv ->
+  let v =
+    if i < Array.length va then va.(i)
+    else (log "a_max = %d\n%!" i; hmk_vartype ("a" ^ string_of_int i))
+  in v, tv
 ;;
+
+(* Without sharing, [canonical_typ b] returns the type variables of
+   [b] together with a type alpha-equivalent to [b] such that, for any
+   type [b'] alpha-equivalent to [b], [canonical_typ b' =
+   canonical_typ b]. *)
+let canonical_typ b =
+  let tvs = tyvars b in tvs, type_subst (List.mapi type_var tvs) b
+;;
+
+(* With sharing, [hcanonical_typ b] returns the type variables of [b]
+   together with a type alpha-equivalent to [b] such that, for any
+   type [b'] alpha-equivalent to [b], [canonical_typ b' =
+   canonical_typ b]. *)
+let hcanonical_typ =
+  let rec type_subst s b =
+    match b with
+    | Tyapp(c,bs) -> hmk_tyapp (c, List.map (type_subst s) bs)
+    | _ -> Lib.rev_assocd b s b
+  in
+  fun b ->
+  let tvs = tyvars b in tvs, type_subst (List.mapi type_var tvs) b
+;;
+
+let canonical_typ b =
+  if !sharing then hcanonical_typ b else canonical_typ b;;
 
 (* Subterm positions in types are represented as list of natural numbers. *)
 
@@ -268,6 +367,9 @@ let arity =
 (* Functions on terms. *)
 (****************************************************************************)
 
+let get_vartype = function Var(_,b) -> b | _ -> assert false;;
+
+(* [size t] computes the number of term constructors in [t]. *)
 let rec size = function
   | Var _ | Const _ -> 1
   | Comb(u,v) -> 1 + size u + size v
@@ -407,33 +509,27 @@ let mk_el b = mk_const("el",[b,aty]);;
 (* Canonical term for alpha-equivalence without sharing. *)
 (****************************************************************************)
 
+(* [term_var i v] returns [v,v'] where [v'] is a variable of name ["x"
+   ^ string_of_int i] with the same type as [v]. *)
+let term_var =
+  let sx = Array.init 50 (fun i -> "x" ^ string_of_int i) in
+  fun i v ->
+  match v with
+  | Var(_,b) ->
+     let s =
+       if i < Array.length sx then sx.(i)
+       else (log "x_max = %d\n%!" i; "x" ^ string_of_int i)
+     in v, hmk_var(s,b)
+  | _ -> assert false
+;;
+
 (* [canonical_term t] returns the free type and term variables of [t]
    together with a term alpha-equivalent to [t] so that
    [canonical_term t = canonical_term u] if [t] and [u] are
    alpha-equivalent. *)
 let canonical_term =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
-  let va = Array.init 20 (fun i -> mk_vartype ("a" ^ string_of_int i))
-  and sx = Array.init 50 (fun i -> "x" ^ string_of_int i)
-  and sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
-  let get_type = function Var(_,b) -> b | _ -> assert false in
-  let type_var i tv =
-    (*if i > !a_max then begin a_max := i; log "a_max = %d\n%!" i end;*)
-    let v =
-      if i < Array.length va then va.(i)
-      else (log "a_max = %d\n%!" i; mk_vartype ("a" ^ string_of_int i))
-    in v, tv
-  in
-  let term_var i v =
-    (*if i > !x_max then begin x_max := i; log "x_max = %d\n%!" i end;*)
-    match v with
-    | Var(_,b) ->
-       let s =
-         if i < Array.length sx then sx.(i)
-         else (log "x_max = %d\n%!" i; "x" ^ string_of_int i)
-       in v, mk_var(s,b)
-    | _ -> assert false
-  in
+  let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted
      variables as well by incrementing the integer [i]. *)
   let rec subst i su t =
@@ -445,7 +541,6 @@ let canonical_term =
     | Abs(u,v) ->
        match u with
        | Var(_,b) ->
-          (*if i > !y_max then begin y_max := i; log "y_max = %d\n%!" i end;*)
           let s =
             if i < Array.length sy then sy.(i)
             else (log "y_max = %d\n%!" i; "y" ^ string_of_int i)
@@ -458,79 +553,9 @@ let canonical_term =
   let tvs = type_vars_in_term t and vs = frees t in
   let su = List.mapi type_var tvs in
   let t' = inst su t and vs' = List.map (inst su) vs in
-  let bs = List.map get_type vs' and su' = List.mapi term_var vs' in
+  let bs = List.map get_vartype vs' and su' = List.mapi term_var vs' in
   tvs, vs, bs, subst 0 su' t'
 ;;
-
-(****************************************************************************)
-(* Sharing of strings, types and terms. *)
-(****************************************************************************)
-
-module StrHash = struct
-  type t = string
-  let equal x1 x2 = x1 = x2
-  let hash x = Hashtbl.hash x
-end;;
-
-module StrHashtbl = Hashtbl.Make(StrHash);;
-
-let htbl_string : string StrHashtbl.t = StrHashtbl.create 100_000;;
-
-let share_string x =
-  try StrHashtbl.find htbl_string x
-  with Not_found -> StrHashtbl.add htbl_string x x; x;;
-
-module TypHash = struct
-  type t = hol_type
-  let equal x1 x2 = x1 = x2
-  let hash x = Hashtbl.hash x
-end;;
-
-module TypHashtbl = Hashtbl.Make(TypHash);;
-
-let htbl_type : hol_type TypHashtbl.t = TypHashtbl.create 100_000;;
-
-let share_type x =
-  try TypHashtbl.find htbl_type x
-  with Not_found -> TypHashtbl.add htbl_type x x; x;;
-
-let hmk_tyvar s = share_type (Tyvar(share_string s));;
-let hmk_tyapp(s,bs) = share_type (Tyapp(share_string s,bs));;
-
-let rec htype = function
-  | Tyvar s -> hmk_tyvar s
-  | Tyapp(s,bs) -> hmk_tyapp(s, List.map htype bs);;
-
-module TrmHash = struct
-  type t = term
-  let equal x1 x2 =
-    match x1,x2 with
-    | Var(s1,b1), Var(s2,b2)
-    | Const(s1,b1), Const(s2,b2) -> s1 == s2 && b1 == b2
-    | Comb(t1,u1), Comb(t2,u2)
-    | Abs(t1,u1), Abs(t2,u2) -> t1 == t2 && u1 == u2
-    | _ -> false
-  let hash x = Hashtbl.hash x
-end;;
-
-module TrmHashtbl = Hashtbl.Make(TrmHash);;
-
-let htbl_term : term TrmHashtbl.t = TrmHashtbl.create 1_000_000;;
-
-let share_term x =
-  try TrmHashtbl.find htbl_term x
-  with Not_found -> TrmHashtbl.add htbl_term x x; x;;
-
-let hmk_var(s,b) = share_term (Var(share_string s, htype b));;
-let hmk_const(s,b) = share_term (Const(share_string s, htype b));;
-let hmk_comb(t,u) = share_term (Comb(t,u));;
-let hmk_abs(t,u) = share_term (Abs(t,u));;
-
-let print_hstats() =
-  log "\nhstring: %a\nhtype: %a\nhterm: %a"
-    hstats (StrHashtbl.stats htbl_string)
-    hstats (TypHashtbl.stats htbl_type)
-    hstats (TrmHashtbl.stats htbl_term)
 
 (****************************************************************************)
 (* Canonical term for alpha-equivalence with sharing. *)
@@ -538,31 +563,11 @@ let print_hstats() =
 
 (* [hcanonical_term t] returns the free type and term variables of [t]
    together with a term alpha-equivalent to [t] so that
-   [canonical_term t = canonical_term u] if [t] and [u] are
+   [hcanonical_term t = hcanonical_term u] if [t] and [u] are
    alpha-equivalent. *)
 let hcanonical_term =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
-  let va = Array.init 20 (fun i -> hmk_tyvar ("a" ^ string_of_int i))
-  and sx = Array.init 50 (fun i -> "x" ^ string_of_int i)
-  and sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
-  let get_type = function Var(_,b) -> b | _ -> assert false in
-  let type_var i tv =
-    (*if i > !a_max then begin a_max := i; log "a_max = %d\n%!" i end;*)
-    let v =
-      if i < Array.length va then va.(i)
-      else (log "a_max = %d\n%!" i; hmk_tyvar ("a" ^ string_of_int i))
-    in v, tv
-  in
-  let term_var i v =
-    (*if i > !x_max then begin x_max := i; log "x_max = %d\n%!" i end;*)
-    match v with
-    | Var(_,b) ->
-       let s =
-         if i < Array.length sx then sx.(i)
-         else (log "x_max = %d\n%!" i; "x" ^ string_of_int i)
-       in v, hmk_var(s,b)
-    | _ -> assert false
-  in
+  let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted
      variables as well by incrementing the integer [i]. *)
   let rec subst i su t =
@@ -574,7 +579,6 @@ let hcanonical_term =
     | Abs(u,v) ->
        match u with
        | Var(_,b) ->
-          (*if i > !y_max then begin y_max := i; log "y_max = %d\n%!" i end;*)
           let s =
             if i < Array.length sy then sy.(i)
             else (log "y_max = %d\n%!" i; "y" ^ string_of_int i)
@@ -587,11 +591,9 @@ let hcanonical_term =
   let tvs = type_vars_in_term t and vs = frees t in
   let su = List.mapi type_var tvs in
   let t' = inst su t and vs' = List.map (inst su) vs in
-  let bs = List.map get_type vs' and su' = List.mapi term_var vs' in
+  let bs = List.map get_vartype vs' and su' = List.mapi term_var vs' in
   tvs, vs, bs, subst 0 su' t'
 ;;
-
-let sharing = ref false;;
 
 let canonical_term t =
   if !sharing then hcanonical_term t else canonical_term t;;
@@ -837,11 +839,22 @@ let const_typ_vars_pos n =
 (* Type and term abbreviations to reduce size of generated files. *)
 (****************************************************************************)
 
-(* [map_typ] is used to hold a map from types to type abbreviations. *)
-let map_typ : (int * int) MapTyp.t ref = ref MapTyp.empty;;
+(* Table mapping a type to its identifier and the number of its type
+   variables. *)
+let htbl_type_abbrev : (int * int) TypHashtbl.t = TypHashtbl.create 100_000;;
 
-(* [map_term] is used to hold a map from terms to term abbreviations. *)
-let map_term : (int * int * hol_type list) MapTrm.t ref = ref MapTrm.empty;;
+(* Table mapping a term to its identifier, the number of its type
+   variables, and the types of its free term variables. *)
+let htbl_term_abbrev : (int * int * hol_type list) TrmHashtbl.t =
+  TrmHashtbl.create 1_000_000;;
+
+let print_hstats() =
+  log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a"
+    hstats (StrHashtbl.stats htbl_string)
+    hstats (TypHashtbl.stats htbl_type)
+    hstats (TrmHashtbl.stats htbl_term)
+    hstats (TypHashtbl.stats htbl_type_abbrev)
+    hstats (TrmHashtbl.stats htbl_term_abbrev)
 
 (*REMOVE
 set_jrh_lexer;;

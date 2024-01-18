@@ -11,11 +11,11 @@ a solution is to use (maximal) sharing when building the map of term abbreviatio
 
 but sharing increases generation time significantly
 
-with split and -j32, hol.lp is generated in 42s instead of 32s (+31%)
+with split and -j32, hol.lp is generated in 40s instead of 32s (+25%)
 
-in singly-threaded mode, hol.lp is generated in 5m56s instead of 4m7s (+44%)
+in singly-threaded mode, hol.lp is generated in 4m59s instead of 4m7s (+21%)
 
-however GRASSMANN_PLUCKER_4.lp can now be generated in 128 minutes
+however GRASSMANN_PLUCKER_4.lp can now be generated in 2 hours (119m23s)
 
 ## 11/01/24
 
