@@ -451,17 +451,33 @@ let canonical_term =
 (* Sharing of strings, types and terms. *)
 (****************************************************************************)
 
-let hmap_string : (string,string) Hashtbl.t = Hashtbl.create 100000;;
+module StrHash = struct
+  type t = string
+  let equal x1 x2 = x1 = x2
+  let hash x = Hashtbl.hash x
+end;;
+
+module StrHashtbl = Hashtbl.Make(StrHash);;
+
+let hmap_string : string StrHashtbl.t = StrHashtbl.create 100_000;;
 
 let share_string x =
-  try Hashtbl.find hmap_string x
-  with Not_found -> Hashtbl.add hmap_string x x; x;;
+  try StrHashtbl.find hmap_string x
+  with Not_found -> StrHashtbl.add hmap_string x x; x;;
 
-let hmap_type : (hol_type,hol_type) Hashtbl.t = Hashtbl.create 100000;;
+module TypHash = struct
+  type t = hol_type
+  let equal x1 x2 = x1 = x2
+  let hash x = Hashtbl.hash x
+end;;
+
+module TypHashtbl = Hashtbl.Make(TypHash);;
+
+let hmap_type : hol_type TypHashtbl.t = TypHashtbl.create 100_000;;
 
 let share_type x =
-  try Hashtbl.find hmap_type x
-  with Not_found -> Hashtbl.add hmap_type x x; x;;
+  try TypHashtbl.find hmap_type x
+  with Not_found -> TypHashtbl.add hmap_type x x; x;;
 
 let hmk_tyvar s = share_type (Tyvar(share_string s));;
 let hmk_tyapp(s,bs) = share_type (Tyapp(share_string s,bs));;
@@ -470,28 +486,36 @@ let rec htype = function
   | Tyvar s -> hmk_tyvar s
   | Tyapp(s,bs) -> hmk_tyapp(s, List.map htype bs);;
 
-let hmap_term : (term,term) Hashtbl.t = Hashtbl.create 1000000;;
+module TrmHash = struct
+  type t = term
+  let equal x1 x2 =
+    match x1,x2 with
+    | Var(s1,b1), Var(s2,b2)
+    | Const(s1,b1), Const(s2,b2) -> s1 == s2 && b1 == b2
+    | Comb(t1,u1), Comb(t2,u2)
+    | Abs(t1,u1), Abs(t2,u2) -> t1 == t2 && u1 == u2
+    | _ -> false
+  let hash x = Hashtbl.hash x
+end;;
+
+module TrmHashtbl = Hashtbl.Make(TrmHash);;
+
+let hmap_term : term TrmHashtbl.t = TrmHashtbl.create 1_000_000;;
 
 let share_term x =
-  try Hashtbl.find hmap_term x
-  with Not_found -> Hashtbl.add hmap_term x x; x;;
+  try TrmHashtbl.find hmap_term x
+  with Not_found -> TrmHashtbl.add hmap_term x x; x;;
 
 let hmk_var(s,b) = share_term (Var(share_string s, htype b));;
 let hmk_const(s,b) = share_term (Const(share_string s, htype b));;
 let hmk_comb(t,u) = share_term (Comb(t,u));;
 let hmk_abs(t,u) = share_term (Abs(t,u));;
 
-let rec hterm = function
-  | Var(s,b) -> hmk_var(s,b)
-  | Const(s,b) -> hmk_const(s,b)
-  | Comb(t,u) -> hmk_comb(hterm t, hterm u)
-  | Abs(t,u) -> hmk_abs(hterm t, hterm u);;
-
 (****************************************************************************)
 (* Canonical term for alpha-equivalence with sharing. *)
 (****************************************************************************)
 
-(* [canonical_term t] returns the free type and term variables of [t]
+(* [hcanonical_term t] returns the free type and term variables of [t]
    together with a term alpha-equivalent to [t] so that
    [canonical_term t = canonical_term u] if [t] and [u] are
    alpha-equivalent. *)
@@ -793,12 +817,10 @@ let const_typ_vars_pos n =
 (****************************************************************************)
 
 (* [map_typ] is used to hold a map from types to type abbreviations. *)
-let map_typ = ref (MapTyp.empty : (int * int) MapTyp.t);;
-let reset_map_typ() = map_typ := MapTyp.empty;;
+let map_typ : (int * int) MapTyp.t ref = ref MapTyp.empty;;
 
 (* [map_term] is used to hold a map from terms to term abbreviations. *)
-let map_term = ref (MapTrm.empty : (int * int * hol_type list) MapTrm.t);;
-let reset_map_term() = map_term := MapTrm.empty;;
+let map_term : (int * int * hol_type list) MapTrm.t ref = ref MapTrm.empty;;
 
 (*REMOVE
 set_jrh_lexer;;
