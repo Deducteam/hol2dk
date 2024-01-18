@@ -360,7 +360,7 @@ and command = function
 
   | "--sharing"::args -> sharing := true; command args
 
-  | "--hstats"::args -> at_exit print_hstats; command args
+  | "--print-stats"::args -> at_exit print_hstats; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
