@@ -1,6 +1,13 @@
 NOTES
 -----
 
+## 19/01/24
+
+Arithmetic/make:
+- dump-simp 6m2s 5.4G 82% useless
+- lp 21s 734M
+- v 31s 682M mkv 23s vo (-j20) 32m
+
 ## 17/01/24
 
 the generation of Multivariate/make_upto_topology/GRASSMANN_PLUCKER_4.lp takes too much memory

@@ -21,26 +21,26 @@ Calculus of Inductive Constructions.
 Results
 -------
 
-The HOL-Light base library `hol.ml` and the library `Logic/make.ml`
-formalizing the metatheory of first-order logic can be exported and
-translated to Dedukti, Lambdapi and Coq in a few minutes. The
-generated Dedukti files can be checked in a few minutes, but it takes
-a long time for Coq to check the generated files (28 minutes for
-`hol.ml`), and too much memory for Lambdapi.
+The HOL-Light base library `hol.ml` and the libraries `Arithmetic` and
+`Logic` formalizing the metatheory of first-order logic can be
+exported and translated to Dedukti, Lambdapi and Coq in a few
+minutes. The generated Dedukti files can be checked in a few minutes
+also, but it takes a much longer time for Coq to check the generated
+files (28 minutes for `hol.ml`), and too much memory for Lambdapi.
 
 On the other hand, `hol2dk` may take several hours to translate the
-proofs of a few particular theorems like `GRASSMANN_PLUCKER_4`,
-`CHAIN_BOUNDARY_BOUNDARY` and
-`HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS` in `Multivariate/make`,
-because their proofs use a lot of big terms and sharing is not
-sufficient. We will work on improving this.
+proofs of a few particular theorems of the `Multivariate` library:
+`GRASSMANN_PLUCKER_4`, `CHAIN_BOUNDARY_BOUNDARY` and
+`HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS`, because their proofs
+contqin a lot of big terms and the lambdapi output does not use enough
+sharing. We will work on improving this.
 
-Moreover, while it is possible to translate any HOL-Light proof to
-Coq, the translated theorem may not be directly usable by Coq users
-because HOL-Light types and functions may not be aligned with those of
-the Coq standard library yet. Currently, only the type of natural
-numbers and various functions on natural numbers have been aligned. We
-gathered the obtained 448 lemmas in the package
+Finally, while it is possible to translate any HOL-Light proof to Coq,
+the translated theorem may not be directly usable by Coq users because
+HOL-Light types and functions may not be aligned with those of the Coq
+standard library yet. Currently, only the type of natural numbers and
+various functions on natural numbers have been aligned. We gathered
+the obtained 448 lemmas in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam). We
 are working on adding more mappings (lists, reals).
@@ -395,9 +395,19 @@ Performance
 
 Performance on a machine with 32 processors i9-13950HX and 64G RAM:
 
+Dumping, simplification and translation of `Logic/Make.ml` with `split`:
+  * dump-simp 10m29s 10G 83% useless (including hol.ml)
+  * lp 57s 1.2G
+  * v 43s mkv 50s vo (-j20) 34m10s
+
 Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
   * dump-simp 11m42s 10G 21.2M steps (83% unused including hol.ml) +1729 named theorems
   * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11m
+
+Dumping, simplification and translation of `Arithmetic/make.ml` with `split`:
+  * dump-simp 6m2s 5.4G 82% useless (including hol.ml) 2.5M steps
+  * lp 21s 734M
+  * v 31s 682M mkv 23s vo (-j20) 32m
 
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
