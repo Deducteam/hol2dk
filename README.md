@@ -23,11 +23,17 @@ Results
 
 The HOL-Light base library `hol.ml` and the library `Logic/make.ml`
 formalizing the metatheory of first-order logic can be exported and
-translated to Dedukti, Lambdapi and Coq in a few minutes. However, it
-may take hours for Coq and require too much memory for Lambdapi to
-check the translated files. Bigger libraries like
-`Multivariate/make.ml` requires too much memory for the moment. We
-hope to fix this soon.
+translated to Dedukti, Lambdapi and Coq in a few minutes. The
+generated Dedukti files can be checked in a few minutes, but it takes
+a long time for Coq to check the generated files (28 minutes for
+`hol.ml`), and too much memory for Lambdapi.
+
+On the other hand, `hol2dk` may take several hours to translate the
+proofs of a few particular theorems like `GRASSMANN_PLUCKER_4`,
+`CHAIN_BOUNDARY_BOUNDARY` and
+`HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS` in `Multivariate/make`,
+because their proofs use a lot of big terms and sharing is not
+sufficient. We will work on improving this.
 
 Moreover, while it is possible to translate any HOL-Light proof to
 Coq, the translated theorem may not be directly usable by Coq users
@@ -36,7 +42,8 @@ the Coq standard library yet. Currently, only the type of natural
 numbers and various functions on natural numbers have been aligned. We
 gathered the obtained 448 lemmas in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
-in the Coq Opam repository [released](https://github.com/coq/opam).
+in the Coq Opam repository [released](https://github.com/coq/opam). We
+are working on adding more mappings (lists, reals).
 
 Installing HOL-Light sources
 ----------------------------

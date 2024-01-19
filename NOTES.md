@@ -17,6 +17,12 @@ in singly-threaded mode, hol.lp is generated in 4m59s instead of 4m7s (+21%)
 
 however GRASSMANN_PLUCKER_4.lp can now be generated in 2 hours (119m23s)
 
+`Multivariate/make_upto_topology.ml`:
+  * lp 4h28m 48G type_abbrevs 47M term_abbrevs 42G with 38G by 3 files >1G:
+    - GRASSMANN_PLUCKER_4_term_abbrevs.lp 14G
+    - CHAIN_BOUNDARY_BOUNDARY_term_abbrevs.lp 5.2G
+    - HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS_term_abbrevs.lp 19G
+
 ## 11/01/24
 
 Translation of `hol.ml` with splitting: stp <1s lp 32s 1.1G v 43s 1.1G mkv 51s 2.7M vo (-j20) 28m 3.1G mklp 47s 2.7M lpo (-j32) 96m 0.9G
@@ -48,6 +54,7 @@ Translation of `100/isoperimetric.ml`:
 
 Translation of `Multivariate/make.ml`:
   * dump 35m52s 120 Go +16646 named theorems
+  * dump-simp 133 minutes (59% useless)
 
 Translation of `Multivariate/make_upto_derivatives.ml`:
   * dump 27m46s 91 Go + 14901 named theorems

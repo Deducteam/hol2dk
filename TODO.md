@@ -1,7 +1,7 @@
 TODO
 ----
 
-- use hashconsing for building map_term
+- add abbreviations for closed terms
 
 - get rid of use file? in pos files, set pos to -1 for unused theorems?
 
