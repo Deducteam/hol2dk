@@ -29,7 +29,7 @@ $(BASE_FILES:%=%.lp) &:
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
 %.lp: %.sti
-	hol2dk theorem $(BASE) $@
+	hol2dk --sharing theorem $(BASE) $@
 
 .PHONY: clean-lp
 clean-lp:

@@ -15,6 +15,14 @@ let usage() =
 hol2dk [-h|--help]
   print this help
 
+hol2dk options command arguments
+
+Options
+-------
+
+--sharing: use sharing for recording term abbreviations
+--hstats: print statistics on hash tables at exit
+
 Dumping commands
 ----------------
 
@@ -45,12 +53,6 @@ hol2dk rewrite $file
 hol2dk purge $file
   compute theorems that can be discarded in $file.use
 
-hol2dk proof $file $x $y
-  print proof steps between theorem indexes $x and $y
-
-hol2dk print use $file $x
-  print the contents of $file.use for theorem index $x
-
 Single-threaded dk/lp file generation
 -------------------------------------
 
@@ -59,6 +61,16 @@ hol2dk $file.[dk|lp]
 
 hol2dk $file.[dk|lp] $thm_id
   generate $file.[dk|lp] but with theorem index $thm_id only (for debug)
+
+Multi-threaded lp file generation by having a file for each named theorem
+-------------------------------------------------------------------------
+
+hol2dk split $file
+  generate $file.thp and the files $t.sti, $t.pos and $t.use
+  for each named theorem $t
+
+hol2dk theorem $file $t.lp
+  generate the lp proof of the theorem named $t
 
 Multi-threaded dk/lp file generation by splitting proofs in $n parts
 --------------------------------------------------------------------
@@ -79,36 +91,21 @@ hol2dk thm $file.[dk|lp]
 hol2dk axm $file.[dk|lp]
   generate $file_opam.[dk|lp] from $file.thm (same as thm but without proofs)
 
-Multi-threaded lp file generation by having a file for each named theorem
--------------------------------------------------------------------------
-
-hol2dk split $file
-  generate $file.thp and the files $t.sti, $t.pos and $t.use
-  for each named theorem $t
-
-hol2dk theorem $file $t.lp
-  generate the lp proof of the theorem named $t
-
-Experimental (not efficient)
-----------------------------
-
-hol2dk prf $x $y $file
-  generate a lp file for each proof from index $x to index $y in $file.prf
-  without using type and term abbreviations
-
-hol2dk mk-lp $jobs $file
-  generate Makefile.lp for generating with the option -j $jobs a lp file
-  (without type and term abbreviations) for each proof of $file.prf
-
-hol2dk mk-coq $n $file
-  generate a Makefile for translating to Coq each lp file generated
-  by Makefile.lp and check them by using $n sequential calls to make
-
 Other commands
 --------------
 
+hol2dk proof $file $x $y
+  print proof steps between theorem indexes $x and $y
+
+hol2dk print use $file $x
+  print the contents of $file.use for theorem index $x
+
 hol2dk stat $file
-  print statistics on $file.prf
+  print statistics on proofs
+
+hol2dk size $file [$lower_bound]
+  print statistics on the size of terms
+  and the number of terms of size greater than $lower_bound
 
 hol2dk dep
   print on stdout a Makefile giving the dependencies of all HOL-Light files
@@ -127,9 +124,22 @@ hol2dk name upto file.[ml|hl]
 hol2dk name
   print on stdout the named theorems proved in all HOL-Light files
   in the working directory and all its subdirectories recursively
-%!"
 
-let percent k n = (100 * k) / n
+Experimental (not efficient)
+----------------------------
+
+hol2dk prf $x $y $file
+  generate a lp file for each proof from index $x to index $y in $file.prf
+  without using type and term abbreviations
+
+hol2dk mk-lp $jobs $file
+  generate Makefile.lp for generating with the option -j $jobs a lp file
+  (without type and term abbreviations) for each proof of $file.prf
+
+hol2dk mk-coq $n $file
+  generate a Makefile for translating to Coq each lp file generated
+  by Makefile.lp and check them by using $n sequential calls to make
+%!"
 
 let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
@@ -336,8 +346,8 @@ let rec log_command l =
 and dump_and_simp after_hol f =
   let b = basename_ml f in
   match dump after_hol f b with
-  | 0 -> begin match command ["pos";b] with
-         | 0 -> begin match command ["use";b] with
+  | 0 -> begin match log_command ["pos";b] with
+         | 0 -> begin match log_command ["use";b] with
                 | 0 -> command ["simp";b]
                 | e -> e
                 end
@@ -347,6 +357,10 @@ and dump_and_simp after_hol f =
 
 and command = function
   | [] | ["-"|"--help"|"help"] -> usage(); 0
+
+  | "--sharing"::args -> sharing := true; command args
+
+  | "--print-stats"::args -> at_exit print_hstats; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
@@ -409,12 +423,12 @@ and command = function
      let rule_uses = Array.make nb_rules 0 in
      let unused = ref 0 in
      read_use b;
-     let f k p =
+     let handle_proof k p =
        if Array.get !Xproof.last_use k >= 0 then
          (count_thm_uses thm_uses p; count_rule_uses rule_uses p)
        else incr unused
      in
-     read_prf b f;
+     read_prf b handle_proof;
      log "compute statistics ...\n";
      print_histogram thm_uses;
      print_rule_uses rule_uses (nb_proofs - !unused);
@@ -442,6 +456,35 @@ and command = function
      log "compute statistics ...\n";
      print_histogram thm_uses;
      print_rule_uses rule_uses (nb_proofs - !unused);
+     0
+
+  | ["size";b] -> command ["size";b;"0"]
+  | ["size";b;l] ->
+     let l = integer l in
+     read_use b;
+     init_proof_reading b;
+     let max_size = ref 0 and sum_size = ref 0 and nb_terms = ref 0
+     and nb_terms_gtl = ref 0 in
+     let handle_term t =
+       incr nb_terms;
+       let s = size t in
+       if s > !max_size then max_size := s;
+       if s > l then incr nb_terms_gtl;
+       sum_size := s + !sum_size
+     in
+     let handle_proof k p =
+       if Array.get !Xproof.last_use k >= 0 then
+         begin
+           let Proof(th,_) = p in
+           let hs,c = dest_thm th in
+           handle_term c; List.iter handle_term hs
+         end
+     in
+     read_prf b handle_proof;
+     log "%#d terms, average size = %#d, max size = %#d, \
+          %#d terms of size >%#d (%d%%)\n"
+       !nb_terms (!sum_size / !nb_terms) !max_size
+       !nb_terms_gtl l (percent !nb_terms_gtl !nb_terms);
      0
 
   | ["proof";b;x;y] ->
@@ -647,11 +690,11 @@ and command = function
          end
      in
      read_use b;
-     let f k p =
+     let handle_proof k p =
        if Array.get !Xproof.last_use k >= 0 then
          List.iter (add_dep k) (deps p)
      in
-     read_prf b f;
+     read_prf b handle_proof;
      for i = 1 to nb_parts - 1 do
        log "%d:" (i+1);
        for j = 0 to i - 1 do
