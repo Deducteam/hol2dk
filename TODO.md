@@ -1,6 +1,8 @@
 TODO
 ----
 
+- extend split command to dedukti output
+
 - add abbreviations for closed terms
 
 - get rid of use file? in pos files, set pos to -1 for unused theorems?

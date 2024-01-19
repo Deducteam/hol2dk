@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Makefile to generate and check lp and coq files generated with split
 - command size to get statistics on the size of terms
 - option --sharing for using maximal sharing when recording term abbreviations
+- option --print-stats to print statistics on hash tables at exit
 
 ### Modified
 
