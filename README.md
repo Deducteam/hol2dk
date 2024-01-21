@@ -397,7 +397,7 @@ Performance on a machine with 32 processors i9-13950HX and 64G RAM:
 
 Dumping, simplification and translation of `Logic/Make.ml` with `split`:
   * dump-simp 10m29s 10G 83% useless (including hol.ml)
-  * lp 57s 1.2G
+  * lp 57s 1.2G mklp 1m24s
   * v 43s mkv 50s vo (-j20) 34m10s
 
 Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
@@ -406,7 +406,7 @@ Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analy
 
 Dumping, simplification and translation of `Arithmetic/make.ml` with `split`:
   * dump-simp 6m2s 5.4G 82% useless (including hol.ml) 2.5M steps
-  * lp 21s 734M
+  * lp 21s 734M mklp 1m6s
   * v 31s 682M mkv 23s vo (-j20) 32m
 
 Dumping of `hol.ml`:

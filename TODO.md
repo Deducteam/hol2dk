@@ -1,6 +1,8 @@
 TODO
 ----
 
+- generate lp.mk and coq.mk at the same time as lp files
+
 - extend split command to dedukti output
 
 - add abbreviations for closed terms
