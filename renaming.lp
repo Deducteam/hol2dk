@@ -47,7 +47,7 @@ builtin "dotdot_def" ≔ …_def;
 builtin "dollar" ≔ ﹩;
 builtin "dollar_def" ≔ ﹩_def;
 
-// Logic/make
+// Logic
 builtin "FImp" ≔ ⟶;
 builtin "FImp_def" ≔ ⟶_def;
 builtin "FAll" ≔ !!;
@@ -68,3 +68,13 @@ builtin "FEq" ≔ ===;
 builtin "FEq_def" ≔ ===_def;
 builtin "FNot" ≔ ~~;
 builtin "FNot_def" ≔ ~~_def;
+
+// Arithmetic
+builtin "addadd" ≔ ++;
+builtin "addadd_def" ≔ ++_def;
+builtin "mulmul" ≔ **;
+builtin "mulmul_def" ≔ **_def;
+builtin "ltle" ≔ <<=;
+builtin "ltle_def" ≔ <<=_def;
+builtin "mapsto" ≔ vdash>;
+builtin "mapsto_def" ≔ vdash>_def;
