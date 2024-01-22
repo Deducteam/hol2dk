@@ -1351,7 +1351,19 @@ Inductive list_ind {A : Type'} : recspace A -> Prop :=
 
 Lemma list_eq {A : Type'} : @list_pred A = @list_ind A.
 Proof.
-  Admitted.
+  apply fun_ext. intro r. apply prop_ext.
+  intro h. apply h. intros r' H. destruct H. rewrite H. exact list_ind0. destruct H. destruct H. destruct H. rewrite H. destruct H0.
+  assert (_dest_list nil = @CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A)).
+  reflexivity. rewrite <- H0. exact (list_ind1 x nil).
+  assert (_dest_list (cons a'' l'') = @CONSTR A (S (NUMERAL 0)) a'' (@FCONS (recspace A) (@_dest_list A l'') (fun n : nat => @BOTTOM A))).
+  reflexivity. rewrite <- H0. exact (list_ind1 x (a'':: l'')).
+
+  induction 1; unfold list_pred; intros R h; apply h.
+  left; reflexivity.
+  right. exists a''. exists (_dest_list l''). split. reflexivity. apply h. 
+  induction l''. auto. right. exists a. exists (_dest_list l''). split. reflexivity. 
+  apply h. exact IHl''.
+Qed.  
 
 Lemma axiom_16' : forall {A : Type'} (r : recspace A), (list_pred r) = ((@_dest_list A (@_mk_list A r)) = r).
 Proof.
@@ -1651,6 +1663,31 @@ Lemma axiom_19 : forall (a : nadd), (mk_nadd (dest_nadd a)) = a.
 Proof.
   intros [f h]. simpl. apply eq_nadd. simpl. rewrite <- axiom_20. exact h. 
 Qed.
+
+(****************************************************************************)
+(* Mapping of the type hreal of nonnegative real numbers. *)
+(****************************************************************************)
+
+Require Import Coq.Reals.Raxioms.
+Require Import Coq.Reals.Rbasic_fun.
+
+Open Scope R_scope.
+
+Definition hreal : Type := { r : R | r >= 0}. 
+
+Definition is_nonnegative (r : R) : Prop := r >= 0.
+
+Lemma is_nonnegative_0 : is_nonnegative 0.
+Proof. 
+  unfold is_nonnegative. unfold Rge. right. reflexivity.
+Qed.    
+
+Definition nonnegative_0 : hreal := exist _ _ is_nonnegative_0.
+
+Definition hreal' : Type' := {| type := hreal ; el := nonnegative_0|}.
+
+Definition dest_hreal : hreal -> nadd -> Prop := 
+fun r f => exists B : nat, forall n : nat, (Rabs ((INR (dest_nadd f n)/ INR n) - proj1_sig r)) < INR B/INR n. 
 
 
 
