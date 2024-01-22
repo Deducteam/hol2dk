@@ -1,9 +1,13 @@
 TODO
 ----
 
-- get rid of use file? in pos files, set pos to -1 for unused theorems
+- extend split command to dedukti output
 
-- proofs can be simplified in parallel by working on the proof of each named theorem separately
+- add abbreviations for closed terms
+
+- get rid of use file? in pos files, set pos to -1 for unused theorems?
+
+- simplify/purge proofs in parallel?
 
 - add commands for patch/unpatch/add-links ?
 

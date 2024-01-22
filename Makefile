@@ -14,7 +14,10 @@ sti:
 
 .PHONY: clean-sti
 clean-sti:
-	find . -maxdepth 1 -name '*.sti' -exec rm -f {} `basename {}`.nbp `basename {}`.pos `basename {}`.use \;
+	find . -maxdepth 1 -name '*.sti' -delete
+	find . -maxdepth 1 -name '*.nbp' -delete
+	find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
+	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
 	rm -f $(BASE).thp
 
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
@@ -26,7 +29,7 @@ $(BASE_FILES:%=%.lp) &:
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
 %.lp: %.sti
-	hol2dk theorem $(BASE) $@
+	hol2dk --sharing theorem $(BASE) $@
 
 .PHONY: clean-lp
 clean-lp:

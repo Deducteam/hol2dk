@@ -14,11 +14,17 @@ open Lib
 
 module type Hol_kernel =
   sig
-      type hol_type = private
+    type hol_type =
+      (*REMOVE
+      private
+      REMOVE*)
         Tyvar of string
       | Tyapp of string *  hol_type list
 
-      type term = private
+      type term =
+      (*REMOVE
+      private
+      REMOVE*)
         Var of string * hol_type
       | Const of string * hol_type
       | Comb of term * term

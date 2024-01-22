@@ -101,13 +101,13 @@ let abbrev_typ =
         abbreviation if needed *)
      let tvs, b = canonical_typ b in
      let k =
-       match MapTyp.find_opt b !map_typ with
+       match TypHashtbl.find_opt htbl_type_abbrev b with
        | Some (k,_) -> k
        | None ->
           let k = !idx + 1 in
           idx := k;
           let x = (k, List.length tvs) in
-          map_typ := MapTyp.add b x !map_typ;
+          TypHashtbl.add htbl_type_abbrev b x;
           k
      in
      match tvs with
@@ -126,17 +126,18 @@ let typ ?(abbrev=true) tvs oc b =
   else unabbrev_typ tvs oc b
 ;;
 
-(* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
-let decl_map_typ oc m =
-  let abbrev (b,(k,n)) =
+(* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
+let decl_map_typ oc =
+  let abbrev b (k,n) =
     out oc "def %a := " typ_abbrev k;
     for i=0 to n-1 do out oc "a%d : %a => " i typ_name "Set" done;
     (* We can use [raw_type] here because [b] is canonical. *)
     out oc "%a.\n" raw_typ b
   in
-  List.iter abbrev
+  (*List.iter abbrev
     (List.sort (fun (_,(k1,_)) (_,(k2,_)) -> k1 - k2)
-       (MapTyp.fold (fun b x l -> (b,x)::l) m []))
+       (MapTyp.fold (fun b x l -> (b,x)::l) m []))*)
+  TypHashtbl.iter abbrev htbl_type_abbrev
 ;;
 
 (****************************************************************************)
@@ -252,13 +253,13 @@ let abbrev_term =
        abbreviation if needed *)
     let tvs, vs, bs, t = canonical_term t in
     let k =
-      match MapTrm.find_opt t !map_term with
+      match TrmHashtbl.find_opt htbl_term_abbrev t with
       | Some (k,_,_) -> k
       | None ->
          let k = !idx + 1 in
          idx := k;
          let x = (k, List.length tvs, bs) in
-         map_term := MapTrm.add t x !map_term;
+         TrmHashtbl.add htbl_term_abbrev t x;
          k
     in
     out oc "(%a%a%a)" term_abbrev k
@@ -313,10 +314,9 @@ let term =
   (*else unabbrev_term*)
 ;;
 
-(* [decl_map_term oc m] outputs on [oc] the term abbreviations defined
-   by [m]. *)
-let decl_map_term oc m =
-  let abbrev (t,(k,n,bs)) =
+(* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
+let decl_map_term oc =
+  let abbrev t (k,n,bs) =
     out oc "def %a := " term_abbrev k;
     for i=0 to n-1 do out oc "a%d : %a => " i typ_name "Set" done;
     (* We can use abbrev_typ here since [bs] are canonical. *)
@@ -325,9 +325,10 @@ let decl_map_term oc m =
     (* We can use [raw_term] here since [t] is canonical. *)
     out oc "%a.\n" raw_term t
   in
-  List.iter abbrev
+  (*List.iter abbrev
     (List.sort (fun (_,(k1,_,_)) (_,(k2,_,_)) -> k1 - k2)
-       (MapTrm.fold (fun b x l -> (b,x)::l) m []))
+       (MapTrm.fold (fun b x l -> (b,x)::l) m []))*)
+  TrmHashtbl.iter abbrev htbl_term_abbrev
 ;;
 
 (****************************************************************************)
@@ -731,9 +732,7 @@ let export_types =
 
 let export_type_abbrevs b s =
   export b (s ^ "_type_abbrevs")
-    (fun oc ->
-      out oc "\n(; type abbreviations ;)\n";
-      decl_map_typ oc !map_typ)
+    (fun oc -> out oc "\n(; type abbreviations ;)\n"; decl_map_typ oc)
 ;;
 
 let export_terms =
@@ -752,9 +751,7 @@ let export_terms =
 
 let export_term_abbrevs b s =
   export b (s ^ "_term_abbrevs")
-    (fun oc ->
-      out oc "\n(; term abbreviations ;)\n";
-      decl_map_term oc !map_term)
+    (fun oc -> out oc "\n(; term abbreviations ;)\n"; decl_map_term oc)
 ;;
 
 let export_axioms b =

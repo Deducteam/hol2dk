@@ -81,13 +81,13 @@ let abbrev_typ =
         abbreviation if needed *)
      let tvs, b = canonical_typ b in
      let k =
-       match MapTyp.find_opt b !map_typ with
+       match TypHashtbl.find_opt htbl_type_abbrev b with
        | Some (k,_) -> k
        | None ->
           let k = !idx + 1 in
           idx := k;
           let x = (k, List.length tvs) in
-          map_typ := MapTyp.add b x !map_typ;
+          TypHashtbl.add htbl_type_abbrev b x;
           k
      in
      match tvs with
@@ -97,17 +97,18 @@ let abbrev_typ =
 
 let typ oc b = if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;
 
-(* [decl_map_typ oc m] outputs on [oc] the type abbreviations of [m]. *)
-let decl_map_typ oc m =
-  let abbrev (b,(k,n)) =
+(* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
+let decl_map_typ oc =
+  let abbrev b (k,n) =
     out oc "symbol type%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
     (* We can use [raw_typ] here since [b] canonical. *)
     out oc " ≔ %a;\n" raw_typ b
   in
-  List.iter abbrev
+  (*List.iter abbrev
     (List.sort (fun (_,(k1,_)) (_,(k2,_)) -> k1 - k2)
-       (MapTyp.fold (fun b x l -> (b,x)::l) m []))
+       (MapTyp.fold (fun b x l -> (b,x)::l) m []))*)
+  TypHashtbl.iter abbrev htbl_type_abbrev
 ;;
 
 (****************************************************************************)
@@ -209,19 +210,22 @@ let unabbrev_term =
 ;;
 
 let abbrev_term =
+  (*let oc_abbrevs = open_out "term_abbrevs" in*)
   let idx = ref (-1) in
   let abbrev oc t =
     (* check whether the term is already abbreviated; add a new
        abbreviation if needed *)
     let tvs, vs, bs, t = canonical_term t in
     let k =
-      match MapTrm.find_opt t !map_term with
+      match TrmHashtbl.find_opt htbl_term_abbrev t with
       | Some (k,_,_) -> k
       | None ->
          let k = !idx + 1 in
+         (*if k mod 1000 = 0 then log "term abbrev %d\n%!" k;*)
+         (*out oc_abbrevs "%a\n\n" raw_term t;*)
          idx := k;
          let x = (k, List.length tvs, bs) in
-         map_term := MapTrm.add t x !map_term;
+         TrmHashtbl.add htbl_term_abbrev t x;
          k
     in
     match tvs, vs with
@@ -256,20 +260,20 @@ let term rmap oc t =
   else unabbrev_term rmap oc (rename rmap t)
 ;;
 
-(* [decl_map_term oc m] outputs on [oc] the term abbreviations defined
-   by [m]. *)
-let decl_map_term oc m =
-  let abbrev (t,(k,n,bs)) =
+(* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
+let decl_map_term oc =
+  let abbrev t (k,n,bs) =
     out oc "symbol term%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
-    (* We can use abbrev_typ here since [bs] are canonical. *)
+    (* We can use [abbrev_typ] here since [bs] are canonical. *)
     List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
     (* We can use [raw_term] here since [t] is canonical. *)
     out oc " ≔ %a;\n" raw_term t
   in
-  List.iter abbrev
+  (*List.iter abbrev
     (List.sort (fun (_,(k1,_,_)) (_,(k2,_,_)) -> k1 - k2)
-       (MapTrm.fold (fun b x l -> (b,x)::l) m []))
+       (MapTrm.fold (fun b x l -> (b,x)::l) m []))*)
+  TrmHashtbl.iter abbrev htbl_term_abbrev
 ;;
 
 (****************************************************************************)
@@ -532,8 +536,8 @@ let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
    [x] .. [y]. *)
 let proofs_in_interval oc x y =
   for k = x to y do
-    (*log "proof %d\n%!" k;*)
-    if get_use k >= 0 then theorem oc k (proof_at k)
+    if get_use k >= 0 then
+      begin (*log "proof %d ...\n%!" k;*) theorem oc k (proof_at k) end
   done
 
 (* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
@@ -580,7 +584,7 @@ let export_types b =
 
 let export_type_abbrevs b n s =
   export n (s ^ "_type_abbrevs")
-    (fun oc -> require oc b "_types"; decl_map_typ oc !map_typ)
+    (fun oc -> require oc b "_types"; decl_map_typ oc)
 ;;
 
 let constants() =
@@ -598,7 +602,7 @@ let export_term_abbrevs b n s =
     (fun oc ->
       List.iter (require oc b) ["_types"; "_terms"];
       List.iter (require oc n) [s ^ "_type_abbrevs"];
-      decl_map_term oc !map_term)
+      decl_map_term oc)
 ;;
 
 let export_axioms b =
