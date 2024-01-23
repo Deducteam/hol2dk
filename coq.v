@@ -1373,9 +1373,12 @@ Proof.
   rewrite list_eq in h. induction h.
   exists nil. reflexivity. exists (cons a'' l''). reflexivity.
 
-  intro e. rewrite <- e. intros P h. apply h. destruct (_mk_list r); simpl.
-  left. reflexivity. right. exists t0. exists (_dest_list l). Admitted.
-
+  intro e. rewrite <- e. intros P h. apply h. destruct (_mk_list r). 
+  left. reflexivity. right. exists t0. exists (_dest_list l). split. 
+  reflexivity. apply h. generalize l.
+  induction l0. left; reflexivity. right. exists a. exists (_dest_list l0). split. 
+  reflexivity. apply h. exact IHl0.
+Qed.
 
 Lemma axiom_16 : forall {A : Type'} (r : recspace A), 
 ((fun a : recspace A => 
