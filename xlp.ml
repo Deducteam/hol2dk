@@ -17,7 +17,8 @@ let name =
     [ "|----", "vdash4"
     ; "|---", "vdash3"
     ; "|--", "vdash2"
-    ; "|-", "vdash" ]
+    ; "|-", "vdash"
+    ; "|=>", "bar_imp"]
   in
   fun oc n ->
   string oc
@@ -39,7 +40,15 @@ let name =
     | ".." -> "…" (* 2026 *)
     | "|" -> "¦" (* 00A6 *)
     | "||" -> "¦¦"
-    | "open" | "as" -> n ^ "_"
+    |"abort"|"admit"|"admitted"|"apply"|"as"|"assert"|"assertnot"
+    |"associative"|"assume"|"begin"|"builtin"|"coerce_rule"|"commutative"
+    |"compute"|"constant"|"debug"|"end"|"fail"|"flag"|"generalize"|"have"
+    |"in"|"induction"|"inductive"|"infix"|"injective"|"left"|"let"|"notation"
+    |"off"|"on"|"opaque"|"open"|"postfix"|"prefix"|"print"|"private"
+    |"proofterm"|"protected"|"prover"|"prover_timeout"|"quantifier"|"refine"
+    |"reflexivity"|"remove"|"require"|"rewrite"|"right"|"rule"|"search"
+    |"sequential"|"simplify"|"solve"|"symbol"|"symmetry"|"type"|"TYPE"
+    |"unif_rule"|"verbose"|"why3"|"with" -> n ^ "_"
     | _ -> (* for Coq *)
        Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
     end
