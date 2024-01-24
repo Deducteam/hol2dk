@@ -1312,7 +1312,9 @@ Qed.
 Definition list' (A : Type') := {| type := list A; el := nil |}.
 Canonical list'.
 
-Definition FCONS {A : Type'} := @ε ((prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A) (fun FCONS' : (prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A => forall _17460 : prod nat (prod nat (prod nat (prod nat nat))), (forall a : A, forall f : nat -> A, (FCONS' _17460 a f (NUMERAL 0)) = a) /\ (forall a : A, forall f : nat -> A, forall n : nat, (FCONS' _17460 a f (S n)) = (f n))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
+Definition FCONS {A : Type'} := 
+@ε ((prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A) 
+(fun FCONS' : (prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A => forall _17460 : prod nat (prod nat (prod nat (prod nat nat))), (forall a : A, forall f : nat -> A, (FCONS' _17460 a f (NUMERAL 0)) = a) /\ (forall a : A, forall f : nat -> A, forall n : nat, (FCONS' _17460 a f (S n)) = (f n))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
 
 Fixpoint _dest_list {A : Type'} l :=
   match l with
@@ -1324,12 +1326,19 @@ Definition _mk_list_pred {A : Type'} (r : recspace A) : list A -> Prop :=
 fun l => _dest_list l = r.
 
 Definition _mk_list : forall {A : Type'}, (recspace A) -> list A :=
-fun A r => ε (_mk_list_pred r). 
+fun A r => ε (_mk_list_pred r).
 
-Lemma _dest_list_inj {A : Type'} (l l' : list A) : _dest_list l = _dest_list l' -> l = l'.
+Lemma FCONS_0 {A : Type'} (a : A) (f : nat -> A) : FCONS a f (NUMERAL 0) = a.
+Proof. Admitted.      
+
+Lemma _dest_list_inj : forall {A : Type'} (l l' : list A), _dest_list l = _dest_list l' -> l = l'.
 Proof.
   induction l; induction l'; simpl; rewrite (@CONSTR_INJ A); intros [e1 [e2 e3]].
-  reflexivity. discriminate. discriminate. Admitted.
+  reflexivity. discriminate. discriminate. rewrite e2. rewrite (@IHl l'). reflexivity.
+  rewrite <- (FCONS_0 (_dest_list l) ((fun _ : nat => BOTTOM))). 
+  rewrite <- (FCONS_0 (_dest_list l') ((fun _ : nat => BOTTOM))).
+  rewrite e3. reflexivity. 
+Qed.    
  
 Lemma axiom_15 : forall {A : Type'} (a : list A), (@_mk_list A (@_dest_list A a)) = a. 
 Proof.
