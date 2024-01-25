@@ -104,7 +104,7 @@ let abbrev_typ =
      | _ -> out oc "(type%d%a)" k (list_prefix " " raw_typ) tvs
 ;;
 
-let typ oc b = abbrev_typ oc b;;
+let typ = abbrev_typ;;
   (*if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;*)
 
 (* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
