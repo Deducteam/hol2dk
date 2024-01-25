@@ -449,7 +449,7 @@ Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make -j32 lpo: 1h36m 0.9G
   * make -j32 v: 42s 1.1G
   * make mkv: 41s 2.7M
-  * make -j20 vo: 28m 3.1G
+  * make -j16 vo: 32m20s 3.1G
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
   * hol2dk mk 100: 14s
