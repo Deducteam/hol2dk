@@ -260,9 +260,9 @@ let rec rename rmap t =
   match t with
   | Var(_,b) -> (try mk_var(List.assoc t rmap,b) with Not_found -> mk_el b)
   | Const(_,_) -> t
-  | Comb(u,v) -> mk_comb(rename rmap u, rename rmap v)
+  | Comb(u,v) -> Comb(rename rmap u, rename rmap v)
   | Abs(u,v) ->
-     let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
+     let rmap' = add_var rmap u in Abs(rename rmap' u,rename rmap' v)
 ;;
 
 let term rmap oc t = abbrev_term oc (rename rmap t);;

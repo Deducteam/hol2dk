@@ -299,9 +299,9 @@ let rename tvs =
     | Const(_,b) ->
        let su = subst_missing_as_bool tvs b in
        if su = [] then t else inst su t
-    | Comb(u,v) -> mk_comb(rename rmap u, rename rmap v)
+    | Comb(u,v) -> Comb(rename rmap u, rename rmap v)
     | Abs(u,v) ->
-       let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
+       let rmap' = add_var rmap u in Abs(rename rmap' u,rename rmap' v)
   in rename
 ;;
 
