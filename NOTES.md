@@ -1,6 +1,11 @@
 NOTES
 -----
 
+## 25/01/24
+
+By introducing sharing in term abbreviations, we can reduce the the size of some lp files significantly:
+- CHAIN_BOUNDARY_BOUNDARY.lp is generated in 59m37s and the size of the term_abbrevs.lp file is reduced from 5.2G to 1.9G (-63%)
+
 ## 19/01/24
 
 Arithmetic/make:

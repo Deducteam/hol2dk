@@ -32,8 +32,8 @@ On the other hand, `hol2dk` may take several hours to translate the
 proofs of a few particular theorems of the `Multivariate` library:
 `GRASSMANN_PLUCKER_4`, `CHAIN_BOUNDARY_BOUNDARY` and
 `HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS`, because their proofs
-contqin a lot of big terms and the lambdapi output does not use enough
-sharing. We will work on improving this.
+contain a lot of big terms without sharing. We will work on improving
+this.
 
 Finally, while it is possible to translate any HOL-Light proof to Coq,
 the translated theorem may not be directly usable by Coq users because
@@ -447,7 +447,7 @@ Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make -j32 lp: 45s 1.2G
   * make mklp: 39s 2.7M
   * make -j32 lpo: 1h36m 0.9G
-  * make -j32 v: 44s 1.1G
+  * make -j32 v: 42s 1.1G
   * make mkv: 41s 2.7M
   * make -j20 vo: 28m 3.1G
 
