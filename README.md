@@ -158,11 +158,11 @@ WARNING: it is important to run the command in the HOL-Light directory so as to 
 For dumping (a subset of) `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump-use-simp file.ml
+hol2dk dump-simp-use file.ml
 ```
 where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
-The command `dump-simp` (and similarly for `dump-use-simp`) are actually the sequential composition of various lower level commands: `dump`, `pos`, `use`, `rewrite` and `purge`:
+The command `dump-simp` (and similarly for `dump-simp-use`) are actually the sequential composition of various lower level commands: `dump`, `pos`, `use`, `rewrite` and `purge`:
 
 **Simplifying dumped proofs.** HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) is sometimes proved by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
@@ -217,7 +217,7 @@ that are faster to check.
 Remark: for not cluttering HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump-use-simp hol.ml
+hol2dk dump-simp-use hol.ml
 mkdir -p ~/output-hol2dk/hol
 cd ~/output-hol2dk/hol
 $HOL2DK_DIR/add-links hol

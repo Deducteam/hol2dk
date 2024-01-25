@@ -29,7 +29,7 @@ hol2dk dump-simp $file.[ml|hl]
   compose the commands dump, pos, use, rewrite and purge
   for $file depending on hol.ml
 
-hol2dk dump-use-simp $file.[ml|hl]
+hol2dk dump-simp-use $file.[ml|hl]
   same as hol2dk dump except that hol.ml is not loaded first
 
 hol2dk dump $file.[ml|hl]
@@ -389,7 +389,7 @@ and command = function
   | ["dump";f] -> dump true f (basename_ml f)
   | ["dump-use";f] -> dump false f (basename_ml f)
   | ["dump-simp";f] -> dump_and_simp true f
-  | ["dump-use-simp";f] -> dump_and_simp false f
+  | ["dump-simp-use";f] -> dump_and_simp false f
 
   | ["pos";b] ->
      let nb_proofs = read_val (b ^ ".nbp") in
