@@ -340,6 +340,14 @@ let basename_ml f =
   | ".ml" | ".hl" -> Filename.chop_extension f
   | _ -> wrong_arg()
 
+let print_hstats() =
+  log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a"
+    hstats (StrHashtbl.stats htbl_string)
+    hstats (TypHashtbl.stats htbl_type)
+    hstats (TrmHashtbl.stats htbl_term)
+    hstats (TypHashtbl.stats htbl_type_abbrev)
+    hstats (TrmHashtbl.stats htbl_term_abbrev)
+
 let rec log_command l =
   log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
 

@@ -168,7 +168,7 @@ let hstats oc hs =
 ;;
 
 (****************************************************************************)
-(* Sharing of strings, types and terms. *)
+(* Sharing of strings. *)
 (****************************************************************************)
 
 let sharing = ref false;;
@@ -186,6 +186,10 @@ let htbl_string : string StrHashtbl.t = StrHashtbl.create 10_000;;
 let share_string x =
   try StrHashtbl.find htbl_string x
   with Not_found -> StrHashtbl.add htbl_string x x; x;;
+
+(****************************************************************************)
+(* Sharing of types when building canonical types. *)
+(****************************************************************************)
 
 module TypHash = struct
   type t = hol_type
@@ -212,6 +216,10 @@ let hmk_tyapp(s,bs) = share_type (Tyapp(share_string s,bs));;
 let rec htype = function
   | Tyvar s -> hmk_vartype s
   | Tyapp(s,bs) -> hmk_tyapp(s, List.map htype bs);;
+
+(****************************************************************************)
+(* Sharing of terms when building canonical terms. *)
+(****************************************************************************)
 
 module TrmHash = struct
   type t = term
@@ -299,9 +307,8 @@ let canonical_typ b =
 ;;
 
 (* With sharing, [hcanonical_typ b] returns the type variables of [b]
-   together with a type alpha-equivalent to [b] such that, for any
-   type [b'] alpha-equivalent to [b], [canonical_typ b' =
-   canonical_typ b]. *)
+   and a type similar to [b] except that type variables are replaced
+   by the canonical type variables [a0, a1, ...]. *)
 let hcanonical_typ =
   let rec type_subst s b =
     match b with
@@ -367,6 +374,7 @@ let arity =
 (* Functions on terms. *)
 (****************************************************************************)
 
+(* [get_vartype t] returns the type of [t] assuming that [t] is a variable. *)
 let get_vartype = function Var(_,b) -> b | _ -> assert false;;
 
 (* [size t] computes the number of term constructors in [t]. *)
@@ -561,15 +569,21 @@ let canonical_term =
 (* Canonical term for alpha-equivalence with sharing. *)
 (****************************************************************************)
 
-(* [hcanonical_term t] returns the free type and term variables of [t]
-   together with a term alpha-equivalent to [t] so that
-   [hcanonical_term t = hcanonical_term u] if [t] and [u] are
-   alpha-equivalent. *)
+(* [hcanonical_term t] returns [tvs,vs,bs,u] where [tvs] are the type
+   variables of [t], [vs] are the free term variables of [t], [bs] are
+   the types of [vs], and [u] is a term similar to [t] except that
+   [tvs] are replaced by canonical type variables [a0, a1, ...], [vs]
+   are replaced by canonical term variables [x0, x1, ...], and the
+   abstracted term variables are replaced by canonical variables [y0,
+   y1, ...]. Hence, if [t'] is alpha-equivalent to [t], then
+   [hcanonical_term t' = u]. *)
 let hcanonical_term =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
   let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted
-     variables as well by incrementing the integer [i]. *)
+     variables as well by incrementing the integer [i]. [su] is a term
+     substitution mapping term variables abstracted in [t] by the
+     canonical term variables [y0, y1, ...]. *)
   let rec subst i su t =
     (*log "subst %d %a %a\n%!" i (olist (opair oterm oterm)) su oterm t;*)
     match t with
@@ -589,9 +603,14 @@ let hcanonical_term =
   in
   fun t ->
   let tvs = type_vars_in_term t and vs = frees t in
+  (* Type substitution mapping type variables of [t] to the canonical
+     type variables [a0, a1, ...]. *)
   let su = List.mapi type_var tvs in
   let t' = inst su t and vs' = List.map (inst su) vs in
-  let bs = List.map get_vartype vs' and su' = List.mapi term_var vs' in
+  let bs = List.map get_vartype vs'
+  (* Term substitution mapping term variables of [t] to the canonical
+     term variables [x0, x1, ...]. *)
+  and su' = List.mapi term_var vs' in
   tvs, vs, bs, subst 0 su' t'
 ;;
 
@@ -836,6 +855,80 @@ let const_typ_vars_pos n =
   with Not_found -> log "no const_typ_vars_pos for %s\n%!" n; assert false;;
 
 (****************************************************************************)
+(* Sharing of subterms. *)
+(****************************************************************************)
+
+let rec htype_of =
+  let arr = share_string "fun" in
+  fun tm ->
+  match tm with
+    Var(_,ty) -> htype ty
+  | Const(_,ty) -> htype ty
+  | Comb(s,_) ->
+     begin
+       match htype_of s with
+       | Tyapp("fun",[_;rty]) -> rty
+       | _ -> assert false
+     end
+  | Abs(Var(_,ty),t) -> hmk_tyapp(arr, [ty; htype_of t])
+  | _ -> assert false
+;;
+
+(* Table injectively mapping a term [t] to [k,t',t] where [t'] is
+   [mk_var("z" ^ string_of_int k)]. *)
+let htbl_subterms : (term * term) TrmHashtbl.t =
+  TrmHashtbl.create 1_000_000;;
+
+let share_subterm =
+  let idx = ref (-1) in
+  fun l t ->
+  (*log "share_subterm %a %a\n" (olist (opair oterm oterm)) !l oterm t;*)
+  try let (_,t') as x = TrmHashtbl.find htbl_subterms t in
+      (*log "found\n";*)
+      if t <> t' && List.for_all ((<>) x) !l then
+        begin l := x::!l; (*log "add let %a\n" (opair oterm oterm) x*) end;
+      t'
+  with Not_found ->
+        (*log "not found\n";*)
+    match t with
+    | Var _ | Const _ ->
+       (*log "add %a\n" (opair oterm oterm) (t,t);*)
+       TrmHashtbl.add htbl_subterms t (t,t); t
+    | _ ->
+       let k = !idx + 1 in
+       idx := k;
+       let s = share_string ("z" ^ string_of_int k) in
+       let t' = mk_var(s, htype_of t) in
+       let x = (t,t') in
+       (*log "add %a\n" (opair oterm oterm) x;*)
+       TrmHashtbl.add htbl_subterms t x;
+       l := x::!l; t'
+;;
+
+let hmk_var l (s,b) = share_subterm l (Var(share_string s, htype b));;
+let hmk_const l (s,b) = share_subterm l (Const(share_string s, htype b));;
+let hmk_comb l (t,u) = share_subterm l (Comb(t,u));;
+let hmk_abs l (t,u) = share_subterm l (Abs(t,u));;
+
+(* [shared t] returns [u,l] where [u] is a variable and [l] is a term
+   substitution so that the repeated application of [l] to [u] gives
+   [t]. *)
+let shared t =
+  (*log "\nshared %a\n" oterm t;*)
+  let l = ref [] in
+  let rec aux t =
+    (*log "aux %a %a\n" (olist (opair oterm oterm)) !l oterm t;*)
+    match t with
+    | Var(s,b) -> hmk_var l (s,b)
+    | Const(s,b) -> hmk_const l (s,b)
+    | Comb(u,v) -> hmk_comb l (aux u, aux v)
+    | Abs(u,v) -> hmk_abs l (u,v)
+  in
+  let t' = aux t in
+  t', List.rev !l
+;;
+
+(****************************************************************************)
 (* Type and term abbreviations to reduce size of generated files. *)
 (****************************************************************************)
 
@@ -847,14 +940,6 @@ let htbl_type_abbrev : (int * int) TypHashtbl.t = TypHashtbl.create 100_000;;
    variables, and the types of its free term variables. *)
 let htbl_term_abbrev : (int * int * hol_type list) TrmHashtbl.t =
   TrmHashtbl.create 1_000_000;;
-
-let print_hstats() =
-  log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a"
-    hstats (StrHashtbl.stats htbl_string)
-    hstats (TypHashtbl.stats htbl_type)
-    hstats (TrmHashtbl.stats htbl_term)
-    hstats (TypHashtbl.stats htbl_type_abbrev)
-    hstats (TrmHashtbl.stats htbl_term_abbrev)
 
 (*REMOVE
 set_jrh_lexer;;

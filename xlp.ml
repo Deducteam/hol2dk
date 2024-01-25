@@ -106,8 +106,8 @@ let abbrev_typ =
 
 let typ oc b = if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;
 
-(* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
-let decl_map_typ oc =
+(* [decl_typ_abbrevs oc] outputs on [oc] the type abbreviations. *)
+let decl_typ_abbrevs oc =
   let abbrev b (k,n) =
     out oc "symbol type%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
@@ -269,15 +269,19 @@ let term rmap oc t =
   else unabbrev_term rmap oc (rename rmap t)
 ;;
 
-(* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
-let decl_map_term oc =
+(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
+let decl_term_abbrevs oc =
   let abbrev t (k,n,bs) =
     out oc "symbol term%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
     (* We can use [abbrev_typ] here since [bs] are canonical. *)
     List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
     (* We can use [raw_term] here since [t] is canonical. *)
-    out oc " ≔ %a;\n" raw_term t
+    (*out oc " ≔ %a;\n" raw_term t*)
+    let t', l = shared t in
+    let print_let oc (t,t') =
+      out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
+    out oc " ≔%a %a;\n" (list print_let) l raw_term t'
   in
   (*List.iter abbrev
     (List.sort (fun (_,(k1,_,_)) (_,(k2,_,_)) -> k1 - k2)
@@ -593,7 +597,7 @@ let export_types b =
 
 let export_type_abbrevs b n s =
   export n (s ^ "_type_abbrevs")
-    (fun oc -> require oc b "_types"; decl_map_typ oc)
+    (fun oc -> require oc b "_types"; decl_typ_abbrevs oc)
 ;;
 
 let constants() =
@@ -611,7 +615,7 @@ let export_term_abbrevs b n s =
     (fun oc ->
       List.iter (require oc b) ["_types"; "_terms"];
       List.iter (require oc n) [s ^ "_type_abbrevs"];
-      decl_map_term oc)
+      decl_term_abbrevs oc)
 ;;
 
 let export_axioms b =
