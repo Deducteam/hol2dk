@@ -287,15 +287,15 @@ let type_var =
     else (log "a_max = %d\n%!" i; hmk_vartype ("a" ^ string_of_int i))
   in v, tv
 ;;
-
+(*
 (* Without sharing, [canonical_typ b] returns the type variables of
    [b] together with a type alpha-equivalent to [b] such that, for any
    type [b'] alpha-equivalent to [b], [canonical_typ b' =
    canonical_typ b]. *)
-let _canonical_typ b =
+let canonical_typ b =
   let tvs = tyvars b in tvs, type_subst (List.mapi type_var tvs) b
 ;;
-
+ *)
 (* With sharing, [canonical_typ b] returns the type variables of [b]
    together with a type alpha-equivalent to [b] such that, for any
    type [b'] alpha-equivalent to [b], [canonical_typ b' =
@@ -517,12 +517,12 @@ let term_var =
      in v, hmk_var(s,b)
   | _ -> assert false
 ;;
-
+(*
 (* [canonical_term t] returns the free type and term variables of [t]
    together with a term alpha-equivalent to [t] so that
    [canonical_term t = canonical_term u] if [t] and [u] are
    alpha-equivalent. *)
-let _canonical_term =
+let canonical_term =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
   let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted
@@ -551,7 +551,7 @@ let _canonical_term =
   let bs = List.map get_vartype vs' and su' = List.mapi term_var vs' in
   tvs, vs, bs, subst 0 su' t'
 ;;
-
+ *)
 (****************************************************************************)
 (* Canonical term for alpha-equivalence with sharing. *)
 (****************************************************************************)
