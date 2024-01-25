@@ -444,11 +444,11 @@ Dumping of `hol.ml`:
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make sti: <1s
-  * make -j32 lp: 32s 1.1G, 40s with sharing
-  * make mklp: 47s 2.7M
+  * make -j32 lp: 45s 1.2G
+  * make mklp: 39s 2.7M
   * make -j32 lpo: 1h36m 0.9G
-  * make -j32 v: 43s 1.1G
-  * make mkv: 51s 2.7M
+  * make -j32 v: 44s 1.1G
+  * make mkv: 41s 2.7M
   * make -j20 vo: 28m 3.1G
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:

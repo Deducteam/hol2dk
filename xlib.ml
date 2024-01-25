@@ -875,9 +875,9 @@ let share_subterm =
   let idx = ref (-1) in
   fun l t ->
   (*log "share_subterm %a %a\n" (olist (opair oterm oterm)) !l oterm t;*)
-  try let (_,t') as x = TrmHashtbl.find htbl_subterms t in
+  try let (t,t') as x = TrmHashtbl.find htbl_subterms t in
       (*log "found\n";*)
-      if t <> t' && List.for_all ((<>) x) !l then
+      if t != t' && List.for_all ((!=) x) !l then
         begin l := x::!l; (*log "add let %a\n" (opair oterm oterm) x*) end;
       t'
   with Not_found ->
