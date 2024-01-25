@@ -341,12 +341,14 @@ let basename_ml f =
   | _ -> wrong_arg()
 
 let print_hstats() =
-  log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a"
+  log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a\
+       \nsubterms: %a"
     hstats (StrHashtbl.stats htbl_string)
     hstats (TypHashtbl.stats htbl_type)
     hstats (TrmHashtbl.stats htbl_term)
     hstats (TypHashtbl.stats htbl_type_abbrev)
     hstats (TrmHashtbl.stats htbl_term_abbrev)
+    hstats (TrmHashtbl.stats htbl_subterms)
 
 let rec log_command l =
   log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
