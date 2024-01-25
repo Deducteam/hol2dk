@@ -20,7 +20,6 @@ hol2dk options command arguments
 Options
 -------
 
---sharing: use sharing for recording term abbreviations
 --hstats: print statistics on hash tables at exit
 
 Dumping commands
@@ -30,7 +29,7 @@ hol2dk dump-simp $file.[ml|hl]
   compose the commands dump, pos, use, rewrite and purge
   for $file depending on hol.ml
 
-hol2dk dump-use-simp $file.[ml|hl]
+hol2dk dump-simp-use $file.[ml|hl]
   same as hol2dk dump except that hol.ml is not loaded first
 
 hol2dk dump $file.[ml|hl]
@@ -124,8 +123,9 @@ hol2dk name upto file.[ml|hl]
 hol2dk name
   print on stdout the named theorems proved in all HOL-Light files
   in the working directory and all its subdirectories recursively
+%!"
 
-Experimental (not efficient)
+(*Experimental (not efficient)
 ----------------------------
 
 hol2dk prf $x $y $file
@@ -139,7 +139,7 @@ hol2dk mk-lp $jobs $file
 hol2dk mk-coq $n $file
   generate a Makefile for translating to Coq each lp file generated
   by Makefile.lp and check them by using $n sequential calls to make
-%!"
+*)
 
 let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
@@ -358,8 +358,6 @@ and dump_and_simp after_hol f =
 and command = function
   | [] | ["-"|"--help"|"help"] -> usage(); 0
 
-  | "--sharing"::args -> sharing := true; command args
-
   | "--print-stats"::args -> at_exit print_hstats; command args
 
   | ["dep";f] ->
@@ -391,7 +389,7 @@ and command = function
   | ["dump";f] -> dump true f (basename_ml f)
   | ["dump-use";f] -> dump false f (basename_ml f)
   | ["dump-simp";f] -> dump_and_simp true f
-  | ["dump-use-simp";f] -> dump_and_simp false f
+  | ["dump-simp-use";f] -> dump_and_simp false f
 
   | ["pos";b] ->
      let nb_proofs = read_val (b ^ ".nbp") in
@@ -863,7 +861,7 @@ and command = function
                         (n^"_deps.lp") (n^"_proofs.lp") (n^".lp")
                         (n^"_deps.lp") (n^"_proofs.lp"))
        end
-
+(*
   | ["prf";x;y;b] ->
      read_sig b;
      read_pos b;
@@ -896,7 +894,7 @@ and command = function
      Xlp.gen_coq_makefile_one_file_by_prf b nb_proofs nb_parts;
      close_in !Xproof.ic_prf;
      0
-
+ *)
   | f::args ->
      let r = range args in
      let dk = is_dk f in

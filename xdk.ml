@@ -12,11 +12,17 @@ open Xproof
 (****************************************************************************)
 
 (* Dedukti valid identifiers *)
-let is_alpha = function 'a'..'z' | 'A'..'Z' | '0'..'9' -> true | _ -> false;;
-let is_valid_letter = function
-  | '_' | '\'' | 'a'..'z' | 'A'..'Z' | '0'..'9' -> true | _ -> false;;
+let is_valid_first_letter = function
+  | 'a'..'z' | 'A'..'Z' | '0'..'9' | '_' | '!' | '?' -> true
+  | _ -> false;;
+let is_valid_non_first_letter = function
+  | 'a'..'z' | 'A'..'Z' | '0'..'9' | '_' | '!' | '?' | '\'' -> true
+  | _ -> false;;
 let is_valid_id s =
-  s <> "" && is_alpha s.[0] && String.for_all is_valid_letter s;;
+  String.for_all is_valid_non_first_letter s
+  && s <> ""
+  && s.[0] <> '\''
+  && s <> "_";;
 
 (* We rename some symbols to make files smaller and more readable. *)
 let valid_name = function
@@ -115,16 +121,7 @@ let abbrev_typ =
      | _ -> out oc "(%a%a)" typ_abbrev k (list_prefix " " raw_typ) tvs
 ;;
 
-(*let typ =
-  (*if !use_abbrev then*)
-  fun tvs oc b -> abbrev_typ oc (missing_as_bool tvs b)
-  (*else unabbrev_typ*)
-;;*)
-
-let typ ?(abbrev=true) tvs oc b =
-  if abbrev then abbrev_typ oc (missing_as_bool tvs b)
-  else unabbrev_typ tvs oc b
-;;
+let typ tvs oc b = abbrev_typ oc (missing_as_bool tvs b);;
 
 (* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
 let decl_map_typ oc =
@@ -308,11 +305,10 @@ let rename tvs =
   in rename
 ;;
 
-let term =
-  (*if !use_abbrev then*)
-    fun tvs rmap oc t -> abbrev_term tvs oc (rename tvs rmap t)
-  (*else unabbrev_term*)
-;;
+(* [term tvs rmap oc t] prints on [oc] the term [t] with type
+   variables [tvs] and term variable renaming map [rmap]. A variable
+   of type [b] not in [rmap] is replaced by [el b]. *)
+let term tvs rmap oc t = abbrev_term tvs oc (rename tvs rmap t);;
 
 (* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
 let decl_map_term oc =
