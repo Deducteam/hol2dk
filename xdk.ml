@@ -12,11 +12,17 @@ open Xproof
 (****************************************************************************)
 
 (* Dedukti valid identifiers *)
-let is_alpha = function 'a'..'z' | 'A'..'Z' | '0'..'9' -> true | _ -> false;;
-let is_valid_letter = function
-  | '_' | '\'' | 'a'..'z' | 'A'..'Z' | '0'..'9' -> true | _ -> false;;
+let is_valid_first_letter = function
+  | 'a'..'z' | 'A'..'Z' | '0'..'9' | '_' | '!' | '?' -> true
+  | _ -> false;;
+let is_valid_non_first_letter = function
+  | 'a'..'z' | 'A'..'Z' | '0'..'9' | '_' | '!' | '?' | '\'' -> true
+  | _ -> false;;
 let is_valid_id s =
-  s <> "" && is_alpha s.[0] && String.for_all is_valid_letter s;;
+  String.for_all is_valid_non_first_letter s
+  && s <> ""
+  && s.[0] <> '\''
+  && s <> "_";;
 
 (* We rename some symbols to make files smaller and more readable. *)
 let valid_name = function
