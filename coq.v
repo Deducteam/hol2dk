@@ -1509,6 +1509,19 @@ Lemma LAST_def {A : Type'} (l : list A) : (@last A l (el A)) = (@ε ((prod nat (
 Proof. 
   Admitted.
 
+Lemma COND_list {A : Type'} (l0 l1 l2 : list A) : 
+match l0 with 
+| nil => l1
+| cons h t => l2
+end
+= COND (l0 = nil) l1 l2.
+Proof.
+  induction l0. symmetry. assert ((@nil A = nil) = True). apply prop_ext. auto. auto. 
+  rewrite H. apply COND_True.
+  assert ((a :: l0 = nil) = False). apply prop_ext. intro. assert (nil <> a :: l0). apply nil_cons. easy. easy. 
+  rewrite H. symmetry. apply COND_False.
+Qed.       
+
 Lemma BUTLAST_def {_25251 : Type'} : (@removelast _25251) = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))) -> (list' _25251) -> list' _25251) (fun BUTLAST' : (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))) -> (list _25251) -> list _25251 => forall _17958 : prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))), ((BUTLAST' _17958 (@nil _25251)) = (@nil _25251)) /\ (forall h : _25251, forall t : list _25251, (BUTLAST' _17958 (@cons _25251 h t)) = (@COND (list' _25251) (t = (@nil _25251)) (@nil _25251) (@cons _25251 h (BUTLAST' _17958 t))))) (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))))))))))).
 Proof. 
   generalize (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0))))))), 
@@ -1522,10 +1535,13 @@ Proof.
   match goal with |- _ = ε ?x _ _ => set (Q := x) end.
   assert (i: exists q, Q q). exists (fun _ => @removelast _25251). unfold Q. intro. split.
   simpl. reflexivity.
-  intros. admit.
+  intros. simpl. apply COND_list.
   generalize (ε_spec i). intro H. symmetry. 
   induction l. simpl. apply H.
-  assert (ε Q p (a :: l) = COND (l = nil) nil (a :: ε Q p l)). apply H. simpl. rewrite <- IHl. Admitted.    
+  assert (ε Q p (a :: l) = COND (l = nil) nil (a :: ε Q p l)). 
+  apply H. simpl. rewrite <- IHl. transitivity (COND (l = nil) nil (a :: ε Q p l)). 
+  exact H0. symmetry. apply COND_list.
+Qed.     
 
 (* HOL's 'ALL' uses Prop while Coq's 'forallb' uses bool, idem for HOL's 'FILTER' and Coq's 'filter', hence
 it is not possible to align these definitions. *)
