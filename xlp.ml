@@ -104,7 +104,8 @@ let abbrev_typ =
      | _ -> out oc "(type%d%a)" k (list_prefix " " raw_typ) tvs
 ;;
 
-let typ oc b = if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;
+let typ oc b = abbrev_typ oc b;;
+  (*if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;*)
 
 (* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
 let decl_map_typ oc =
@@ -264,10 +265,9 @@ let rec rename rmap t =
      let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
 ;;
 
-let term rmap oc t =
-  if !use_abbrev then abbrev_term oc (rename rmap t)
-  else unabbrev_term rmap oc (rename rmap t)
-;;
+let term rmap oc t = abbrev_term oc (rename rmap t);;
+  (*if !use_abbrev then abbrev_term oc (rename rmap t)
+  else unabbrev_term rmap oc (rename rmap t);;*)
 
 (* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
 let decl_map_term oc =
@@ -672,7 +672,7 @@ let export_theorems_part k b map_thid_name =
       for i = 1 to k do require oc b ("_part_" ^ string_of_int i) done;
       out_map_thid_name false oc map_thid_name)
 ;;
-
+(*
 (****************************************************************************)
 (* Generate a lp file without abbreviations for each proof step. *)
 (****************************************************************************)
@@ -809,3 +809,4 @@ let gen_coq_makefile_one_file_by_prf b nb_proofs nb_parts =
           \trm -f *.glob *.vo* .*.aux *.lpo *.dko\n";
   close_out oc
 ;;
+*)

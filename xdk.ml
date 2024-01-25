@@ -115,16 +115,7 @@ let abbrev_typ =
      | _ -> out oc "(%a%a)" typ_abbrev k (list_prefix " " raw_typ) tvs
 ;;
 
-(*let typ =
-  (*if !use_abbrev then*)
-  fun tvs oc b -> abbrev_typ oc (missing_as_bool tvs b)
-  (*else unabbrev_typ*)
-;;*)
-
-let typ ?(abbrev=true) tvs oc b =
-  if abbrev then abbrev_typ oc (missing_as_bool tvs b)
-  else unabbrev_typ tvs oc b
-;;
+let typ tvs oc b = abbrev_typ oc (missing_as_bool tvs b);;
 
 (* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
 let decl_map_typ oc =
@@ -308,11 +299,10 @@ let rename tvs =
   in rename
 ;;
 
-let term =
-  (*if !use_abbrev then*)
-    fun tvs rmap oc t -> abbrev_term tvs oc (rename tvs rmap t)
-  (*else unabbrev_term*)
-;;
+(* [term tvs rmap oc t] prints on [oc] the term [t] with type
+   variables [tvs] and term variable renaming map [rmap]. A variable
+   of type [b] not in [rmap] is replaced by [el b]. *)
+let term tvs rmap oc t = abbrev_term tvs oc (rename tvs rmap t);;
 
 (* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
 let decl_map_term oc =
