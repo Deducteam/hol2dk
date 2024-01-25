@@ -171,8 +171,6 @@ let hstats oc hs =
 (* Sharing of strings, types and terms. *)
 (****************************************************************************)
 
-let sharing = ref false;;
-
 module StrHash = struct
   type t = string
   let equal x1 x2 = x1 == x2 || x1 = x2
@@ -272,11 +270,11 @@ let tyvars b = List.sort_uniq compare (tyvars b);;
 (* [missing_as_bool tvs b] replaces in [b] every type variable not in
    [tvs]. *)
 let missing_as_bool tvs =
-  let rec typ b =
+  let rec aux b =
     match b with
     | Tyvar _ -> if List.mem b tvs then b else bool_ty
-    | Tyapp(n,bs) -> mk_type(n, List.map typ bs)
-  in typ
+    | Tyapp(n,bs) -> mk_type(n, List.map aux bs)
+  in aux
 ;;
 
 (* [type_var i tv] returns [v, tv] where [v] is the type variable of
@@ -289,7 +287,7 @@ let type_var =
     else (log "a_max = %d\n%!" i; hmk_vartype ("a" ^ string_of_int i))
   in v, tv
 ;;
-
+(*
 (* Without sharing, [canonical_typ b] returns the type variables of
    [b] together with a type alpha-equivalent to [b] such that, for any
    type [b'] alpha-equivalent to [b], [canonical_typ b' =
@@ -297,12 +295,12 @@ let type_var =
 let canonical_typ b =
   let tvs = tyvars b in tvs, type_subst (List.mapi type_var tvs) b
 ;;
-
-(* With sharing, [hcanonical_typ b] returns the type variables of [b]
+ *)
+(* With sharing, [canonical_typ b] returns the type variables of [b]
    together with a type alpha-equivalent to [b] such that, for any
    type [b'] alpha-equivalent to [b], [canonical_typ b' =
    canonical_typ b]. *)
-let hcanonical_typ =
+let canonical_typ =
   let rec type_subst s b =
     match b with
     | Tyapp(c,bs) -> hmk_tyapp (c, List.map (type_subst s) bs)
@@ -311,9 +309,6 @@ let hcanonical_typ =
   fun b ->
   let tvs = tyvars b in tvs, type_subst (List.mapi type_var tvs) b
 ;;
-
-let canonical_typ b =
-  if !sharing then hcanonical_typ b else canonical_typ b;;
 
 (* Subterm positions in types are represented as list of natural numbers. *)
 
@@ -522,7 +517,7 @@ let term_var =
      in v, hmk_var(s,b)
   | _ -> assert false
 ;;
-
+(*
 (* [canonical_term t] returns the free type and term variables of [t]
    together with a term alpha-equivalent to [t] so that
    [canonical_term t = canonical_term u] if [t] and [u] are
@@ -556,16 +551,16 @@ let canonical_term =
   let bs = List.map get_vartype vs' and su' = List.mapi term_var vs' in
   tvs, vs, bs, subst 0 su' t'
 ;;
-
+ *)
 (****************************************************************************)
 (* Canonical term for alpha-equivalence with sharing. *)
 (****************************************************************************)
 
-(* [hcanonical_term t] returns the free type and term variables of [t]
+(* [canonical_term t] returns the free type and term variables of [t]
    together with a term alpha-equivalent to [t] so that
-   [hcanonical_term t = hcanonical_term u] if [t] and [u] are
+   [canonical_term t = canonical_term u] if [t] and [u] are
    alpha-equivalent. *)
-let hcanonical_term =
+let canonical_term =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
   let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted
@@ -594,9 +589,6 @@ let hcanonical_term =
   let bs = List.map get_vartype vs' and su' = List.mapi term_var vs' in
   tvs, vs, bs, subst 0 su' t'
 ;;
-
-let canonical_term t =
-  if !sharing then hcanonical_term t else canonical_term t;;
 
 (****************************************************************************)
 (* Functions on proofs. *)

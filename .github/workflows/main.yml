@@ -51,7 +51,7 @@ jobs:
           eval `opam env`
           cp xci.ml hol-light/
           cd hol-light
-          hol2dk dump-use-simp xci.ml
+          hol2dk dump-simp-use xci.ml
       - name: Generate and check single-threaded dk output
         run: |
           eval `opam env`
