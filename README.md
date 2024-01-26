@@ -421,8 +421,8 @@ Dumping of `hol.ml`:
   * purge time: 11s
   * unused proof steps after purge: 60%
 
-| rule         |  % |
-|:-------------|---:|
+| rule       |  % |
+|:-----------|---:|
 | comb       | 20 |
 | term_subst | 17 |
 | refl       | 16 |
@@ -444,12 +444,12 @@ Dumping of `hol.ml`:
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make sti: <1s
-  * make -j32 lp: 42s 1.2G
-  * make mklp: 39s 2.7M
+  * make -j32 lp: 44s 1.2G
+  * make mklp: 36s 3.5M
   * make -j32 lpo: 1h36m 0.9G
-  * make -j32 v: 42s 1.1G
-  * make mkv: 41s 2.7M
-  * make -j16 vo: 32m20s 3.1G
+  * make -j32 v: 46s 1.1G
+  * make mkv: 32s 3.4M
+  * make -j16 vo: 40m29s 3.5G
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
   * hol2dk mk 100: 14s

@@ -156,12 +156,13 @@ let hstats oc hs =
   let histo = hs.bucket_histogram in
   out oc "buckets with 0 bindings: %#d (%d%% of buckets)\n"
     histo.(0) (percent histo.(0) hs.num_buckets);
-  out oc "bindings | buckets |    %% | cumulated | %% bindings\n";
+  out oc "| bindings | buckets |    %% | cumulated | %% bindings |\n";
+  out oc "|----------|---------|-------|-----------|-------------|\n";
   let sum = ref 0 in
   for i = 1 to min 10 hs.max_bucket_length do
     let n = i * histo.(i) in
     sum := !sum + n;
-    out oc "%8d | %#7d | %3d%% | %#9d | %2d%%\n"
+    out oc "| %8d | %#7d | %3d%% | %#9d | %2d%% |\n"
       i histo.(i) (percent n hs.num_bindings)
       !sum (percent !sum hs.num_bindings)
   done
@@ -850,6 +851,7 @@ let const_typ_vars_pos n =
 (* Sharing of subterms. *)
 (****************************************************************************)
 
+(* [htype_of] is the composition of [htype] and [type_of]. *)
 let rec htype_of =
   let arr = share_string "fun" in
   fun tm ->
@@ -866,33 +868,60 @@ let rec htype_of =
   | _ -> assert false
 ;;
 
-(* Table injectively mapping a term [t] to [k,t',t] where [t'] is
-   [mk_var("z" ^ string_of_int k)]. *)
-let htbl_subterms : (term * term) TrmHashtbl.t =
+(* Table mapping a term [t] to [t,t',c,k] where [t'] is the alias for
+   [t], [c] indicates if [t] contains some variable, and [k] indicates
+   the rank of the alias. *)
+let htbl_subterms : (term * term * bool * int) TrmHashtbl.t =
   TrmHashtbl.create 1_000_000;;
+
+(* [contains_var_typ b] holds iff [b] contains a type variable. *)
+let rec contains_var_typ b =
+  match b with
+  | Tyvar _ -> true
+  | Tyapp(_,bs) -> List.exists contains_var_typ bs
+;;
+
+(* [contains_var t] holds iff [t] contains a term or type variable. *)
+let rec contains_var t =
+  match t with
+  | Var _ | Abs _ -> true
+  | Const(_,b) -> contains_var_typ b
+  | Comb(u,v) -> contains_var v || contains_var u
+;;
 
 let share_subterm =
   let idx = ref (-1) in
   fun l t ->
-  (*log "share_subterm %a %a\n" (olist (opair oterm oterm)) !l oterm t;*)
-  try let (t,t') as x = TrmHashtbl.find htbl_subterms t in
-      (*log "found\n";*)
-      if t != t' && List.for_all ((!=) x) !l then
-        begin l := x::!l; (*log "add let %a\n" (opair oterm oterm) x*) end;
-      t'
+  try let (t,t',c,_) as x = TrmHashtbl.find htbl_subterms t in
+      if c && t != t' && List.for_all ((!=) x) !l then l := x::!l; t'
   with Not_found ->
-        (*log "not found\n";*)
     match t with
-    | Var _ | Const _ ->
-       (*log "add %a\n" (opair oterm oterm) (t,t);*)
-       TrmHashtbl.add htbl_subterms t (t,t); t
-    | _ ->
+    | Var _ -> TrmHashtbl.add htbl_subterms t (t,t,true,-1); t
+    | Const(_,b) ->
+       TrmHashtbl.add htbl_subterms t (t,t,contains_var_typ b,-1); t
+    | Comb(u,v) ->
        let k = !idx + 1 in
        idx := k;
        let s = share_string ("z" ^ string_of_int k) in
        let t' = mk_var(s, htype_of t) in
-       let x = (t,t') in
-       (*log "add %a\n" (opair oterm oterm) x;*)
+       let c =
+         match TrmHashtbl.find_opt htbl_subterms v with
+         | None -> contains_var v
+         | Some(_,_,true,_) -> true
+         | Some(_,_,false,_) ->
+            match TrmHashtbl.find_opt htbl_subterms u with
+            | Some(_,_,c,_) -> c
+            | None -> contains_var u
+       in
+       let x = (t,t',c,k) in
+       TrmHashtbl.add htbl_subterms t x;
+       if c then l := x::!l; t'
+    | Abs _ ->
+       let k = !idx + 1 in
+       idx := k;
+       let s = share_string ("z" ^ string_of_int k) in
+       let t' = mk_var(s, htype_of t) in
+       let x = (t,t',true,k) in
        TrmHashtbl.add htbl_subterms t x;
        l := x::!l; t'
 ;;

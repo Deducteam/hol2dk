@@ -20,14 +20,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command theorem to generate the lp files corresponding to a named theorem
 - Makefile to generate and check lp and coq files generated with split
 - command size to get statistics on the size of terms
-- option --sharing for using maximal sharing when recording term abbreviations
 - option --print-stats to print statistics on hash tables at exit
+- use hash tables instead of maps to build abbreviations maps
+- use sharing when building canonical types and terms
+- use sharing in lp output for defining term abbreviations
 
 ### Modified
 
 - identifier renamings
 - merged the command dg in the command mk
 - fusion.ml: do not generate new theorems for empty instantiations
+
+### Fixed
+
+- valid dedukti and lambdapi identifiers
 
 ## 0.0.1 (2023-11-22)
 

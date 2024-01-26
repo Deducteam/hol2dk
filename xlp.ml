@@ -271,6 +271,8 @@ let term rmap oc t = abbrev_term oc (rename rmap t);;
 
 (* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
 let decl_term_abbrevs oc =
+  let print_let oc (t,t',_,_) =
+    out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
   let abbrev t (k,n,bs) =
     out oc "symbol term%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
@@ -279,14 +281,20 @@ let decl_term_abbrevs oc =
     (* We can use [raw_term] here since [t] is canonical. *)
     (*out oc " ≔ %a;\n" raw_term t*)
     let t', l = shared t in
-    let print_let oc (t,t') =
-      out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
     out oc " ≔%a %a;\n" (list print_let) l raw_term t'
   in
-  (*List.iter abbrev
-    (List.sort (fun (_,(k1,_,_)) (_,(k2,_,_)) -> k1 - k2)
-       (MapTrm.fold (fun b x l -> (b,x)::l) m []))*)
   TrmHashtbl.iter abbrev htbl_term_abbrev
+;;
+
+(* [decl_subterm_abbrevs oc] outputs on [oc] the subterm abbreviations
+   with no variables. *)
+let decl_subterm_abbrevs =
+  let add _ x l = match x with t,t',false,_ when t != t' -> x::l | _ -> l
+  and cmp (_,_,_,k1) (_,_,_,k2) = k1 - k2 in
+  fun oc ->
+  (* print closed subterm abbreviations *)
+  let abbrev (t,t',_,_) = out oc "symbol %a ≔ %a;\n" raw_term t' raw_term t in
+  List.iter abbrev (List.sort cmp (TrmHashtbl.fold add htbl_subterms []))
 ;;
 
 (****************************************************************************)
@@ -614,8 +622,13 @@ let export_term_abbrevs b n s =
   export n (s ^ "_term_abbrevs")
     (fun oc ->
       List.iter (require oc b) ["_types"; "_terms"];
+      List.iter (require oc n) [s ^ "_type_abbrevs"; s ^ "_subterm_abbrevs"];
+      decl_term_abbrevs oc);
+  export n (s ^ "_subterm_abbrevs")
+    (fun oc ->
+      List.iter (require oc b) ["_types"; "_terms"];
       List.iter (require oc n) [s ^ "_type_abbrevs"];
-      decl_term_abbrevs oc)
+      decl_subterm_abbrevs oc)
 ;;
 
 let export_axioms b =

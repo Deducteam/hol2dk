@@ -1,6 +1,10 @@
 TODO
 ----
 
+- remove/comment code for mk (i.e. use split as default)
+
+- remove the need to define BASE in Makefile
+
 - improve efficiency of code outputing dk/lp (avoid multiple term traversals)
 
 - generate lp.mk and coq.mk at the same time as lp files

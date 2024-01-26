@@ -46,7 +46,7 @@ clean-lpo:
 	find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: v
-v: theory_hol.v $(BASE_FILES:%=%.v) $(STI_FILES:%.sti=%.v) $(STI_FILES:%.sti=%_type_abbrevs.v) $(STI_FILES:%.sti=%_term_abbrevs.v)
+v: theory_hol.v $(BASE_FILES:%=%.v) $(STI_FILES:%.sti=%.v) $(STI_FILES:%.sti=%_type_abbrevs.v) $(STI_FILES:%.sti=%_term_abbrevs.v) $(STI_FILES:%.sti=%_subterm_abbrevs.v)
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
