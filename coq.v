@@ -1434,23 +1434,12 @@ Qed.
 
 Require Import List.
 
-(* Contrary to Coq, the head of the empty list NIL is not defined in HOL-Light, 
-so the definitions in Coq and HOL-Light can't be aligned *)
-Lemma HD_def {A : Type'} : (@hd A (el A)) = (@ε ((prod nat nat) -> (list A) -> A) (fun HD' : (prod nat nat) -> (list A) -> A => forall _17927 : prod nat nat, forall t : list A, forall h : A, (HD' _17927 (@cons A h t)) = h) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))).
-Proof.
-  apply fun_ext. intro l. simpl.
-  match goal with |- _ = ε ?x _ _ => set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _ => @hd A (el A)). unfold Q. intros. reflexivity.
-  generalize (ε_spec i). intro H. symmetry. auto. 
-  induction l. simpl. 2: auto. Admitted. 
-
-Lemma TL_def {A : Type'} : (@tl A) = (@ε ((prod nat nat) -> (list' A) -> list' A) (fun TL' : (prod nat nat) -> (list A) -> list A => forall _17931 : prod nat nat, forall h : A, forall t : list A, (TL' _17931 (@cons A h t)) = t) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))). 
-Proof.
-  apply fun_ext. intro l. simpl.
-  match goal with |- _ = ε ?x _ _ => set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _ => @tl A). unfold Q. intros. reflexivity.
-  generalize (ε_spec i). intro H. symmetry.
-  induction l. simpl. 2: auto. Admitted.
+(* 
+Remark on the alignment of definitions on lists: 
+contrary to Coq, the head (resp. tail, last element) of the empty list NIL is not defined in HOL-Light, 
+so the definitions `hd` (resp. `tl`, `last`) in Coq and `HD` (resp. `TL`, `LAST`) in HOL-Light can't be aligned.
+Also,  HOL's 'FILTER' uses Prop while Coq's 'filter' uses bool, hence it is not possible to align these definitions. 
+*)
 
 Lemma APPEND_def {A : Type'} : (@app A) = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (list' A) -> (list' A) -> list' A) (fun APPEND' : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (list A) -> (list A) -> list A => forall _17935 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), (forall l : list A, (APPEND' _17935 (@nil A) l) = l) /\ (forall h : A, forall t : list A, forall l : list A, (APPEND' _17935 (@cons A h t) l) = (@cons A h (APPEND' _17935 t l)))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))))))).
 Proof.
@@ -1505,12 +1494,6 @@ Proof.
   simpl. rewrite <- IHl. apply H.
 Qed. 
 
-(* Contrary to Coq, the last element of the empty list NIL is not defined in HOL-Light, 
-so the definitions below in Coq and HOL-Light can't be aligned *)
-Lemma LAST_def {A : Type'} (l : list A) : (@last A l (el A)) = (@ε ((prod nat (prod nat (prod nat nat))) -> (list A) -> A) (fun LAST' : (prod nat (prod nat (prod nat nat))) -> (list A) -> A => forall _17954 : prod nat (prod nat (prod nat nat)), forall h : A, forall t : list A, (LAST' _17954 (@cons A h t)) = (@COND A (t = (@nil A)) h (LAST' _17954 t))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))) l.
-Proof. 
-  Admitted.
-
 Lemma COND_list {A : Type'} (l0 l1 l2 : list A) : 
 match l0 with 
 | nil => l1
@@ -1544,23 +1527,6 @@ Proof.
   apply H. simpl. rewrite <- IHl. transitivity (COND (l = nil) nil (a :: ε Q p l)). 
   exact H0. symmetry. apply COND_list.
 Qed.     
-
-(* HOL's 'ALL' uses Prop while Coq's 'forallb' uses bool, idem for HOL's 'FILTER' and Coq's 'filter', hence
-it is not possible to align these definitions. *)
-
-(*
-Definition ALL {_25307 : Type'} := @ε ((prod nat (prod nat nat)) -> (_25307 -> Prop) -> (list _25307) -> Prop) (fun ALL' : (prod nat (prod nat nat)) -> (_25307 -> Prop) -> (list _25307) -> Prop => forall _17973 : prod nat (prod nat nat), (forall P : _25307 -> Prop, (ALL' _17973 P (@nil _25307)) = True) /\ (forall h : _25307, forall P : _25307 -> Prop, forall t : list _25307, (ALL' _17973 P (@cons _25307 h t)) = ((P h) /\ (ALL' _17973 P t)))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))). 
-
-Lemma ForallPairs_nil {A : Type'} (R : A -> A -> Prop) : @ForallPairs A R nil = True.
-Proof.
-  unfold ForallPairs. simpl. apply prop_ext. easy. easy. 
-Qed.  
-
-Lemma ForallPairs_cons {A : Type'} (R : A -> A -> Prop) (h : A) (t : list A) :
-  @ForallPairs A R (h :: t) = ((@ALL A (R h) t) /\ @ForallPairs A R t).
-Proof.
-    induction t. rewrite ForallPairs_nil; simpl. unfold ForallPairs; simpl.
-*)
 
 Lemma ALL_def {_25307 : Type'} : (@Forall _25307) = (@ε ((prod nat (prod nat nat)) -> (_25307 -> Prop) -> (list _25307) -> Prop) (fun ALL' : (prod nat (prod nat nat)) -> (_25307 -> Prop) -> (list _25307) -> Prop => forall _17973 : prod nat (prod nat nat), (forall P : _25307 -> Prop, (ALL' _17973 P (@nil _25307)) = True) /\ (forall h : _25307, forall P : _25307 -> Prop, forall t : list _25307, (ALL' _17973 P (@cons _25307 h t)) = ((P h) /\ (ALL' _17973 P t)))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))))))).
 Proof.
