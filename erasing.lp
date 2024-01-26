@@ -189,6 +189,7 @@ builtin "REVERSE_def" ≔ REVERSE_def;
 builtin "LENGTH_def" ≔ LENGTH_def;
 builtin "MAP_def" ≔ MAP_def;
 builtin "LAST_def" ≔ LAST_def;
+builtin "ALL_def" ≔ ALL_def;
 builtin "ALLPAIRS_def" ≔ ALLPAIRS_def;
 builtin "PAIRWISE_def" ≔ PAIRWISE_def;
 builtin "nil" ≔ NIL;
