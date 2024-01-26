@@ -1563,7 +1563,19 @@ Proof.
 *)
 
 Lemma ALL_def {_25307 : Type'} : (@Forall _25307) = (@ε ((prod nat (prod nat nat)) -> (_25307 -> Prop) -> (list _25307) -> Prop) (fun ALL' : (prod nat (prod nat nat)) -> (_25307 -> Prop) -> (list _25307) -> Prop => forall _17973 : prod nat (prod nat nat), (forall P : _25307 -> Prop, (ALL' _17973 P (@nil _25307)) = True) /\ (forall h : _25307, forall P : _25307 -> Prop, forall t : list _25307, (ALL' _17973 P (@cons _25307 h t)) = ((P h) /\ (ALL' _17973 P t)))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))))))).
-Proof. Admitted.
+Proof.
+  generalize (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0))))))), 
+    (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
+      NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))))); intro p.
+  apply fun_ext. intro P. apply fun_ext. intro l.  
+  match goal with |- _ = ε ?x _ _ _=> set (Q := x) end.
+  assert (i : exists q, Q q). exists (fun _ => @Forall _25307). 
+  unfold Q. intro. split. intro. apply prop_ext. trivial. intro. apply Forall_nil.
+  intros h P0 t. apply prop_ext; apply Forall_cons_iff. 
+  generalize (ε_spec i). intro. induction l; destruct (H p) as [H1 H2].  
+  rewrite H1. apply prop_ext. trivial. intro; apply Forall_nil. rewrite H2. 
+  transitivity (P a /\ Forall P l). apply prop_ext; apply Forall_cons_iff. rewrite IHl. reflexivity.
+Qed.                
 
 Lemma ForallOrdPairs_nil {A : Type'} (R : A -> A -> Prop) : @ForallOrdPairs A R nil = True.
 Proof. 
