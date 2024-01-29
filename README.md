@@ -221,7 +221,7 @@ mkdir -p ~/output-hol2dk/hol
 cd ~/output-hol2dk/hol
 $HOL2DK_DIR/add-links hol
 ```
-This will add links to files that are needed to generate, translate and check proofs.
+This will add links to files needed to generate, translate and check proofs.
 
 **By generating a lp file for each named theorem: command `split`**
 
@@ -239,6 +239,8 @@ make BASE=file -j $jobs v # generate v files
 make BASE=file mkv # generate coq.mk (v files dependencies)
 make BASE=file -j $jobs vo # check v files
 ```
+
+Remark: you do not need to write `BASE=file` if the directory name is `file`.
 
 **By splitting proofs in several parts: command `mk`**
 

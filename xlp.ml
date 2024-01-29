@@ -20,7 +20,7 @@ let name =
     ; "|-", "vdash"
     ; "|=>", "bar_imp"]
   in
-  fun oc n ->
+  fun oc n -> if n = "_" then log "underscore\n%!";
   string oc
     begin match n with
     | "" -> assert false
@@ -40,7 +40,7 @@ let name =
     | ".." -> "…" (* 2026 *)
     | "|" -> "¦" (* 00A6 *)
     | "||" -> "¦¦"
-    |"abort"|"admit"|"admitted"|"apply"|"as"|"assert"|"assertnot"
+    |"_"|"abort"|"admit"|"admitted"|"apply"|"as"|"assert"|"assertnot"
     |"associative"|"assume"|"begin"|"builtin"|"coerce_rule"|"commutative"
     |"compute"|"constant"|"debug"|"end"|"fail"|"flag"|"generalize"|"have"
     |"in"|"induction"|"inductive"|"infix"|"injective"|"left"|"let"|"notation"
@@ -48,9 +48,10 @@ let name =
     |"proofterm"|"protected"|"prover"|"prover_timeout"|"quantifier"|"refine"
     |"reflexivity"|"remove"|"require"|"rewrite"|"right"|"rule"|"search"
     |"sequential"|"simplify"|"solve"|"symbol"|"symmetry"|"type"|"TYPE"
-    |"unif_rule"|"verbose"|"why3"|"with" -> n ^ "_"
-    | _ -> (* for Coq *)
-       Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
+    |"unif_rule"|"verbose"|"why3"|"with" -> "_" ^ n
+    (* for Coq *)
+    | "%" -> n
+    | _ -> Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
     end
 ;;
 
@@ -65,7 +66,8 @@ let typ_name oc n =
     begin match n with
      | "" -> assert false
        (* type names used also as constant names are capitalized *)
-     | "sum" | "topology" | "metric" | "multiset" -> String.capitalize_ascii n
+     |"sum"|"topology"|"metric"|"multiset"|"group" ->
+       String.capitalize_ascii n
      | n ->
         if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
         else n
@@ -279,9 +281,10 @@ let decl_term_abbrevs oc =
     (* We can use [abbrev_typ] here since [bs] are canonical. *)
     List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
     (* We can use [raw_term] here since [t] is canonical. *)
-    (*out oc " ≔ %a;\n" raw_term t*)
-    let t', l = shared t in
-    out oc " ≔%a %a;\n" (list print_let) l raw_term t'
+    if !use_sharing then
+      let t', l = shared t in
+      out oc " ≔%a %a;\n" (list print_let) l raw_term t'
+    else out oc " ≔ %a;\n" raw_term t
   in
   TrmHashtbl.iter abbrev htbl_term_abbrev
 ;;

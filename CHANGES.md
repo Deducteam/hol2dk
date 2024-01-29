@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - option --print-stats to print statistics on hash tables at exit
 - use hash tables instead of maps to build abbreviations maps
 - use sharing when building canonical types and terms
-- use sharing in lp output for defining term abbreviations
+- add option --use-sharing for using sharing in lp output when defining term abbreviations
 
 ### Modified
 

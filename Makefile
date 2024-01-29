@@ -1,6 +1,6 @@
 .SUFFIXES:
 
-BASE = hol
+BASE = $(shell basename `pwd`)
 
 STI_FILES := $(wildcard *.sti)
 
@@ -28,12 +28,21 @@ $(BASE_FILES:%=%.lp) &:
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
+CHAIN_BOUNDARY_BOUNDARY.lp GRASSMANN_PLUCKER_4.lp HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS.lp: HOL2DK_OPTIONS = --use-sharing
+
 %.lp: %.sti
-	hol2dk theorem $(BASE) $@
+	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
 
 .PHONY: clean-lp
 clean-lp:
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+
+.PHONY: mklp
+mklp lp.mk:
+	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lp.mk
+	touch Makefile
+
+include lp.mk
 
 .PHONY: lpo
 lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STI_FILES:%.sti=%.lpo) $(STI_FILES:%.sti=%_type_abbrevs.lpo) $(STI_FILES:%.sti=%_term_abbrevs.lpo)
@@ -57,16 +66,12 @@ clean-v:
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
 .PHONY: mkv
-mkv coq.mk:
-	find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
+mkv coq.mk: lp.mk
+	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lp.mk > coq.mk
+	touch Makefile
+#find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
 
 include coq.mk
-
-.PHONY: mklp
-mklp lp.mk:
-	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lp.mk
-
-include lp.mk
 
 .PHONY: vo
 vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STI_FILES:%.sti=%.vo) $(STI_FILES:%.sti=%_type_abbrevs.vo) $(STI_FILES:%.sti=%_term_abbrevs.vo)

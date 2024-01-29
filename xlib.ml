@@ -949,6 +949,8 @@ let shared t =
   t', List.rev !l
 ;;
 
+let use_sharing = ref false;;
+
 (****************************************************************************)
 (* Type and term abbreviations to reduce size of generated files. *)
 (****************************************************************************)

@@ -20,7 +20,9 @@ hol2dk options command arguments
 Options
 -------
 
---hstats: print statistics on hash tables at exit
+--use-sharing: define term abbreviations using sharing
+
+--print-stats: print statistics on hash tables at exit
 
 Dumping commands
 ----------------
@@ -353,6 +355,8 @@ and command = function
   | [] | ["-"|"--help"|"help"] -> usage(); 0
 
   | "--print-stats"::args -> at_exit print_hstats; command args
+
+  | "--use-sharing"::args -> use_sharing := true; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
