@@ -20,7 +20,7 @@ let name =
     ; "|-", "vdash"
     ; "|=>", "bar_imp"]
   in
-  fun oc n -> if n = "_" then log "underscore\n%!";
+  fun oc n ->
   string oc
     begin match n with
     | "" -> assert false
