@@ -28,7 +28,9 @@ $(BASE_FILES:%=%.lp) &:
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
-CHAIN_BOUNDARY_BOUNDARY.lp GRASSMANN_PLUCKER_4.lp HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS.lp: HOL2DK_OPTIONS = --use-sharing
+FILES_WITH_SHARING = #CHAIN_BOUNDARY_BOUNDARY GRASSMANN_PLUCKER_4 HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS
+
+$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --use-sharing
 
 %.lp: %.sti
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
@@ -40,7 +42,6 @@ clean-lp:
 .PHONY: mklp
 mklp lp.mk:
 	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lp.mk
-#	touch Makefile
 
 include lp.mk
 
@@ -55,7 +56,7 @@ clean-lpo:
 	find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: v
-v: theory_hol.v $(BASE_FILES:%=%.v) $(STI_FILES:%.sti=%.v) $(STI_FILES:%.sti=%_type_abbrevs.v) $(STI_FILES:%.sti=%_term_abbrevs.v) $(STI_FILES:%.sti=%_subterm_abbrevs.v)
+v: theory_hol.v $(BASE_FILES:%=%.v) $(STI_FILES:%.sti=%.v) $(STI_FILES:%.sti=%_type_abbrevs.v) $(STI_FILES:%.sti=%_term_abbrevs.v) $(FILES_WITH_SHARING:%=%_subterm_abbrevs.v)
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
@@ -68,13 +69,12 @@ clean-v:
 .PHONY: mkv
 mkv coq.mk: lp.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lp.mk > coq.mk
-#	touch Makefile
 #find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
 
 include coq.mk
 
 .PHONY: vo
-vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STI_FILES:%.sti=%.vo) $(STI_FILES:%.sti=%_type_abbrevs.vo) $(STI_FILES:%.sti=%_term_abbrevs.vo)
+vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STI_FILES:%.sti=%.vo) $(STI_FILES:%.sti=%_type_abbrevs.vo) $(STI_FILES:%.sti=%_term_abbrevs.vo) $(FILES_WITH_SHARING:%=%_subterm_abbrevs.vo)
 
 %.vo: %.v
 	coqc -R . HOLLight $<

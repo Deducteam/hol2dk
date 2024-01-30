@@ -25,21 +25,22 @@ The HOL-Light base library `hol.ml` and the libraries `Arithmetic` and
 `Logic` formalizing the metatheory of first-order logic can be
 exported and translated to Dedukti, Lambdapi and Coq in a few
 minutes. The generated Dedukti files can be checked in a few minutes
-also, but it takes a much longer time for Coq to check the generated
-files (28 minutes for `hol.ml`), and too much memory for Lambdapi.
+also, but it takes a much longer time for Coq and Lambdapi to check
+the generated files (28 minutes for Coq for `hol.ml`).
 
 On the other hand, `hol2dk` may take several hours to translate the
 proofs of a few particular theorems of the `Multivariate` library:
-`GRASSMANN_PLUCKER_4`, `CHAIN_BOUNDARY_BOUNDARY` and
+`CHAIN_BOUNDARY_BOUNDARY`, `GRASSMANN_PLUCKER_4` and
 `HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS`, because their proofs
-contain a lot of big terms.
+contain a lot of big terms. For such files, one should use the option
+`--use-sharing` to reduce the size of generated files.
 
-Finally, while it is possible to translate any HOL-Light proof to Coq,
-the translated theorem may not be directly usable by Coq users because
-HOL-Light types and functions may not be aligned with those of the Coq
-standard library yet. Currently, only the type of natural numbers and
-various functions on natural numbers have been aligned. We gathered
-the obtained 448 lemmas in the package
+Finally, while it is a priori possible to translate any HOL-Light
+proof to Coq, the translated theorem may not be directly usable by Coq
+users because HOL-Light types and functions may not be aligned with
+those of the Coq standard library yet. Currently, only the type of
+natural numbers and various functions on natural numbers have been
+aligned. We gathered the obtained 448 lemmas in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam). We
 are working on adding more mappings (lists, reals).
@@ -209,7 +210,7 @@ Generating dk/lp files in parallel
 
 Dk/lp file generation is linear in the size of dumped files. For big
 dumped files, we provide two different commands to do file generation
-in parallel using `make`: `mk` and `split`. Currently, only `mk`
+in parallel using `make`: `split` and `mk`. Currently, only `mk`
 allows to generate dk files, but `split` generate lp and coq files
 that are faster to check.
 
@@ -241,6 +242,8 @@ make BASE=file -j $jobs vo # check v files
 ```
 
 Remark: you do not need to write `BASE=file` if the directory name is `file`.
+
+Remark: if you have big files, add them in the variable `FILES_WITH_SHARING` in `Makefile`.
 
 **By splitting proofs in several parts: command `mk`**
 
@@ -445,12 +448,12 @@ Dumping of `hol.ml`:
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make sti: <1s
-  * make -j32 lp: 44s 1.2G
-  * make mklp: 36s 3.5M
-  * make -j32 lpo: 1h36m 0.9G
-  * make -j32 v: 46s 1.1G
-  * make mkv: 32s 3.4M
-  * make -j16 vo: 40m29s 3.5G
+  * make -j32 lp: 42s 1.1G (41s 1.2G with sharing)
+  * make mklp: 36s 2.7M (45s 3.5M with sharing)
+  * make -j16 lpo: 51m10s 9G
+  * make -j32 v: 45s 1.1G (47s 1.1G with sharing)
+  * make mkv: <1s 2.6M (3.4M with sharing)
+  * make -j16 vo: 31m35s 3.1G (40m37s 3.5G with sharing)
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
   * hol2dk mk 100: 14s

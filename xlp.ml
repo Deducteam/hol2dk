@@ -625,13 +625,15 @@ let export_term_abbrevs b n s =
   export n (s ^ "_term_abbrevs")
     (fun oc ->
       List.iter (require oc b) ["_types"; "_terms"];
-      List.iter (require oc n) [s ^ "_type_abbrevs"; s ^ "_subterm_abbrevs"];
+      require oc n (s ^ "_type_abbrevs");
+      if !use_sharing then require oc n (s ^ "_subterm_abbrevs");
       decl_term_abbrevs oc);
-  export n (s ^ "_subterm_abbrevs")
-    (fun oc ->
-      List.iter (require oc b) ["_types"; "_terms"];
-      List.iter (require oc n) [s ^ "_type_abbrevs"];
-      decl_subterm_abbrevs oc)
+  if !use_sharing then
+    export n (s ^ "_subterm_abbrevs")
+      (fun oc ->
+        List.iter (require oc b) ["_types"; "_terms"];
+        require oc n (s ^ "_type_abbrevs");
+        decl_subterm_abbrevs oc)
 ;;
 
 let export_axioms b =
