@@ -1,6 +1,109 @@
 NOTES
 -----
 
+## 25/01/24
+
+By introducing sharing in term abbreviations, we can reduce the size of some lp files significantly:
+
+| term_abbrevs.lp file                    | generation | size w/o sharing | size w/ sharing | %    |
+|-----------------------------------------|------------|------------------|-----------------|------|
+| CHAIN_BOUNDARY_BOUNDARY                 | 56m29s     | 5.2G             | 1.9G            | -63% |
+| GRASSMANN_PLUCKER_4                     | 3h25m27s   | 14G              | 4.7G            | -66% |
+| HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS | 6h48m57s   | 19G              | 5.3G            | -72% |
+
+but coq checking is slowed down: the checking of `hol.ml` takes 40m29s 3.5G with sharing and -j16 (it fails now with -j20) instead of 32m20s 3.1G with -j20 before.
+
+statistics on hashtables for CHAIN_BOUNDARY_BOUNDARY:
+  we need to improve the hash function on big terms
+
+string: 362_900 bindings, 262_144 buckets, 1.38 bindings/bucket, max 10
+buckets with 0 bindings: 65_814 (25% of buckets)
+
+| bindings | buckets | %   | cumulated | % bindings |
+|----------|---------|-----|-----------|------------|
+| 1        | 90_480  | 24% | 90_480    | 24%        |
+| 2        | 63_195  | 34% | 216_870   | 59%        |
+| 3        | 29_063  | 24% | 304_059   | 83%        |
+| 4        | 10_028  | 11% | 344_171   | 94%        |
+| 5        | 2_823   | 3%  | 358_286   | 98%        |
+| 6        | 598     | 0%  | 361_874   | 99%        |
+| 7        | 124     | 0%  | 362_742   | 99%        |
+| 8        | 14      | 0%  | 362_854   | 99%        |
+| 9        | 4       | 0%  | 362_890   | 99%        |
+| 10       | 1       | 0%  | 362_900   | 100%       |
+
+type: 371 bindings, 131_072 buckets, 0.00 bindings/bucket, max 9
+buckets with 0 bindings: 130_759 (99% of buckets)
+
+| bindings | buckets | %   | cumulated | % bindings |
+|----------|---------|-----|-----------|------------|
+| 1        | 278     | 74% | 278       | 74%        |
+| 2        | 24      | 12% | 326       | 87%        |
+| 3        | 5       | 4%  | 341       | 91%        |
+| 4        | 4       | 4%  | 357       | 96%        |
+| 5        | 1       | 1%  | 362       | 97%        |
+| 6        | 0       | 0%  | 362       | 97%        |
+| 7        | 0       | 0%  | 362       | 97%        |
+| 8        | 0       | 0%  | 362       | 97%        |
+| 9        | 1       | 2%  | 371       | 100%       |
+
+term: 382_063 bindings, 1_048_576 buckets, 0.36 bindings/bucket, max 46_266
+buckets with 0 bindings: 1_024_846 (97% of buckets)
+
+| bindings | buckets | %  | cumulated | % bindings |
+|----------|---------|----|-----------|------------|
+| 1        | 17_769  | 4% | 17_769    | 4%         |
+| 2        | 2_855   | 1% | 23_479    | 6%         |
+| 3        | 976     | 0% | 26_407    | 6%         |
+| 4        | 602     | 0% | 28_815    | 7%         |
+| 5        | 287     | 0% | 30_250    | 7%         |
+| 6        | 253     | 0% | 31_768    | 8%         |
+| 7        | 134     | 0% | 32_706    | 8%         |
+| 8        | 111     | 0% | 33_594    | 8%         |
+| 9        | 85      | 0% | 34_359    | 8%         |
+| 10       | 69      | 0% | 35_049    | 9%         |
+
+type_abbrev: 121 bindings, 131_072 buckets, 0.00 bindings/bucket, max 3
+buckets with 0 bindings: 130_957 (99% of buckets)
+
+| bindings | buckets | %   | cumulated | % bindings |
+|----------|---------|-----|-----------|------------|
+| 1        | 110     | 90% | 110       | 90%        |
+| 2        | 4       | 6%  | 118       | 97%        |
+| 3        | 1       | 2%  | 121       | 100%       |
+
+term_abbrev: 265_885 bindings, 1_048_576 buckets, 0.25 bindings/bucket, max 41_447
+buckets with 0 bindings: 1_043_364 (99% of buckets)
+
+| bindings | buckets | %  | cumulated | % bindings |
+|----------|---------|----|-----------|------------|
+| 1        | 3_522   | 1% | 3_522     | 1%         |
+| 2        | 870     | 0% | 5_262     | 1%         |
+| 3        | 222     | 0% | 5_928     | 2%         |
+| 4        | 165     | 0% | 6_588     | 2%         |
+| 5        | 55      | 0% | 6_863     | 2%         |
+| 6        | 44      | 0% | 7_127     | 2%         |
+| 7        | 20      | 0% | 7_267     | 2%         |
+| 8        | 21      | 0% | 7_435     | 2%         |
+| 9        | 22      | 0% | 7_633     | 2%         |
+| 10       | 32      | 0% | 7_953     | 2%         |
+
+subterms: 363_160 bindings, 1_048_576 buckets, 0.35 bindings/bucket, max 178
+buckets with 0 bindings: 742_670 (70% of buckets)
+
+| bindings | buckets | %   | cumulated | % bindings |
+|----------|---------|-----|-----------|------------|
+| 1        | 255_762 | 70% | 255_762   | 70%        |
+| 2        | 44_486  | 24% | 344_734   | 94%        |
+| 3        | 5_130   | 4%  | 360_124   | 99%        |
+| 4        | 459     | 0%  | 361_960   | 99%        |
+| 5        | 32      | 0%  | 362_120   | 99%        |
+| 6        | 10      | 0%  | 362_180   | 99%        |
+| 7        | 4       | 0%  | 362_208   | 99%        |
+| 8        | 4       | 0%  | 362_240   | 99%        |
+| 9        | 0       | 0%  | 362_240   | 99%        |
+| 10       | 2       | 0%  | 362_260   | 99%        |
+
 ## 19/01/24
 
 Arithmetic/make:
