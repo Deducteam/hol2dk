@@ -78,3 +78,15 @@ builtin "ltle" ≔ <<=;
 builtin "ltle_def" ≔ <<=_def;
 builtin "mapsto" ≔ vdash>;
 builtin "mapsto_def" ≔ vdash>_def;
+
+// Multivariate
+builtin "add_c" ≔ +_c;
+builtin "add_c_def" ≔ +_c_def;
+builtin "percent" ≔ %;
+builtin "percent_def" ≔ %_def;
+builtin "mul_c" ≔ *_c;
+builtin "mul_c_def" ≔ *_c_def;
+builtin "pow_c" ≔ ^_c;
+builtin "pow_c_def" ≔ ^_c_def;
+builtin "_at" ≔ at;
+builtin "_at_def" ≔ at_def;

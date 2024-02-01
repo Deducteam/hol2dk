@@ -40,7 +40,7 @@ let name =
     | ".." -> "…" (* 2026 *)
     | "|" -> "¦" (* 00A6 *)
     | "||" -> "¦¦"
-    |"abort"|"admit"|"admitted"|"apply"|"as"|"assert"|"assertnot"
+    |"_"|"abort"|"admit"|"admitted"|"apply"|"as"|"assert"|"assertnot"
     |"associative"|"assume"|"begin"|"builtin"|"coerce_rule"|"commutative"
     |"compute"|"constant"|"debug"|"end"|"fail"|"flag"|"generalize"|"have"
     |"in"|"induction"|"inductive"|"infix"|"injective"|"left"|"let"|"notation"
@@ -48,9 +48,10 @@ let name =
     |"proofterm"|"protected"|"prover"|"prover_timeout"|"quantifier"|"refine"
     |"reflexivity"|"remove"|"require"|"rewrite"|"right"|"rule"|"search"
     |"sequential"|"simplify"|"solve"|"symbol"|"symmetry"|"type"|"TYPE"
-    |"unif_rule"|"verbose"|"why3"|"with" -> n ^ "_"
-    | _ -> (* for Coq *)
-       Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
+    |"unif_rule"|"verbose"|"why3"|"with" -> "_" ^ n
+    (* for Coq *)
+    | "%" -> n
+    | _ -> Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
     end
 ;;
 
@@ -65,7 +66,8 @@ let typ_name oc n =
     begin match n with
      | "" -> assert false
        (* type names used also as constant names are capitalized *)
-     | "sum" | "topology" | "metric" | "multiset" -> String.capitalize_ascii n
+     |"sum"|"topology"|"metric"|"multiset"|"group" ->
+       String.capitalize_ascii n
      | n ->
         if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
         else n
@@ -107,8 +109,8 @@ let abbrev_typ =
 let typ = abbrev_typ;;
   (*if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;*)
 
-(* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
-let decl_map_typ oc =
+(* [decl_typ_abbrevs oc] outputs on [oc] the type abbreviations. *)
+let decl_typ_abbrevs oc =
   let abbrev b (k,n) =
     out oc "symbol type%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
@@ -260,29 +262,42 @@ let rec rename rmap t =
   match t with
   | Var(_,b) -> (try mk_var(List.assoc t rmap,b) with Not_found -> mk_el b)
   | Const(_,_) -> t
-  | Comb(u,v) -> mk_comb(rename rmap u, rename rmap v)
+  | Comb(u,v) -> Comb(rename rmap u, rename rmap v)
   | Abs(u,v) ->
-     let rmap' = add_var rmap u in mk_abs(rename rmap' u,rename rmap' v)
+     let rmap' = add_var rmap u in Abs(rename rmap' u,rename rmap' v)
 ;;
 
 let term rmap oc t = abbrev_term oc (rename rmap t);;
   (*if !use_abbrev then abbrev_term oc (rename rmap t)
   else unabbrev_term rmap oc (rename rmap t);;*)
 
-(* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
-let decl_map_term oc =
+(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
+let decl_term_abbrevs oc =
+  let print_let oc (t,t',_,_) =
+    out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
   let abbrev t (k,n,bs) =
     out oc "symbol term%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
     (* We can use [abbrev_typ] here since [bs] are canonical. *)
     List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
     (* We can use [raw_term] here since [t] is canonical. *)
-    out oc " ≔ %a;\n" raw_term t
+    if !use_sharing then
+      let t', l = shared t in
+      out oc " ≔%a %a;\n" (list print_let) l raw_term t'
+    else out oc " ≔ %a;\n" raw_term t
   in
-  (*List.iter abbrev
-    (List.sort (fun (_,(k1,_,_)) (_,(k2,_,_)) -> k1 - k2)
-       (MapTrm.fold (fun b x l -> (b,x)::l) m []))*)
   TrmHashtbl.iter abbrev htbl_term_abbrev
+;;
+
+(* [decl_subterm_abbrevs oc] outputs on [oc] the subterm abbreviations
+   with no variables. *)
+let decl_subterm_abbrevs =
+  let add _ x l = match x with t,t',false,_ when t != t' -> x::l | _ -> l
+  and cmp (_,_,_,k1) (_,_,_,k2) = k1 - k2 in
+  fun oc ->
+  (* print closed subterm abbreviations *)
+  let abbrev (t,t',_,_) = out oc "symbol %a ≔ %a;\n" raw_term t' raw_term t in
+  List.iter abbrev (List.sort cmp (TrmHashtbl.fold add htbl_subterms []))
 ;;
 
 (****************************************************************************)
@@ -593,7 +608,7 @@ let export_types b =
 
 let export_type_abbrevs b n s =
   export n (s ^ "_type_abbrevs")
-    (fun oc -> require oc b "_types"; decl_map_typ oc)
+    (fun oc -> require oc b "_types"; decl_typ_abbrevs oc)
 ;;
 
 let constants() =
@@ -610,8 +625,15 @@ let export_term_abbrevs b n s =
   export n (s ^ "_term_abbrevs")
     (fun oc ->
       List.iter (require oc b) ["_types"; "_terms"];
-      List.iter (require oc n) [s ^ "_type_abbrevs"];
-      decl_map_term oc)
+      require oc n (s ^ "_type_abbrevs");
+      if !use_sharing then require oc n (s ^ "_subterm_abbrevs");
+      decl_term_abbrevs oc);
+  if !use_sharing then
+    export n (s ^ "_subterm_abbrevs")
+      (fun oc ->
+        List.iter (require oc b) ["_types"; "_terms"];
+        require oc n (s ^ "_type_abbrevs");
+        decl_subterm_abbrevs oc)
 ;;
 
 let export_axioms b =

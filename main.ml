@@ -20,7 +20,9 @@ hol2dk options command arguments
 Options
 -------
 
---hstats: print statistics on hash tables at exit
+--use-sharing: define term abbreviations using sharing
+
+--print-stats: print statistics on hash tables at exit
 
 Dumping commands
 ----------------
@@ -124,22 +126,6 @@ hol2dk name
   print on stdout the named theorems proved in all HOL-Light files
   in the working directory and all its subdirectories recursively
 %!"
-
-(*Experimental (not efficient)
-----------------------------
-
-hol2dk prf $x $y $file
-  generate a lp file for each proof from index $x to index $y in $file.prf
-  without using type and term abbreviations
-
-hol2dk mk-lp $jobs $file
-  generate Makefile.lp for generating with the option -j $jobs a lp file
-  (without type and term abbreviations) for each proof of $file.prf
-
-hol2dk mk-coq $n $file
-  generate a Makefile for translating to Coq each lp file generated
-  by Makefile.lp and check them by using $n sequential calls to make
-*)
 
 let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
 
@@ -340,6 +326,16 @@ let basename_ml f =
   | ".ml" | ".hl" -> Filename.chop_extension f
   | _ -> wrong_arg()
 
+let print_hstats() =
+  log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a\
+       \nsubterms: %a"
+    hstats (StrHashtbl.stats htbl_string)
+    hstats (TypHashtbl.stats htbl_type)
+    hstats (TrmHashtbl.stats htbl_term)
+    hstats (TypHashtbl.stats htbl_type_abbrev)
+    hstats (TrmHashtbl.stats htbl_term_abbrev)
+    hstats (TrmHashtbl.stats htbl_subterms)
+
 let rec log_command l =
   log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
 
@@ -359,6 +355,8 @@ and command = function
   | [] | ["-"|"--help"|"help"] -> usage(); 0
 
   | "--print-stats"::args -> at_exit print_hstats; command args
+
+  | "--use-sharing"::args -> use_sharing := true; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
@@ -861,40 +859,7 @@ and command = function
                         (n^"_deps.lp") (n^"_proofs.lp") (n^".lp")
                         (n^"_deps.lp") (n^"_proofs.lp"))
        end
-(*
-  | ["prf";x;y;b] ->
-     read_sig b;
-     read_pos b;
-     let x = integer x and y = integer y
-         and nb_proofs = Array.length !prf_pos in
-     if x < 0 || y < 0 || x > y || x >= nb_proofs || y >= nb_proofs then
-       wrong_arg();
-     init_proof_reading b;
-     read_use b;
-     Xlp.export_one_file_by_prf b x y;
-     close_in !Xproof.ic_prf;
-     0
 
-  | ["mk-lp";nb_parts;b] ->
-     let nb_parts = integer nb_parts in
-     if nb_parts < 1 then wrong_arg();
-     read_pos b;
-     let nb_proofs = Array.length !prf_pos in
-     init_proof_reading b;
-     Xlp.gen_lp_makefile_one_file_by_prf b nb_proofs nb_parts;
-     close_in !Xproof.ic_prf;
-     0
-
-  | ["mk-coq";nb_parts;b] ->
-     let nb_parts = integer nb_parts in
-     if nb_parts < 1 then wrong_arg();
-     read_pos b;
-     let nb_proofs = Array.length !prf_pos in
-     init_proof_reading b;
-     Xlp.gen_coq_makefile_one_file_by_prf b nb_proofs nb_parts;
-     close_in !Xproof.ic_prf;
-     0
- *)
   | f::args ->
      let r = range args in
      let dk = is_dk f in
@@ -946,3 +911,57 @@ and command = function
 let _ =
   (*Memtrace.trace_if_requested ();*)
   exit (command (List.tl (Array.to_list Sys.argv)))
+
+
+
+
+
+(*Experimental (not efficient)
+----------------------------
+
+hol2dk prf $x $y $file
+  generate a lp file for each proof from index $x to index $y in $file.prf
+  without using type and term abbreviations
+
+hol2dk mk-lp $jobs $file
+  generate Makefile.lp for generating with the option -j $jobs a lp file
+  (without type and term abbreviations) for each proof of $file.prf
+
+hol2dk mk-coq $n $file
+  generate a Makefile for translating to Coq each lp file generated
+  by Makefile.lp and check them by using $n sequential calls to make
+*)
+(*
+  | ["prf";x;y;b] ->
+     read_sig b;
+     read_pos b;
+     let x = integer x and y = integer y
+         and nb_proofs = Array.length !prf_pos in
+     if x < 0 || y < 0 || x > y || x >= nb_proofs || y >= nb_proofs then
+       wrong_arg();
+     init_proof_reading b;
+     read_use b;
+     Xlp.export_one_file_by_prf b x y;
+     close_in !Xproof.ic_prf;
+     0
+
+  | ["mk-lp";nb_parts;b] ->
+     let nb_parts = integer nb_parts in
+     if nb_parts < 1 then wrong_arg();
+     read_pos b;
+     let nb_proofs = Array.length !prf_pos in
+     init_proof_reading b;
+     Xlp.gen_lp_makefile_one_file_by_prf b nb_proofs nb_parts;
+     close_in !Xproof.ic_prf;
+     0
+
+  | ["mk-coq";nb_parts;b] ->
+     let nb_parts = integer nb_parts in
+     if nb_parts < 1 then wrong_arg();
+     read_pos b;
+     let nb_proofs = Array.length !prf_pos in
+     init_proof_reading b;
+     Xlp.gen_coq_makefile_one_file_by_prf b nb_proofs nb_parts;
+     close_in !Xproof.ic_prf;
+     0
+*)
