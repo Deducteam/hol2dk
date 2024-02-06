@@ -67,7 +67,7 @@ clean-v:
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
 .PHONY: mkv
-mkv coq.mk: lp.mk
+mkv coq.mk:
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lp.mk > coq.mk
 #find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
 
