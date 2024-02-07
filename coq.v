@@ -1202,23 +1202,24 @@ Proof. (*thm_1060744*)
 Qed.
 
 (****************************************************************************)
-(* Mapping of sum_type. *)
+(* Mapping of Sum. *)
 (****************************************************************************)
 
-Definition sum_type (A B : Type') : Type' :=
-  {| type:= sum A B; el := inl (el A)|}.
+Definition sum' (A B : Type') : Type' := {| type:= sum A B; el := inl (el A)|}.
 
-Definition _dest_sum : forall {A B : Type'}, sum_type A B -> recspace (prod A B) := 
+Canonical sum'.
+
+Definition _dest_sum : forall {A B : Type'}, sum A B -> recspace (prod A B) :=
 fun A B p => match p with 
 | inl a => CONSTR (NUMERAL 0) (a , ε (fun _ => True)) (fun _ => BOTTOM)
 | inr b => CONSTR (S (NUMERAL 0)) (ε (fun _ => True) , b) (fun _ => BOTTOM)
 end.
 
-Definition _mk_sum : forall {A B : Type'}, (recspace (prod A B)) -> sum_type A B :=
-fun A B f => ε (fun p => f = _dest_sum p).
+Definition _mk_sum : forall {A B : Type'}, recspace (prod A B) -> sum A B :=
+  fun A B f => ε (fun p => f = _dest_sum p).
 
 Lemma _dest_sum_inj :
-  forall {A B : Type'} (f g : sum_type A B), _dest_sum f = _dest_sum g -> f = g. 
+  forall {A B : Type'} (f g : sum A B), _dest_sum f = _dest_sum g -> f = g.
 Proof.
   intros.
   induction f; induction g; unfold _dest_sum in H; rewrite (@CONSTR_INJ (prod A B)) in H; destruct H. destruct H0.
@@ -1227,19 +1228,17 @@ Proof.
   destruct H0. apply pair_equal_spec in H0. destruct H0. rewrite H2. reflexivity.
 Qed.
 
-Lemma axiom_11 : forall {A B : Type'} (a : sum_type A B), (@_mk_sum A B (@_dest_sum A B a)) = a.
+Lemma axiom_11 : forall {A B : Type'} (a : sum A B), (@_mk_sum A B (@_dest_sum A B a)) = a.
 Proof.
   intros. unfold _mk_sum. apply _dest_sum_inj.
-  rewrite sym. apply (@ε_spec (sum_type A B)). 
-  exists a. reflexivity.
+  rewrite sym. apply (@ε_spec (sum A B)). exists a. reflexivity.
 Qed.
 
-Lemma axiom_12 : forall {A B : Type'} (r : recspace (prod A B)), 
-  ((fun a : recspace (prod A B) => forall sum' : (recspace (prod A B)) -> Prop, (forall a' : recspace (prod A B), ((exists a'' : A, a' = ((fun a''' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a''' (@ε B (fun v : B => True))) (fun n : nat => @BOTTOM (prod A B))) a'')) \/ (exists a'' : B, a' = ((fun a''' : B => @CONSTR (prod A B) (S (NUMERAL 0)) (@pair A B (@ε A (fun v : A => True)) a''') (fun n : nat => @BOTTOM (prod A B))) a''))) -> sum' a') -> sum' a) r) = ((@_dest_sum A B (@_mk_sum A B r)) = r).
+Lemma axiom_12 : forall {A B : Type'} (r : recspace (prod A B)), ((fun a : recspace (prod A B) => forall sum' : (recspace (prod A B)) -> Prop, (forall a' : recspace (prod A B), ((exists a'' : A, a' = ((fun a''' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a''' (@ε B (fun v : B => True))) (fun n : nat => @BOTTOM (prod A B))) a'')) \/ (exists a'' : B, a' = ((fun a''' : B => @CONSTR (prod A B) (S (NUMERAL 0)) (@pair A B (@ε A (fun v : A => True)) a''') (fun n : nat => @BOTTOM (prod A B))) a''))) -> sum' a') -> sum' a) r) = ((@_dest_sum A B (@_mk_sum A B r)) = r).
 Proof.
   intros. apply prop_ext.
-  intro h. unfold _mk_sum. rewrite sym. apply (@ε_spec (sum_type A B)).
-  apply (h (fun r : recspace (prod A B) => exists x : sum_type A B, r = _dest_sum x)).
+  intro h. unfold _mk_sum. rewrite sym. apply (@ε_spec (sum' A B)).
+  apply (h (fun r : recspace (prod A B) => exists x : sum' A B, r = _dest_sum x)).
   intros. destruct H. destruct H. exists (inl(x)). simpl. exact H.
 
   destruct H. exists (inr(x)). simpl. exact H. 
@@ -1255,7 +1254,7 @@ Proof.
   (* rewrite sym. rewrite <- axiom_12. doesn't work *)
   unfold _mk_sum. assert (h: exists p, r = _dest_sum p).
   exists (inl a). simpl. reflexivity.
-  generalize (ε_spec h). set (o := ε (fun p : sum_type A B => _dest_sum p = r)).
+  generalize (ε_spec h). set (o := ε (fun p : sum' A B => _dest_sum p = r)).
   auto. 
 Qed.
 
@@ -1266,7 +1265,7 @@ Proof.
   (* rewrite sym. rewrite <- axiom_12. doesn't work *)
   unfold _mk_sum. assert (h: exists p, r = _dest_sum p).
   exists (inr(b)). simpl. reflexivity.
-  generalize (ε_spec h). set (o := ε (fun p : sum_type A B => _dest_sum p = r)).
+  generalize (ε_spec h). set (o := ε (fun p : sum' A B => _dest_sum p = r)).
   auto. 
 Qed.
 
@@ -1275,13 +1274,14 @@ Qed.
 (****************************************************************************)
 
 Definition option' (A : Type') := {| type := option A; el := None |}.
+
 Canonical option'.
 
-Definition _dest_option : forall {A : Type'}, (option A) -> recspace A :=
+Definition _dest_option : forall {A : Type'}, option A -> recspace A :=
   fun A o =>
     match o with
-    | None => @CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A)
-    | Some a => (fun a' : A => @CONSTR A (S (NUMERAL 0)) a' (fun n : nat => @BOTTOM A)) a
+    | None => @CONSTR A (NUMERAL 0) (@ε A (fun v => True)) (fun _ => @BOTTOM A)
+    | Some a => (fun a' : A => @CONSTR A (S (NUMERAL 0)) a' (fun _ => @BOTTOM A)) a
     end.
 
 Lemma _dest_option_inj {A : Type'} (o1 o2 : option A) :
@@ -1306,7 +1306,8 @@ Proof.
   generalize (ε_spec i). fold q. unfold Q, _mk_option_pred. apply _dest_option_inj.
 Qed.
 
-Definition option_pred {A : Type'} (r : recspace A) := forall option' : recspace A -> Prop,
+Definition option_pred {A : Type'} (r : recspace A) :=
+  forall option' : recspace A -> Prop,
       (forall a' : recspace A,
        a' = CONSTR (NUMERAL 0) (ε (fun _ : A => True)) (fun _ : nat => BOTTOM) \/
        (exists a'' : A, a' = CONSTR (S (NUMERAL 0)) a'' (fun _ : nat => BOTTOM)) ->
@@ -1365,19 +1366,17 @@ Qed.
 (* Mapping of list. *)
 (****************************************************************************)
 
-
 Definition list' (A : Type') := {| type := list A; el := nil |}.
+
 Canonical list'.
 
 Definition FCONS {A : Type'} (a : A) (f: nat -> A) (n : nat) : A :=
-match n with 
-| 0 => a
-| S n => f n
-end.  
+  match n with
+  | 0 => a
+  | S n => f n
+  end.
 
-Lemma FCONS_def {A : Type'} :
-  @FCONS A = @ε ((prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A) 
-(fun FCONS' : (prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A => forall _17460 : prod nat (prod nat (prod nat (prod nat nat))), (forall a : A, forall f : nat -> A, (FCONS' _17460 a f (NUMERAL 0)) = a) /\ (forall a : A, forall f : nat -> A, forall n : nat, (FCONS' _17460 a f (S n)) = (f n))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
+Lemma FCONS_def {A : Type'} : @FCONS A = @ε ((prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A) (fun FCONS' : (prod nat (prod nat (prod nat (prod nat nat)))) -> A -> (nat -> A) -> nat -> A => forall _17460 : prod nat (prod nat (prod nat (prod nat nat))), (forall a : A, forall f : nat -> A, (FCONS' _17460 a f (NUMERAL 0)) = a) /\ (forall a : A, forall f : nat -> A, forall n : nat, (FCONS' _17460 a f (S n)) = (f n))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))).
 Proof.
   generalize (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))), 
     (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0))))))), 
@@ -1397,15 +1396,16 @@ Fixpoint _dest_list {A : Type'} l :=
   end.
 
 Definition _mk_list_pred {A : Type'} (r : recspace A) : list A -> Prop :=
-fun l => _dest_list l = r.
+  fun l => _dest_list l = r.
 
 Definition _mk_list : forall {A : Type'}, (recspace A) -> list A :=
-fun A r => ε (_mk_list_pred r).
+  fun A r => ε (_mk_list_pred r).
 
 Lemma FCONS_0 {A : Type'} (a : A) (f : nat -> A) : FCONS a f (NUMERAL 0) = a.
-Proof. reflexivity. Qed.       
+Proof. reflexivity. Qed.
 
-Lemma _dest_list_inj : forall {A : Type'} (l l' : list A), _dest_list l = _dest_list l' -> l = l'.
+Lemma _dest_list_inj :
+  forall {A : Type'} (l l' : list A), _dest_list l = _dest_list l' -> l = l'.
 Proof.
   induction l; induction l'; simpl; rewrite (@CONSTR_INJ A); intros [e1 [e2 e3]].
   reflexivity. discriminate. discriminate. rewrite e2. rewrite (@IHl l'). reflexivity.
@@ -1422,7 +1422,8 @@ Proof.
   generalize (ε_spec i). fold l'. unfold L', _mk_list_pred. apply _dest_list_inj.
 Qed.
 
-Definition list_pred {A : Type'} (r : recspace A) := forall list'0 : recspace A -> Prop, 
+Definition list_pred {A : Type'} (r : recspace A) :=
+  forall list'0 : recspace A -> Prop,
   (forall a' : recspace A, 
   a' = CONSTR (NUMERAL 0) (ε (fun _ : A => True)) (fun _ : nat => BOTTOM) \/ 
   (exists (a0 : A) (a1 : recspace A), a' = CONSTR (S (NUMERAL 0)) a0 (FCONS a1 (fun _ : nat => BOTTOM)) /\ list'0 a1) -> list'0 a') 
@@ -1463,19 +1464,7 @@ Proof.
   reflexivity. apply h. exact IHl0.
 Qed.
 
-Lemma axiom_16 : forall {A : Type'} (r : recspace A), 
-((fun a : recspace A => 
-forall list' : (recspace A) -> Prop, 
-(forall a' : recspace A, 
-(
-  (a' = (@CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A))) 
-  \/ 
-  (exists a0 : A, exists a1 : recspace A, (a' = ((fun a0' : A => fun a1' : recspace A => @CONSTR A (S (NUMERAL 0)) a0' (@FCONS (recspace A) a1' (fun n : nat => @BOTTOM A))) a0 a1)) /\ (list' a1))
-) 
--> list' a'
-) 
-  -> list' a) r) 
-= ((@_dest_list A (@_mk_list A r)) = r).
+Lemma axiom_16 : forall {A : Type'} (r : recspace A), ((fun a : recspace A => forall list' : (recspace A) -> Prop, (forall a' : recspace A, ((a' = (@CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A))) \/ (exists a0 : A, exists a1 : recspace A, (a' = ((fun a0' : A => fun a1' : recspace A => @CONSTR A (S (NUMERAL 0)) a0' (@FCONS (recspace A) a1' (fun n : nat => @BOTTOM A))) a0 a1)) /\ (list' a1))) -> list' a') -> list' a) r) = ((@_dest_list A (@_mk_list A r)) = r).
 Proof. intros A r. apply axiom_16'. Qed.
 
 Lemma NIL_def {A : Type'} : (@nil A) = (@_mk_list A (@CONSTR A (NUMERAL 0) (@ε A (fun v : A => True)) (fun n : nat => @BOTTOM A))).
@@ -1503,17 +1492,18 @@ Require Import ExtensionalityFacts.
 
 Lemma ISO_def {A B : Type'} : (@is_inverse A B) = (fun _17569 : A -> B => fun _17570 : B -> A => (forall x : B, (_17569 (_17570 x)) = x) /\ (forall y : A, (_17570 (_17569 y)) = y)).
 Proof.
-  apply fun_ext; intro f. apply fun_ext; intro g. unfold is_inverse. apply prop_ext; tauto.
+  apply fun_ext; intro f. apply fun_ext; intro g.
+  unfold is_inverse. apply prop_ext; tauto.
 Qed. 
 
 Require Import List.
 
-(* 
-Remark on the alignment of definitions on lists: 
-contrary to Coq, the head (resp. tail, last element) of the empty list NIL is not defined in HOL-Light, 
-so the definitions `hd` (resp. `tl`, `last`) in Coq and `HD` (resp. `TL`, `LAST`) in HOL-Light can't be aligned.
-Also,  HOL's 'FILTER' uses Prop while Coq's 'filter' uses bool, hence it is not possible to align these definitions. 
-*)
+(* Remark on the alignment of definitions on lists: contrary to Coq,
+the head (resp. tail, last element) of the empty list NIL is not
+defined in HOL-Light, so the definitions `hd` (resp. `tl`, `last`) in
+Coq and `HD` (resp. `TL`, `LAST`) in HOL-Light can't be aligned.
+Also, HOL's 'FILTER' uses Prop while Coq's 'filter' uses bool, hence
+it is not possible to align these definitions. *)
 
 Lemma APPEND_def {A : Type'} : (@app A) = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (list' A) -> (list' A) -> list' A) (fun APPEND' : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (list A) -> (list A) -> list A => forall _17935 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), (forall l : list A, (APPEND' _17935 (@nil A) l) = l) /\ (forall h : A, forall t : list A, forall l : list A, (APPEND' _17935 (@cons A h t) l) = (@cons A h (APPEND' _17935 t l)))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))))))).
 Proof.
@@ -1569,15 +1559,16 @@ Proof.
 Qed. 
 
 Lemma COND_list {A : Type'} (l0 l1 l2 : list A) : 
-match l0 with 
-| nil => l1
-| cons h t => l2
-end
-= COND (l0 = nil) l1 l2.
+  match l0 with
+  | nil => l1
+  | cons h t => l2
+  end
+  = COND (l0 = nil) l1 l2.
 Proof.
   induction l0. symmetry. assert ((@nil A = nil) = True). apply prop_ext. auto. auto. 
   rewrite H. apply COND_True.
-  assert ((a :: l0 = nil) = False). apply prop_ext. intro. assert (nil <> a :: l0). apply nil_cons. easy. easy. 
+  assert ((a :: l0 = nil) = False). apply prop_ext. intro.
+  assert (nil <> a :: l0). apply nil_cons. easy. easy.
   rewrite H. symmetry. apply COND_False.
 Qed.       
 
@@ -1660,20 +1651,23 @@ Qed.
 
 Require Import Coq.Strings.Ascii.
 
-Definition char := {| type := ascii; el := zero |}.
+Definition ascii' := {| type := ascii; el := zero |}.
 
-(* Note the mismatch between Coq's Ascii which takes booleans as arguments and HOL-Light's ASCII which takes propositions as arguments.*)
+Canonical ascii'.
+
+(* Note the mismatch between Coq's Ascii which takes booleans as arguments
+and HOL-Light's ASCII which takes propositions as arguments.*)
 Coercion is_true : bool >-> Sortclass. 
 
-Definition _dest_char : char -> recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) :=
+Definition _dest_char : ascii -> recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) :=
 fun a => match a with 
 | Ascii a0 a1 a2 a3 a4 a5 a6 a7 => (fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7
 end.
 
-Definition _mk_char_pred (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) : char -> Prop :=
+Definition _mk_char_pred (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) : ascii -> Prop :=
 fun a => _dest_char a = r.
 
-Definition _mk_char : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> char :=
+Definition _mk_char : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> ascii :=
 fun r => ε (_mk_char_pred r).
 
 Lemma eq_true_inj (b b' : bool) : is_true b = is_true b' -> b = b'. 
@@ -1685,7 +1679,7 @@ Proof.
   reflexivity.
 Qed.    
 
-Lemma _dest_char_inj (a a' : char) : _dest_char a = _dest_char a' -> a = a'.
+Lemma _dest_char_inj (a a' : ascii) : _dest_char a = _dest_char a' -> a = a'.
 Proof.
   induction a. induction a'. simpl. 
   rewrite (@CONSTR_INJ (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))).
@@ -1704,7 +1698,7 @@ Proof.
   destruct H4; rewrite H4. destruct H5; rewrite H5. rewrite H6. reflexivity.
 Qed.
 
-Lemma axiom_17 : forall (a : char), (_mk_char (_dest_char a)) = a.
+Lemma axiom_17 : forall (a : ascii), (_mk_char (_dest_char a)) = a.
 Proof.
   intro a. unfold _mk_char. 
   match goal with [|- ε ?x = _] => set (A' := x); set (a' := ε A') end.

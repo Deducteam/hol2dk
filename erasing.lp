@@ -163,40 +163,51 @@ builtin "None" ≔ NONE;
 builtin "NONE_def" ≔ NONE_def;
 builtin "Some" ≔ SOME;
 builtin "SOME_def" ≔ SOME_def;
-builtin "sum_type" ≔ sum_type;
+builtin "sum" ≔ Sum;
 builtin "_mk_sum" ≔ _mk_sum;
 builtin "_dest_sum" ≔ _dest_sum;
 builtin "axiom_11" ≔ axiom_11;
-builtin "axiom 12" ≔ axiom_12;
+builtin "axiom_12" ≔ axiom_12;
 builtin "inl" ≔ INL;
 builtin "INL_def" ≔ INL_def;
 builtin "inr" ≔ INR;
 builtin "INR_def" ≔ INR_def;
-builtin "nil" ≔ NIL;
-builtin "cons" ≔ CONS;
+
+// lists
 builtin "list" ≔ list;
+builtin "FCONS" ≔ FCONS;
 builtin "FCONS_def" ≔ FCONS_def;
-builtin "_dest_list" ≔ dest_list;
+builtin "_dest_list" ≔ _dest_list;
 builtin "_mk_list" ≔ _mk_list;
 builtin "axiom_15" ≔ axiom_15;
 builtin "axiom_16" ≔ axiom_16;
+builtin "nil" ≔ NIL;
 builtin "NIL_def" ≔ NIL_def;
+builtin "cons" ≔ CONS;
 builtin "CONS_def" ≔ CONS_def;
+builtin "ExtensionalityFacts.is_inverse" ≔ ISO;
 builtin "ISO_def" ≔ ISO_def;
+builtin "List.app" ≔ APPEND;
 builtin "APPEND_def" ≔ APPEND_def;
+builtin "List.rev" ≔ REVERSE;
 builtin "REVERSE_def" ≔ REVERSE_def;
+builtin "List.length" ≔ LENGTH;
 builtin "LENGTH_def" ≔ LENGTH_def;
+builtin "List.map" ≔ MAP;
 builtin "MAP_def" ≔ MAP_def;
+builtin "List.removelast" ≔ BUTLAST;
 builtin "BUTLAST_def" ≔ BUTLAST_def;
+builtin "List.Forall" ≔ ALL;
 builtin "ALL_def" ≔ ALL_def;
+builtin "List.ForallOrdPairs" ≔ PAIRWISE;
 builtin "PAIRWISE_def" ≔ PAIRWISE_def;
-builtin "char" ≔ char;
+builtin "Ascii.ascii" ≔ char;
 builtin "_dest_char" ≔ _dest_char;
 builtin "_mk_char" ≔ _mk_char;
 builtin "axiom_17" ≔ axiom_17;
 builtin "axiom_18" ≔ axiom_18;
 
-// type nadd of nearly-additive sequences of natural numbers
+// realax
 builtin "nadd" ≔ nadd;
 builtin "dest_nadd" ≔ dest_nadd;
 builtin "mk_nadd" ≔ mk_nadd;
