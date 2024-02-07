@@ -32,7 +32,8 @@ Definition ex1 : forall {A : Type'}, (A -> Prop) -> Prop := fun A P => exists! x
 (* Proof of some HOL-Light rules. *)
 (****************************************************************************)
 
-Lemma MK_COMB {a b : Type} {s t : a -> b} {u v : a} (h1 : s = t) (h2 : u = v) : (s u) = (t v).
+Lemma MK_COMB {a b : Type} {s t : a -> b} {u v : a} (h1 : s = t) (h2 : u = v)
+  : (s u) = (t v).
 Proof. rewrite h1, h2. reflexivity. Qed.
 
 Lemma EQ_MP {p q : Prop} (e : p = q) (h : p) : q.
@@ -51,7 +52,8 @@ Proof. exact (@or_intror p q h). Qed.
 Lemma or_elim {p q : Prop} (h : p \/ q) {r : Prop} (h1: p -> r) (h2: q -> r) : r.
 Proof. exact (@or_ind p q r h1 h2 h). Qed.
 
-Lemma ex_elim {a} {p : a -> Prop} (h1 : exists x, p x) {r : Prop} (h2 : forall x : a, (p x) -> r) : r.
+Lemma ex_elim {a} {p : a -> Prop}
+  (h1 : exists x, p x) {r : Prop} (h2 : forall x : a, (p x) -> r) : r.
 Proof. exact (@ex_ind a p r h2 h1). Qed.
 
 (****************************************************************************)
@@ -60,7 +62,8 @@ Proof. exact (@ex_ind a p r h2 h1). Qed.
 
 Require Import Coq.Logic.ClassicalEpsilon.
 
-Definition ε : forall {A : Type'}, (type A -> Prop) -> type A := fun A P => epsilon (inhabits (el A)) P.
+Definition ε : forall {A : Type'}, (type A -> Prop) -> type A :=
+  fun A P => epsilon (inhabits (el A)) P.
 
 Lemma ε_spec {A : Type'} {P : type A -> Prop} : (exists x, P x) -> P (ε P).
 Proof. intro h. unfold ε. apply epsilon_spec. exact h. Qed.
@@ -73,8 +76,8 @@ Require Import ClassicalFacts.
 
 Lemma prop_degen : forall P, P = True \/ P = False.
 Proof.
-  apply prop_ext_em_degen.
-  unfold prop_extensionality. intros A B [AB BA]. apply prop_ext. exact AB. exact BA.
+  apply prop_ext_em_degen. unfold prop_extensionality. intros A B [AB BA].
+  apply prop_ext. exact AB. exact BA.
   intro P. apply classic.
 Qed.
 
@@ -104,10 +107,16 @@ Lemma True_and_True : (True /\ True) = True.
 Proof. rewrite is_True. tauto. Qed.
 
 Lemma not_forall_eq A (P : A -> Prop) : (~ forall x, P x) = exists x, ~ (P x).
-Proof. apply prop_ext; intro h. apply not_all_ex_not. exact h. apply ex_not_not_all. exact h. Qed.
+Proof.
+  apply prop_ext; intro h. apply not_all_ex_not. exact h.
+  apply ex_not_not_all. exact h.
+Qed.
 
 Lemma not_exists_eq A (P : A -> Prop) : (~ exists x, P x) = forall x, ~ (P x).
-Proof. apply prop_ext; intro h. apply not_ex_all_not. exact h. apply all_not_not_ex. exact h. Qed.
+Proof.
+  apply prop_ext; intro h. apply not_ex_all_not. exact h.
+  apply all_not_not_ex. exact h.
+Qed.
 
 (****************************************************************************)
 (* Proof of HOL-Light axioms. *)
@@ -117,7 +126,9 @@ Lemma axiom_0 : forall {A B : Type'}, forall t : A -> B, (fun x : A => t x) = t.
 Proof. reflexivity. Qed.
 
 Lemma axiom_1 : forall {A : Type'}, forall P : A -> Prop, forall x : A, (P x) -> P (@ε A P).
-Proof. intros A P x h. apply (epsilon_spec (inhabits (el A)) P (ex_intro P x h)). Qed.
+Proof.
+  intros A P x h. apply (epsilon_spec (inhabits (el A)) P (ex_intro P x h)).
+Qed.
 
 (****************************************************************************)
 (* Proof of mappings from HOL-Light connectives to Coq connectives. *)
@@ -130,12 +141,14 @@ Proof.
   intros [x [px u]]. split. apply (ex_intro P x px). intros a b [ha hb].
   transitivity x. symmetry. apply u. exact ha. apply u. exact hb.
 
-  intros [[x px] u]. apply (ex_intro _ x). split. exact px. intros y py. apply u. split.
-  exact px. exact py.
+  intros [[x px] u]. apply (ex_intro _ x). split. exact px. intros y py.
+  apply u. split. exact px. exact py.
 Qed.
 
 Lemma F_def : False = (forall p : Prop, p).
-Proof. apply prop_ext. intros b p. apply (False_rec p b). intro h. exact (h False). Qed.
+Proof.
+  apply prop_ext. intros b p. apply (False_rec p b). intro h. exact (h False).
+Qed.
 
 Lemma not_def : not = (fun p : Prop => p -> False).
 Proof. reflexivity. Qed.
@@ -165,7 +178,8 @@ Qed.
 Lemma imp_def : imp = (fun p : Prop => fun q : Prop => (p /\ q) = p).
 Proof.
   apply fun_ext; intro p. apply fun_ext; intro q. apply prop_ext.
-  intro pq. apply prop_ext. intros [hp _]. exact hp. intro hp. split. exact hp. apply pq. exact hp.
+  intro pq. apply prop_ext. intros [hp _]. exact hp. intro hp.
+  split. exact hp. apply pq. exact hp.
   intro e. rewrite <- e. intros [_ hq]. exact hq.
 Qed.
 
@@ -215,39 +229,52 @@ Proof. generalize (ε one_REP). destruct t. reflexivity. Qed.
 Definition prod' (a b : Type') := {| type := a * b; el := pair (el a) (el b) |}.
 Canonical prod'.
 
-Definition mk_pair {A B : Type'} := fun x : A => fun y : B => fun a : A => fun b : B => (a = x) /\ (b = y).
+Definition mk_pair {A B : Type'} :=
+  fun x : A => fun y : B => fun a : A => fun b : B => (a = x) /\ (b = y).
 
-Lemma mk_pair_inj (A B : Type') (x x' : A) (y y' : B) : mk_pair x y = mk_pair x' y' -> x = x' /\ y = y'.
+Lemma mk_pair_inj (A B : Type') (x x' : A) (y y' : B) :
+  mk_pair x y = mk_pair x' y' -> x = x' /\ y = y'.
 Proof.
-  intro e; generalize (ext_fun e); clear e; intro e. generalize (ext_fun (e x)); clear e; intro e.
+  intro e; generalize (ext_fun e); clear e; intro e.
+  generalize (ext_fun (e x)); clear e; intro e.
   generalize (e y); clear e. unfold mk_pair.
-  rewrite refl_is_True, refl_is_True, True_and_True, sym, is_True. intro h; exact h.
+  rewrite refl_is_True, refl_is_True, True_and_True, sym, is_True.
+  intro h; exact h.
 Qed.
 
-Definition ABS_prod : forall {A B : Type'}, (A -> B -> Prop) -> prod A B := fun A B f => ε (fun p => f = mk_pair (fst p) (snd p)).
+Definition ABS_prod : forall {A B : Type'}, (A -> B -> Prop) -> prod A B :=
+  fun A B f => ε (fun p => f = mk_pair (fst p) (snd p)).
 
-Lemma ABS_prod_mk_pair (A B : Type') (x : A) (y : B) : ABS_prod (mk_pair x y) = (x,y).
+Lemma ABS_prod_mk_pair (A B : Type') (x : A) (y : B) :
+  ABS_prod (mk_pair x y) = (x,y).
 Proof.
-  unfold ABS_prod. match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
+  unfold ABS_prod.
+  match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
   rewrite (surjective_pairing q).
   assert (i : exists q, Q q). exists (x,y). reflexivity.
   generalize (ε_spec i); fold q; unfold Q; intro h.
   apply mk_pair_inj in h. destruct h as [h1 h2]. rewrite h1, h2. reflexivity.
 Qed.
 
-Lemma ABS_prod_mk_pair_eta (A B : Type') (x : A) (y : B) : ABS_prod (fun a b => mk_pair x y a b) = (x,y).
+Lemma ABS_prod_mk_pair_eta (A B : Type') (x : A) (y : B) :
+  ABS_prod (fun a b => mk_pair x y a b) = (x,y).
 Proof.
-  unfold ABS_prod. match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
+  unfold ABS_prod.
+  match goal with [|- ε ?x = _] => set (Q := x); set (q := ε Q) end.
   rewrite (surjective_pairing q).
   assert (i : exists q, Q q). exists (x,y). reflexivity.
   generalize (ε_spec i); fold q; unfold Q; intro h.
   apply mk_pair_inj in h. destruct h as [h1 h2]. rewrite h1, h2. reflexivity.
 Qed.
 
-Definition REP_prod : forall {A B : Type'}, (prod A B) -> A -> B -> Prop := fun A B p a b => mk_pair (fst p) (snd p) a b.
+Definition REP_prod : forall {A B : Type'}, (prod A B) -> A -> B -> Prop :=
+  fun A B p a b => mk_pair (fst p) (snd p) a b.
 
 Lemma pair_def {A B : Type'} : (@pair A B) = (fun x : A => fun y : B => @ABS_prod A B (@mk_pair A B x y)).
-Proof. apply fun_ext; intro x; apply fun_ext; intro y. symmetry. apply ABS_prod_mk_pair. Qed.
+Proof.
+  apply fun_ext; intro x; apply fun_ext; intro y. symmetry.
+  apply ABS_prod_mk_pair.
+Qed.
 
 Lemma FST_def {A B : Type'} : (@fst A B) = (fun p : prod A B => @ε A (fun x : A => exists y : B, p = (@pair A B x y))).
 Proof.
@@ -289,7 +316,10 @@ Definition ONE_ONE {A B : Type'} := fun _2064 : A -> B => forall x1 : A, forall 
 Definition ONTO {A B : Type'} := fun _2069 : A -> B => forall y : B, exists x : A, y = (_2069 x).
 
 Lemma axiom_6 : exists f : ind -> ind, (@ONE_ONE ind ind f) /\ (~ (@ONTO ind ind f)).
-Proof. exists S. split. exact eq_add_S. intro h. generalize (h 0). intros [x hx]. discriminate. Qed.
+Proof.
+  exists S. split. exact eq_add_S. intro h. generalize (h 0). intros [x hx].
+  discriminate.
+Qed.
 
 Definition IND_SUC_pred := fun f : ind -> ind => exists z : ind, (forall x1 : ind, forall x2 : ind, ((f x1) = (f x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((f x) = z)).
 
@@ -298,7 +328,8 @@ Definition IND_SUC := ε IND_SUC_pred.
 Lemma IND_SUC_ex : exists f, IND_SUC_pred f.
 Proof.
   destruct axiom_6 as [f [h1 h2]]. exists f.
-  unfold ONTO in h2. rewrite not_forall_eq in h2. destruct h2 as [z h2]. exists z. split.
+  unfold ONTO in h2. rewrite not_forall_eq in h2. destruct h2 as [z h2]. exists z.
+  split.
   intros x y. apply prop_ext. apply h1. intro e. rewrite e. reflexivity.
   rewrite not_exists_eq in h2. intros x e. apply (h2 x). symmetry. exact e.
 Qed.
@@ -307,14 +338,19 @@ Lemma IND_SUC_prop : IND_SUC_pred IND_SUC.
 Proof. unfold IND_SUC. apply ε_spec. apply IND_SUC_ex. Qed.
 
 Lemma IND_SUC_inj : ONE_ONE IND_SUC.
-Proof. generalize IND_SUC_prop. intros [z [h1 h2]]. intros x y e. rewrite <- h1. exact e. Qed.
+Proof.
+  generalize IND_SUC_prop. intros [z [h1 h2]]. intros x y e. rewrite <- h1.
+  exact e.
+Qed.
 
 Definition IND_0_pred := fun z : ind => (forall x1 : ind, forall x2 : ind, ((IND_SUC x1) = (IND_SUC x2)) = (x1 = x2)) /\ (forall x : ind, ~ ((IND_SUC x) = z)).
 
 Definition IND_0 := ε IND_0_pred.
 
 Lemma IND_0_ex : exists z, IND_0_pred z.
-Proof. generalize IND_SUC_prop. intros [z [h1 h2]]. exists z. split. exact h1. exact h2. Qed.
+Proof.
+  generalize IND_SUC_prop. intros [z [h1 h2]]. exists z. split. exact h1. exact h2.
+Qed.
 
 Lemma IND_0_prop : IND_0_pred IND_0.
 Proof. unfold IND_0. apply ε_spec. apply IND_0_ex. Qed.
@@ -360,7 +396,10 @@ Lemma NUM_REP_0 : NUM_REP IND_0.
 Proof. rewrite NUM_REP_eq. intros P [h _]. exact h. Qed.
 
 Lemma NUM_REP_S i : NUM_REP i -> NUM_REP (IND_SUC i).
-Proof. rewrite NUM_REP_eq. intros hi P [h0 hS]. apply hS. apply hi. split. exact h0. exact hS. Qed.
+Proof.
+  rewrite NUM_REP_eq. intros hi P [h0 hS]. apply hS. apply hi.
+  split. exact h0. exact hS.
+Qed.
 
 Inductive NUM_REP_ID : ind -> Prop :=
   | NUM_REP_ID_0 : NUM_REP_ID IND_0
@@ -383,7 +422,8 @@ Proof.
   rewrite NUM_REP_eq_ID. revert i. induction 1.
     exists 0. reflexivity.
     destruct IHNUM_REP_ID as [n hn]. rewrite hn. exists (S n). reflexivity.
-  intros [n hn]. subst. induction n. apply NUM_REP_0. apply NUM_REP_S. assumption.
+  intros [n hn]. subst. induction n. apply NUM_REP_0. apply NUM_REP_S.
+    assumption.
 Qed.
 
 Lemma NUM_REP_dest_num k : NUM_REP (dest_num k).
@@ -397,7 +437,8 @@ Lemma mk_num_ex i : NUM_REP i -> exists n, mk_num_pred i n.
 Proof.
   rewrite NUM_REP_eq_ID. induction 1.
   exists 0. reflexivity.
-  destruct IHNUM_REP_ID as [n hn]. exists (S n). unfold mk_num_pred. rewrite hn. reflexivity.
+  destruct IHNUM_REP_ID as [n hn]. exists (S n). unfold mk_num_pred. rewrite hn.
+  reflexivity.
 Qed.
 
 Lemma mk_num_prop i : NUM_REP i -> dest_num (mk_num i) = i.
@@ -412,7 +453,10 @@ Lemma axiom_7 : forall (a : nat), (mk_num (dest_num a)) = a.
 Proof. exact mk_num_dest_num. Qed.
 
 Lemma axiom_8 : forall (r : ind), (NUM_REP r) = ((dest_num (mk_num r)) = r).
-Proof. intro r. apply prop_ext. apply dest_num_mk_num. intro h. rewrite <- h. apply NUM_REP_dest_num. Qed.
+Proof.
+  intro r. apply prop_ext. apply dest_num_mk_num. intro h. rewrite <- h.
+  apply NUM_REP_dest_num.
+Qed.
 
 Lemma mk_num_0 : mk_num IND_0 = 0.
 Proof.
@@ -427,7 +471,8 @@ Proof. symmetry. exact mk_num_0. Qed.
 
 Lemma mk_num_S : forall i, NUM_REP i -> mk_num (IND_SUC i) = S (mk_num i).
 Proof.
-  intros i hi. rewrite NUM_REP_eq_dest_num_img in hi. destruct hi as [n hn]. rewrite hn, mk_num_dest_num.
+  intros i hi. rewrite NUM_REP_eq_dest_num_img in hi. destruct hi as [n hn].
+  rewrite hn, mk_num_dest_num.
   change (mk_num (dest_num (S n)) = S n). apply mk_num_dest_num. 
 Qed.
 
@@ -479,7 +524,8 @@ Proof. apply prop_ext; lia. Qed.
 Lemma DIV_MULT m n : m <> 0 -> (m * n) / m = n.
 Proof. (*thm_170547*) intro h. rewrite mul_comm. apply div_mul. exact h. Qed.
 
-Lemma divmod_unicity k k' q r r' : r < q -> r' < q -> k * q + r = k' * q + r' -> k = k' /\ r = r'.
+Lemma divmod_unicity k k' q r r' :
+  r < q -> r' < q -> k * q + r = k' * q + r' -> k = k' /\ r = r'.
 Proof.
   intros h h' e.
   destruct (Compare_dec.lt_eq_lt_dec k k') as [[i|i]|i].
@@ -509,7 +555,8 @@ Fixpoint BIT0 n :=
 Lemma BIT0_def : BIT0 =
          (@ε (arr nat nat')
             (fun fn : forall _ : nat, nat =>
-               and (@Logic.eq nat (fn O) O) (forall n : nat, @Logic.eq nat (fn (S n)) (S (S (fn n)))))).
+               and (@Logic.eq nat (fn O) O)
+                 (forall n : nat, @Logic.eq nat (fn (S n)) (S (S (fn n)))))).
 Proof.
   match goal with [|- _ = ε ?x] => set (Q := x) end.
   assert (i : exists q, Q q). exists BIT0. split; reflexivity.
@@ -520,8 +567,8 @@ Qed.
 
 Lemma BIT0_is_double : BIT0 = Nat.double.
 Proof.
-  apply fun_ext; intro n. induction n; simpl. reflexivity. rewrite IHn. unfold Nat.double. simpl.
-  rewrite PeanoNat.Nat.add_succ_r. reflexivity.
+  apply fun_ext; intro n. induction n; simpl. reflexivity. rewrite IHn.
+  unfold Nat.double. simpl. rewrite PeanoNat.Nat.add_succ_r. reflexivity.
 Qed.
 
 Definition BIT1 := fun _2143 : nat => S (BIT0 _2143).
@@ -575,7 +622,7 @@ Proof.
   match goal with [|- _ = ε ?x _] => set (Q := x) end.
   assert (i : exists q, Q q). exists (fun _ => le). split; simpl; intro x.
   apply prop_ext; intro h.
-    symmetry. apply Arith_prebase.le_n_0_eq_stt. exact h.
+    symmetry. apply Arith_base.le_n_0_eq_stt. exact h.
     rewrite h. reflexivity.
   intro n. apply prop_ext; lia.
   generalize (ε_spec i a). intros [h0 hs].
@@ -586,7 +633,8 @@ Proof.
     rewrite hs. right. assumption.
   induction y.
     rewrite h0. intro h. rewrite h. reflexivity.
-    rewrite hs. intros [h|h]. rewrite h. reflexivity. apply le_S. apply IHy. exact h.
+    rewrite hs. intros [h|h]. rewrite h. reflexivity. apply le_S. apply IHy.
+    exact h.
 Qed.
 
 Lemma lt_def : lt = (@ε (arr nat (arr nat (arr nat Prop'))) (fun lt : nat -> nat -> nat -> Prop => forall _2248 : nat, (forall m : nat, (lt _2248 m ( 0)) = False) /\ (forall m : nat, forall n : nat, (lt _2248 m (S n)) = ((m = n) \/ (lt _2248 m n)))) ( (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 0)))))))).
@@ -597,11 +645,13 @@ Proof.
   generalize (ε_spec i a). intros [h0 hs].
   apply fun_ext; intro x. apply fun_ext; intro y.
   apply prop_ext.
-    induction y. lia. rewrite hs. intro h. apply le_S_n in h. apply le_eq_lt in h. destruct h as [h|h].
+  induction y. lia. rewrite hs. intro h. apply le_S_n in h.
+    apply le_eq_lt in h. destruct h as [h|h].
     left. exact h. right. apply IHy. exact h.
   induction y.
     rewrite h0. lia.
-    rewrite hs. intros [h|h]. rewrite h. unfold lt. lia. generalize (IHy h). lia.
+    rewrite hs. intros [h|h]. rewrite h. unfold lt. lia. generalize (IHy h).
+    lia.
 Qed.
 
 Lemma ge_def : ge = (fun _2249 : nat => fun _2250 : nat => le _2250 _2249).
@@ -615,14 +665,16 @@ Definition COND {A : Type'} := fun t : Prop => fun t1 : A => fun t2 : A => @ε A
 Lemma COND_True (A : Type') (x y : A) : COND True x y = x.
 Proof.
   unfold COND. match goal with [|- ε ?x = _] => set (Q := x) end.
-  assert (i : exists q, Q q). exists x. split; intro h. reflexivity. apply False_rec. rewrite <- h. exact I.
+  assert (i : exists q, Q q). exists x. split; intro h.
+  reflexivity. apply False_rec. rewrite <- h. exact I.
   generalize (ε_spec i). intros [h1 h2]. apply h1. reflexivity.
 Qed.
 
 Lemma COND_False (A : Type') (x y : A) : COND False x y = y.
 Proof.
   unfold COND. match goal with [|- ε ?x = _] => set (Q := x) end.
-  assert (i : exists q, Q q). exists y. split; intro h. apply False_rec. rewrite h. exact I. reflexivity.
+  assert (i : exists q, Q q). exists y. split; intro h. apply False_rec.
+  rewrite h. exact I. reflexivity.
   generalize (ε_spec i). intros [h1 h2]. apply h2. reflexivity.
 Qed.
 
@@ -703,11 +755,14 @@ Proof.
   generalize (ε_spec i a). intro h.
   apply fun_ext; intro x. apply fun_ext; intro y.
   revert x. induction y.
-  intro x. generalize (h x 0). rewrite refl_is_True, COND_True. intros [h1 h2]. symmetry. exact h2.
-  intro x. generalize (h x (S y)). rewrite S_eq_0_is_False, COND_False. intros [h1 h2].
+  intro x. generalize (h x 0). rewrite refl_is_True, COND_True. intros [h1 h2].
+  symmetry. exact h2.
+  intro x. generalize (h x (S y)). rewrite S_eq_0_is_False, COND_False.
+  intros [h1 h2].
   generalize (Coq.Arith.PeanoNat.Nat.divmod_spec x y 0 y (le_n y)).
   unfold Nat.modulo. destruct (Nat.divmod x y 0 y) as [q r].
-  rewrite PeanoNat.Nat.sub_diag, PeanoNat.Nat.mul_0_r, !PeanoNat.Nat.add_0_r. rewrite h1 at 1.
+  rewrite PeanoNat.Nat.sub_diag, PeanoNat.Nat.mul_0_r, !PeanoNat.Nat.add_0_r.
+  rewrite h1 at 1.
   intros [i1 i2]. assert (h3 : y - r < S y). lia.
   rewrite (PeanoNat.Nat.mul_comm (S y) q) in i1.
   generalize (divmod_unicity (Nat.div x (S y)) q (S y) (ε Q a x (S y)) (y - r) h2 h3 i1).
@@ -729,21 +784,24 @@ Proof. rewrite even_spec. exists n. reflexivity. Qed.
 Lemma Even_or_Odd x : Even x \/ Odd x.
 Proof.
   rewrite (div_mod_eq x 2). assert (h1: 0 <= x). lia. assert (h2: 0 < 2). lia.
-  generalize (mod_bound_pos x 2 h1 h2). generalize (x mod 2). intro n. destruct n; intro h.
+  generalize (mod_bound_pos x 2 h1 h2). generalize (x mod 2). intro n.
+  destruct n; intro h.
   left. exists (x / 2). lia. destruct n. right. exists (x / 2). reflexivity. lia.
 Qed.
 
 Lemma not_Even_is_Odd x : (~Even x) = Odd x.
 Proof.
   apply prop_ext; intro h; generalize (Even_or_Odd x); intros [i|i].
-  apply False_rec. exact (h i). exact i. destruct h as [k hk]. destruct i as [l hl]. lia.
+  apply False_rec. exact (h i). exact i. destruct h as [k hk].
+  destruct i as [l hl]. lia.
   intros [k hk]. destruct i as [l hl]. lia.
 Qed.
 
 Lemma not_Odd_is_Even x : (~Odd x) = Even x.
 Proof.
   apply prop_ext; intro h; generalize (Even_or_Odd x); intros [i|i].
-  exact i. apply False_rec. exact (h i). destruct h as [k hk]. intro j. destruct j as [l hl]. lia.
+  exact i. apply False_rec. exact (h i). destruct h as [k hk]. intro j.
+  destruct j as [l hl]. lia.
   intros [k hk]. destruct h as [l hl]. lia.
 Qed.
 
@@ -941,7 +999,8 @@ Qed.
 Lemma NUMRIGHT_NUMSUM b n : NUMRIGHT (NUMSUM b n) = n.
 Proof.
   unfold NUMSUM, NUMERAL, BIT1, BIT0, NUMRIGHT. destruct (prop_degen b); subst.
-  rewrite COND_True, even_succ, odd_mul, odd_2, S_minus_1, DIV_MULT. reflexivity. lia.
+  rewrite COND_True, even_succ, odd_mul, odd_2, S_minus_1, DIV_MULT.
+  reflexivity. lia.
   rewrite COND_False, even_double, DIV_MULT. reflexivity. lia.
 Qed.
 
@@ -1024,7 +1083,7 @@ Proof.
 Qed.
 
 (****************************************************************************)
-(* Alignment of recspace. Uses proof irrelevance. *)
+(* Alignment of recspace (uses proof irrelevance). *)
 (****************************************************************************)
 
 Require Import ProofIrrelevance.
@@ -1045,9 +1104,11 @@ Definition _mk_rec_pred {A : Type'} (f : nat -> A -> Prop) (g : recspace A) :=
 Definition _mk_rec : forall {A : Type'}, (nat -> A -> Prop) -> recspace A :=
   fun A f => ε (_mk_rec_pred f).
 
-Lemma eq_recspace {A : Type'} : forall (f g : recspace A), _dest_rec f = _dest_rec g -> f = g.
+Lemma eq_recspace {A : Type'} :
+  forall (f g : recspace A), _dest_rec f = _dest_rec g -> f = g.
 Proof.
-  intros [f hf] [g hg]. simpl. intro e. subst g. apply subset_eq_compat. reflexivity.
+  intros [f hf] [g hg]. simpl. intro e. subst g. apply subset_eq_compat.
+  reflexivity.
 Qed.
 
 Lemma axiom_10 : forall {A : Type'} (r : nat -> A -> Prop), (@ZRECSPACE A r) = ((@_dest_rec A (@_mk_rec A r)) = r).
@@ -1096,7 +1157,8 @@ Qed.
 Lemma INJF_INJ {A : Type'} : forall f1 : nat -> nat -> A -> Prop, forall f2 : nat -> nat -> A -> Prop, ((@INJF A f1) = (@INJF A f2)) = (f1 = f2).
 Proof. (*thm_1056768*)
   intros f1 f2. apply prop_ext. 2: intro e; subst; reflexivity.
-  intro e. apply fun_ext; intro x. apply fun_ext; intro y. apply fun_ext; intro a.
+  intro e. apply fun_ext; intro x. apply fun_ext; intro y.
+  apply fun_ext; intro a.
   generalize (ext_fun e (NUMPAIR x y)); clear e; intro e.
   generalize (ext_fun e a); clear e. unfold INJF.
   rewrite NUMFST_NUMPAIR, NUMSND_NUMPAIR. auto.
@@ -1104,7 +1166,8 @@ Qed.
 
 Lemma INJP_INJ {A : Type'} : forall f1 : nat -> A -> Prop, forall f1' : nat -> A -> Prop, forall f2 : nat -> A -> Prop, forall f2' : nat -> A -> Prop, ((@INJP A f1 f2) = (@INJP A f1' f2')) = ((f1 = f1') /\ (f2 = f2')).
 Proof. (*thm_1057673*)
-  intros f1 f1' f2 f2'. apply prop_ext. 2: intros [e1 e2]; subst; reflexivity. intro e.
+  intros f1 f1' f2 f2'. apply prop_ext. 2: intros [e1 e2]; subst; reflexivity.
+  intro e.
   assert (e1: forall x a, INJP f1 f2 x a = INJP f1' f2' x a).
   intros x a. rewrite e. reflexivity.
   split; apply fun_ext; intro x; apply fun_ext; intro a.
@@ -1130,34 +1193,37 @@ Qed.
 
 Lemma CONSTR_INJ : forall {A : Type'}, forall c1 : nat, forall i1 : A, forall r1 : nat -> recspace A, forall c2 : nat, forall i2 : A, forall r2 : nat -> recspace A, ((@CONSTR A c1 i1 r1) = (@CONSTR A c2 i2 r2)) = ((c1 = c2) /\ ((i1 = i2) /\ (r1 = r2))).
 Proof. (*thm_1060744*)
-  intros A c1 i1 r1 c2 i2 r2. apply prop_ext. 2: intros [e1 [e2 e3]]; subst; reflexivity.
+  intros A c1 i1 r1 c2 i2 r2. apply prop_ext.
+  2: intros [e1 [e2 e3]]; subst; reflexivity.
   unfold CONSTR. intro e. apply MK_REC_INJ in e. apply ZCONSTR_INJ in e.
   destruct e as [e1 [e2 e3]]. split. auto. split. auto. apply fun_ext; intro x.
   apply eq_recspace. generalize (ext_fun e3 x). auto.
   split; apply ZRECSPACE1; intro n. destruct (r1 n). auto. destruct (r2 n). auto.
 Qed.
 
-
 (****************************************************************************)
 (* Mapping of sum_type. *)
 (****************************************************************************)
 
-Definition sum_type (A B : Type') : Type' := {| type:= sum A B; el := inl (el A)|}.
+Definition sum_type (A B : Type') : Type' :=
+  {| type:= sum A B; el := inl (el A)|}.
 
 Definition _dest_sum : forall {A B : Type'}, sum_type A B -> recspace (prod A B) := 
 fun A B p => match p with 
-| inl(a) => CONSTR (NUMERAL 0) (a , ε (fun _: B => True)) (fun n => BOTTOM)
-| inr(b) => CONSTR (S (NUMERAL 0)) (ε (fun _: A => True) , b) (fun n => BOTTOM)
+| inl a => CONSTR (NUMERAL 0) (a , ε (fun _ => True)) (fun _ => BOTTOM)
+| inr b => CONSTR (S (NUMERAL 0)) (ε (fun _ => True) , b) (fun _ => BOTTOM)
 end.
 
 Definition _mk_sum : forall {A B : Type'}, (recspace (prod A B)) -> sum_type A B :=
 fun A B f => ε (fun p => f = _dest_sum p).
 
-Lemma _dest_sum_inj : forall {A B : Type'} (f g : sum_type A B), _dest_sum f = _dest_sum g -> f = g. 
+Lemma _dest_sum_inj :
+  forall {A B : Type'} (f g : sum_type A B), _dest_sum f = _dest_sum g -> f = g. 
 Proof. 
   intros.
   induction f; induction g; unfold _dest_sum in H; rewrite (@CONSTR_INJ (prod A B)) in H; destruct H. destruct H0.
-  apply pair_equal_spec in H0. destruct H0. rewrite H0. reflexivity. discriminate. discriminate. 
+  apply pair_equal_spec in H0. destruct H0. rewrite H0. reflexivity.
+  discriminate. discriminate. 
   destruct H0. apply pair_equal_spec in H0. destruct H0. rewrite H2. reflexivity.
 Qed.
 
@@ -1169,35 +1235,26 @@ Proof.
 Qed.
 
 Lemma axiom_12 : forall {A B : Type'} (r : recspace (prod A B)), 
-  ((fun a : recspace (prod A B) => 
-  forall sum' : (recspace (prod A B)) -> Prop, 
-  (forall a' : recspace (prod A B), 
-  (
-  (exists a'' : A, a' = ((fun a''' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a''' (@ε B (fun v : B => True))) (fun n : nat => @BOTTOM (prod A B))) a'')) 
-  \/ 
-  (exists a'' : B, a' = ((fun a''' : B => @CONSTR (prod A B) (S (NUMERAL 0)) (@pair A B (@ε A (fun v : A => True)) a''') (fun n : nat => @BOTTOM (prod A B))) a''))
-  ) -> sum' a'
-  ) 
-  -> sum' a) r) 
-  = ((@_dest_sum A B (@_mk_sum A B r)) = r).
+  ((fun a : recspace (prod A B) => forall sum' : (recspace (prod A B)) -> Prop, (forall a' : recspace (prod A B), ((exists a'' : A, a' = ((fun a''' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a''' (@ε B (fun v : B => True))) (fun n : nat => @BOTTOM (prod A B))) a'')) \/ (exists a'' : B, a' = ((fun a''' : B => @CONSTR (prod A B) (S (NUMERAL 0)) (@pair A B (@ε A (fun v : A => True)) a''') (fun n : nat => @BOTTOM (prod A B))) a''))) -> sum' a') -> sum' a) r) = ((@_dest_sum A B (@_mk_sum A B r)) = r).
 Proof.
-intros. apply prop_ext.
-intro h. unfold _mk_sum. rewrite sym. apply (@ε_spec (sum_type A B)).
-apply (h (fun r : recspace (prod A B) => exists x : sum_type A B, r = _dest_sum x)).
-intros. destruct H. destruct H. exists (inl(x)). simpl. exact H.
+  intros. apply prop_ext.
+  intro h. unfold _mk_sum. rewrite sym. apply (@ε_spec (sum_type A B)).
+  apply (h (fun r : recspace (prod A B) => exists x : sum_type A B, r = _dest_sum x)).
+  intros. destruct H. destruct H. exists (inl(x)). simpl. exact H.
 
-destruct H. exists (inr(x)). simpl. exact H. 
+  destruct H. exists (inr(x)). simpl. exact H. 
 
-intro e. rewrite <- e. intros P h. apply h. destruct (_mk_sum r). simpl. left. exists t0. reflexivity. right. exists t0. reflexivity.
+  intro e. rewrite <- e. intros P h. apply h. destruct (_mk_sum r).
+  simpl. left. exists t0. reflexivity. right. exists t0. reflexivity.
 Qed.
 
 Lemma INL_def {A B : Type'} : (@inl A B) = (fun a : A => @_mk_sum A B ((fun a' : A => @CONSTR (prod A B) (NUMERAL 0) (@pair A B a' (@ε B (fun v : B => True))) (fun n : nat => @BOTTOM (prod A B))) a)).
 Proof.
   apply fun_ext. intro a. apply _dest_sum_inj. simpl.
-  match goal with [|- ?x = _] => set (r := x) end. 
+  match goal with [|- ?x = _] => set (r := x) end.
   (* rewrite sym. rewrite <- axiom_12. doesn't work *)
   unfold _mk_sum. assert (h: exists p, r = _dest_sum p).
-  exists (inl(a)). simpl. reflexivity.
+  exists (inl a). simpl. reflexivity.
   generalize (ε_spec h). set (o := ε (fun p : sum_type A B => _dest_sum p = r)).
   auto. 
 Qed.
