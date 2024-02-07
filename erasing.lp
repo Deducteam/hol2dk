@@ -190,6 +190,11 @@ builtin "MAP_def" ≔ MAP_def;
 builtin "BUTLAST_def" ≔ BUTLAST_def;
 builtin "ALL_def" ≔ ALL_def;
 builtin "PAIRWISE_def" ≔ PAIRWISE_def;
+builtin "char" ≔ char;
+builtin "_dest_char" ≔ _dest_char;
+builtin "_mk_char" ≔ _mk_char;
+builtin "axiom_17" ≔ axiom_17;
+builtin "axiom_18" ≔ axiom_18;
 
 // type nadd of nearly-additive sequences of natural numbers
 builtin "nadd" ≔ nadd;

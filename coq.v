@@ -1654,6 +1654,126 @@ Proof.
   apply H. rewrite (ForallOrdPairs_cons R a l). rewrite <- IHl. apply H.
 Qed.        
 
+(****************************************************************************)
+(* Mapping of char. *)
+(****************************************************************************)
+
+Require Import Coq.Strings.Ascii.
+
+Definition char := {| type := ascii; el := zero |}.
+
+(* Note the mismatch between Coq's Ascii which takes booleans as arguments and HOL-Light's ASCII which takes propositions as arguments.*)
+Coercion is_true : bool >-> Sortclass. 
+
+Definition _dest_char : char -> recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) :=
+fun a => match a with 
+| Ascii a0 a1 a2 a3 a4 a5 a6 a7 => (fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7
+end.
+
+Definition _mk_char_pred (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) : char -> Prop :=
+fun a => _dest_char a = r.
+
+Definition _mk_char : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> char :=
+fun r => ε (_mk_char_pred r).
+
+Lemma eq_true_inj (b b' : bool) : is_true b = is_true b' -> b = b'. 
+Proof.
+  intro. induction b; induction b'. 
+  reflexivity. 
+  unfold is_true in H. symmetry. rewrite <- H. reflexivity.
+  unfold is_true in H. rewrite H; reflexivity.
+  reflexivity.
+Qed.    
+
+Lemma _dest_char_inj (a a' : char) : _dest_char a = _dest_char a' -> a = a'.
+Proof.
+  induction a. induction a'. simpl. 
+  rewrite (@CONSTR_INJ (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))).
+  intros [e1[ e2 e3]]. 
+  assert (b = b7 /\ b0 = b8 /\ b1 = b9 /\ b2 = b10 /\ b3 = b11 /\ b4 = b12 /\ b5 = b13 /\ b6 = b14).
+  apply pair_equal_spec in e2. repeat (rewrite pair_equal_spec in e2; split).
+  apply eq_true_inj; apply e2. 
+  apply eq_true_inj; apply e2. 
+  apply eq_true_inj; apply e2. 
+  apply eq_true_inj; apply e2. 
+  apply eq_true_inj; apply e2. 
+  apply eq_true_inj; apply e2. split. 
+  apply eq_true_inj; apply e2. 
+  apply eq_true_inj; apply e2. 
+  destruct H; rewrite H. destruct H0; rewrite H0. destruct H1; rewrite H1. destruct H2; rewrite H2. destruct H3; rewrite H3.
+  destruct H4; rewrite H4. destruct H5; rewrite H5. rewrite H6. reflexivity.
+Qed.
+
+Lemma axiom_17 : forall (a : char), (_mk_char (_dest_char a)) = a.
+Proof.
+  intro a. unfold _mk_char. 
+  match goal with [|- ε ?x = _] => set (A' := x); set (a' := ε A') end.
+  assert (i : exists a', A' a'). exists a. reflexivity. 
+  generalize (ε_spec i). fold a'. unfold A', _mk_char_pred. apply _dest_char_inj.
+Qed.
+
+Definition char_pred (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) := 
+  forall char' : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> Prop, (forall a' : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))), (exists a0 : Prop, exists a1 : Prop, exists a2 : Prop, exists a3 : Prop, exists a4 : Prop, exists a5 : Prop, exists a6 : Prop, exists a7 : Prop, a' = 
+    ((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7)) -> char' a') -> char' r.
+
+Inductive char_ind : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) -> Prop :=
+| char_ind_cons a0 a1 a2 a3 a4 a5 a6 a7 : char_ind (CONSTR (NUMERAL 0) (is_true a0, (is_true a1, (is_true a2, (is_true a3, (is_true a4, (is_true a5, (is_true a6, is_true a7))))))) (fun _ : nat => BOTTOM)).
+
+Lemma is_true_of_true : True = is_true true.
+Proof.
+  unfold is_true. apply prop_ext. trivial. trivial.
+Qed.
+
+Lemma is_true_of_false : False = is_true false.
+Proof.
+  unfold is_true. apply prop_ext. auto. intro. discriminate.
+Qed.
+
+Lemma Prop_bool_eq (P : Prop) : P = @COND bool P true false.
+Proof.
+  assert (P = True \/ P = False). apply prop_degen. destruct H.
+  rewrite H. rewrite (COND_True bool true false). rewrite is_true_of_true. reflexivity.
+  rewrite H. rewrite (COND_False bool true false). rewrite is_true_of_false. reflexivity.
+Qed. 
+
+Lemma char_eq : char_pred = char_ind.
+Proof.
+  apply fun_ext. intro r. apply prop_ext.
+  intro h. apply h. intros r' H. destruct H as [a0 [a1 [a2 [a3 [a4 [a5 [a6 [a7 e]]]]]]]].
+  rewrite e. 
+  rewrite (Prop_bool_eq a0).
+  rewrite (Prop_bool_eq a1).
+  rewrite (Prop_bool_eq a2).
+  rewrite (Prop_bool_eq a3).
+  rewrite (Prop_bool_eq a4).
+  rewrite (Prop_bool_eq a5).
+  rewrite (Prop_bool_eq a6).
+  rewrite (Prop_bool_eq a7).
+  exact (char_ind_cons (@COND bool a0 true false) (@COND bool a1 true false) (@COND bool a2 true false) 
+  (@COND bool a3 true false) (@COND bool a4 true false) (@COND bool a5 true false) (@COND bool a6 true false) 
+  (@COND bool a7 true false)).
+  induction 1. unfold char_pred. intros R h. apply h. 
+  exists a0. exists a1. exists a2. exists a3. exists a4. exists a5. exists a6. exists a7.
+  reflexivity.     
+Qed.
+
+Lemma axiom_18' : forall (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))),
+char_pred r = ((_dest_char (_mk_char r)) = r).
+Proof.
+  intro r. apply prop_ext.
+  
+  intro h. apply (@ε_spec _ (_mk_char_pred r)).
+  rewrite char_eq in h. induction h. exists (Ascii a0 a1 a2 a3 a4 a5 a6 a7). reflexivity.
+
+  intro e. rewrite <- e. intros P h. apply h. destruct (_mk_char r); simpl.
+  exists (is_true b). exists (is_true b0). exists (is_true b1). exists (is_true b2). exists (is_true b3). exists (is_true b4). exists (is_true b5). exists (is_true b6).
+  reflexivity.
+Qed.
+
+Lemma axiom_18 : forall (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))), ((fun a : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) => forall char' : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> Prop, (forall a' : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))), (exists a0 : Prop, exists a1 : Prop, exists a2 : Prop, exists a3 : Prop, exists a4 : Prop, exists a5 : Prop, exists a6 : Prop, exists a7 : Prop, a' = 
+((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7)) -> char' a') -> char' a) r) = ((_dest_char (_mk_char r)) = r).
+Proof. intro r. apply axiom_18'. Qed.
+
 (*******************************************************************************)
 (* Mapping of nadd (the type of nearly-additive sequences of natural numbers). *)
 (*******************************************************************************)
@@ -1703,7 +1823,3 @@ Lemma axiom_19 : forall (a : nadd), (mk_nadd (dest_nadd a)) = a.
 Proof.
   intros [f h]. simpl. apply eq_nadd. simpl. rewrite <- axiom_20. exact h. 
 Qed.
-
-
-
-
