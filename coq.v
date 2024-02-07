@@ -1219,7 +1219,7 @@ fun A B f => ε (fun p => f = _dest_sum p).
 
 Lemma _dest_sum_inj :
   forall {A B : Type'} (f g : sum_type A B), _dest_sum f = _dest_sum g -> f = g. 
-Proof. 
+Proof.
   intros.
   induction f; induction g; unfold _dest_sum in H; rewrite (@CONSTR_INJ (prod A B)) in H; destruct H. destruct H0.
   apply pair_equal_spec in H0. destruct H0. rewrite H0. reflexivity.
