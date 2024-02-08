@@ -1,1 +1,2 @@
 - [Frédéric Blanqui](https://blanqui.gitlabpages.inria.fr/)
+- [Anthony Bordg](https://sites.google.com/site/anthonybordg/)

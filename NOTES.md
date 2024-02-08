@@ -1,6 +1,14 @@
 NOTES
 -----
 
+## 02/02/24
+
+Translation of `Multivariate/make.ml` upto `topology.ml`:
+  * lp 6h40m 25G v 13m7s 21G mklp 2m24s mkv 1s
+  * vo -j16 256m + -j8 50m + -j4 181m + -j1 134m
+    Stack overflow on big term_abbrevs.v files below + URYSOHN_LEMMA_term_abbrevs.v (722M)
+    (100,000 < nb defs < 600,000)
+
 ## 25/01/24
 
 By introducing sharing in term abbreviations, we can reduce the size of some lp files significantly:

@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command simp is equivalent to rewrite and purge
 - command dump-simp is equivalent to dump, pos, use and simp
 - allow simultaneous dumping
-- Coq mapping for the option type
+- alignments of the types option, Sum and list
 - command split to generate a pos/use/stp file for each named theorem
   (an stp file contains the starting position of the corresponding proof)
 - command theorem to generate the lp files corresponding to a named theorem
@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - use hash tables instead of maps to build abbreviations maps
 - use sharing when building canonical types and terms
 - add option --use-sharing for using sharing in lp output when defining term abbreviations
+- command nbp to get the number of proof steps
 
 ### Modified
 
