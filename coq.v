@@ -1560,11 +1560,7 @@ Proof.
 Qed. 
 
 Lemma COND_list {A : Type'} (l0 l1 l2 : list A) : 
-  match l0 with
-  | nil => l1
-  | cons h t => l2
-  end
-  = COND (l0 = nil) l1 l2.
+  match l0 with nil => l1 | cons h t => l2 end = COND (l0 = nil) l1 l2.
 Proof.
   induction l0. symmetry. assert ((@nil A = nil) = True). apply prop_ext. auto. auto. 
   rewrite H. apply COND_True.
@@ -1647,14 +1643,7 @@ Proof.
 Qed.
 
 (* Below we use the coercion is_true to handle the mismatch between HOL's 'FILTER' 
-which uses Prop and Coq's 'filter' which uses bool. *) 
-Coercion is_true : bool >-> Sortclass.
-
-Fixpoint filter_bis {A : Type'} (f : A -> Prop) (l : list A) : list A :=
-      match l with
-      | nil => nil
-      | x :: l => @COND (list A) (f x) (x::filter_bis f l) (filter_bis f l)
-      end.
+which uses Prop and Coq's 'filter' which uses bool. *)
 
 Lemma is_true_of_true : True = is_true true.
 Proof.
@@ -1665,6 +1654,14 @@ Lemma is_true_of_false : False = is_true false.
 Proof.
   unfold is_true. apply prop_ext. auto. intro. discriminate.
 Qed.
+
+(*Fixpoint filter_bis {A : Type'} (f : A -> Prop) (l : list A) : list A :=
+      match l with
+      | nil => nil
+      | x :: l => @COND (list A) (f x) (x::filter_bis f l) (filter_bis f l)
+      end.
+
+Coercion is_true : bool >-> Sortclass.
 
 Lemma FILTER_def {_25594 : Type'} : (@filter _25594) = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (_25594 -> Prop) -> (list _25594) -> list _25594) (fun FILTER' : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (_25594 -> Prop) -> (list _25594) -> list _25594 => forall _18022 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), (forall P : _25594 -> Prop, (FILTER' _18022 P (@nil _25594)) = (@nil _25594)) /\ (forall h : _25594, forall P : _25594 -> Prop, forall t : list _25594, (FILTER' _18022 P (@cons _25594 h t)) = (@COND (list _25594) (P h) (@cons _25594 h (FILTER' _18022 P t)) (FILTER' _18022 P t)))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))))).
 Proof.
@@ -1686,6 +1683,7 @@ Proof.
   destruct (f a). rewrite <- is_true_of_true. rewrite COND_True. rewrite <- IHl. reflexivity.
   rewrite <- is_true_of_false. apply COND_False.
 Qed.
+*)
 
 Lemma MEM_def {_25376 : Type'} : (@In _25376) = (@ε ((prod nat (prod nat nat)) -> _25376 -> (list _25376) -> Prop) (fun MEM' : (prod nat (prod nat nat)) -> _25376 -> (list _25376) -> Prop => forall _17995 : prod nat (prod nat nat), (forall x : _25376, (MEM' _17995 x (@nil _25376)) = False) /\ (forall h : _25376, forall x : _25376, forall t : list _25376, (MEM' _17995 x (@cons _25376 h t)) = ((x = h) \/ (MEM' _17995 x t)))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))))))).
 Proof.
@@ -1706,7 +1704,7 @@ Qed.
 (****************************************************************************)
 (* Mapping of char. *)
 (****************************************************************************)
-
+(*
 Require Import Coq.Strings.Ascii.
 
 Definition ascii' := {| type := ascii; el := zero |}.
@@ -1715,6 +1713,8 @@ Canonical ascii'.
 
 (* Note the mismatch between Coq's Ascii which takes booleans as arguments
 and HOL-Light's ASCII which takes propositions as arguments.*) 
+
+Coercion is_true : bool >-> Sortclass.
 
 Definition _dest_char : ascii -> recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) :=
 fun a => match a with 
@@ -1814,13 +1814,11 @@ Qed.
 Lemma axiom_18 : forall (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))), ((fun a : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) => forall char' : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> Prop, (forall a' : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))), (exists a0 : Prop, exists a1 : Prop, exists a2 : Prop, exists a3 : Prop, exists a4 : Prop, exists a5 : Prop, exists a6 : Prop, exists a7 : Prop, a' = 
 ((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7)) -> char' a') -> char' a) r) = ((_dest_char (_mk_char r)) = r).
 Proof. intro r. apply axiom_18'. Qed.
-
+*)
 (*******************************************************************************)
 (* Mapping of nadd (the type of nearly-additive sequences of natural numbers). *)
 (*******************************************************************************)
-
-(* I found nothing about nearly-additive sequences in the standard library of Coq. *)
-
+(*
 Definition dist := fun _22820 : prod nat nat => Nat.add (Nat.sub (@fst nat nat _22820) (@snd nat nat _22820)) (Nat.sub (@snd nat nat _22820) (@fst nat nat _22820)).
 
 Definition is_nadd := fun _23130 : nat -> nat => exists B : nat, forall m : nat, forall n : nat, Peano.le (dist (@pair nat nat (Nat.mul m (_23130 n)) (Nat.mul n (_23130 m)))) (Nat.mul B (Nat.add m n)).
@@ -1864,3 +1862,4 @@ Lemma axiom_19 : forall (a : nadd), (mk_nadd (dest_nadd a)) = a.
 Proof.
   intros [f h]. simpl. apply eq_nadd. simpl. rewrite <- axiom_20. exact h. 
 Qed.
+*)
