@@ -1,6 +1,8 @@
 TODO
 ----
 
+- beta-normalize hol-light terms ?
+
 - remove the need for sed after lambdapi export -o stt_coq
 
 - rename targets mklp -> lpo.mk, mkv -> vo.mk
