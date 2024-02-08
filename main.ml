@@ -95,6 +95,9 @@ hol2dk axm $file.[dk|lp]
 Other commands
 --------------
 
+hol2dk nbp $file
+  print the number of proof steps in $file.prf
+
 hol2dk proof $file $x $y
   print proof steps between theorem indexes $x and $y
 
@@ -336,6 +339,8 @@ let print_hstats() =
     hstats (TrmHashtbl.stats htbl_term_abbrev)
     hstats (TrmHashtbl.stats htbl_subterms)
 
+let valid_coq_filename s = match s with "at" -> "_" ^ s | _ -> s;;
+
 let rec log_command l =
   log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
 
@@ -453,6 +458,8 @@ and command = function
      print_histogram thm_uses;
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
+
+  | ["nbp";b] -> log "%#d proof steps\n" (read_val (b ^ ".nbp")); 0
 
   | ["size";b] -> command ["size";b;"0"]
   | ["size";b;l] ->
@@ -795,7 +802,7 @@ and command = function
      let map_thid_name = read_val (b ^ ".thm") in
      let map = ref MapInt.empty in
      let create_segment start_index end_index =
-       let n = try MapInt.find end_index map_thid_name
+       let n = try valid_coq_filename (MapInt.find end_index map_thid_name)
                with Not_found -> "thm" ^ string_of_int end_index in
        let len = end_index - start_index + 1 in
        write_val (n ^ ".nbp") len;
@@ -825,7 +832,7 @@ and command = function
          end
      done;
      create_segment 0 !end_idx;
-     MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;
+     (*MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;*)
      write_val (b ^ ".thp") !map;
      0
 

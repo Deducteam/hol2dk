@@ -399,7 +399,7 @@ Performance
 
 Performance on a machine with 32 processors i9-13950HX and 64G RAM:
 
-Dumping, simplification and translation of `Logic/Make.ml` with `split`:
+Dumping, simplification and translation of `Logic/make.ml` with `split`:
   * dump-simp 10m29s 10G 83% useless (including hol.ml)
   * lp 57s 1.2G mklp 1m24s
   * v 43s mkv 50s vo (-j20) 34m10s
@@ -456,22 +456,22 @@ Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make -j16 vo: 31m35s 3.1G (40m37s 3.5G with sharing)
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
-  * hol2dk mk 100: 14s
+  * hol2dk mk 100: 16s
   * make -j32 lp: 31s 1.1G type abbrevs 796K term abbrevs 583M (53%)
   * make -j32 lpo: fails (too big for lambdapi)
   * make -j32 v: 24s 1G
   * make -j32 vo: 1h4m
 
 Multi-threaded translation of `hol.ml` to Dedukti with `mk 100`:
-  * make -j32 dk: 49s 1.5G type abbrevs 876K term abbrevs 660M (44%)
-  * dkcheck: 3m31s
-  * kocheck: 5m54s
+  * make -j32 dk: 1m10s 1.4G type abbrevs 876K term abbrevs 640M (46%)
+  * dkcheck: 4m11s
+  * kocheck: 5m33s
 
 Single-threaded translation of `hol.ml` to Lambdapi:
-  * lp files generation: 4m7s 1.1G type abbrevs 308K term abbrevs 524M (48%)
+  * lp files generation: 5m4s 1.1G type abbrevs 308K term abbrevs 524M (48%)
 
 Single-threaded translation of `hol.ml` to Dedukti:
-  * dk files generation: 7m12s 1.4G type abbrevs 348K term abbrevs 590M (42%)
+  * dk files generation: 9m39s 1.3G type abbrevs 348K term abbrevs 570M (44%)
 
 Dumping and translation of `hol.ml` upto `arith.ml` with `mk 7`:
   * proof dumping time: 11s 77M 448 named theorems
