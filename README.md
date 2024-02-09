@@ -230,13 +230,15 @@ hol2dk split file
 ```
 generates file.thp and files t.sti, t.nbp, t.pos and t.use for each named theorem t.
 
-After `hol2dk link`, you can use `make -j$jobs` to translate and check files in parallel:
-- `split` to split file.prf
+After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check files in parallel, where `TARGET` is either:
+- `split` to do `hol2dk split`
 - `lp` to generate lp files
 - `v` to translate lp files to Coq
 - `dep` to generate dependencies to check lp or v files in parallel
 - `lpo` to check lp files
 - `vo` to check Coq files
+
+Remark: the order is important, `split` must be done first, `v` will do `lp`, and `dep` must be done after `lp` and before `lpo` or `vo`.
 
 You can also write in a file called `FILES_WITH_SHARING` a space-separated list of theorem names for which sharing is needed.
  
