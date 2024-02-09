@@ -19,8 +19,6 @@ TODO
 
 - simplify/purge proofs in parallel?
 
-- add commands for patch/unpatch/add-links ?
-
 - create doc on readthedocs.io
 
 - replace terms of the form (@f _ x) by x if f is a function equal to
