@@ -228,23 +228,21 @@ This will add links to files needed to generate, translate and check proofs.
 ```
 hol2dk split file
 ```
-generates file.thp and files t.sti, t.pos and t.use for each named theorem t.
+generates file.thp and files t.sti, t.nbp, t.pos and t.use for each named theorem t.
 
-You can then generate and check the lp and coq files as follows:
-```
-make BASE=file -j$jobs lp # generate lp files
-make BASE=file mklp # generate lp.mk (lp files dependencies)
-make BASE=file -j$jobs lpo # check lp files
-make BASE=file -j$jobs v # generate v files
-make BASE=file mkv # generate coq.mk (v files dependencies)
-make BASE=file -j$jobs vo # check v files
-```
+After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check files in parallel, where `TARGET` is either:
+- `split` to do `hol2dk split`
+- `lp` to generate lp files
+- `v` to translate lp files to Coq
+- `dep` to generate dependencies to check lp or v files in parallel
+- `lpo` to check lp files
+- `vo` to check Coq files
 
-Remark: you do not need to write `BASE=file` if the directory name is `file`.
+Remark: the order is important, `split` must be done first, `v` will do `lp`, and `dep` must be done after `lp` and before `lpo` or `vo`.
 
-Remark: if you have big files, add them in the variable `FILES_WITH_SHARING` in `Makefile`.
-
-**By splitting proofs in several parts: command `mk` (obsolete)**
+You can also write in a file called `FILES_WITH_SHARING` a space-separated list of theorem names for which sharing is needed.
+ 
+**By splitting proofs in several parts: command `mk`**
 
 ```
 hol2dk mk $nb_parts file
