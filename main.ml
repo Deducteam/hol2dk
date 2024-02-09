@@ -24,6 +24,15 @@ Options
 
 --print-stats: print statistics on hash tables at exit
 
+Patching commands
+-----------------
+
+hol2dk patch
+  patch the $HOLLIGHT_DIR sources
+
+hol2dk unpatch
+  unpatch the $HOLLIGHT_DIR sources
+
 Dumping commands
 ----------------
 
@@ -65,6 +74,9 @@ hol2dk $file.[dk|lp] $thm_id
 
 Multi-threaded lp file generation by having a file for each named theorem
 -------------------------------------------------------------------------
+
+hol2dk link $file
+  add links to files needed to translate and check $file.prf
 
 hol2dk split $file
   generate $file.thp and the files $t.sti, $t.pos and $t.use
@@ -341,6 +353,12 @@ let print_hstats() =
 
 let valid_coq_filename s = match s with "at" -> "_" ^ s | _ -> s;;
 
+let call_script s args =
+  match Sys.getenv_opt "HOL2DK_DIR" with
+  | None -> log "set $HOL2DK_DIR first"; 1
+  | Some d -> Sys.command (d ^ "/" ^ s ^ " " ^ String.concat " " args)
+;;
+
 let rec log_command l =
   log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
 
@@ -388,6 +406,10 @@ and command = function
        (fun f -> List.iter (log "%s %s\n" f) (thms_of_file f))
        (files());
      0
+
+  | ["patch" as s] -> call_script s []
+  | ["unpatch" as s] -> call_script s []
+  | ["link";arg] -> call_script "add-links" [arg]
 
   | ["dump";f] -> dump true f (basename_ml f)
   | ["dump-use";f] -> dump false f (basename_ml f)

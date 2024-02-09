@@ -1,35 +1,37 @@
 #!/bin/sh
 
-if test "$1" = "-y"
+if test -z "$HOL2DK_DIR"
 then
-    opt=''
-    shift
-else
-    opt=' -i'
-fi
-
-if test $# -ne 1
-then
-    echo "wrong number of arguments"
-    echo "usage: `basename $0` [-y] hol-light-dir"
+    echo "HOL2DK_DIR is not set"
     exit 1
 fi
 
-dir=$1
+if test -z "$HOLLIGHT_DIR"
+then
+    echo "HOLLIGHT_DIR is not set"
+    exit 1
+fi
+
+if test $# -ne 0
+then
+    echo "usage: `basename $0`"
+    echo "unpatch the HOL-Light sources in $HOLLIGHT_DIR"
+    exit 1
+fi
 
 restore() {
-    if test -f $dir/$1-bak.ml
+    if test -f $HOLLIGHT_DIR/$1-bak.ml
     then
-        echo "mv$opt $dir/$1-bak.ml $dir/$1.ml"
-        mv$opt $dir/$1-bak.ml $dir/$1.ml
+        echo "mv$opt $HOLLIGHT_DIR/$1-bak.ml $HOLLIGHT_DIR/$1.ml ..."
+        mv $HOLLIGHT_DIR/$1-bak.ml $HOLLIGHT_DIR/$1.ml
     else
-        echo "$dir/lib-bak.ml does not exist"
+        echo "$HOLLIGHT_DIR/lib-bak.ml does not exist"
     fi
 }
 
 remove() {
-    echo "rm$opt $dir/$1.ml"
-    rm$opt $dir/$1.ml
+    echo "rm$opt $HOLLIGHT_DIR/$1.ml ..."
+    rm$opt $HOLLIGHT_DIR/$1.ml
 }
 
 restore fusion
