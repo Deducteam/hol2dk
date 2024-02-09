@@ -107,6 +107,9 @@ hol2dk axm $file.[dk|lp]
 Other commands
 --------------
 
+hol2dk env
+  print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
+
 hol2dk nbp $file
   print the number of proof steps in $file.prf
 
@@ -359,6 +362,12 @@ let call_script s args =
   | Some d -> Sys.command (d ^ "/" ^ s ^ " " ^ String.concat " " args)
 ;;
 
+let print_env_var n =
+  match Sys.getenv_opt n with
+  | None -> log "%s is undefined\n" n
+  | Some v -> log "%s = \"%s\"\n" n v
+;;
+
 let rec log_command l =
   log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
 
@@ -407,6 +416,7 @@ and command = function
        (files());
      0
 
+  | ["env"] -> print_env_var "HOL2DK_DIR"; print_env_var "HOLLIGHT_DIR"; 0
   | ["patch" as s] -> call_script s []
   | ["unpatch" as s] -> call_script s []
   | ["link";arg] -> call_script "add-links" [arg]

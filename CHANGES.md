@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - add option --use-sharing for using sharing in lp output when defining term abbreviations
 - command nbp to get the number of proof steps
 - commands patch, unpatch and link to call the corresponding scripts
+- command env to print $HOL2DK_DIR and $HOLLIGHT_DIR
 
 ### Modified
 
