@@ -230,8 +230,10 @@ hol2dk split file
 ```
 generates file.thp and files t.sti, t.pos and t.use for each named theorem t.
 
-You can then generate and check the lp and coq files as follows:
+After `hol2dk link`, you can then use generate and check the lp and coq files as follows:
 ```
+echo file > BASE
+echo ... > FILES_WITH_SHARING
 make BASE=file -j$jobs lp # generate lp files
 make BASE=file mklp # generate lp.mk (lp files dependencies)
 make BASE=file -j$jobs lpo # check lp files
@@ -244,7 +246,7 @@ Remark: you do not need to write `BASE=file` if the directory name is `file`.
 
 Remark: if you have big files, add them in the variable `FILES_WITH_SHARING` in `Makefile`.
 
-**By splitting proofs in several parts: command `mk` (obsolete)**
+**By splitting proofs in several parts: command `mk`**
 
 ```
 hol2dk mk $nb_parts file
