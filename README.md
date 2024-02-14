@@ -108,16 +108,21 @@ In case you installed hol2dk using opam, write:
 export HOL2DK_DIR=$OPAM_SWITCH_PREFIX/share/hol2dk
 ```
 
+Summary of hol2dk commands
+--------------------------
+
+Get it by running `hol2dk | less`.
+
 Patching HOL-Light sources
 --------------------------
 
 By default, HOL-Light does not generate proofs that can be checked independently. Therefore, it must be patched so that proof steps are recorded:
 
 ```
-$HOL2DK_DIR/patch $HOLLIGHT_DIR
+hol2dk patch
 ```
 
-This script slightly modifies a few HOL-Light files in order to dump proofs:
+This command slightly modifies a few HOL-Light files in order to dump proofs:
 - `fusion.ml`: the HOL-Light kernel file defining types, terms, theorems, proofs and proof rules
 - `bool.ml`: HOL-Light file defining basic tactics corresponding to introduction and elimination rules of connectives
 - `equal.ml`: HOL-Light file defining basic tactics on equality
@@ -128,14 +133,8 @@ Before applying the patch, a copy of these files is created in `fusion-bak.ml`, 
 
 To restore HOL-Light files, simply do:
 ```
-$HOL2DK_DIR/unpatch $HOLLIGHT_DIR
+hol2dk unpatch
 ```
-You can add the option `-y` to force file restoration.
-
-Summary of hol2dk commands
---------------------------
-
-Get it by running `hol2dk` without arguments.
 
 Dumping HOL-Light proofs
 ------------------------
@@ -220,7 +219,7 @@ cd $HOLLIGHT_DIR
 hol2dk dump-simp-use hol.ml
 mkdir -p ~/output-hol2dk/hol
 cd ~/output-hol2dk/hol
-$HOL2DK_DIR/add-links hol
+hol2dk link hol
 ```
 This will add links to files needed to generate, translate and check proofs.
 
@@ -229,22 +228,20 @@ This will add links to files needed to generate, translate and check proofs.
 ```
 hol2dk split file
 ```
-generates file.thp and files t.sti, t.pos and t.use for each named theorem t.
+generates file.thp and files t.sti, t.nbp, t.pos and t.use for each named theorem t.
 
-You can then generate and check the lp and coq files as follows:
-```
-make BASE=file -j $jobs lp # generate lp files
-make BASE=file mklp # generate lp.mk (lp files dependencies)
-make BASE=file -j $jobs lpo # check lp files
-make BASE=file -j $jobs v # generate v files
-make BASE=file mkv # generate coq.mk (v files dependencies)
-make BASE=file -j $jobs vo # check v files
-```
+After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check files in parallel, where `TARGET` is either:
+- `split` to do `hol2dk split`
+- `lp` to generate lp files
+- `v` to translate lp files to Coq
+- `dep` to generate dependencies to check lp or v files in parallel
+- `lpo` to check lp files
+- `vo` to check Coq files
 
-Remark: you do not need to write `BASE=file` if the directory name is `file`.
+Remark: the order is important, `split` must be done first, `v` will do `lp`, and `dep` must be done after `lp` and before `lpo` or `vo`.
 
-Remark: if you have big files, add them in the variable `FILES_WITH_SHARING` in `Makefile`.
-
+You can also write in a file called `FILES_WITH_SHARING` a space-separated list of theorem names for which sharing is needed.
+ 
 **By splitting proofs in several parts: command `mk`**
 
 ```
@@ -255,13 +252,13 @@ generates `file.dg` and `file.mk`.
 Then generate and check `file.dk` with:
 
 ```
-make -f file.mk -j $jobs dk
+make -f file.mk -j$jobs dk
 ```
 
 And `file.lp` with:
 
 ```
-make -f file.mk -j $jobs lp
+make -f file.mk -j$jobs lp
 ```
 
 Checking the generated dk file
@@ -269,7 +266,7 @@ Checking the generated dk file
 
 **Requirement:** dedukti >= 2.7, [kocheck](https://github.com/01mf02/kontroli-rs), or lambdapi >= 2.3.0
 
-Add a link to the dk file defining the logic of HOL-Light:
+If you didn't use `hol2dk link`, add a link to the dk file defining the logic of HOL-Light:
 ```
 ln -s $HOL2DK_DIR/theory_hol.dk
 ```
@@ -285,7 +282,7 @@ change the generated file:
 
 ```
 sed -e 's/^injective /def /g' file.dk > file-for-kocheck.dk
-kocheck -j 7 file-for-kocheck.dk
+kocheck -j7 file-for-kocheck.dk
 ```
 
 Checking the generated lp files
@@ -293,7 +290,7 @@ Checking the generated lp files
 
 **Requirement:** lambdapi >= 2.3.0 for single-threaded generated files, lambdapi master branch for multi-threaded generated files
 
-Add links to the following hol2dk files:
+If you didn't use `hol2dk link`, add links to the following files:
 ```
 ln -s $HOL2DK_DIR/theory_hol.lp
 ln -s $HOL2DK_DIR/lambdapi.pkg
@@ -328,7 +325,7 @@ Translating lp files to Coq
 
 **Requirement:** lambdapi >= 2.4.1
 
-Add links to the following hol2dk files:
+If you didn't use `hol2dk link`, add links to the following files:
 ```
 ln -s $HOL2DK_DIR/coq.v
 ln -s $HOL2DK_DIR/_CoqProject
@@ -340,11 +337,12 @@ using the Coq [export](https://lambdapi.readthedocs.io/en/latest/options.html#ex
 
 If the lp files have been generated using `split`, simply do:
 ```
-make -j $jobs v
+make -j$jobs v
 ```
+
 If the lp files have been generated using `mk`, simply do:
 ```
-make -f file.mk -j $jobs v
+make -f file.mk -j$jobs v
 ```
 
 Otherwise, you need to translate Lambdapi files one by one by hand or
@@ -356,11 +354,11 @@ lambdapi export -o stt_coq --encoding $HOL2DK_DIR/encoding.lp --erasing $HOL2DK_
 You can then check the generated Coq files as follows.
 If the lp files have been generated with `split`, simply do:
 ```
-make -j $jobs vo
+make -j$jobs vo
 ```
 If the lp files have been generated using `mk`, simply do:
 ```
-make -f file.mk -j $jobs vo
+make -f file.mk -j$jobs vo
 ```
 
 Coq axioms used to encode HOL-Light proofs
@@ -524,7 +522,7 @@ Dumping of `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the e
   * proof dumping: 1.4s 157M
   * dk file generation: 45s 153M
   * checking time with dk check: 26s
-  * checking time with kocheck -j 7: 22s
+  * checking time with kocheck -j7: 22s
   * lp file generation: 29s 107M
   * checking time with lambdapi: 2m49s
 

@@ -1,15 +1,18 @@
 .SUFFIXES:
 
-BASE = $(shell basename `pwd`)
+BASE = $(shell if test -f BASE; then cat BASE; fi)
 
 STI_FILES := $(wildcard *.sti)
 
 .PHONY: default
 default:
-	@echo targets: sti lp mklp lpo v mkv vo
+	@echo targets: split lp v dep lpo vo
 
-.PHONY: sti
-sti:
+.PHONY: dep
+dep: dep-lpo dep-vo
+
+.PHONY: split
+split:
 	hol2dk split $(BASE)
 
 .PHONY: clean-sti
@@ -28,7 +31,7 @@ $(BASE_FILES:%=%.lp) &:
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
-FILES_WITH_SHARING = #CHAIN_BOUNDARY_BOUNDARY GRASSMANN_PLUCKER_4 HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS
+FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
 $(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --use-sharing
 
@@ -39,11 +42,11 @@ $(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --use-sharing
 clean-lp:
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
-.PHONY: mklp
-mklp lp.mk:
-	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lp.mk
+.PHONY: dep-lpo
+dep-lpo lpo.mk:
+	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lpo.mk
 
-include lp.mk
+include lpo.mk
 
 .PHONY: lpo
 lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STI_FILES:%.sti=%.lpo) $(STI_FILES:%.sti=%_type_abbrevs.lpo) $(STI_FILES:%.sti=%_term_abbrevs.lpo)
@@ -66,12 +69,12 @@ v: theory_hol.v $(BASE_FILES:%=%.v) $(STI_FILES:%.sti=%.v) $(STI_FILES:%.sti=%_t
 clean-v:
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
-.PHONY: mkv
-mkv coq.mk: lp.mk
-	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lp.mk > coq.mk
-#find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > coq.mk
+.PHONY: dep-vo
+dep-vo vo.mk: lpo.mk
+	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
+#find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > vo.mk
 
-include coq.mk
+include vo.mk
 
 .PHONY: vo
 vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STI_FILES:%.sti=%.vo) $(STI_FILES:%.sti=%_type_abbrevs.vo) $(STI_FILES:%.sti=%_term_abbrevs.vo) $(FILES_WITH_SHARING:%=%_subterm_abbrevs.vo)

@@ -1,12 +1,5 @@
 #!/bin/sh
 
-if test $# -ne 1 -o "$1" = "--help"
-then
-    echo "usage: `basename $0` DIRNAME"
-    echo 'creates the directory DIRNAME and add in it links to files in the directories $HOL2DK_DIR and $HOLLIGHT_DIR'
-    exit 1
-fi
-
 if test -z "$HOL2DK_DIR"
 then
     echo "HOL2DK_DIR is not set"
@@ -19,12 +12,24 @@ then
     exit 1
 fi
 
+if test $# -ne 1
+then
+    echo "usage: `basename $0` FILE"
+    echo 'create BASE and add links to files in $HOL2DK_DIR and $HOLLIGHT_DIR for translating the proofs of FILE'
+    exit 1
+fi
+
+echo create BASE ...
+echo $1 > BASE
+
 for ext in prf nbp sig thm pos use
 do
-   ln -f -s $HOLLIGHT_DIR/$1.$ext
+    echo ln -f -s $HOLLIGHT_DIR/$1.$ext
+    ln -f -s $HOLLIGHT_DIR/$1.$ext
 done
 
 for f in theory_hol.dk theory_hol.lp lambdapi.pkg coq.v _CoqProject Makefile
 do
+    echo ln -f -s $HOL2DK_DIR/$f
     ln -f -s $HOL2DK_DIR/$f
 done

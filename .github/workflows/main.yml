@@ -45,7 +45,8 @@ jobs:
           eval `opam env`
           make -C hol-light
           export HOL2DK_DIR=`pwd`
-          ./patch hol-light
+          export HOLLIGHT_DIR=`pwd`/hol-light
+          hol2dk patch
       - name: Dump proofs
         run: |
           eval `opam env`
@@ -88,9 +89,12 @@ jobs:
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
-          cd hol-light
-          make -f ../Makefile BASE=xci clean-all
-          make -f ../Makefile BASE=xci -j3 sti
-          make -f ../Makefile BASE=xci -j3 lp
-          make -f ../Makefile BASE=xci mklp
-          make -f ../Makefile BASE=xci -j3 lpo
+          export HOLLIGHT_DIR=`pwd`/hol-light
+          mkdir -p output/xci
+          cd output/xci
+          hol2dk link xci
+          make split
+          make -j3 lp
+          make -j3 v
+          make -j3 dep
+          make -j3 lpo

@@ -6,36 +6,40 @@ then
     exit 1
 fi
 
-if test $# -ne 1
+if test -z "$HOLLIGHT_DIR"
 then
-    echo "wrong number of arguments"
-    echo "usage: `basename $0` hol_light_dir"
+    echo "HOLLIGHT_DIR is not set"
     exit 1
 fi
 
-dir=$1
+if test $# -ne 0
+then
+    echo "usage: `basename $0`"
+    echo "patch the HOL-Light sources in $HOLLIGHT_DIR"
+    exit 1
+fi
 
 patch() {
-    if test -f $dir/$1-bak.ml
+    if test -f $HOLLIGHT_DIR/$1-bak.ml
     then
-        echo "$dir/$1-bak.ml already exists"
+        echo "$HOLLIGHT_DIR/$1-bak.ml already exists"
         exit 1
     else
-        echo "cp $dir/$1.ml $dir/$1-bak.ml"
-        cp $dir/$1.ml $dir/$1-bak.ml
-        echo "patch $dir/$1.ml"
-        sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' $HOL2DK_DIR/$1.ml > $dir/$1.ml
+        echo "cp $HOLLIGHT_DIR/$1.ml $HOLLIGHT_DIR/$1-bak.ml"
+        cp $HOLLIGHT_DIR/$1.ml $HOLLIGHT_DIR/$1-bak.ml
+        echo "patch $HOLLIGHT_DIR/$1.ml ..."
+        sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' $HOL2DK_DIR/$1.ml > $HOLLIGHT_DIR/$1.ml
     fi
 }
 
 create() {
-    if test -f $dir/$1.ml
+    if test -f $HOLLIGHT_DIR/$1.ml
     then
-        echo "$dir/$1.ml already exists"
+        echo "$HOLLIGHT_DIR/$1.ml already exists"
         exit 1
     else
-        echo "create $dir/$1.ml"
-        sed -e 's/.*REMOVE.*//' -e 's/^open .*//' $HOL2DK_DIR/$1.ml > $dir/$1.ml
+        echo "create $HOLLIGHT_DIR/$1.ml ..."
+        sed -e 's/.*REMOVE.*//' -e 's/^open .*//' $HOL2DK_DIR/$1.ml > $HOLLIGHT_DIR/$1.ml
     fi
 }
 
