@@ -386,7 +386,10 @@ functions have been aligned with those of Coq:
 - product type constructor
 - type of natural numbers
 - functions and predicates on natural numbers: addition, multiplication, order, power, maximum, minimum, substraction, factorial, division, division remainder, parity
+- sum type constructor
 - option type constructor
+- type of lists
+- functions on lists
 
 The part of HOL-Light that is aligned with Coq is gathered in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
