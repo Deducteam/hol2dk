@@ -1502,9 +1502,11 @@ Require Import List.
 the head (resp. tail, last element) of the empty list NIL is not
 defined in HOL-Light, so the definitions `hd` (resp. `tl`, `last`) in
 Coq and `HD` (resp. `TL`, `LAST`) in HOL-Light can't be aligned. 
-Also, for this reason, Coq's `nth` and HOL-Light's `EL` can't be aligned. 
-Finally, Coq's `existsb` can't be aligned with its HOL-Light counterpart `EX`, 
-since Coq cannot unify Prop' and bool. *)
+Also, for this reason, Coq's `nth` and HOL-Light's `EL` can't be directly aligned. 
+Moreover, Coq's `existsb` can't be aligned with its HOL-Light counterpart `EX`, 
+since Coq cannot unify Prop' and bool. 
+Finally, Coq's List.combine and HOL-Light's ZIP can't be aligned due to a mismatch between
+their definitions. *)
 
 Lemma APPEND_def {A : Type'} : (@app A) = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (list' A) -> (list' A) -> list' A) (fun APPEND' : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (list A) -> (list A) -> list A => forall _17935 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), (forall l : list A, (APPEND' _17935 (@nil A) l) = l) /\ (forall h : A, forall t : list A, forall l : list A, (APPEND' _17935 (@cons A h t) l) = (@cons A h (APPEND' _17935 t l)))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))))))).
 Proof.
@@ -1742,6 +1744,55 @@ Proof.
   generalize (ε_spec i). intro H. symmetry. induction l; simpl. apply H. 
   rewrite <- IHl. apply H.
 Qed.  
+
+Definition HD {A : Type'} := @ε ((prod nat nat) -> (list A) -> A) (fun HD' : (prod nat nat) -> (list A) -> A => forall _17927 : prod nat nat, forall t : list A, forall h : A, (HD' _17927 (@cons A h t)) = h) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))).
+
+Lemma HD_def {A : Type'} : @hd A (HD nil) = @HD A. 
+Proof.
+  apply fun_ext. intro l. unfold HD.
+  generalize (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
+    NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))); intro p. 
+  match goal with |- _ = ε ?x _ _=> set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _=> @hd A (HD nil)). 
+  unfold Q. intro. simpl. trivial.
+  generalize (ε_spec i). intro H. destruct l; simpl. reflexivity. rewrite H. reflexivity.
+Qed.
+
+Lemma HD_of_cons {A: Type'} (h: A) (t: list A) : @HD A (h :: t) = h.
+Proof.
+  unfold HD. generalize (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
+    NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))); intro p.
+  match goal with |- ε ?x _ _ = _=> set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _=> @hd A (HD nil)). 
+  unfold Q. intro. simpl. trivial. 
+  generalize (ε_spec i). intro H. apply H.
+Qed.
+
+Definition nth_with_perm_args {A: Type'} (default: A) (n: nat) (l: list A) : A 
+  := @nth A n l default.
+
+Lemma nth_of_0 {A: Type'} (l: list A) : nth (NUMERAL 0) l (HD nil) = HD l.
+Proof. destruct l; simpl. reflexivity. symmetry. apply HD_of_cons. Qed.
+
+Lemma nth_of_Suc {A: Type'} (n: nat) (l: list A) : nth (S n) l (HD nil) = nth n (tl l) (HD nil).
+Proof. destruct l; simpl. destruct n; simpl; reflexivity. reflexivity. Qed.
+
+Definition EL {A: Type'} := @nth_with_perm_args A (@HD A nil). 
+
+Lemma EL_def {_25569 : Type'} : (@EL _25569) = (@ε ((prod nat nat) -> nat -> (list _25569) -> _25569) (fun EL' : (prod nat nat) -> nat -> (list _25569) -> _25569 => forall _18015 : prod nat nat, (forall l : list _25569, (EL' _18015 (NUMERAL 0) l) = (@HD _25569 l)) /\ (forall n : nat, forall l : list _25569, (EL' _18015 (S n) l) = (EL' _18015 n (@tl _25569 l)))) (@pair nat nat (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))).      
+Proof.
+  generalize (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))), 
+    NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))); intro p.
+  apply fun_ext. intro n.
+  match goal with |-_ = ε ?x _ _=> set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _=> @nth_with_perm_args _25569 (@HD _25569 nil)).
+  unfold Q. intro. unfold nth_with_perm_args. simpl. split.
+  apply nth_of_0. apply nth_of_Suc.
+  generalize (ε_spec i). intro H. unfold EL. unfold nth_with_perm_args. apply fun_ext.
+  induction n; simpl; intro l.
+  rewrite nth_of_0. symmetry. apply H.
+  rewrite nth_of_Suc. rewrite (IHn (tl l)). symmetry. apply H. 
+Qed.   
 
 (****************************************************************************)
 (* Mapping of char. *)
