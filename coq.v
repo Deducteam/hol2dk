@@ -1649,8 +1649,12 @@ Proof.
 Qed.
 
 (* Below we use the coercion is_true to handle the mismatch between HOL's 'FILTER' 
-which uses Prop and Coq's 'filter' which uses bool. *) 
+which uses Prop and Coq's 'filter' which uses bool. *)
 Coercion is_true : bool >-> Sortclass.
+
+Definition bool_of_Prop (P:Prop) : bool := COND P true false.
+
+Coercion bool_of_Prop: Sortclass >-> bool.
 
 Fixpoint filter_bis {A : Type'} (f : A -> Prop) (l : list A) : list A :=
       match l with
@@ -1747,17 +1751,6 @@ Qed.
 
 Definition HD {A : Type'} := @ε ((prod nat nat) -> (list A) -> A) (fun HD' : (prod nat nat) -> (list A) -> A => forall _17927 : prod nat nat, forall t : list A, forall h : A, (HD' _17927 (@cons A h t)) = h) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))).
 
-Lemma HD_def {A : Type'} : @hd A (HD nil) = @HD A. 
-Proof.
-  apply fun_ext. intro l. unfold HD.
-  generalize (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
-    NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))); intro p. 
-  match goal with |- _ = ε ?x _ _=> set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _=> @hd A (HD nil)). 
-  unfold Q. intro. simpl. trivial.
-  generalize (ε_spec i). intro H. destruct l; simpl. reflexivity. rewrite H. reflexivity.
-Qed.
-
 Lemma HD_of_cons {A: Type'} (h: A) (t: list A) : @HD A (h :: t) = h.
 Proof.
   unfold HD. generalize (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
@@ -1768,31 +1761,43 @@ Proof.
   generalize (ε_spec i). intro H. apply H.
 Qed.
 
-Definition nth_with_perm_args {A: Type'} (default: A) (n: nat) (l: list A) : A 
-  := @nth A n l default.
+Definition default {A:Type'} := @HD A nil.
 
-Lemma nth_of_0 {A: Type'} (l: list A) : nth (NUMERAL 0) l (HD nil) = HD l.
-Proof. destruct l; simpl. reflexivity. symmetry. apply HD_of_cons. Qed.
+Definition hd {A:Type'} := @hd A default.
 
-Lemma nth_of_Suc {A: Type'} (n: nat) (l: list A) : nth (S n) l (HD nil) = nth n (tl l) (HD nil).
+Lemma HD_def {A : Type'} : @hd A = @HD A. 
+Proof.
+  apply fun_ext. intro l. unfold hd, default, HD.
+  generalize (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
+    NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))); intro p. 
+  match goal with |- _ = ε ?x _ _=> set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _ => @hd A). 
+  unfold Q. intro. simpl. trivial.
+  generalize (ε_spec i). intro H. destruct l; simpl. reflexivity. rewrite H. reflexivity.
+Qed.
+
+Lemma nth_of_0 {A: Type'} (l: list A) : nth (NUMERAL 0) l default = hd l.
+Proof. destruct l; simpl. reflexivity. symmetry. reflexivity. Qed.
+
+Lemma nth_of_Suc {A: Type'} (n: nat) (l: list A) : nth (S n) l default = nth n (tl l) default.
 Proof. destruct l; simpl. destruct n; simpl; reflexivity. reflexivity. Qed.
 
-Definition EL {A: Type'} := @nth_with_perm_args A (@HD A nil). 
+Definition EL {A: Type'} (n: nat) (l: list A) : A := @nth A n l default.
 
-Lemma EL_def {_25569 : Type'} : (@EL _25569) = (@ε ((prod nat nat) -> nat -> (list _25569) -> _25569) (fun EL' : (prod nat nat) -> nat -> (list _25569) -> _25569 => forall _18015 : prod nat nat, (forall l : list _25569, (EL' _18015 (NUMERAL 0) l) = (@HD _25569 l)) /\ (forall n : nat, forall l : list _25569, (EL' _18015 (S n) l) = (EL' _18015 n (@tl _25569 l)))) (@pair nat nat (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))).      
+Lemma EL_def {_25569 : Type'} : (@EL _25569) = (@ε ((prod nat nat) -> nat -> (list _25569) -> _25569) (fun EL' : (prod nat nat) -> nat -> (list _25569) -> _25569 => forall _18015 : prod nat nat, (forall l : list _25569, (EL' _18015 (NUMERAL 0) l) = (@hd _25569 l)) /\ (forall n : nat, forall l : list _25569, (EL' _18015 (S n) l) = (EL' _18015 n (@tl _25569 l)))) (@pair nat nat (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))).
 Proof.
   generalize (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))), 
     NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))); intro p.
   apply fun_ext. intro n.
-  match goal with |-_ = ε ?x _ _=> set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _=> @nth_with_perm_args _25569 (@HD _25569 nil)).
-  unfold Q. intro. unfold nth_with_perm_args. simpl. split.
+  match goal with |-_ = ε ?x _ _ => set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _ => @EL _25569).
+  unfold Q. intro. unfold EL. simpl. split.
   apply nth_of_0. apply nth_of_Suc.
-  generalize (ε_spec i). intro H. unfold EL. unfold nth_with_perm_args. apply fun_ext.
+  generalize (ε_spec i). intro H. unfold EL. apply fun_ext.
   induction n; simpl; intro l.
   rewrite nth_of_0. symmetry. apply H.
   rewrite nth_of_Suc. rewrite (IHn (tl l)). symmetry. apply H. 
-Qed.   
+Qed.
 
 (****************************************************************************)
 (* Mapping of char. *)
