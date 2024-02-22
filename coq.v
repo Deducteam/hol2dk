@@ -1799,6 +1799,27 @@ Proof.
   rewrite nth_of_Suc. rewrite (IHn (tl l)). symmetry. apply H. 
 Qed.
 
+Definition TL {A : Type'} := (@ε ((prod nat nat) -> (list A) -> list A) (fun TL' : (prod nat nat) -> (list A) -> list A => forall _17931 : prod nat nat, forall h : A, forall t : list A, (TL' _17931 (@cons A h t)) = t) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))).
+
+Definition tl {A : Type'} (l : list A) :=
+match l with 
+| nil => @TL A nil
+| cons h t => @tl A (cons h t)
+end.
+
+Lemma TL_def {A : Type'} : @tl A = @TL A.
+Proof.
+  apply fun_ext. intro l. destruct l. simpl. reflexivity. unfold TL. 
+  generalize (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))), 
+    NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))); intro p.
+  match goal with |-_ = ε ?x _ _ => set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _=> @tl A). 
+  unfold Q. intro. simpl. trivial.
+  generalize (ε_spec i). intro H. 
+  unfold Q. simpl. symmetry. apply H.
+Qed. 
+
+
 (****************************************************************************)
 (* Mapping of char. *)
 (****************************************************************************)

@@ -213,6 +213,8 @@ builtin "hd" ≔ HD;
 builtin "HD_def" ≔ HD_def;
 builtin "EL" ≔ EL;
 builtin "EL_def" ≔ EL_def;
+builtin "tl" ≔ TL;
+builtin "TL_def" ≔ TL_def;
 builtin "Ascii.ascii" ≔ char;
 builtin "_dest_char" ≔ _dest_char;
 builtin "_mk_char" ≔ _mk_char;
