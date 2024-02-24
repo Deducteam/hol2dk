@@ -7,18 +7,16 @@
 (source
  (github Deducteam/hol2dk))
 
-(authors "Frédéric Blanqui")
+(authors "Frédéric Blanqui" "Anthony Bordg")
 
 (maintainers "Frédéric Blanqui")
 
 (license CeCILL-2.1)
 
-(documentation https://github.com/Deducteam/hol2dk/blob/master/README.md)
-
 (package
  (name hol2dk)
- (synopsis "HOL-Light to Dedukti/Lambdapi translator")
- (description "HOL-Light to Dedukti/Lambdapi translator")
+ (synopsis "HOL-Light to Dedukti/Lambdapi and Coq translator")
+ (description "HOL-Light to Dedukti/Lambdapi and Coq translator")
  (depends
   (ocaml (>= 4.13))
   dune

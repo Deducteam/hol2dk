@@ -448,7 +448,7 @@ Dumping of `hol.ml`:
 | conj       |  1 |
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
-  * make sti: <1s
+  * make split: <1s
   * make -j32 lp: 42s 1.1G (41s 1.2G with sharing)
   * make mklp: 36s 2.7M (45s 3.5M with sharing)
   * make -j16 lpo: 51m10s 9G

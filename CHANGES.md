@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 1.0.0 (2024-02-24)
 
 ### Added
 
@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command dump-simp is equivalent to dump, pos, use and simp
 - allow simultaneous dumping
 - alignments of the types option, Sum and list
-- command split to generate a pos/use/stp file for each named theorem
-  (an stp file contains the starting position of the corresponding proof)
+- command split to generate a pos/use/sti/nbp file for each named theorem
+  (an sti file contains the starting index of the corresponding proof)
 - command theorem to generate the lp files corresponding to a named theorem
 - Makefile to generate and check lp and coq files generated with split
 - command size to get statistics on the size of terms
