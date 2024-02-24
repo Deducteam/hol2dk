@@ -5,7 +5,7 @@
 )
 
 (install
- (files coq.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp erasing.lp fusion.ml bool.ml equal.ml xnames.ml patch unpatch add-links Makefile dep-lp.sh dep-coq.sh)
+ (files coq.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp erasing.lp fusion.ml bool.ml equal.ml xnames.ml patch unpatch add-links Makefile dep-lp.sh dep-coq.sh README.md)
  (section share)
  (package hol2dk)
 )
