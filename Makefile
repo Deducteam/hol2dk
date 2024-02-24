@@ -6,7 +6,7 @@ STI_FILES := $(wildcard *.sti)
 
 .PHONY: default
 default:
-	@echo targets: split lp v dep lpo vo
+	@echo "targets: split lp dep-lpo lpo v dep-vo vo opam clean-<target> clean-all"
 
 .PHONY: dep
 dep: dep-lpo dep-vo
@@ -15,8 +15,8 @@ dep: dep-lpo dep-vo
 split:
 	hol2dk split $(BASE)
 
-.PHONY: clean-sti
-clean-sti:
+.PHONY: clean-split
+clean-split:
 	find . -maxdepth 1 -name '*.sti' -delete
 	find . -maxdepth 1 -name '*.nbp' -delete
 	find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
@@ -48,6 +48,10 @@ dep-lpo lpo.mk:
 
 include lpo.mk
 
+.PHONY: clean-dep-lpo
+clean-dep-lpo:
+	rm -f lpo.mk
+
 .PHONY: lpo
 lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STI_FILES:%.sti=%.lpo) $(STI_FILES:%.sti=%_type_abbrevs.lpo) $(STI_FILES:%.sti=%_term_abbrevs.lpo)
 
@@ -76,11 +80,16 @@ dep-vo vo.mk: lpo.mk
 
 include vo.mk
 
+.PHONY: clean-dep-vo
+clean-dep-vo:
+	rm -f vo.mk
+
 .PHONY: vo
 vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STI_FILES:%.sti=%.vo) $(STI_FILES:%.sti=%_type_abbrevs.vo) $(STI_FILES:%.sti=%_term_abbrevs.vo) $(FILES_WITH_SHARING:%=%_subterm_abbrevs.vo)
 
 %.vo: %.v
-	coqc -R . HOLLight $<
+	@echo coqc $<
+	@coqc -w -coercions -R . HOLLight $<
 
 .PHONY: clean-vo
 clean-vo:
@@ -89,6 +98,17 @@ clean-vo:
 	find . -maxdepth 1 -name '.*.aux' -delete
 	rm -f .lia.cache .nia.cache
 
+.PHONY: opam
+opam: $(BASE)_opam.vo
+
+.PRECIOUS: $(BASE)_opam.v
+
+$(BASE)_opam.lp:
+	hol2dk axm $(BASE).lp
+
+.PHONY: clean-opam
+clean-opam:
+	rm -f $(BASE)_opam.*
+
 .PHONY: clean-all
-clean-all: clean-sti clean-lp clean-lpo clean-v clean-vo
-	rm -f lp.mk coq.mk
+clean-all: clean-split clean-lp clean-dep-lp clean-lpo clean-dep-lpo clean-v clean-vo clean-opam
