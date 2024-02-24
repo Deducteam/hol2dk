@@ -111,4 +111,4 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-dep-lp clean-lpo clean-dep-lpo clean-v clean-vo clean-opam
+clean-all: clean-split clean-lp clean-dep-lpo clean-lpo clean-v clean-dep-vo clean-vo clean-opam
