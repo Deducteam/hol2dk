@@ -87,9 +87,10 @@ clean-dep-vo:
 .PHONY: vo
 vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STI_FILES:%.sti=%.vo) $(STI_FILES:%.sti=%_type_abbrevs.vo) $(STI_FILES:%.sti=%_term_abbrevs.vo) $(FILES_WITH_SHARING:%=%_subterm_abbrevs.vo)
 
+COQC_OPTIONS = # -w -coercions
 %.vo: %.v
 	@echo coqc $<
-	@coqc -w -coercions -R . HOLLight $<
+	@coqc $(COQC_OPTIONS) -R . HOLLight $<
 
 .PHONY: clean-vo
 clean-vo:

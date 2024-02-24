@@ -1650,7 +1650,7 @@ Qed.
 
 (* Below we use the coercion is_true to handle the mismatch between HOL's 'FILTER' 
 which uses Prop and Coq's 'filter' which uses bool. *)
-Coercion is_true : bool >-> Sortclass.
+(*Coercion is_true : bool >-> Sortclass.
 
 Definition bool_of_Prop (P:Prop) : bool := COND P true false.
 
@@ -1691,7 +1691,7 @@ Proof.
   rewrite <- IHl. reflexivity.
   destruct (f a). rewrite <- is_true_of_true. rewrite COND_True. rewrite <- IHl. reflexivity.
   rewrite <- is_true_of_false. apply COND_False.
-Qed.
+Qed.*)
 
 Lemma MEM_def {_25376 : Type'} : (@In _25376) = (@ε ((prod nat (prod nat nat)) -> _25376 -> (list _25376) -> Prop) (fun MEM' : (prod nat (prod nat nat)) -> _25376 -> (list _25376) -> Prop => forall _17995 : prod nat (prod nat nat), (forall x : _25376, (MEM' _17995 x (@nil _25376)) = False) /\ (forall h : _25376, forall x : _25376, forall t : list _25376, (MEM' _17995 x (@cons _25376 h t)) = ((x = h) \/ (MEM' _17995 x t)))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0))))))))))).
 Proof.
@@ -1761,28 +1761,46 @@ Proof.
   generalize (ε_spec i). intro H. apply H.
 Qed.
 
-Definition default {A:Type'} := @HD A nil.
-
-Definition hd {A:Type'} := @hd A default.
+Definition hd {A:Type'} := @hd A (HD nil).
 
 Lemma HD_def {A : Type'} : @hd A = @HD A. 
 Proof.
-  apply fun_ext. intro l. unfold hd, default, HD.
+  apply fun_ext. intro l. unfold hd, HD.
   generalize (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
     NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))); intro p. 
   match goal with |- _ = ε ?x _ _=> set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _ => @hd A). 
+  assert (i: exists q, Q q). exists (fun _ => @hd A).
   unfold Q. intro. simpl. trivial.
   generalize (ε_spec i). intro H. destruct l; simpl. reflexivity. rewrite H. reflexivity.
 Qed.
 
-Lemma nth_of_0 {A: Type'} (l: list A) : nth (NUMERAL 0) l default = hd l.
+Definition TL {A : Type'} := (@ε ((prod nat nat) -> (list A) -> list A) (fun TL' : (prod nat nat) -> (list A) -> list A => forall _17931 : prod nat nat, forall h : A, forall t : list A, (TL' _17931 (@cons A h t)) = t) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))).
+
+Definition tl {A : Type'} (l : list A) :=
+match l with
+| nil => @TL A nil
+| cons h t => @tl A (cons h t)
+end.
+
+Lemma TL_def {A : Type'} : @tl A = @TL A.
+Proof.
+  apply fun_ext. intro l. destruct l. simpl. reflexivity. unfold TL.
+  generalize (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))),
+    NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))); intro p.
+  match goal with |-_ = ε ?x _ _ => set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _=> @tl A).
+  unfold Q. intro. simpl. trivial.
+  generalize (ε_spec i). intro H.
+  unfold Q. simpl. symmetry. apply H.
+Qed.
+
+(*Lemma nth_of_0 {A: Type'} (l: list A) d : nth (NUMERAL 0) l d = List.hd d l.
 Proof. destruct l; simpl. reflexivity. symmetry. reflexivity. Qed.
 
-Lemma nth_of_Suc {A: Type'} (n: nat) (l: list A) : nth (S n) l default = nth n (tl l) default.
+Lemma nth_of_Suc {A: Type'} (n: nat) (l: list A) d : nth (S n) l d = nth n (List.tl l) d.
 Proof. destruct l; simpl. destruct n; simpl; reflexivity. reflexivity. Qed.
 
-Definition EL {A: Type'} (n: nat) (l: list A) : A := @nth A n l default.
+Definition EL {A: Type'} (n: nat) (l: list A) : A := @nth A n l (HD nil).
 
 Lemma EL_def {_25569 : Type'} : (@EL _25569) = (@ε ((prod nat nat) -> nat -> (list _25569) -> _25569) (fun EL' : (prod nat nat) -> nat -> (list _25569) -> _25569 => forall _18015 : prod nat nat, (forall l : list _25569, (EL' _18015 (NUMERAL 0) l) = (@hd _25569 l)) /\ (forall n : nat, forall l : list _25569, (EL' _18015 (S n) l) = (EL' _18015 n (@tl _25569 l)))) (@pair nat nat (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))).
 Proof.
@@ -1792,34 +1810,13 @@ Proof.
   match goal with |-_ = ε ?x _ _ => set (Q := x) end.
   assert (i: exists q, Q q). exists (fun _ => @EL _25569).
   unfold Q. intro. unfold EL. simpl. split.
-  apply nth_of_0. apply nth_of_Suc.
+  destruct l; reflexivity. intros n' l. rewrite nth_of_Suc.
   generalize (ε_spec i). intro H. unfold EL. apply fun_ext.
   induction n; simpl; intro l.
   rewrite nth_of_0. symmetry. apply H.
   rewrite nth_of_Suc. rewrite (IHn (tl l)). symmetry. apply H. 
-Qed.
-
-Definition TL {A : Type'} := (@ε ((prod nat nat) -> (list A) -> list A) (fun TL' : (prod nat nat) -> (list A) -> list A => forall _17931 : prod nat nat, forall h : A, forall t : list A, (TL' _17931 (@cons A h t)) = t) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))))).
-
-Definition tl {A : Type'} (l : list A) :=
-match l with 
-| nil => @TL A nil
-| cons h t => @tl A (cons h t)
-end.
-
-Lemma TL_def {A : Type'} : @tl A = @TL A.
-Proof.
-  apply fun_ext. intro l. destruct l. simpl. reflexivity. unfold TL. 
-  generalize (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))), 
-    NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))); intro p.
-  match goal with |-_ = ε ?x _ _ => set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _=> @tl A). 
-  unfold Q. intro. simpl. trivial.
-  generalize (ε_spec i). intro H. 
-  unfold Q. simpl. symmetry. apply H.
-Qed. 
-
-
+Qed.*)
+(*
 (****************************************************************************)
 (* Mapping of char. *)
 (****************************************************************************)
@@ -1931,7 +1928,7 @@ Qed.
 Lemma axiom_18 : forall (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))), ((fun a : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) => forall char' : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> Prop, (forall a' : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))), (exists a0 : Prop, exists a1 : Prop, exists a2 : Prop, exists a3 : Prop, exists a4 : Prop, exists a5 : Prop, exists a6 : Prop, exists a7 : Prop, a' = 
 ((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7)) -> char' a') -> char' a) r) = ((_dest_char (_mk_char r)) = r).
 Proof. intro r. apply axiom_18'. Qed.
-
+*)
 (*******************************************************************************)
 (* Mapping of nadd (the type of nearly-additive sequences of natural numbers). *)
 (*******************************************************************************)
