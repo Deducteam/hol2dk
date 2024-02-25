@@ -215,11 +215,11 @@ builtin "tl" ≔ TL;
 builtin "TL_def" ≔ TL_def;
 //builtin "EL" ≔ EL;
 //builtin "EL_def" ≔ EL_def;
-//builtin "Ascii.ascii" ≔ char;
-//builtin "_dest_char" ≔ _dest_char;
-//builtin "_mk_char" ≔ _mk_char;
-//builtin "axiom_17" ≔ axiom_17;
-//builtin "axiom_18" ≔ axiom_18;
+builtin "Ascii.ascii" ≔ char;
+builtin "_dest_char" ≔ _dest_char;
+builtin "_mk_char" ≔ _mk_char;
+builtin "axiom_17" ≔ axiom_17;
+builtin "axiom_18" ≔ axiom_18;
 
 // realax
 builtin "nadd" ≔ nadd;
