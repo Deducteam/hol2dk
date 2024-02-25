@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## 1.0.0 (2024-02-24)
+## 1.0.0 (2024-02-25)
 
 ### Added
 
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command simp is equivalent to rewrite and purge
 - command dump-simp is equivalent to dump, pos, use and simp
 - allow simultaneous dumping
-- alignments of the types option, Sum and list
+- alignments of the types option, Sum, list, char, nadd
 - command split to generate a pos/use/sti/nbp file for each named theorem
   (an sti file contains the starting index of the corresponding proof)
 - command theorem to generate the lp files corresponding to a named theorem
