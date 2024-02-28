@@ -36,14 +36,33 @@ contain a lot of big terms. For such files, one should use the option
 `--use-sharing` to reduce the size of generated files.
 
 Finally, while it is a priori possible to translate any HOL-Light
-proof to Coq, the translated theorem may not be directly usable by Coq
-users because HOL-Light types and functions may not be aligned with
-those of the Coq standard library yet. Currently, only the type of
-natural numbers and various functions on natural numbers have been
-aligned. We gathered the obtained 448 lemmas in the package
+proof to Coq, the translated theorems may not be directly usable by
+Coq users because not all HOL-Light types and functions are aligned
+with those of the Coq standard library yet. Currently, we only aligned
+the types of natural numbers and lists, and some functions on them in
+the file
+[coq.v](https://github.com/Deducteam/hol2dk/blob/main/coq.v). We
+gathered the resulting theorems in the Opam package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam). We
-are working on adding more mappings (lists, reals).
+plan to add more mappings, especially on real numbers.
+
+Coq axioms used to encode HOL-Light proofs
+------------------------------------------
+
+HOL-Light is based on classical higher-order logic with functional and propositional extensionality. We use the following Coq axioms to encode them:
+```
+Axiom classic : forall P:Prop, P \/ ~ P.
+Axiom constructive_indefinite_description : forall (A : Type) (P : A->Prop), (exists x, P x) -> { x : A | P x }.
+Axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
+Axiom prop_ext : forall {P Q : Prop}, (P -> Q) -> (Q -> P) -> P = Q.
+Axiom proof_irrelevance : forall (P:Prop) (p1 p2:P), p1 = p2.
+```
+
+Bibliography
+------------
+
+- [Translating HOL-Light proofs to Coq](https://files.inria.fr/blanqui/blanqui24draft.pdf), Frédéric Blanqui, 21 February 2024
 
 Installing HOL-Light sources
 ----------------------------
@@ -81,7 +100,7 @@ Installing hol2dk
 - ocaml >= 4.13
 - dune >= 3.7
 
-hol2dk is now available on [Opam](https://opam.ocaml.org/). To install it, simply do:
+hol2dk is available on [Opam](https://opam.ocaml.org/). To install it, simply do:
 ```
 opam install hol2dk
 ```
@@ -359,18 +378,6 @@ make -j$jobs vo
 If the lp files have been generated using `mk`, simply do:
 ```
 make -f file.mk -j$jobs vo
-```
-
-Coq axioms used to encode HOL-Light proofs
-------------------------------------------
-
-HOL-Light is based on classical higher-order logic with functional and propositional extensionality. We use the following Coq axioms to encode them:
-```
-Axiom classic : forall P:Prop, P \/ ~ P.
-Axiom constructive_indefinite_description : forall (A : Type) (P : A->Prop), (exists x, P x) -> { x : A | P x }.
-Axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
-Axiom prop_ext : forall {P Q : Prop}, (P -> Q) -> (Q -> P) -> P = Q.
-Axiom proof_irrelevance : forall (P:Prop) (p1 p2:P), p1 = p2.
 ```
 
 Alignments of HOL-Light types and definitions with those of Coq
