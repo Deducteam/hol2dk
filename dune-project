@@ -4,8 +4,9 @@
 
 (generate_opam_files true)
 
-(source
- (github Deducteam/hol2dk))
+(source (github Deducteam/hol2dk))
+
+(documentation "https://github.com/Deducteam/hol2dk/blob/master/README.md")
 
 (authors "Frédéric Blanqui" "Anthony Bordg")
 
