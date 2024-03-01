@@ -1,6 +1,8 @@
 TODO
 ----
 
+- keep subterm_abbrevs?
+
 - Makefile: add targets for dk output
 
 - simplify dk output of proofs by replacing [c : x:A -> B := x:A => t] by [c (x:A) : B := t].

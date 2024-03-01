@@ -886,12 +886,13 @@ and command = function
          cur_part_max := !the_start_idx + Array.length !prf_pos - 1;
          Xlp.export_proofs b n All;
          close_in !Xproof.ic_prf;
-         Xlp.export_term_abbrevs b n "";
+         Xlp.decl_term_abbrevs b n;
          Xlp.export_type_abbrevs b n "";
          let dump_file = n ^ "_deps.lp" in
          log "generate %s ...\n%!" dump_file;
          let oc = open_out dump_file in
          SetStr.iter (out oc "require open hol-light.%s;\n") !thdeps;
+         Xlp.require_term_abbrevs oc n;
          close_out oc;
          log "generate %s.lp ...\n%!" n;
          Sys.command (Printf.sprintf "cat %s %s > %s && rm -f %s %s"
