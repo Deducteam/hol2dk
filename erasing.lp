@@ -163,7 +163,7 @@ builtin "None" ≔ NONE;
 builtin "NONE_def" ≔ NONE_def;
 builtin "Some" ≔ SOME;
 builtin "SOME_def" ≔ SOME_def;
-builtin "sum" ≔ Sum;
+builtin "Datatypes.sum" ≔ Sum;
 builtin "_mk_sum" ≔ _mk_sum;
 builtin "_dest_sum" ≔ _dest_sum;
 builtin "axiom_11" ≔ axiom_11;

@@ -1,6 +1,8 @@
 TODO
 ----
 
+- remove base argument in all commands by using BASE file
+
 - rename file _term by _sig
 
 - keep subterm_abbrevs?

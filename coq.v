@@ -1971,6 +1971,8 @@ Definition fun_0' : nadd := exist _ _ is_nadd_0.
 
 Definition nadd' : Type' := {| type := nadd ; el := fun_0'|}.
 
+Canonical nadd'.
+
 Definition dest_nadd : nadd -> (nat -> nat) := fun f => proj1_sig f.
 
 Definition mk_nadd_pred (f : nat -> nat) (g : nadd) := dest_nadd g = f.

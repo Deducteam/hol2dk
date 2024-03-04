@@ -683,6 +683,16 @@ let export_term_abbrevs b n s =
         decl_subterm_abbrevs oc)
 ;;
 
+let new_export_term_abbrevs b n =
+  new_decl_term_abbrevs b n;
+  if !use_sharing then
+    export n "_subterm_abbrevs"
+      (fun oc ->
+        List.iter (require oc b) ["_types"; "_terms"];
+        require oc n "_type_abbrevs";
+        decl_subterm_abbrevs oc)
+;;
+
 let export_axioms b =
   export b "_axioms"
     (fun oc ->
@@ -690,13 +700,19 @@ let export_axioms b =
       decl_axioms oc (axioms()))
 ;;
 
-let export_proofs b n r =
-  export n "_proofs"
-    (fun oc ->
-      List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
-      List.iter (require oc n) ["_type_abbrevs"];
-      require_term_abbrevs oc n;
-      proofs_in_range oc r)
+let theorem_deps oc b n =
+  List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
+  List.iter (require oc n) ["_type_abbrevs"];
+  require_term_abbrevs oc n;
+  SetStr.iter (fun d -> require oc d "") !thdeps
+;;
+
+let export_deps b n = export n "_deps" (fun oc -> theorem_deps oc b n);;
+
+let export_proofs n r = export n "_proofs" (fun oc -> proofs_in_range oc r);;
+
+let export_deps_and_proofs b n r =
+  export n "_proofs" (fun oc -> theorem_deps oc b n; proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =
