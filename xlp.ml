@@ -275,7 +275,24 @@ let term rmap oc t = abbrev_term oc (rename rmap t);;
 (* Translation of term abbreviations. *)
 (****************************************************************************)
 
-let require oc n suffix = out oc "require open hol-light.%s%s;\n" n suffix;;
+let print_let oc (t,t',_,_) =
+  out oc "\n  let %a ≔ %a in" raw_term t' raw_term t;;
+
+let abbrev oc t (k,n,bs) =
+  out oc "symbol term%d" k;
+  for i=0 to n-1 do out oc " a%d" i done;
+  (* We can use [abbrev_typ] here since [bs] are canonical. *)
+  List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
+  (* We can use [raw_term] here since [t] is canonical. *)
+  if !use_sharing then
+    let t', l = shared t in
+    out oc " ≔%a %a;\n" (list print_let) l raw_term t'
+  else out oc " ≔ %a;\n" raw_term t
+;;
+
+(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations in a
+   single file. *)
+let decl_term_abbrevs oc = TrmHashtbl.iter (abbrev oc) htbl_term_abbrev;;
 
 (* Maximum number of abbreviations in a term_abbrev file. *)
 let max_abbrevs = 50_000;;
@@ -285,26 +302,15 @@ let abbrev_part = ref 0;;
 
 let abbrev_part_name k = "_term_abbrevs_part_" ^ string_of_int k;;
 
+let require oc n suffix = out oc "require open hol-light.%s%s;\n" n suffix;;
+
 let require_term_abbrevs oc n =
   require oc n "_term_abbrevs";
   for k = 2 to !abbrev_part do require oc n (abbrev_part_name k) done;;
 
-(* [new_decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
-let new_decl_term_abbrevs =
-  let print_let oc (t,t',_,_) =
-    out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
-  let abbrev oc t (k,n,bs) =
-    out oc "symbol term%d" k;
-    for i=0 to n-1 do out oc " a%d" i done;
-    (* We can use [abbrev_typ] here since [bs] are canonical. *)
-    List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
-    (* We can use [raw_term] here since [t] is canonical. *)
-    if !use_sharing then
-      let t', l = shared t in
-      out oc " ≔%a %a;\n" (list print_let) l raw_term t'
-    else out oc " ≔ %a;\n" raw_term t
-  in
-  fun b n ->
+(* [new_decl_term_abbrevs oc] outputs on [oc] the term abbreviations
+   in several files. *)
+let new_decl_term_abbrevs b n =
   let cur_abbrev = ref 0 in
   let cur_oc = ref stdout in
   let create_new_part() =
@@ -314,6 +320,7 @@ let new_decl_term_abbrevs =
     log "generate %s ...\n%!" f;
     let oc = open_out f in
     cur_oc := oc;
+    require oc "theory_hol" "";
     List.iter (require oc b) ["_types"; "_terms"];
     require oc n "_type_abbrevs";
     if !use_sharing then require oc n "_subterm_abbrevs"
@@ -330,24 +337,6 @@ let new_decl_term_abbrevs =
   in
   create_new_part();
   TrmHashtbl.iter handle_abbrev htbl_term_abbrev
-;;
-
-(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
-let decl_term_abbrevs oc =
-  let print_let oc (t,t',_,_) =
-    out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
-  let abbrev t (k,n,bs) =
-    out oc "symbol term%d" k;
-    for i=0 to n-1 do out oc " a%d" i done;
-    (* We can use [abbrev_typ] here since [bs] are canonical. *)
-    List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
-    (* We can use [raw_term] here since [t] is canonical. *)
-    if !use_sharing then
-      let t', l = shared t in
-      out oc " ≔%a %a;\n" (list print_let) l raw_term t'
-    else out oc " ≔ %a;\n" raw_term t
-  in
-  TrmHashtbl.iter abbrev htbl_term_abbrev
 ;;
 
 (* [decl_subterm_abbrevs oc] outputs on [oc] the subterm abbreviations

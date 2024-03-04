@@ -892,7 +892,6 @@ and command = function
          log "generate %s ...\n%!" dump_file;
          let oc = open_out dump_file in
          SetStr.iter (out oc "require open hol-light.%s;\n") !thdeps;
-         Xlp.require_term_abbrevs oc n;
          close_out oc;
          log "generate %s.lp ...\n%!" n;
          Sys.command (Printf.sprintf "cat %s %s > %s && rm -f %s %s"
