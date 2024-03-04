@@ -332,6 +332,24 @@ let decl_term_abbrevs =
   TrmHashtbl.iter handle_abbrev htbl_term_abbrev
 ;;
 
+(* [old_decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
+let old_decl_term_abbrevs oc =
+  let print_let oc (t,t',_,_) =
+    out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
+  let abbrev t (k,n,bs) =
+    out oc "symbol term%d" k;
+    for i=0 to n-1 do out oc " a%d" i done;
+    (* We can use [abbrev_typ] here since [bs] are canonical. *)
+    List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
+    (* We can use [raw_term] here since [t] is canonical. *)
+    if !use_sharing then
+      let t', l = shared t in
+      out oc " ≔%a %a;\n" (list print_let) l raw_term t'
+    else out oc " ≔ %a;\n" raw_term t
+  in
+  TrmHashtbl.iter abbrev htbl_term_abbrev
+;;
+
 (* [decl_subterm_abbrevs oc] outputs on [oc] the subterm abbreviations
    with no variables. *)
 let decl_subterm_abbrevs =
@@ -667,7 +685,7 @@ let export_term_abbrevs b n s =
       List.iter (require oc b) ["_types"; "_terms"];
       require oc n (s ^ "_type_abbrevs");
       if !use_sharing then require oc n (s ^ "_subterm_abbrevs");
-      decl_term_abbrevs b n);
+      old_decl_term_abbrevs oc);
   if !use_sharing then
     export n (s ^ "_subterm_abbrevs")
       (fun oc ->

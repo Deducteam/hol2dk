@@ -1,6 +1,8 @@
 TODO
 ----
 
+- rename file _term by _sig
+
 - keep subterm_abbrevs?
 
 - Makefile: add targets for dk output
