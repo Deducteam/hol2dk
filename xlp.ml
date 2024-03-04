@@ -286,7 +286,8 @@ let abbrev_part = ref 0;;
 let abbrev_part_name k = "_term_abbrevs_part_" ^ string_of_int k;;
 
 let require_term_abbrevs oc n =
-  for k = 1 to !abbrev_part do require oc n (abbrev_part_name k) done;;
+  require oc n "_term_abbrevs";
+  for k = 2 to !abbrev_part do require oc n (abbrev_part_name k) done;;
 
 (* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
 let decl_term_abbrevs =
@@ -308,7 +309,8 @@ let decl_term_abbrevs =
   let cur_oc = ref stdout in
   let create_new_part() =
     incr abbrev_part;
-    let f = n ^ abbrev_part_name !abbrev_part ^ ".lp" in
+    let f = if !abbrev_part = 1 then n ^ "_term_abbrevs.lp"
+            else n ^ abbrev_part_name !abbrev_part ^ ".lp" in
     log "generate %s ...\n%!" f;
     let oc = open_out f in
     cur_oc := oc;
