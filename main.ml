@@ -886,7 +886,7 @@ and command = function
          cur_part_max := !the_start_idx + Array.length !prf_pos - 1;
          Xlp.export_proofs b n All;
          close_in !Xproof.ic_prf;
-         Xlp.decl_term_abbrevs b n;
+         Xlp.new_decl_term_abbrevs b n;
          Xlp.export_type_abbrevs b n "";
          let dump_file = n ^ "_deps.lp" in
          log "generate %s ...\n%!" dump_file;

@@ -289,8 +289,8 @@ let require_term_abbrevs oc n =
   require oc n "_term_abbrevs";
   for k = 2 to !abbrev_part do require oc n (abbrev_part_name k) done;;
 
-(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
-let decl_term_abbrevs =
+(* [new_decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
+let new_decl_term_abbrevs =
   let print_let oc (t,t',_,_) =
     out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
   let abbrev oc t (k,n,bs) =
@@ -332,8 +332,8 @@ let decl_term_abbrevs =
   TrmHashtbl.iter handle_abbrev htbl_term_abbrev
 ;;
 
-(* [old_decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
-let old_decl_term_abbrevs oc =
+(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
+let decl_term_abbrevs oc =
   let print_let oc (t,t',_,_) =
     out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
   let abbrev t (k,n,bs) =
@@ -685,7 +685,7 @@ let export_term_abbrevs b n s =
       List.iter (require oc b) ["_types"; "_terms"];
       require oc n (s ^ "_type_abbrevs");
       if !use_sharing then require oc n (s ^ "_subterm_abbrevs");
-      old_decl_term_abbrevs oc);
+      decl_term_abbrevs oc);
   if !use_sharing then
     export n (s ^ "_subterm_abbrevs")
       (fun oc ->
