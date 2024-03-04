@@ -1,6 +1,16 @@
 NOTES
 -----
 
+## 04/03/24
+
+The generation of `URYSOHN_LEMMA.lp` takes 6m30s. `URYSOHN_LEMMA_term_abbrevs.lp` has 100_000 abbreviations. Compilation of the corresponding Coq files depending on `--max-abbrevs`:
+
+| max-abbrevs | term_abbrevs.v | URYSOHN_LEMMA.v |
+|-------------|----------------|-----------------|
+| 50_000      | 5m48s          | 20m40s          |
+| 10_000      | 1m4s           | 21m33s          |
+| 5_000       | 35s            | 21m27s          |
+
 ## 02/02/24
 
 Translation of `Multivariate/make.ml` upto `topology.ml`:

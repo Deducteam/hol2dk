@@ -23,7 +23,7 @@ Options
 --use-sharing: define term abbreviations using sharing
 
 --max-abbrevs INT: maximum number of definitions in a term abbreviation file
-  (default is 50,000)
+  (default is 5_000)
 
 --print-stats: print statistics on hash tables at exit
 

@@ -11,7 +11,7 @@ TODO
 
 - simplify dk output of proofs by replacing [c : x:A -> B := x:A => t] by [c (x:A) : B := t].
 
-- use exact_no_check/vm_cast_no_check/native_cast_no_check in lambdapi export to coq
+- use exact_no_check/vm_cast_no_check/native_cast_no_check in lambdapi export to coq ? can work only if there is no implicit argument and no need for implicit coercions
 
 - split big term_abbrevs files into various pieces
 
