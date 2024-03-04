@@ -22,6 +22,9 @@ Options
 
 --use-sharing: define term abbreviations using sharing
 
+--max-abbrevs INT: maximum number of definitions in a term abbreviation file
+  (default is 50,000)
+
 --print-stats: print statistics on hash tables at exit
 
 Patching commands
@@ -389,6 +392,8 @@ and command = function
   | "--print-stats"::args -> at_exit print_hstats; command args
 
   | "--use-sharing"::args -> use_sharing := true; command args
+
+  | "--max-abbrevs"::m::args -> Xlp.max_abbrevs := integer m; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in

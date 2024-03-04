@@ -295,7 +295,7 @@ let abbrev oc t (k,n,bs) =
 let decl_term_abbrevs oc = TrmHashtbl.iter (abbrev oc) htbl_term_abbrev;;
 
 (* Maximum number of abbreviations in a term_abbrev file. *)
-let max_abbrevs = 50_000;;
+let max_abbrevs = ref 50_000;;
 
 (* Number of term_abbrevs_part files. *)
 let abbrev_part = ref 0;;
@@ -327,7 +327,7 @@ let new_decl_term_abbrevs b n =
   in
   let handle_abbrev t x =
     incr cur_abbrev;
-    if !cur_abbrev > max_abbrevs then
+    if !cur_abbrev > !max_abbrevs then
       begin
         close_out !cur_oc;
         create_new_part();
