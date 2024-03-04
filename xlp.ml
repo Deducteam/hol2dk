@@ -709,7 +709,13 @@ let theorem_deps oc b n =
 
 let export_deps b n = export n "_deps" (fun oc -> theorem_deps oc b n);;
 
-let export_proofs n r = export n "_proofs" (fun oc -> proofs_in_range oc r);;
+let export_proofs n r =
+  let filename = n ^ "_proofs.lp" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  proofs_in_range oc r;
+  close_out oc
+;;
 
 let export_deps_and_proofs b n r =
   export n "_proofs" (fun oc -> theorem_deps oc b n; proofs_in_range oc r)
