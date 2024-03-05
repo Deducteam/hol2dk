@@ -327,7 +327,7 @@ let new_decl_term_abbrevs b n =
   in
   let handle_abbrev t x =
     incr cur_abbrev;
-    if !cur_abbrev > !max_abbrevs then
+    if !cur_abbrev >= !max_abbrevs then
       begin
         close_out !cur_oc;
         create_new_part();

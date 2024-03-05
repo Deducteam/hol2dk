@@ -30,7 +30,7 @@ $(BASE_FILES:%=%.lp) &:
 
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
-$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --use-sharing
+$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --use-sharing --max-abbrevs 700
 
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)

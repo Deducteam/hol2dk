@@ -1,6 +1,14 @@
 NOTES
 -----
 
+## 05/03/24
+
+Gulliver: 56 processors Intel Core Processor (Haswell, no TSX) 2.3 Ghz cache 16 Mo, RAM 122 Go
+
+hol.ml: dump-simp-use 6m7s split 2s make -j56 lp 1m14s v 45s dep-lpo 1m46s vo 38m46s
+
+Multivariate/make_upto_topology.ml: dump-simp 1h55m36s split 13s make -j56 lp
+
 ## 04/03/24
 
 The generation of `URYSOHN_LEMMA.lp` takes 6m30s. `URYSOHN_LEMMA_term_abbrevs.lp` has 100_000 abbreviations. Compilation of the corresponding Coq files depending on `--max-abbrevs`:

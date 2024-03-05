@@ -13,8 +13,6 @@ TODO
 
 - use exact_no_check/vm_cast_no_check/native_cast_no_check in lambdapi export to coq ? can work only if there is no implicit argument and no need for implicit coercions
 
-- split big term_abbrevs files into various pieces
-
 - improve hash function on big terms
 
 - beta-normalize hol-light terms ?

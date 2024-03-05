@@ -32,8 +32,8 @@ On the other hand, `hol2dk` may take several hours to translate the
 proofs of a few particular theorems of the `Multivariate` library:
 `CHAIN_BOUNDARY_BOUNDARY`, `GRASSMANN_PLUCKER_4` and
 `HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS`, because their proofs
-contain a lot of big terms. For such files, one should use the option
-`--use-sharing` to reduce the size of generated files.
+contain a lot of big terms. For such files, one should use the options
+`--use-sharing` and `--max-abbrevs` to reduce the size of generated files.
 
 Finally, while it is a priori possible to translate any HOL-Light
 proof to Coq, the translated theorems may not be directly usable by
@@ -260,7 +260,7 @@ After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check fi
 Remark: the order is important, `split` must be done first, `v` will do `lp`, and `dep` must be done after `lp` and before `lpo` or `vo`.
 
 You can also write in a file called `FILES_WITH_SHARING` a space-separated list of theorem names for which sharing is needed.
- 
+
 **By splitting proofs in several parts: command `mk`**
 
 ```
