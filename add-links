@@ -20,7 +20,7 @@ then
 fi
 
 echo create BASE ...
-echo $1 > BASE
+echo `basename $1` > BASE
 
 for ext in prf nbp sig thm pos use
 do
