@@ -22,6 +22,9 @@ Options
 
 --use-sharing: define term abbreviations using sharing
 
+--max-abbrevs INT: maximum number of definitions in a term abbreviation file
+  (default is 5_000)
+
 --print-stats: print statistics on hash tables at exit
 
 Patching commands
@@ -389,6 +392,8 @@ and command = function
   | "--print-stats"::args -> at_exit print_hstats; command args
 
   | "--use-sharing"::args -> use_sharing := true; command args
+
+  | "--max-abbrevs"::m::args -> Xlp.max_abbrevs := integer m; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
@@ -884,15 +889,11 @@ and command = function
      else
        begin
          cur_part_max := !the_start_idx + Array.length !prf_pos - 1;
-         Xlp.export_proofs b n All;
+         Xlp.export_proofs n All;
          close_in !Xproof.ic_prf;
-         Xlp.export_term_abbrevs b n "";
+         Xlp.new_export_term_abbrevs b n;
          Xlp.export_type_abbrevs b n "";
-         let dump_file = n ^ "_deps.lp" in
-         log "generate %s ...\n%!" dump_file;
-         let oc = open_out dump_file in
-         SetStr.iter (out oc "require open hol-light.%s;\n") !thdeps;
-         close_out oc;
+         Xlp.export_deps b n;
          log "generate %s.lp ...\n%!" n;
          Sys.command (Printf.sprintf "cat %s %s > %s && rm -f %s %s"
                         (n^"_deps.lp") (n^"_proofs.lp") (n^".lp")
@@ -939,7 +940,7 @@ and command = function
        end
      else
        begin
-         Xlp.export_proofs b b r;
+         Xlp.export_deps_and_proofs b b r;
          if r = All then Xlp.export_theorems b (read_val (b ^ ".thm"));
          Xlp.export_term_abbrevs b b "";
          Xlp.export_type_abbrevs b b ""

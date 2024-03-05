@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Modified
+
+- hol2dk theorem now splits a term_abbrevs file into several files if
+  it is too big. The option --max-abbrevs allows to change the maximum
+  number of definitions in a term abbreviations file.
+
 ## 1.0.0 (2024-02-25)
 
 ### Added

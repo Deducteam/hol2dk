@@ -109,8 +109,8 @@ let abbrev_typ =
 let typ = abbrev_typ;;
   (*if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;*)
 
-(* [decl_typ_abbrevs oc] outputs on [oc] the type abbreviations. *)
-let decl_typ_abbrevs oc =
+(* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
+let decl_type_abbrevs oc =
   let abbrev b (k,n) =
     out oc "symbol type%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
@@ -271,22 +271,72 @@ let term rmap oc t = abbrev_term oc (rename rmap t);;
   (*if !use_abbrev then abbrev_term oc (rename rmap t)
   else unabbrev_term rmap oc (rename rmap t);;*)
 
-(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
-let decl_term_abbrevs oc =
-  let print_let oc (t,t',_,_) =
-    out oc "\n  let %a ≔ %a in" raw_term t' raw_term t in
-  let abbrev t (k,n,bs) =
-    out oc "symbol term%d" k;
-    for i=0 to n-1 do out oc " a%d" i done;
-    (* We can use [abbrev_typ] here since [bs] are canonical. *)
-    List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
-    (* We can use [raw_term] here since [t] is canonical. *)
-    if !use_sharing then
-      let t', l = shared t in
-      out oc " ≔%a %a;\n" (list print_let) l raw_term t'
-    else out oc " ≔ %a;\n" raw_term t
+(****************************************************************************)
+(* Translation of term abbreviations. *)
+(****************************************************************************)
+
+let print_let oc (t,t',_,_) =
+  out oc "\n  let %a ≔ %a in" raw_term t' raw_term t;;
+
+let abbrev oc t (k,n,bs) =
+  out oc "symbol term%d" k;
+  for i=0 to n-1 do out oc " a%d" i done;
+  (* We can use [abbrev_typ] here since [bs] are canonical. *)
+  List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
+  (* We can use [raw_term] here since [t] is canonical. *)
+  if !use_sharing then
+    let t', l = shared t in
+    out oc " ≔%a %a;\n" (list print_let) l raw_term t'
+  else out oc " ≔ %a;\n" raw_term t
+;;
+
+(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations in a
+   single file. *)
+let decl_term_abbrevs oc = TrmHashtbl.iter (abbrev oc) htbl_term_abbrev;;
+
+(* Maximum number of abbreviations in a term_abbrev file. *)
+let max_abbrevs = ref 5_000;;
+
+(* Number of term_abbrevs_part files. *)
+let abbrev_part = ref 0;;
+
+let abbrev_part_name k = "_term_abbrevs_part_" ^ string_of_int k;;
+
+let require oc n suffix = out oc "require open hol-light.%s%s;\n" n suffix;;
+
+let require_term_abbrevs oc n =
+  require oc n "_term_abbrevs";
+  for k = 2 to !abbrev_part do require oc n (abbrev_part_name k) done;;
+
+(* [new_decl_term_abbrevs oc] outputs on [oc] the term abbreviations
+   in several files. *)
+let new_decl_term_abbrevs b n =
+  let cur_abbrev = ref 0 in
+  let cur_oc = ref stdout in
+  let create_new_part() =
+    incr abbrev_part;
+    let f = if !abbrev_part = 1 then n ^ "_term_abbrevs.lp"
+            else n ^ abbrev_part_name !abbrev_part ^ ".lp" in
+    log "generate %s ...\n%!" f;
+    let oc = open_out f in
+    cur_oc := oc;
+    require oc "theory_hol" "";
+    List.iter (require oc b) ["_types"; "_terms"];
+    require oc n "_type_abbrevs";
+    if !use_sharing then require oc n "_subterm_abbrevs"
   in
-  TrmHashtbl.iter abbrev htbl_term_abbrev
+  let handle_abbrev t x =
+    incr cur_abbrev;
+    if !cur_abbrev > !max_abbrevs then
+      begin
+        close_out !cur_oc;
+        create_new_part();
+        cur_abbrev := 0;
+      end;
+    abbrev !cur_oc t x
+  in
+  create_new_part();
+  TrmHashtbl.iter handle_abbrev htbl_term_abbrev
 ;;
 
 (* [decl_subterm_abbrevs oc] outputs on [oc] the subterm abbreviations
@@ -585,14 +635,11 @@ print thm_%d;\n" x*)
 (* Lambdapi file generation with type and term abbreviations. *)
 (****************************************************************************)
 
-let require oc b s =
-  out oc "require open hol-light.%s%s;\n" b s;;
-
-let export b suffix f =
-  let filename = b ^ suffix ^ ".lp" in
+let export n suffix f =
+  let filename = n ^ suffix ^ ".lp" in
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
-  out oc "require open hol-light.theory_hol;\n";
+  require oc "theory_hol" "";
   f oc;
   close_out oc
 ;;
@@ -608,7 +655,7 @@ let export_types b =
 
 let export_type_abbrevs b n s =
   export n (s ^ "_type_abbrevs")
-    (fun oc -> require oc b "_types"; decl_typ_abbrevs oc)
+    (fun oc -> require oc b "_types"; decl_type_abbrevs oc)
 ;;
 
 let constants() =
@@ -636,6 +683,16 @@ let export_term_abbrevs b n s =
         decl_subterm_abbrevs oc)
 ;;
 
+let new_export_term_abbrevs b n =
+  new_decl_term_abbrevs b n;
+  if !use_sharing then
+    export n "_subterm_abbrevs"
+      (fun oc ->
+        List.iter (require oc b) ["_types"; "_terms"];
+        require oc n "_type_abbrevs";
+        decl_subterm_abbrevs oc)
+;;
+
 let export_axioms b =
   export b "_axioms"
     (fun oc ->
@@ -643,12 +700,25 @@ let export_axioms b =
       decl_axioms oc (axioms()))
 ;;
 
-let export_proofs b n r =
-  export n "_proofs"
-    (fun oc ->
-      List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
-      List.iter (require oc n) ["_type_abbrevs"; "_term_abbrevs"];
-      proofs_in_range oc r)
+let theorem_deps oc b n =
+  List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
+  List.iter (require oc n) ["_type_abbrevs"];
+  require_term_abbrevs oc n;
+  SetStr.iter (fun d -> require oc d "") !thdeps
+;;
+
+let export_deps b n = export n "_deps" (fun oc -> theorem_deps oc b n);;
+
+let export_proofs n r =
+  let filename = n ^ "_proofs.lp" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  proofs_in_range oc r;
+  close_out oc
+;;
+
+let export_deps_and_proofs b n r =
+  export n "_proofs" (fun oc -> theorem_deps oc b n; proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =
@@ -661,8 +731,9 @@ let out_map_thid_name as_axiom oc map_thid_name =
 let export_theorems b map_thid_name =
   export b ""
     (fun oc ->
-      List.iter (require oc b)
-        ["_types";"_type_abbrevs";"_terms";"_term_abbrevs";"_axioms";"_proofs"];
+      List.iter (require oc b) ["_types";"_type_abbrevs";"_terms"];
+      require_term_abbrevs oc b;
+      List.iter (require oc b) ["_axioms";"_proofs"];
       out_map_thid_name false oc map_thid_name)
 ;;
 
@@ -672,6 +743,8 @@ let export_theorems_as_axioms b map_thid_name =
       List.iter (require oc b) ["_types";"_terms";"_axioms"];
       out_map_thid_name true oc map_thid_name)
 ;;
+
+(* used in hol2dk part *)
 
 let export_proofs_part =
   let part i s = "_part_" ^ string_of_int i ^ s in

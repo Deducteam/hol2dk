@@ -28,12 +28,12 @@ BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
 
-.PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
-
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
 $(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --use-sharing
+
+.PHONY: lp
+lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
 %.lp: %.sti
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
@@ -52,8 +52,10 @@ include lpo.mk
 clean-dep-lpo:
 	rm -f lpo.mk
 
+LP_FILES := $(wildcard *.lp)
+
 .PHONY: lpo
-lpo: theory_hol.lpo $(BASE_FILES:%=%.lpo) $(STI_FILES:%.sti=%.lpo) $(STI_FILES:%.sti=%_type_abbrevs.lpo) $(STI_FILES:%.sti=%_term_abbrevs.lpo)
+lpo: $(LP_FILES:%.lp=%.lpo)
 
 %.lpo: %.lp
 	lambdapi check -c -w -v0 $<
@@ -63,7 +65,7 @@ clean-lpo:
 	find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: v
-v: theory_hol.v $(BASE_FILES:%=%.v) $(STI_FILES:%.sti=%.v) $(STI_FILES:%.sti=%_type_abbrevs.v) $(STI_FILES:%.sti=%_term_abbrevs.v) $(FILES_WITH_SHARING:%=%_subterm_abbrevs.v)
+v: $(LP_FILES:%.lp=%.v)
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
@@ -85,7 +87,7 @@ clean-dep-vo:
 	rm -f vo.mk
 
 .PHONY: vo
-vo: coq.vo theory_hol.vo $(BASE_FILES:%=%.vo) $(STI_FILES:%.sti=%.vo) $(STI_FILES:%.sti=%_type_abbrevs.vo) $(STI_FILES:%.sti=%_term_abbrevs.vo) $(FILES_WITH_SHARING:%=%_subterm_abbrevs.vo)
+vo: $(LP_FILES:%.lp=%.vo)
 
 COQC_OPTIONS = # -w -coercions
 %.vo: %.v
