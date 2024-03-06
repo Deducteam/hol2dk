@@ -931,9 +931,9 @@ let hmk_const l (s,b) = share_subterm l (Const(share_string s, htype b));;
 let hmk_comb l (t,u) = share_subterm l (Comb(t,u));;
 let hmk_abs l (t,u) = share_subterm l (Abs(t,u));;
 
-(* [shared t] returns [u,l] where [u] is a variable and [l] is a term
-   substitution so that the repeated application of [l] to [u] gives
-   [t]. *)
+(* [shared t] returns [u,l] where [u] is a variable and [l] is like a
+   term substitution such that the repeated application of [l] to [u]
+   gives [t]. *)
 let shared t =
   (*log "\nshared %a\n" oterm t;*)
   let l = ref [] in

@@ -1,6 +1,8 @@
 TODO
 ----
 
+- optimize number of let's (use a let only if an abbreviation is used more than once)
+
 - remove base argument in all commands by using BASE file
 
 - rename file _term by _sig
