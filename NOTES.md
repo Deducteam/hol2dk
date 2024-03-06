@@ -3,7 +3,8 @@ NOTES
 
 ## 06/03/24
 
-  * CHAIN_BOUNDARY_BOUNDARY.lp: 38m50s, --with-sharing --max-abbrevs 700: 47m14s
+  * CHAIN_BOUNDARY_BOUNDARY.lp: 38m50s
+  --with-sharing --max-abbrevs 700: 47m14s
   
   * CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo:
   --max-abbrevs 500 -j16: 15m52s
