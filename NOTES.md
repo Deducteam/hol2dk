@@ -1,14 +1,18 @@
 NOTES
 -----
 
+## 06/03/24
+
+  * CHAIN_BOUNDARY_BOUNDARY.lp: 38m50s, --with-sharing --max-abbrevs 700: 47m14s
+  
+  * CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo:
+  --max-abbrevs 500 -j16: 15m52s
+  --max-abbrevs 250 -j32: 14m56s
+  --max-abbrevs 100 -j32: 15m45s
+
 ## 05/03/24
 
   * Coq does not handle let's efficiently: https://github.com/coq/coq/issues/18753
-
-  * CHAIN_BOUNDARY_BOUNDARY.lp: 38m50s, --with-sharing --max-abbrevs 700: 47m14s
-    CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo with --max-abbrevs 500 -j16: 15m52s
-    CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo with --max-abbrevs 250 -j32: 14m56s
-    CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo with --max-abbrevs 100 -j32:
 
   * Gulliver: 56 processors Intel Core Processor (Haswell, no TSX) 2.3 Ghz cache 16 Mo RAM 122 Go
 
