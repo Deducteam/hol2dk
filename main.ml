@@ -20,10 +20,9 @@ hol2dk options command arguments
 Options
 -------
 
---use-sharing: define term abbreviations using sharing
+--use-sharing: define term abbreviations using let's
 
 --max-abbrevs INT: maximum number of definitions in a term abbreviation file
-  (default is 5_000)
 
 --print-stats: print statistics on hash tables at exit
 

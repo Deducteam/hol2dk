@@ -3,11 +3,19 @@ NOTES
 
 ## 05/03/24
 
-Gulliver: 56 processors Intel Core Processor (Haswell, no TSX) 2.3 Ghz cache 16 Mo, RAM 122 Go
+  * Coq does not handle let's efficiently: https://github.com/coq/coq/issues/18753
 
-hol.ml: dump-simp-use 6m7s split 2s make -j56 lp 1m14s v 45s dep-lpo 1m46s vo 38m46s
+  * CHAIN_BOUNDARY_BOUNDARY.lp: 38m50s, --with-sharing --max-abbrevs 700: 47m14s
+    CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo with --max-abbrevs 500 -j16: 15m52s
+    CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo with --max-abbrevs 250 -j32: 14m56s
+    CHAIN_BOUNDARY_BOUNDARY_term_abbrevs*.vo with --max-abbrevs 100 -j32:
 
-Multivariate/make_upto_topology.ml: dump-simp 1h55m36s split 13s make -j56 lp
+  * Gulliver: 56 processors Intel Core Processor (Haswell, no TSX) 2.3 Ghz cache 16 Mo RAM 122 Go
+
+    hol.ml: dump-simp-use 6m7s split 2s make -j56 lp 1m14s v 45s dep-lpo 1m46s vo 38m46s
+
+    Multivariate/make_upto_topology.ml: dump-simp 1h55m36s split 13s
+    --with-sharing: make -j56 lp 10h22m v 20m5s dep-lpo 9m1s
 
 ## 04/03/24
 

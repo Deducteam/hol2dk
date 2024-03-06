@@ -295,7 +295,7 @@ let abbrev oc t (k,n,bs) =
 let decl_term_abbrevs oc = TrmHashtbl.iter (abbrev oc) htbl_term_abbrev;;
 
 (* Maximum number of abbreviations in a term_abbrev file. *)
-let max_abbrevs = ref 5_000;;
+let max_abbrevs = ref max_int;;
 
 (* Number of term_abbrevs_part files. *)
 let abbrev_part = ref 0;;
