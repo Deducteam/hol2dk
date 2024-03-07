@@ -20,9 +20,11 @@ hol2dk options command arguments
 Options
 -------
 
---use-sharing: define term abbreviations using let's
+--max-steps INT: maximum number of proof steps in a proof file
 
 --max-abbrevs INT: maximum number of definitions in a term abbreviation file
+
+--use-sharing: define term abbreviations using let's
 
 --print-stats: print statistics on hash tables at exit
 
@@ -394,7 +396,7 @@ and command = function
 
   | "--max-abbrevs"::k::args -> Xlp.max_abbrevs := integer k; command args
 
-  | "--max-proofs"::k::args -> Xlp.max_proofs := integer k; command args
+  | "--max-steps"::k::args -> Xlp.max_steps := integer k; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in

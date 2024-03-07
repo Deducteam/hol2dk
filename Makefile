@@ -30,7 +30,7 @@ $(BASE_FILES:%=%.lp) &:
 
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
-$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-proofs 500000 --max-abbrevs 250 #--use-sharing
+$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 500000 --max-abbrevs 250 #--use-sharing
 
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
@@ -39,7 +39,7 @@ lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
 
 .PHONY: clean-lp
-clean-lp: clean-lpo
+clean-lp: clean-lpo clean-v clean-vo
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
 include lpo.mk

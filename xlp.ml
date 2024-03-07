@@ -660,17 +660,24 @@ let export n suffix f =
   close_out oc
 ;;
 
-let max_proofs = ref max_int;;
+let max_steps = ref max_int;;
 
 let export_proofs_in_interval b n x y =
-  let cur_proof = ref 0 in
+  let nb_steps = ref 0 in
   let cur_oc = ref stdout in
-  let start_part() =
+  let start_part k =
     incr cur_part;
     let f = part_name n !cur_part ^ "_proofs.lp" in
     log "generate %s ...\n%!" f;
     cur_oc := open_out f;
-    cur_proof := 0
+    nb_steps := 0;
+    (* compute part_max_idx *)
+    let i = ref k and c = ref 0 in
+    while (!i <= y && !c < !max_steps) do
+      if get_use !i >= 0 then incr c;
+      incr i
+    done;
+    part_max_idx := !i - 1
   in
   let finish_part() =
     close_out !cur_oc;
@@ -679,12 +686,12 @@ let export_proofs_in_interval b n x y =
     concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")
   in
   cur_part := 0;
-  start_part();
+  start_part x;
   for k = x to y do
     if get_use k >= 0 then
       begin
-        incr cur_proof;
-        if !cur_proof >= !max_proofs then (finish_part(); start_part());
+        incr nb_steps;
+        if !nb_steps >= !max_steps then (finish_part(); start_part k);
         (*log "proof %d ...\n%!" k;*)
         theorem !cur_oc k (proof_at k)
       end
@@ -695,7 +702,7 @@ let export_proofs_in_interval b n x y =
 ;;
 
 let export_theorem_proof b n =
-  part_max_idx := !the_start_idx + Array.length !prf_pos - 1;
+  (*part_max_idx := !the_start_idx + Array.length !prf_pos - 1;*)
   export_proofs_in_interval b n !the_start_idx !part_max_idx
 ;;
 

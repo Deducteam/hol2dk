@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 hol2dk can now generate term abbreviations and proofs in several files:
 - The option --max-abbrevs allows to fix the maximum number of
   definitions in a term abbreviations file.
-- The option --max-proofs allows to fix the maximum number of proof
+- The option --max-steps allows to fix the maximum number of proof
   steps in a proof file.
 
 ## 1.0.0 (2024-02-25)
