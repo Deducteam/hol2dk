@@ -36,7 +36,7 @@ $(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-proofs 500000 --max-abbrevs
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
 %.lp: %.sti
-	hol2dk --max-proofs 250 $(HOL2DK_OPTIONS) theorem $(BASE) $@
+	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
 
 .PHONY: clean-lp
 clean-lp: clean-lpo

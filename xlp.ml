@@ -558,6 +558,9 @@ type decl =
   | Named_axm of string
 ;;
 
+(* [!cur_part_max] indicates the maximal index of the current part. *)
+let cur_part_max : int ref = ref (-1);;
+
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k]
    and proof [p] as declaration type [d]. *)
 let decl_theorem oc k p d =

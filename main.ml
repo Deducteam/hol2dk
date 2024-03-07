@@ -823,7 +823,7 @@ and command = function
      else
        begin
          (* used in xlp to know whether a theorem can be declared as private *)
-         cur_part_max := y;
+         Xlp.cur_part_max := y;
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
          Xlp.export_term_abbrevs b b suffix;
@@ -889,7 +889,7 @@ and command = function
        end
      else
        begin
-         cur_part_max := !the_start_idx + Array.length !prf_pos - 1;
+         Xlp.cur_part_max := !the_start_idx + Array.length !prf_pos - 1;
          Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.new_export_term_abbrevs b n;

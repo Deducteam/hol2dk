@@ -68,6 +68,3 @@ let get_use k =
   let k' = k - !the_start_idx in
   (*log "get_use %d - %d = %d\n%!" k !the_start_idx k';*)
   Array.get !last_use k';;
-
-(* [!cur_part_max] indicates the maximal index of the current part. *)
-let cur_part_max : int ref = ref (-1);;
