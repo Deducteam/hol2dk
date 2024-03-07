@@ -615,42 +615,6 @@ let proofs_in_interval oc x y =
   done
 ;;
 
-let cur_part = ref 0;;
-
-let proof_part_name n i = n ^ "_proofs_part_" ^ string_of_int i ^ ".lp";;
-
-let new_proofs_in_interval _b n x y =
-  let cur_proof = ref 0 in
-  let cur_oc = ref stdout in
-  let create_new_part() =
-    incr cur_part;
-    let f = proof_part_name !cur_part in
-    log "generate %s ...\n%!" f;
-    let oc = open_out f in
-    cur_oc := oc;
-    require oc "theory_hol" "";
-    List.iter (require oc b) ["_types"; "_terms"];
-    require oc n "_type_abbrevs";
-    if !use_sharing then require oc n "_subterm_abbrevs";
-    for i = 1 to !cur_part - 1 do require oc n (proof_part_name n i) done
-  in
-  create_new_part();
-  for k = x to y do
-    if get_use k >= 0 then
-      begin
-        incr cur_proof;
-        if !cur_proof >= !max_proofs then
-          begin
-            close_out !cur_oc;
-            create_new_part();
-            cur_proofs := 0;
-          end;
-        (*log "proof %d ...\n%!" k;*)
-        theorem !cur_oc k (proof_at k)
-      end
-  done
-;;
-
 (* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
 let proofs_in_range oc = function
   | Only x ->
@@ -668,10 +632,22 @@ print thm_%d;\n" x*)
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
 
-(****************************************************************************)
-(* Lambdapi file generation with type and term abbreviations. *)
-(****************************************************************************)
+let part_name n i = n ^ "_part_" ^ string_of_int i;;
 
+(* Current proof part. *)
+let cur_part = ref 1;;
+
+let theorem_deps oc b n =
+  List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
+  List.iter (require oc n) ["_type_abbrevs"];
+  if !use_sharing then require oc n "_subterm_abbrevs";
+  require_term_abbrevs oc n;
+  for i = 1 to !cur_part - 1 do require oc n ("_part_" ^ string_of_int i) done;
+  SetStr.iter (fun d -> require oc d "") !thdeps
+;;
+
+(* [export n suffix f] creates a file named [n ^ suffix ^ ".lp"] and
+   calls [f] with the corresponding out_channel. *)
 let export n suffix f =
   let filename = n ^ suffix ^ ".lp" in
   log "generate %s ...\n%!" filename;
@@ -680,6 +656,48 @@ let export n suffix f =
   f oc;
   close_out oc
 ;;
+
+let max_proofs = ref max_int;;
+
+let export_proofs_in_interval b n x y =
+  let cur_proof = ref 0 in
+  let cur_oc = ref stdout in
+  let start_part() =
+    incr cur_part;
+    let f = part_name n !cur_part ^ "_proofs.lp" in
+    log "generate %s ...\n%!" f;
+    cur_oc := open_out f;
+    cur_proof := 0
+  in
+  let finish_part() =
+    close_out !cur_oc;
+    let f = part_name n !cur_part in
+    export f "_deps" (fun oc -> theorem_deps oc b n);
+    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")
+  in
+  cur_part := 0;
+  start_part();
+  for k = x to y do
+    if get_use k >= 0 then
+      begin
+        incr cur_proof;
+        if !cur_proof >= !max_proofs then (finish_part(); start_part());
+        (*log "proof %d ...\n%!" k;*)
+        theorem !cur_oc k (proof_at k)
+      end
+  done;
+  finish_part();
+  log "generate %s.lp ...\n%!" n;
+  command (Printf.sprintf "mv -f %s_part_%d.lp %s.lp" n !cur_part n)
+;;
+
+let export_theorem_proof b n =
+  export_proofs_in_interval b n !the_start_idx !cur_part_max
+;;
+
+(****************************************************************************)
+(* Lambdapi file generation with type and term abbreviations. *)
+(****************************************************************************)
 
 let types() =
   let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
@@ -737,24 +755,7 @@ let export_axioms b =
       decl_axioms oc (axioms()))
 ;;
 
-let theorem_deps oc b n =
-  List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
-  List.iter (require oc n) ["_type_abbrevs"];
-  require_term_abbrevs oc n;
-  SetStr.iter (fun d -> require oc d "") !thdeps
-;;
-
-let export_deps b n = export n "_deps" (fun oc -> theorem_deps oc b n);;
-
-let export_proofs n r =
-  let filename = n ^ "_proofs.lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  proofs_in_range oc r;
-  close_out oc
-;;
-
-let export_deps_and_proofs b n r =
+let export_proofs b n r =
   export n "_proofs" (fun oc -> theorem_deps oc b n; proofs_in_range oc r)
 ;;
 
@@ -781,7 +782,7 @@ let export_theorems_as_axioms b map_thid_name =
       out_map_thid_name true oc map_thid_name)
 ;;
 
-(* used in hol2dk part *)
+(* for hol2dk part *)
 
 let export_proofs_part =
   let part i s = "_part_" ^ string_of_int i ^ s in

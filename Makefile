@@ -30,7 +30,7 @@ $(BASE_FILES:%=%.lp) &:
 
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
-$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-abbrevs 250 #--use-sharing
+$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-proofs 500000 --max-abbrevs 250 #--use-sharing
 
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
@@ -42,11 +42,14 @@ lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 clean-lp:
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
-.PHONY: dep-lpo
-dep-lpo lpo.mk:
-	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lpo.mk
-
 include lpo.mk
+
+lpo.mk:
+	touch $<
+
+.PHONY: dep-lpo
+dep-lpo:
+	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lpo.mk
 
 .PHONY: clean-dep-lpo
 clean-dep-lpo:
@@ -76,11 +79,14 @@ clean-v:
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
 .PHONY: dep-vo
-dep-vo vo.mk: lpo.mk
+dep-vo: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
 #find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > vo.mk
 
 include vo.mk
+
+vo.mk:
+	touch $<
 
 .PHONY: clean-dep-vo
 clean-dep-vo:
