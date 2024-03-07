@@ -45,7 +45,7 @@ clean-lp:
 include lpo.mk
 
 lpo.mk:
-	touch $<
+	touch $@
 
 .PHONY: dep-lpo
 dep-lpo:
@@ -86,7 +86,7 @@ dep-vo: lpo.mk
 include vo.mk
 
 vo.mk:
-	touch $<
+	touch $@
 
 .PHONY: clean-dep-vo
 clean-dep-vo:
