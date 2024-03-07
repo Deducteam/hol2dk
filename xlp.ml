@@ -677,7 +677,7 @@ let export_proofs_in_interval b n x y =
       if get_use !i >= 0 then incr c;
       incr i
     done;
-    part_max_idx := !i - 1
+    part_max_idx := !i - 2
   in
   let finish_part() =
     close_out !cur_oc;
