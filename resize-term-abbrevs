@@ -1,0 +1,39 @@
+#!/bin/sh
+
+if test $# -ne 2; then echo "usage: `basename $0` BASE MAX"; exit 1; fi
+
+b=$1
+max=$2
+
+f=${b}_term_abbrevs.lp
+if test ! -f $f; then echo "error: $f does not exist"; exit 1; fi
+
+awk '/^symbol /{nextfile}{print}' $f > header.lp
+
+cat ${b}_term_abbrevs*.lp > abbrevs.lp
+sed -i -e '/^require /d' abbrevs.lp
+split --numeric-suffixes=1 -a5 -l$max abbrevs.lp
+rm -f abbrevs.lp ${b}_term_abbrevs*.lp
+
+n=`ls x* | wc -l`
+
+for p in `ls x*`
+do
+    k=`expr ${p#x} + 0` # remove leading zeros
+    if test $k -eq 1; then s=''; else s=_part_$k; fi
+    g=${b}_term_abbrevs$s.lp
+    echo "generate $g ..."
+    cat header.lp $p > $g
+    rm -f $p
+done
+rm -f header.lp
+
+echo "update $b.lp ..."
+sed -i -e "/^require open hol-light.${b}_term_abbrevs/d" $b.lp
+k=2
+while test $k -le $n
+do
+    l=`expr $k + 4`
+    sed -i -e "${l}i require open hol-light.${b}_term_abbrevs_part_$k;" $b.lp
+    k=`expr $k + 1`
+done
