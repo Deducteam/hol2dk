@@ -613,6 +613,43 @@ let proofs_in_interval oc x y =
     if get_use k >= 0 then
       begin (*log "proof %d ...\n%!" k;*) theorem oc k (proof_at k) end
   done
+;;
+
+let cur_part = ref 0;;
+
+let proof_part_name n i = n ^ "_proofs_part_" ^ string_of_int i ^ ".lp";;
+
+let new_proofs_in_interval _b n x y =
+  let cur_proof = ref 0 in
+  let cur_oc = ref stdout in
+  let create_new_part() =
+    incr cur_part;
+    let f = proof_part_name !cur_part in
+    log "generate %s ...\n%!" f;
+    let oc = open_out f in
+    cur_oc := oc;
+    require oc "theory_hol" "";
+    List.iter (require oc b) ["_types"; "_terms"];
+    require oc n "_type_abbrevs";
+    if !use_sharing then require oc n "_subterm_abbrevs";
+    for i = 1 to !cur_part - 1 do require oc n (proof_part_name n i) done
+  in
+  create_new_part();
+  for k = x to y do
+    if get_use k >= 0 then
+      begin
+        incr cur_proof;
+        if !cur_proof >= !max_proofs then
+          begin
+            close_out !cur_oc;
+            create_new_part();
+            cur_proofs := 0;
+          end;
+        (*log "proof %d ...\n%!" k;*)
+        theorem !cur_oc k (proof_at k)
+      end
+  done
+;;
 
 (* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
 let proofs_in_range oc = function
