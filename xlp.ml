@@ -702,8 +702,8 @@ let export_proofs_in_interval b n x y =
 ;;
 
 let export_theorem_proof b n =
-  (*part_max_idx := !the_start_idx + Array.length !prf_pos - 1;*)
-  export_proofs_in_interval b n !the_start_idx !part_max_idx
+  export_proofs_in_interval b n !the_start_idx
+    (!the_start_idx + Array.length !prf_pos - 1)
 ;;
 
 (****************************************************************************)

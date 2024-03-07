@@ -121,3 +121,14 @@ clean-opam:
 
 .PHONY: clean-all
 clean-all: clean-split clean-lp clean-dep-lpo clean-lpo clean-v clean-dep-vo clean-vo clean-opam
+
+.PHONY: all
+all:
+	$(MAKE) clean-all
+	$(MAKE) split
+	$(MAKE) lp
+	$(MAKE) dep-lpo
+	$(MAKE) lpo
+	$(MAKE) v
+	$(MAKE) dep-vo
+	$(MAKE) vo
