@@ -558,8 +558,8 @@ type decl =
   | Named_axm of string
 ;;
 
-(* [!cur_part_max] indicates the maximal index of the current part. *)
-let cur_part_max : int ref = ref (-1);;
+(* [!part_max_idx] indicates the maximal index of the current part. *)
+let part_max_idx : int ref = ref (-1);;
 
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k]
    and proof [p] as declaration type [d]. *)
@@ -575,7 +575,7 @@ let decl_theorem oc k p d =
      let term = term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     let prv = let l = get_use k in l > 0 && l <= !cur_part_max in
+     let prv = let l = get_use k in l > 0 && l <= !part_max_idx in
      out oc "%s symbol thm_%d%a%a%a : Prf %a ≔ %a;\n"
        (if prv then "private" else "opaque") k
        typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
@@ -695,7 +695,8 @@ let export_proofs_in_interval b n x y =
 ;;
 
 let export_theorem_proof b n =
-  export_proofs_in_interval b n !the_start_idx !cur_part_max
+  part_max_idx := !the_start_idx + Array.length !prf_pos - 1;
+  export_proofs_in_interval b n !the_start_idx !part_max_idx
 ;;
 
 (****************************************************************************)
@@ -790,6 +791,7 @@ let export_theorems_as_axioms b map_thid_name =
 let export_proofs_part =
   let part i s = "_part_" ^ string_of_int i ^ s in
   fun b dg k x y ->
+  part_max_idx := y;
   export b ("_part_" ^ string_of_int k)
     (fun oc ->
       List.iter (require oc b)
