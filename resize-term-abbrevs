@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 usage() { echo "usage: `basename $0` FILE_term_abbrevs.lp INTEGER"; }
 error() { echo "error: $1"; usage; exit 1; }
@@ -31,7 +31,7 @@ cat $f `find . -name "${b}_term_abbrevs_part_*.lp"` > $a
 sed -i -e '/^require /d' $a
 
 echo "split $a ..."
-split --numeric-suffixes=1 -a5 -l$max $a
+split --verbose --numeric-suffixes=1 -a5 -l$max $a
 
 echo "generate $f.bak ..."
 cat $h $a > $f.bak

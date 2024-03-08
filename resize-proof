@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 usage() { echo "usage: `basename $0` FILE.lp INTEGER"; }
 error() { echo "error: $1"; usage; exit 1; }

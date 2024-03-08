@@ -52,7 +52,7 @@ lpo.mk:
 
 .PHONY: dep-lpo
 dep-lpo:
-	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lpo.mk
+	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
 
 .PHONY: clean-dep-lpo
 clean-dep-lpo:
@@ -84,7 +84,7 @@ clean-v: clean-vo
 .PHONY: dep-vo
 dep-vo: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
-#find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > vo.mk
+#find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-vo {} \; > vo.mk
 
 include vo.mk
 
