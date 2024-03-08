@@ -16,30 +16,30 @@ case $1 in
     *) error "not a filename ending with _term_abbrevs.lp";;
 esac
 
+if test ! -f $1; then error "$1 does not exist"; fi
 max=$2
-f=$1
-if test ! -f $f; then error "$f does not exist"; fi
 
 h=${b}_term_abbrevs_header.lp
 echo "generate $h ..."
-awk '/^symbol /{nextfile}{print}' $f > $h
+awk '/^symbol /{nextfile}{print}' $1 > $h
 
 a=${b}_term_abbrevs_without_header.lp
 echo "generate $a ..."
-
-cat $f `find . -name "${b}_term_abbrevs_part_*.lp"` > $a
+cat $1 `find . -name "${b}_term_abbrevs_part_*.lp"` > $a
 sed -i -e '/^require /d' $a
 
+ls x[0-9]* 2> /dev/null
+if test $? -eq 0; then error "there already exist x[0-9]* files"; fi
 echo "split $a ..."
-split --verbose --numeric-suffixes=1 -a5 -l$max $a
+split --numeric-suffixes=1 -a5 -l$max $a
 
-echo "generate $f.bak ..."
-cat $h $a > $f.bak
-rm -f $a $f ${b}_term_abbrevs_part_*.lp
+echo "generate $1.bak ..."
+cat $h $a > $1.bak
+rm -f $a $1 ${b}_term_abbrevs_part_*.lp
 
-n=`ls x* | wc -l`
+n=`ls x[0-9]* | wc -l`
 
-for p in `ls x*`
+for p in `ls x[0-9]*`
 do
     k=`expr ${p#x} + 0` # remove leading zeros
     if test $k -eq 1; then s=''; else s=_part_$k; fi
@@ -50,12 +50,15 @@ do
 done
 rm -f $h
 
-echo "update $b.lp ..."
-sed -i -e "/^require open hol-light.${b}_term_abbrevs_part_/d" $b.lp
-k=2
-while test $k -le $n
+for f in $b.lp `find . -name "${b}_part_*.lp"`
 do
-    l=`expr $k + 5`
-    sed -i -e "${l}i require open hol-light.${b}_term_abbrevs_part_$k;" $b.lp
-    k=`expr $k + 1`
+    echo "update $f ..."
+    sed -i -e "/^require open hol-light.${b}_term_abbrevs_part_/d" $f
+    k=2
+    while test $k -le $n
+    do
+        l=`expr $k + 5`
+        sed -i -e "${l}i require open hol-light.${b}_term_abbrevs_part_$k;" $f
+        k=`expr $k + 1`
+    done
 done
