@@ -20,9 +20,11 @@ hol2dk options command arguments
 Options
 -------
 
---use-sharing: define term abbreviations using let's
+--max-steps INT: maximum number of proof steps in a proof file
 
 --max-abbrevs INT: maximum number of definitions in a term abbreviation file
+
+--use-sharing: define term abbreviations using let's
 
 --print-stats: print statistics on hash tables at exit
 
@@ -392,7 +394,9 @@ and command = function
 
   | "--use-sharing"::args -> use_sharing := true; command args
 
-  | "--max-abbrevs"::m::args -> Xlp.max_abbrevs := integer m; command args
+  | "--max-abbrevs"::k::args -> Xlp.max_abbrevs := integer k; command args
+
+  | "--max-steps"::k::args -> Xlp.max_steps := integer k; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
@@ -820,8 +824,6 @@ and command = function
        end
      else
        begin
-         (* used in xlp to know whether a theorem can be declared as private *)
-         cur_part_max := y;
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
          Xlp.export_term_abbrevs b b suffix;
@@ -887,16 +889,11 @@ and command = function
        end
      else
        begin
-         cur_part_max := !the_start_idx + Array.length !prf_pos - 1;
-         Xlp.export_proofs n All;
+         Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.new_export_term_abbrevs b n;
          Xlp.export_type_abbrevs b n "";
-         Xlp.export_deps b n;
-         log "generate %s.lp ...\n%!" n;
-         Sys.command (Printf.sprintf "cat %s %s > %s && rm -f %s %s"
-                        (n^"_deps.lp") (n^"_proofs.lp") (n^".lp")
-                        (n^"_deps.lp") (n^"_proofs.lp"))
+         0
        end
 
   | f::args ->
@@ -939,7 +936,7 @@ and command = function
        end
      else
        begin
-         Xlp.export_deps_and_proofs b b r;
+         Xlp.export_proofs b b r;
          if r = All then Xlp.export_theorems b (read_val (b ^ ".thm"));
          Xlp.export_term_abbrevs b b "";
          Xlp.export_type_abbrevs b b ""

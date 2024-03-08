@@ -30,7 +30,7 @@ $(BASE_FILES:%=%.lp) &:
 
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
-$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-abbrevs 250 #--use-sharing
+$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 500000 --max-abbrevs 250 #--use-sharing
 
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
@@ -39,14 +39,17 @@ lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
 
 .PHONY: clean-lp
-clean-lp:
+clean-lp: clean-lpo clean-v clean-vo
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
-.PHONY: dep-lpo
-dep-lpo lpo.mk:
-	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lpo.mk
-
 include lpo.mk
+
+lpo.mk:
+	touch $@
+
+.PHONY: dep-lpo
+dep-lpo:
+	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lp.sh {} \; > lpo.mk
 
 .PHONY: clean-dep-lpo
 clean-dep-lpo:
@@ -72,15 +75,18 @@ v: $(LP_FILES:%.lp=%.v)
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring coq.v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
 
 .PHONY: clean-v
-clean-v:
+clean-v: clean-vo
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
 .PHONY: dep-vo
-dep-vo vo.mk: lpo.mk
+dep-vo: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
 #find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-coq.sh {} \; > vo.mk
 
 include vo.mk
+
+vo.mk:
+	touch $@
 
 .PHONY: clean-dep-vo
 clean-dep-vo:
@@ -115,3 +121,14 @@ clean-opam:
 
 .PHONY: clean-all
 clean-all: clean-split clean-lp clean-dep-lpo clean-lpo clean-v clean-dep-vo clean-vo clean-opam
+
+.PHONY: all
+all:
+	$(MAKE) clean-all
+	$(MAKE) split
+	$(MAKE) lp
+	$(MAKE) dep-lpo
+	$(MAKE) lpo
+	$(MAKE) v
+	$(MAKE) dep-vo
+	$(MAKE) vo

@@ -9,6 +9,14 @@ REMOVE*)
 open Xprelude
 open Fusion
 
+let command s =
+  if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
+
+let concat f1 f2 f3 =
+  log "generate %s ...\n%!" f3;
+  command (Printf.sprintf "cat %s %s > %s && rm -f %s %s" f1 f2 f3 f1 f2)
+;;
+
 (****************************************************************************)
 (* Ranges of proof indexes. *)
 (****************************************************************************)
