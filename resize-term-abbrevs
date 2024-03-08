@@ -8,12 +8,21 @@ max=$2
 f=${b}_term_abbrevs.lp
 if test ! -f $f; then echo "error: $f does not exist"; exit 1; fi
 
-awk '/^symbol /{nextfile}{print}' $f > header.lp
+h=${b}_term_abbrevs_header.lp
+echo "generate $h ..."
+awk '/^symbol /{nextfile}{print}' $f > $h
 
-cat ${b}_term_abbrevs*.lp > abbrevs.lp
-sed -i -e '/^require /d' abbrevs.lp
-split --numeric-suffixes=1 -a5 -l$max abbrevs.lp
-rm -f abbrevs.lp ${b}_term_abbrevs*.lp
+a=${b}_term_abbrevs_without_header.lp
+echo "generate $a ..."
+cat ${b}_term_abbrevs*.lp > $a
+sed -i -e '/^require /d' $a
+
+echo "split $a ..."
+split --numeric-suffixes=1 -a5 -l$max $a
+
+echo "generate $f.bak ..."
+cat $h $a > $f.bak
+rm -f $a ${b}_term_abbrevs*.lp
 
 n=`ls x* | wc -l`
 
@@ -23,10 +32,10 @@ do
     if test $k -eq 1; then s=''; else s=_part_$k; fi
     g=${b}_term_abbrevs$s.lp
     echo "generate $g ..."
-    cat header.lp $p > $g
+    cat $h $p > $g
     rm -f $p
 done
-rm -f header.lp
+rm -f $h
 
 echo "update $b.lp ..."
 sed -i -e "/^require open hol-light.${b}_term_abbrevs/d" $b.lp
