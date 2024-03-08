@@ -679,24 +679,18 @@ let export_proofs_in_interval n x y =
     done;
     part_max_idx := !i - 2
   in
-  let finish_part() =
-    close_out !cur_oc(*;
-    let f = part_name n !cur_part in
-    export f "_deps" (fun oc -> theorem_deps oc b n);
-    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")*)
-  in
   cur_part := 0;
   start_part x;
   for k = x to y do
     if get_use k >= 0 then
       begin
         incr nb_steps;
-        if !nb_steps >= !max_steps then (finish_part(); start_part k);
+        if !nb_steps >= !max_steps then (close_out !cur_oc; start_part k);
         (*log "proof %d ...\n%!" k;*)
         theorem !cur_oc k (proof_at k)
       end
   done;
-  finish_part()
+  close_out !cur_oc
 ;;
 
 let export_theorem_proof n =
