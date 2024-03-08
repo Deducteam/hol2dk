@@ -257,7 +257,7 @@ After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check fi
 - `lpo` to check lp files
 - `vo` to check Coq files
 
-Remark: the order is important, `split` must be done first, `v` will do `lp`, and `dep` must be done after `lp` and before `lpo` or `vo`.
+The order of targets is important: `split` must be done first, `v` will do `lp`, and `dep` must be done after `lp` and before `lpo` or `vo`.
 
 You can also write in a file called `FILES_WITH_SHARING` a space-separated list of theorem names for which sharing is needed.
 

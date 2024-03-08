@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         ocaml-version: [4.14.1]
-        camlp5-version: [8.00.05]
+        camlp5-version: [8.02.01]
         dedukti-version: [2.7]
         lambdapi-version: [master]
         dune-version: [3.7.0]
@@ -96,9 +96,9 @@ jobs:
           make split
           make -j3 lp
           make -j3 v
-          make -j3 dep
+          make dep
           make -j3 lpo
-      - name: Generate and check multi-threaded lp output with split and --max-steps 250
+      - name: Check resizing
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
@@ -107,7 +107,18 @@ jobs:
           cd output/xci
           hol2dk link xci
           make split
-          make -j3 HOL2DK_OPTIONS='--max-steps 250' lp
-          make -j3 v
-          make -j3 dep
+          make -j3 HOL2DK_OPTIONS='--max-steps 250 --max-abbrevs 200' lp
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360.lp 500
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360.lp 100
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360_term_abbrevs.lp 300
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360_term_abbrevs.lp 100
+          make dep
           make -j3 lpo

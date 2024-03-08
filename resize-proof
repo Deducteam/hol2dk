@@ -1,0 +1,62 @@
+#!/bin/bash
+
+usage() { echo "usage: `basename $0` FILE.lp INTEGER"; }
+error() { echo "error: $1"; usage; exit 1; }
+
+echo "`basename $0` $* ..."
+
+case "$1" in
+    -h|--help) if test $# -eq 1; then usage; exit 0; else error "wrong number of arguments"; fi;;
+esac
+
+if test $# -ne 2; then error "wrong number of arguments"; fi
+
+case $1 in
+    *.lp) b=${1%.lp};;
+    *) echo "error: not a .lp file"; exit 1;;
+esac
+
+max=$2
+
+parts=`find . -name "${b}_part_*.lp"`
+parts="$parts $1"
+n=`ls $parts | wc -l`
+if test $n -eq 0; then echo "error: $1 does not exist"; exit 1; fi
+n=`expr $n - 1`
+
+if test ! -f $1; then echo "error: $1 does not exist"; exit 1; fi
+h=${b}_header.lp
+echo "generate $h ..."
+awk '/^require /{print;next}{nextfile}' $1 > $h
+sed -i -e "/^require open hol-light.${b}_part_/d" $h
+
+p=${b}_proofs.lp
+echo "generate $p ..."
+cat `ls -v $parts` > $p
+sed -i -e '/^require /d' -e 's/^private /opaque /' $p
+rm -f $parts
+
+echo "generate $1.bak ..."
+cat $h $p > $1.bak
+
+ls x[0-9]* 2> /dev/null
+if test $? -eq 0; then error "there already exist x[0-9]* files"; fi
+echo "split $p ..."
+split --numeric-suffixes=1 -a5 -l$max $p
+rm -f $p
+
+n=`ls x[0-9]* | wc -l`
+for p in `ls x[0-9]*`
+do
+    k=`expr ${p#x} + 0` # remove leading zeros
+    if test $k -eq $n; then s=''; else s="_part_$k"; fi
+    g="$b$s.lp"
+    echo "generate $g ..."
+    if test $k -gt 1; then i=`expr $k - 1`; sed -i -e "\$a require open hol-light.${b}_part_$i;" $h; fi
+    cat $h $p > $g
+    rm -f $p
+done
+rm -f $h
+
+echo "warning: all theorems are exported"
+echo "do \"make $1\" to optimize this"

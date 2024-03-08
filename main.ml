@@ -429,6 +429,14 @@ and command = function
   | ["unpatch" as s] -> call_script s []
   | ["link";arg] -> call_script "add-links" [arg]
 
+  | ["resize";f;k] ->
+     let dk = is_dk f in
+     if dk then (log "dk output not available for this command"; 1)
+     else
+       if String.ends_with ~suffix:"_term_abbrevs.lp" f then
+         call_script "resize-term-abbrevs" [f;k]
+       else call_script "resize-proof" [f;k]
+
   | ["dump";f] -> dump true f (basename_ml f)
   | ["dump-use";f] -> dump false f (basename_ml f)
   | ["dump-simp";f] -> dump_and_simp true f
@@ -883,15 +891,13 @@ and command = function
      the_start_idx := read_val (n ^ ".sti");
      (*log "the_start_idx = %d\n%!" !the_start_idx;*)
      init_proof_reading b;
-     if is_dk f then
-       begin
-         log "dk output not available for this command"; 1
-       end
+     if is_dk f then (log "dk output not available for this command"; 1)
      else
        begin
-         Xlp.export_theorem_proof b n;
+         Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
          Xlp.new_export_term_abbrevs b n;
+         Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n "";
          0
        end
