@@ -96,9 +96,9 @@ jobs:
           make split
           make -j3 lp
           make -j3 v
-          make -j3 dep
+          make dep
           make -j3 lpo
-      - name: Generate and check multi-threaded lp output with split and --max-steps 250
+      - name: Check resizing
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
@@ -109,5 +109,17 @@ jobs:
           make split
           make -j3 HOL2DK_OPTIONS='--max-steps 250' lp
           make -j3 v
-          make -j3 dep
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360.lp 500
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360.lp 100
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360_term_abbrevs.lp 100
+          make dep
+          make -j3 lpo
+          hol2dk resize thm75360_term_abbrevs.lp 200
+          make dep
           make -j3 lpo

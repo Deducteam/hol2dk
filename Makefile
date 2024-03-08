@@ -6,10 +6,13 @@ STI_FILES := $(wildcard *.sti)
 
 .PHONY: default
 default:
-	@echo "targets: split lp dep-lpo lpo v dep-vo vo opam clean-<target> clean-all"
+	@echo "targets: split lp dep lpo v vo opam clean-<target> clean-all"
 
 .PHONY: dep
 dep: dep-lpo dep-vo
+
+.PHONY: clean-dep
+clean-dep: clean-dep-lpo clean-dep-vo
 
 .PHONY: split
 split:
