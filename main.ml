@@ -894,9 +894,10 @@ and command = function
      if is_dk f then (log "dk output not available for this command"; 1)
      else
        begin
-         Xlp.export_theorem_proof b n;
+         Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
          Xlp.new_export_term_abbrevs b n;
+         Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n "";
          0
        end

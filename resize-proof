@@ -34,7 +34,7 @@ p=${b}_proofs.lp
 echo "generate $p ..."
 cat `ls -v $parts` > $p
 sed -i -e '/^require /d' -e 's/^private /opaque /' $p
-rm -f $parts
+#rm -f $parts
 
 echo "generate $b.lp.bak ..."
 cat $h $p > $b.lp.bak
@@ -44,11 +44,11 @@ split --numeric-suffixes=1 -a5 -l$max $p
 rm -f $p
 
 n=`ls x* | wc -l`
-for p in `ls x*`
+for p in `ls x[0-9]*`
 do
     k=`expr ${p#x} + 0` # remove leading zeros
-    if test $k -eq $n; then s=''; else s=_part_$k; fi
-    g=$b$s.lp
+    if test $k -eq $n; then s=''; else s="_part_$k"; fi
+    g="$b$s.lp"
     echo "generate $g ..."
     if test $k -gt 1; then i=`expr $k - 1`; sed -i -e "\$a require open hol-light.${b}_part_$i;" $h; fi
     cat $h $p > $g

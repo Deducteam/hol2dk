@@ -640,12 +640,12 @@ let part_name n i = n ^ "_part_" ^ string_of_int i;;
 (* Current proof part. *)
 let cur_part = ref 1;;
 
-let theorem_deps oc b n =
+let theorem_deps oc b n k =
   List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
   List.iter (require oc n) ["_type_abbrevs"];
   if !use_sharing then require oc n "_subterm_abbrevs";
   require_term_abbrevs oc n;
-  for i = 1 to !cur_part - 1 do require oc n ("_part_" ^ string_of_int i) done;
+  for i = 1 to k do require oc n ("_part_" ^ string_of_int i) done;
   SetStr.iter (fun d -> require oc d "") !thdeps
 ;;
 
@@ -662,7 +662,7 @@ let export n suffix f =
 
 let max_steps = ref max_int;;
 
-let export_proofs_in_interval b n x y =
+let export_proofs_in_interval n x y =
   let nb_steps = ref 0 in
   let cur_oc = ref stdout in
   let start_part k =
@@ -680,10 +680,10 @@ let export_proofs_in_interval b n x y =
     part_max_idx := !i - 2
   in
   let finish_part() =
-    close_out !cur_oc;
+    close_out !cur_oc(*;
     let f = part_name n !cur_part in
     export f "_deps" (fun oc -> theorem_deps oc b n);
-    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")
+    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")*)
   in
   cur_part := 0;
   start_part x;
@@ -696,14 +696,22 @@ let export_proofs_in_interval b n x y =
         theorem !cur_oc k (proof_at k)
       end
   done;
-  finish_part();
-  log "generate %s.lp ...\n%!" n;
-  command (Printf.sprintf "mv -f %s_part_%d.lp %s.lp" n !cur_part n)
+  finish_part()
 ;;
 
-let export_theorem_proof b n =
-  export_proofs_in_interval b n !the_start_idx
+let export_theorem_proof n =
+  export_proofs_in_interval n !the_start_idx
     (!the_start_idx + Array.length !prf_pos - 1)
+;;
+
+let export_theorem_deps b n =
+  for i = 1 to !cur_part do
+    let f = part_name n i in
+    export f "_deps" (fun oc -> theorem_deps oc b n (i - 1));
+    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")
+  done;
+  log "generate %s.lp ...\n%!" n;
+  command (Printf.sprintf "mv -f %s_part_%d.lp %s.lp" n !cur_part n)
 ;;
 
 (****************************************************************************)
@@ -767,7 +775,7 @@ let export_axioms b =
 ;;
 
 let export_proofs b n r =
-  export n "_proofs" (fun oc -> theorem_deps oc b n; proofs_in_range oc r)
+  export n "_proofs" (fun oc -> theorem_deps oc b n 0; proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =
