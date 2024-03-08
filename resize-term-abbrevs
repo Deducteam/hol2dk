@@ -1,12 +1,24 @@
 #!/bin/sh
 
-if test $# -ne 2; then echo "usage: `basename $0` BASE MAX"; exit 1; fi
+usage() { echo "usage: `basename $0` FILE_term_abbrevs.lp INTEGER"; }
+error() { echo "error: $1"; usage; exit 1; }
 
-b=$1
+echo "`basename $0` $* ..."
+
+case "$1" in
+    -h|--help) if test $# -eq 1; then usage; exit 0; else error "wrong number of arguments"; fi;;
+esac
+
+if test $# -ne 2; then error "wrong number of arguments"; fi
+
+case $1 in
+    *_term_abbrevs.lp) b=${1%_term_abbrevs.lp};;
+    *) error "not a filename ending with _term_abbrevs.lp";;
+esac
+
 max=$2
-
-f=${b}_term_abbrevs.lp
-if test ! -f $f; then echo "error: $f does not exist"; exit 1; fi
+f=$1
+if test ! -f $f; then error "$f does not exist"; fi
 
 h=${b}_term_abbrevs_header.lp
 echo "generate $h ..."
@@ -14,7 +26,8 @@ awk '/^symbol /{nextfile}{print}' $f > $h
 
 a=${b}_term_abbrevs_without_header.lp
 echo "generate $a ..."
-cat ${b}_term_abbrevs*.lp > $a
+
+cat $f `find . -name "${b}_term_abbrevs_part_*.lp"` > $a
 sed -i -e '/^require /d' $a
 
 echo "split $a ..."
@@ -22,7 +35,7 @@ split --numeric-suffixes=1 -a5 -l$max $a
 
 echo "generate $f.bak ..."
 cat $h $a > $f.bak
-rm -f $a ${b}_term_abbrevs*.lp
+rm -f $a $f ${b}_term_abbrevs_part_*.lp
 
 n=`ls x* | wc -l`
 
@@ -38,11 +51,11 @@ done
 rm -f $h
 
 echo "update $b.lp ..."
-sed -i -e "/^require open hol-light.${b}_term_abbrevs/d" $b.lp
+sed -i -e "/^require open hol-light.${b}_term_abbrevs_part_/d" $b.lp
 k=2
 while test $k -le $n
 do
-    l=`expr $k + 4`
+    l=`expr $k + 5`
     sed -i -e "${l}i require open hol-light.${b}_term_abbrevs_part_$k;" $b.lp
     k=`expr $k + 1`
 done

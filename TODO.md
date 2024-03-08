@@ -1,6 +1,12 @@
 TODO
 ----
 
+- rename dep-coq.sh into dep-vo, and dep-lp.sh into dep-lpo
+
+- generate proof parts in parallel like with hol2dk mk
+
+- generate term_abbrevs parts in parallel by dumping the htable and then reading the dumped list in parallel
+
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 
 - remove base argument in all commands by using BASE file
