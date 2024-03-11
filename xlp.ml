@@ -304,7 +304,7 @@ let require oc n = out oc "require open hol-light.%s;\n" n;;
 
 let term_abbrevs_deps n =
   (n^"_term_abbrevs")
-  :: Xlib.init (!abbrev_part - 1) (fun k -> n^"_term_abbrevs"^part(k+2))
+  :: list_init (!abbrev_part - 1) (fun k -> n^"_term_abbrevs"^part(k+2))
 ;;
 
 let require_term_abbrevs oc n = List.iter (require oc) (term_abbrevs_deps n);;
@@ -549,7 +549,7 @@ let decl_axioms oc ths =
 ;;
 
 (****************************************************************************)
-(* Translation of theorems. *)
+(* Translation of theorems and proofs. *)
 (****************************************************************************)
 
 type decl =
@@ -636,6 +636,16 @@ print thm_%d;\n" x*)
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
 
+(* [export_no_dep n f] creates a file named [n^".lp"] and calls [f] with the
+   corresponding out_channel. *)
+let export_no_dep n f =
+  let filename = n ^ ".lp" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  f oc;
+  close_out oc
+;;
+
 (* [export_deps n l] creates the files [n ^ ".lpo.mk"] and [n ^
    ".vo.mk"] with the dependencies in [l]. *)
 let export_deps n suffix l =
@@ -647,23 +657,12 @@ let export_deps n suffix l =
   close_out oc
 ;;
 
-(* [export n f] creates a file named [n^".lp"] and calls [f] with the
-   corresponding out_channel. *)
-let export n f =
-  let filename = n ^ ".lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
-  require oc "theory_hol";
-  f oc;
-  close_out oc
-;;
-
-(* [export_with_deps n deps f] creates a file named [n^".lp"], add in
+(* [export n deps f] creates a file named [n^".lp"], add in
    it require commands for [deps], and calls [f] with the
    corresponding out_channel, and creates files named [n^".lpo.mk"]
    and [n^".vo.mk"] with the dependencies to generate [n^".lpo"] and
    [n^".vo"] respectively. *)
-let export_with_deps n deps f =
+let export n deps f =
   let deps = "theory_hol"::deps in
   export_deps n "lpo" deps;
   export_deps n "vo" ("coq"::deps);
@@ -720,16 +719,18 @@ let theorem_deps b n k =
   [b^"_types"; b^"_terms"; b^"_axioms"; n^"_type_abbrevs"]
   @ (if !use_sharing then [n^"_subterm_abbrevs"] else [])
   @ term_abbrevs_deps n
-  @ Xlib.init k (fun i -> n^part(i+1))
+  @ list_init k (fun i -> n^part(i+1))
   @ SetStr.elements !thdeps
 ;;
 
-let theorem_deps oc b n k = List.iter (require oc) (theorem_deps b n k);;
+let require_theorem_deps oc b n k =
+  List.iter (require oc) ("theory_hol"::theorem_deps b n k)
+;;
 
 let export_theorem_deps b n =
   for i = 1 to !cur_part do
     let f = n ^ part i in
-    export (f^"_deps") (fun oc -> theorem_deps oc b n (i - 1));
+    export_no_dep (f^"_deps") (fun oc -> require_theorem_deps oc b n (i-1));
     concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")
   done;
   log "generate %s.lp ...\n%!" n;
@@ -746,11 +747,11 @@ let types() =
 ;;
 
 let export_types b =
-  export_with_deps (b^"_types") [] (fun oc -> list decl_typ oc (types()))
+  export (b^"_types") [] (fun oc -> list decl_typ oc (types()))
 ;;
 
 let export_type_abbrevs b n =
-  export_with_deps (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
+  export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 ;;
 
 let constants() =
@@ -759,34 +760,34 @@ let constants() =
 ;;
 
 let export_terms b =
-  export_with_deps (b^"_terms") [b^"_types"]
-    (fun oc -> list decl_sym oc (constants()))
+  export (b^"_terms") [b^"_types"] (fun oc -> list decl_sym oc (constants()))
 ;;
 
 let export_term_abbrevs b n =
   let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
-  export_with_deps (n^"_term_abbrevs")
+  export (n^"_term_abbrevs")
     (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
     decl_term_abbrevs;
   if !use_sharing then
-    export_with_deps (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
+    export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
 ;;
 
 let export_theorem_term_abbrevs b n =
   new_decl_term_abbrevs b n;
   if !use_sharing then
-    export_with_deps (n^"_subterm_abbrevs")
+    export (n^"_subterm_abbrevs")
       [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
       decl_subterm_abbrevs
 ;;
 
 let export_axioms b =
-  export_with_deps (b^"_axioms") [b^"_types"; b^"_terms"]
+  export (b^"_axioms") [b^"_types"; b^"_terms"]
     (fun oc -> decl_axioms oc (axioms()))
 ;;
 
 let export_proofs b r =
-  export (b^"_proofs") (fun oc -> theorem_deps oc b b 0; proofs_in_range oc r)
+  export_no_dep (b^"_proofs")
+    (fun oc -> require_theorem_deps oc b b 0; proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =
@@ -797,14 +798,14 @@ let out_map_thid_name as_axiom oc map_thid_name =
 ;;
 
 let export_theorems b map_thid_name =
-  export_with_deps b
+  export b
     ([b^"_types";b^"_type_abbrevs";b^"_terms"]
      @ term_abbrevs_deps b @ [b^"_axioms";b^"_proofs"])
     (fun oc -> out_map_thid_name false oc map_thid_name)
 ;;
 
 let export_theorems_as_axioms b map_thid_name =
-  export_with_deps (b^"_opam") [b^"_types";b^"_terms";b^"_axioms"]
+  export (b^"_opam") [b^"_types";b^"_terms";b^"_axioms"]
     (fun oc -> out_map_thid_name true oc map_thid_name)
 ;;
 
@@ -813,22 +814,16 @@ let export_theorems_as_axioms b map_thid_name =
 let export_proofs_part b dg k x y =
   part_max_idx := y;
   export (b^part k)
-    (fun oc ->
-      List.iter (require oc)
-        [b^"_types"; b^part k^"_type_abbrevs"; b^"_terms";
-         b^part k^"_term_abbrevs"; b^"_axioms"];
-      for i = 1 to k-1 do
-        if dg.(k-1).(i-1) > 0 then require oc (b^part i)
-      done;
-      proofs_in_interval oc x y)
+    ([b^"_types"; b^part k^"_type_abbrevs"; b^"_terms";
+      b^part k^"_term_abbrevs"; b^"_axioms"]
+     @ list_init_if (k-1) (fun i -> b^part(i+1)) (fun i -> dg.(k-1).(i) > 0))
+    (fun oc -> proofs_in_interval oc x y)
 ;;
 
 let export_theorems_part k b map_thid_name =
   export b
-    (fun oc ->
-      List.iter (require oc) [b^"_types";b^"_terms";b^"_axioms"];
-      for i = 1 to k do require oc (b^part i) done;
-      out_map_thid_name false oc map_thid_name)
+    ([b^"_types";b^"_terms";b^"_axioms"] @ list_init k (fun i -> b^part(i+1)))
+    (fun oc -> out_map_thid_name false oc map_thid_name)
 ;;
 (*
 (****************************************************************************)

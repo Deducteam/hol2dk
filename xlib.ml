@@ -51,7 +51,13 @@ let percent k n = (100 * k) / n;;
 let part i = "_part_" ^ string_of_int i;;
 
 (* Because [List.init n f] fails if [n < 0]. *)
-let init n f = if n <= 0 then [] else List.init n f;;
+let list_init n f = if n <= 0 then [] else List.init n f;;
+
+let list_init_if n f cond =
+  let l = ref [] in
+  for i = 0 to n-1 do if cond i then l := f i :: !l; done;
+  !l
+;;
 
 (* [pos_first f l] returns the position (counting from 0) of the first
    element of [l] satisfying [f]. Raises Not_found if there is no such
