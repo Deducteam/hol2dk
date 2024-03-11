@@ -290,8 +290,7 @@ let abbrev oc t (k,n,bs) =
   else out oc " ≔ %a;\n" raw_term t
 ;;
 
-(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations in a
-   single file. *)
+(* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
 let decl_term_abbrevs oc = TrmHashtbl.iter (abbrev oc) htbl_term_abbrev;;
 
 (* Maximum number of abbreviations in a term_abbrev file. *)
@@ -394,7 +393,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   in
   match ty_su with
   | [] ->
-     out oc "(@thm_%d%a%a%a)" i2 (list_prefix " " typ) tvs2
+     out oc "(@lem%d%a%a%a)" i2 (list_prefix " " typ) tvs2
        (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
   | _ ->
      (* vs2 is now the application of ty_su on vs2 *)
@@ -403,7 +402,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
      let ts2 = List.map (inst ty_su) ts2 in
      (* bs is the list of types obtained by applying ty_su on tvs2 *)
      let bs = List.map (type_subst ty_su) tvs2 in
-     out oc "(@thm_%d%a%a%a)" i2 (list_prefix " " typ) bs
+     out oc "(@lem%d%a%a%a)" i2 (list_prefix " " typ) bs
        (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
 ;;
 
@@ -576,7 +575,7 @@ let decl_theorem oc k p d =
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
      let prv = let l = get_use k in l > 0 && l <= !part_max_idx in
-     out oc "%s symbol thm_%d%a%a%a : Prf %a ≔ %a;\n"
+     out oc "%s symbol lem%d%a%a%a : Prf %a ≔ %a;\n"
        (if prv then "private" else "opaque") k
        typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
        (proof tvs rmap) p
@@ -584,21 +583,21 @@ let decl_theorem oc k p d =
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     out oc "symbol thm_%d%a%a%a : Prf %a;\n" k
+     out oc "symbol lem%d%a%a%a : Prf %a;\n" k
        typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
   | Named_thm n ->
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
      let hyps oc ts = List.iteri (fun i _ -> out oc " h%d" (i+1)) ts in
-     out oc "opaque symbol thm_%s%a%a%a : Prf %a ≔ thm_%d%a%a;\n" n
+     out oc "opaque symbol lem%s%a%a%a : Prf %a ≔ lem%d%a%a;\n" n
        typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
        k (list_prefix " " (var rmap)) xs hyps ts
   | Named_axm n ->
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     out oc "symbol thm_%s%a%a%a : Prf %a;\n" n
+     out oc "symbol lem%s%a%a%a : Prf %a;\n" n
        typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
 ;;
 
@@ -627,7 +626,7 @@ let proofs_in_range oc = function
      out oc
 "flag \"print_implicits\" on;
 flag \"print_domains\" on;
-print thm_%d;\n" x*)
+print lem%d;\n" x*)
   | All ->
      proofs_in_interval oc !the_start_idx
        (!the_start_idx + Array.length !prf_pos - 1)
@@ -654,7 +653,9 @@ let export_iter
   in
   handle "theory_hol";
   iter_deps handle;
+  out oc_lpo_mk "\n";
   close_out oc_lpo_mk;
+  out oc_vo_mk "\n";
   close_out oc_vo_mk;
   f oc_lp;
   close_out oc_lp;
@@ -815,8 +816,10 @@ let out_map_thid_name as_axiom oc map_thid_name =
     map_thid_name
 ;;
 
+let iter_theorems_deps b f = iter_proofs_deps b f; f (b^"_proofs");;
+
 let export_theorems b map_thid_name =
-  export_iter b (iter_proofs_deps b)
+  export_iter b (iter_theorems_deps b)
     (fun oc -> out_map_thid_name false oc map_thid_name)
 ;;
 
