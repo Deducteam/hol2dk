@@ -647,16 +647,6 @@ let export_deps n suffix l =
   close_out oc
 ;;
 
-let theorem_deps b n k =
-  [b^"_types"; n^"_type_abbrevs"; b^"_terms"; b^"_axioms"]
-  @ (if !use_sharing then [n^"_subterm_abbrevs"] else [])
-  @ term_abbrevs_deps n
-  @ Xlib.init k (fun i -> n^part(i+1))
-  @ SetStr.elements !thdeps
-;;
-
-let theorem_deps oc b n k = List.iter (require oc) (theorem_deps b n k);;
-
 (* [export n f] creates a file named [n^".lp"] and calls [f] with the
    corresponding out_channel. *)
 let export n f =
@@ -726,6 +716,16 @@ let export_theorem_proof n =
     (!the_start_idx + Array.length !prf_pos - 1)
 ;;
 
+let theorem_deps b n k =
+  [b^"_types"; b^"_terms"; b^"_axioms"; n^"_type_abbrevs"]
+  @ (if !use_sharing then [n^"_subterm_abbrevs"] else [])
+  @ term_abbrevs_deps n
+  @ Xlib.init k (fun i -> n^part(i+1))
+  @ SetStr.elements !thdeps
+;;
+
+let theorem_deps oc b n k = List.iter (require oc) (theorem_deps b n k);;
+
 let export_theorem_deps b n =
   for i = 1 to !cur_part do
     let f = n ^ part i in
@@ -772,7 +772,7 @@ let export_term_abbrevs b n =
     export_with_deps (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
 ;;
 
-let new_export_term_abbrevs b n =
+let export_theorem_term_abbrevs b n =
   new_decl_term_abbrevs b n;
   if !use_sharing then
     export_with_deps (n^"_subterm_abbrevs")
@@ -785,8 +785,8 @@ let export_axioms b =
     (fun oc -> decl_axioms oc (axioms()))
 ;;
 
-let export_proofs b n r =
-  export (n^"_proofs") (fun oc -> theorem_deps oc b n 0; proofs_in_range oc r)
+let export_proofs b r =
+  export (b^"_proofs") (fun oc -> theorem_deps oc b b 0; proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =

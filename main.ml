@@ -895,7 +895,7 @@ and command = function
        begin
          Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
-         Xlp.new_export_term_abbrevs b n;
+         Xlp.export_theorem_term_abbrevs b n;
          Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n;
          0
@@ -941,7 +941,7 @@ and command = function
        end
      else
        begin
-         Xlp.export_proofs b b r;
+         Xlp.export_proofs b r;
          if r = All then Xlp.export_theorems b (read_val (b ^ ".thm"));
          Xlp.export_term_abbrevs b b;
          Xlp.export_type_abbrevs b b
