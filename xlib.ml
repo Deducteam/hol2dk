@@ -9,8 +9,6 @@ REMOVE*)
 open Xprelude
 open Fusion
 
-let part i = "_part_" ^ string_of_int i;;
-
 let command s =
   if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
 
@@ -48,7 +46,11 @@ let iter_parts nb_proofs nb_parts f =
 (* Functions on basic data structures. *)
 (****************************************************************************)
 
-let percent k n = (100 * k) / n
+let percent k n = (100 * k) / n;;
+
+let part i = "_part_" ^ string_of_int i;;
+
+let init n f = if n <= 0 then [] else List.init n f;;
 
 (* [pos_first f l] returns the position (counting from 0) of the first
    element of [l] satisfying [f]. Raises Not_found if there is no such

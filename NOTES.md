@@ -6,7 +6,7 @@ NOTES
   * URYSOHN_LEMMA*.vo: --max-size 500000 --max-abbrevs 250 -j16 ~20m
   * CHAIN_BOUNDARY_BOUNDARY*.vo: --max-size 500000 --max-abbrevs 250 -j16 ~120m
   * GRASSMANN_PLUCKER_4: --max-size 20000 --max-abbrevs 100 -j1 ~40m
-  * HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS: --max-size 20000 --max-abbrevs 250
+  * HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS: --max-size 20000 --max-abbrevs 250 out of memory
 
 ## 06/03/24
 

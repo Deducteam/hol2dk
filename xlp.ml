@@ -304,7 +304,7 @@ let require oc n = out oc "require open hol-light.%s;\n" n;;
 
 let term_abbrevs_deps n =
   (n^"_term_abbrevs")
-  :: List.init (!abbrev_part - 1) (fun k -> n^"_term_abbrevs"^part(k+2))
+  :: Xlib.init (!abbrev_part - 1) (fun k -> n^"_term_abbrevs"^part(k+2))
 ;;
 
 let require_term_abbrevs oc n = List.iter (require oc) (term_abbrevs_deps n);;
@@ -651,7 +651,7 @@ let theorem_deps b n k =
   [b^"_types"; n^"_type_abbrevs"; b^"_terms"; b^"_axioms"]
   @ (if !use_sharing then [n^"_subterm_abbrevs"] else [])
   @ term_abbrevs_deps n
-  @ List.init k (fun i -> n^part(i+1))
+  @ Xlib.init k (fun i -> n^part(i+1))
   @ SetStr.elements !thdeps
 ;;
 
