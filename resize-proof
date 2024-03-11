@@ -16,6 +16,8 @@ case $1 in
     *) echo "error: not a .lp file"; exit 1;;
 esac
 
+if test -z "$HOL2DK_DIR"; then error '$HOL2DK_DIR is not set'; fi
+
 max=$2
 
 parts=`find . -name "${b}_part_*.lp"`
@@ -54,6 +56,8 @@ do
     echo "generate $g ..."
     if test $k -gt 1; then i=`expr $k - 1`; sed -i -e "\$a require open hol-light.${b}_part_$i;" $h; fi
     cat $h $p > $g
+    echo "generate ${g}o.mk ..."
+    $HOL2DK_DIR/dep-lpo $g > ${g}o.mk
     rm -f $p
 done
 rm -f $h

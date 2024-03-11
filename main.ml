@@ -117,6 +117,12 @@ hol2dk env
 hol2dk nbp $file
   print the number of proof steps in $file.prf
 
+hol2dk resize $file_term_abbrevs.lp $n
+  rebuild the term abbreviation files of $file.lp with --max-abbrevs $n
+
+hol2dk resize $file.lp $n
+  rebuild the proof files of $file.lp with --max-steps $n
+
 hol2dk proof $file $x $y
   print proof steps between theorem indexes $x and $y
 

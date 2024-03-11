@@ -47,13 +47,15 @@ clean-lp: clean-lpo clean-v clean-vo
 
 include lpo.mk
 
-lpo.mk:
-	touch $@
+LP_FILES := $(wildcard *.lp)
 
 .PHONY: dep-lpo
-dep-lpo:
-	echo 'theory_hol.lpo:' > lpo.mk
-	cat *.lpo.mk >> lpo.mk
+dep-lpo: lpo.mk
+lpo.mk: $(LP_FILES:%.lp=%.lpo.mk)
+	cat *.lpo.mk > lpo.mk
+
+theory_hol.lpo.mk: theory_hol.lp
+	$(HOL2DK_DIR)/dep-lpo $< > $@
 
 .PHONY: recompute-deps
 recompute-deps:
@@ -63,8 +65,6 @@ recompute-deps:
 .PHONY: clean-dep-lpo
 clean-dep-lpo:
 	rm -f lpo.mk
-
-LP_FILES := $(wildcard *.lp)
 
 .PHONY: lpo
 lpo: $(LP_FILES:%.lp=%.lpo)
@@ -88,14 +88,12 @@ clean-v: clean-vo
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
 .PHONY: dep-vo
-dep-vo: lpo.mk
+dep-vo: vo.mk
+vo.mk: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
 #find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-vo {} \; > vo.mk
 
 include vo.mk
-
-vo.mk:
-	touch $@
 
 .PHONY: clean-dep-vo
 clean-dep-vo:
