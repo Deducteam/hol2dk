@@ -9,6 +9,8 @@ REMOVE*)
 open Xprelude
 open Fusion
 
+let open_file n = log "generate %s ...\n%!" n; open_out n;;
+
 let command s =
   if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
 

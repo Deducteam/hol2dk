@@ -307,7 +307,10 @@ let term_abbrevs_deps n =
   :: list_init (!abbrev_part - 1) (fun k -> n^"_term_abbrevs"^part(k+2))
 ;;
 
-let require_term_abbrevs oc n = List.iter (require oc) (term_abbrevs_deps n);;
+let iter_term_abbrevs_deps f n =
+  f (n^"_term_abbrevs");
+  for k = 2 to !abbrev_part do f (n^"_term_abbrevs"^part k) done
+;;
 
 (* [new_decl_term_abbrevs oc] outputs on [oc] the term abbreviations
    in several files. *)
@@ -636,24 +639,32 @@ print thm_%d;\n" x*)
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
 
-(* [export_no_dep n f] creates a file named [n^".lp"] and calls [f] with the
-   corresponding out_channel. *)
-let export_no_dep n f =
-  let filename = n ^ ".lp" in
-  log "generate %s ...\n%!" filename;
-  let oc = open_out filename in
+(* [generate n f] creates a file named [n] and writes to it by calling
+   [f] with the corresponding out_channel. *)
+let generate n f =
+  log "generate %s ...\n%!" n;
+  let oc = open_out n in
   f oc;
   close_out oc
 ;;
 
-(* [export_deps n l] creates the files [n ^ ".lpo.mk"] and [n ^
-   ".vo.mk"] with the dependencies in [l]. *)
-let export_deps n suffix l =
-  let filename = n ^ suffix ^ ".mk" in
+(* [generate_mk n iter_deps] creates the files [n^".lpo.mk"] and [n^".vo.mk"]
+   and writes to it by calling [iter_deps] with the corresponding
+   out_channels. *)
+let generate_mk n suffix iter_deps =
+  let dep oc d = out oc " %s%s" d suffix in
+  generate (n^"q.lpo.mk") (fun oc -> iter_deps (dep oc));
+  generate (n^".vo.mk") (fun oc -> iter_deps (dep oc))
+;;
+
+(* [export_mk n suffix deps] creates the file [n^suffix^".mk"] with
+   the dependencies of [n^suffix] given by [deps]. *)
+let export_mk n suffix deps =
+  let filename = n^suffix^".mk" in
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
-  let dep oc d = out oc " %s.%s" d suffix in
-  out oc "%s.%s:%a\n" n suffix (list dep) l;
+  let dep oc d = out oc " %s%s" d suffix in
+  out oc "%s%s:%a\n" n suffix (list dep) deps;
   close_out oc
 ;;
 
@@ -664,8 +675,8 @@ let export_deps n suffix l =
    [n^".vo"] respectively. *)
 let export n deps f =
   let deps = "theory_hol"::deps in
-  export_deps n "lpo" deps;
-  export_deps n "vo" ("coq"::deps);
+  export_mk n ".lpo" deps;
+  export_mk n ".vo" ("coq"::deps);
   let filename = n ^ ".lp" in
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
@@ -679,6 +690,8 @@ let max_steps = ref max_int;;
 (* Current proof part. *)
 let cur_part = ref 1;;
 
+(* [export_proofs_in_interval n x y] generates the proof steps of
+   index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
 let export_proofs_in_interval n x y =
   let nb_steps = ref 0 in
   let cur_oc = ref stdout in
@@ -710,34 +723,50 @@ let export_proofs_in_interval n x y =
   close_out !cur_oc
 ;;
 
+(* [export_theorem_proof n] generates the files
+   [n^part(k)^"_proofs.lp"] for some [1<=k<!cur_part] and the file
+   [n^"_proofs.lp"]. *)
 let export_theorem_proof n =
   export_proofs_in_interval n !the_start_idx
-    (!the_start_idx + Array.length !prf_pos - 1)
+    (!the_start_idx + Array.length !prf_pos - 1);
+  log "rename %s_part_%d_proofs.lp into %s.lp ...\n%!" n !cur_part n;
+  command
+    (Printf.sprintf "mv -f %s_part_%d_proofs.lp %s_proofs.lp" n !cur_part n)
 ;;
 
-let theorem_deps b n k =
-  [b^"_types"; b^"_terms"; b^"_axioms"; n^"_type_abbrevs"]
-  @ (if !use_sharing then [n^"_subterm_abbrevs"] else [])
-  @ term_abbrevs_deps n
-  @ list_init k (fun i -> n^part(i+1))
-  @ SetStr.elements !thdeps
+let iter_theorem_deps f b n =
+  f "theory_hol";
+  f (b^"_types");
+  f (b^"_terms");
+  f (b^"_axioms");
+  f (n^"_type_abbrevs");
+  if !use_sharing then f (n^"_subterm_abbrevs");
+  iter_term_abbrevs_deps f n;
+  SetStr.iter f !thdeps
 ;;
 
-let require_theorem_deps oc b n k =
-  List.iter (require oc) ("theory_hol"::theorem_deps b n k)
-;;
-
+(* [export_theorem_deps n] generates the files [n^part(k)^".lp"]
+   for some [1<=k<!cur_part] and the file [n^".lp"]. *)
 let export_theorem_deps b n =
   for i = 1 to !cur_part do
-    let f = n ^ part i in
-    let deps = "theory_hol"::theorem_deps b n (i-1) in
-    export_no_dep (f^"_deps") (fun oc -> List.iter (require oc) deps);
-    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp");
-    export_deps f "lpo" deps;
-    export_deps f "vo" ("coq"::deps)
-  done;
-  log "generate %s.lp ...\n%!" n;
-  command (Printf.sprintf "mv -f %s_part_%d.lp %s.lp" n !cur_part n)
+    let p = if i < !cur_part then n^part i else n in
+    let oc_lp = open_file (p^"_deps.lp")
+    and oc_lpo_mk = open_file (p^".lpo.mk")
+    and oc_vo_mk = open_file (p^".vo.mk") in
+    out oc_lpo_mk "%s.lpo:" p;
+    out oc_vo_mk "%s.vo: coq.vo" p;
+    let f dep =
+      require oc_lp dep;
+      out oc_lpo_mk " %s.lpo" dep;
+      out oc_vo_mk " %s.vo" dep
+    in
+    iter_theorem_deps f b n;
+    for j = 1 to i-1 do f (n^part j) done;
+    close_out oc_lp;
+    close_out oc_lpo_mk;
+    close_out oc_vo_mk;
+    concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
+  done
 ;;
 
 (****************************************************************************)
@@ -814,8 +843,6 @@ let export_theorems_as_axioms b map_thid_name =
   export (b^"_opam") [b^"_types";b^"_terms";b^"_axioms"]
     (fun oc -> out_map_thid_name true oc map_thid_name)
 ;;
-
-(* for hol2dk part *)
 
 let export_proofs_part b dg k x y =
   part_max_idx := y;
