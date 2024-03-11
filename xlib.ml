@@ -9,6 +9,8 @@ REMOVE*)
 open Xprelude
 open Fusion
 
+let part i = "_part_" ^ string_of_int i;;
+
 let command s =
   if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
 

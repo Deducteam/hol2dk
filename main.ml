@@ -820,22 +820,21 @@ and command = function
      let k = integer k and x = integer x and y = integer y in
      if k < 1 || k > nb_parts || x < 0 || y < x then wrong_arg();
      read_sig b;
-     let suffix = "_part_" ^ string_of_int k in
      read_pos b;
      init_proof_reading b;
      read_use b;
      if is_dk f then
        begin
          Xdk.export_proofs_part b k x y;
-         Xdk.export_term_abbrevs b suffix;
-         Xdk.export_type_abbrevs b suffix
+         Xdk.export_term_abbrevs b (b^part k);
+         Xdk.export_type_abbrevs b (b^part k)
        end
      else
        begin
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         Xlp.export_term_abbrevs b b suffix;
-         Xlp.export_type_abbrevs b b suffix
+         Xlp.export_term_abbrevs b (b^part k);
+         Xlp.export_type_abbrevs b (b^part k)
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
@@ -898,7 +897,7 @@ and command = function
          close_in !Xproof.ic_prf;
          Xlp.new_export_term_abbrevs b n;
          Xlp.export_theorem_deps b n;
-         Xlp.export_type_abbrevs b n "";
+         Xlp.export_type_abbrevs b n;
          0
        end
 
@@ -944,8 +943,8 @@ and command = function
        begin
          Xlp.export_proofs b b r;
          if r = All then Xlp.export_theorems b (read_val (b ^ ".thm"));
-         Xlp.export_term_abbrevs b b "";
-         Xlp.export_type_abbrevs b b ""
+         Xlp.export_term_abbrevs b b;
+         Xlp.export_type_abbrevs b b
        end;
      close_in !Xproof.ic_prf;
      0

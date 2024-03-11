@@ -300,13 +300,14 @@ let max_abbrevs = ref max_int;;
 (* Number of term_abbrevs_part files. *)
 let abbrev_part = ref 0;;
 
-let abbrev_part_name k = "_term_abbrevs_part_" ^ string_of_int k;;
+let require oc n = out oc "require open hol-light.%s;\n" n;;
 
-let require oc n suffix = out oc "require open hol-light.%s%s;\n" n suffix;;
+let term_abbrevs_deps n =
+  (n^"_term_abbrevs")
+  :: List.init (!abbrev_part - 1) (fun k -> n^"_term_abbrevs"^part(k+2))
+;;
 
-let require_term_abbrevs oc n =
-  require oc n "_term_abbrevs";
-  for k = 2 to !abbrev_part do require oc n (abbrev_part_name k) done;;
+let require_term_abbrevs oc n = List.iter (require oc) (term_abbrevs_deps n);;
 
 (* [new_decl_term_abbrevs oc] outputs on [oc] the term abbreviations
    in several files. *)
@@ -316,14 +317,14 @@ let new_decl_term_abbrevs b n =
   let create_new_part() =
     incr abbrev_part;
     let f = if !abbrev_part = 1 then n ^ "_term_abbrevs.lp"
-            else n ^ abbrev_part_name !abbrev_part ^ ".lp" in
+            else n ^ "_term_abbrevs" ^ part !abbrev_part ^ ".lp" in
     log "generate %s ...\n%!" f;
     let oc = open_out f in
     cur_oc := oc;
-    require oc "theory_hol" "";
-    List.iter (require oc b) ["_types"; "_terms"];
-    require oc n "_type_abbrevs";
-    if !use_sharing then require oc n "_subterm_abbrevs"
+    require oc "theory_hol";
+    List.iter (require oc) [b^"_types"; b^"_terms"];
+    require oc (n^"_type_abbrevs");
+    if !use_sharing then require oc (n^"_subterm_abbrevs")
   in
   let handle_abbrev t x =
     incr cur_abbrev;
@@ -635,39 +636,66 @@ print thm_%d;\n" x*)
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
 
-let part_name n i = n ^ "_part_" ^ string_of_int i;;
-
-(* Current proof part. *)
-let cur_part = ref 1;;
-
-let theorem_deps oc b n k =
-  List.iter (require oc b) ["_types"; "_terms"; "_axioms"];
-  List.iter (require oc n) ["_type_abbrevs"];
-  if !use_sharing then require oc n "_subterm_abbrevs";
-  require_term_abbrevs oc n;
-  for i = 1 to k do require oc n ("_part_" ^ string_of_int i) done;
-  SetStr.iter (fun d -> require oc d "") !thdeps
-;;
-
-(* [export n suffix f] creates a file named [n ^ suffix ^ ".lp"] and
-   calls [f] with the corresponding out_channel. *)
-let export n suffix f =
-  let filename = n ^ suffix ^ ".lp" in
+(* [export_deps n l] creates the files [n ^ ".lpo.mk"] and [n ^
+   ".vo.mk"] with the dependencies in [l]. *)
+let export_deps n suffix l =
+  let filename = n ^ suffix ^ ".mk" in
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
-  require oc "theory_hol" "";
+  let dep oc d = out oc " %s.%s" d suffix in
+  out oc "%s.%s:%a\n" n suffix (list dep) l;
+  close_out oc
+;;
+
+let theorem_deps b n k =
+  [b^"_types"; n^"_type_abbrevs"; b^"_terms"; b^"_axioms"]
+  @ (if !use_sharing then [n^"_subterm_abbrevs"] else [])
+  @ term_abbrevs_deps n
+  @ List.init k (fun i -> n^part(i+1))
+  @ SetStr.elements !thdeps
+;;
+
+let theorem_deps oc b n k = List.iter (require oc) (theorem_deps b n k);;
+
+(* [export n f] creates a file named [n^".lp"] and calls [f] with the
+   corresponding out_channel. *)
+let export n f =
+  let filename = n ^ ".lp" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  require oc "theory_hol";
+  f oc;
+  close_out oc
+;;
+
+(* [export_with_deps n deps f] creates a file named [n^".lp"], add in
+   it require commands for [deps], and calls [f] with the
+   corresponding out_channel, and creates files named [n^".lpo.mk"]
+   and [n^".vo.mk"] with the dependencies to generate [n^".lpo"] and
+   [n^".vo"] respectively. *)
+let export_with_deps n deps f =
+  let deps = "theory_hol"::deps in
+  export_deps n "lpo" deps;
+  export_deps n "vo" ("coq"::deps);
+  let filename = n ^ ".lp" in
+  log "generate %s ...\n%!" filename;
+  let oc = open_out filename in
+  List.iter (require oc) deps;
   f oc;
   close_out oc
 ;;
 
 let max_steps = ref max_int;;
 
+(* Current proof part. *)
+let cur_part = ref 1;;
+
 let export_proofs_in_interval n x y =
   let nb_steps = ref 0 in
   let cur_oc = ref stdout in
   let start_part k =
     incr cur_part;
-    let f = part_name n !cur_part ^ "_proofs.lp" in
+    let f = n ^ part !cur_part ^ "_proofs.lp" in
     log "generate %s ...\n%!" f;
     cur_oc := open_out f;
     nb_steps := 0;
@@ -685,7 +713,7 @@ let export_proofs_in_interval n x y =
     if get_use k >= 0 then
       begin
         incr nb_steps;
-        if !nb_steps >= !max_steps then (close_out !cur_oc; start_part k);
+        if !nb_steps > !max_steps then (close_out !cur_oc; start_part k);
         (*log "proof %d ...\n%!" k;*)
         theorem !cur_oc k (proof_at k)
       end
@@ -700,8 +728,8 @@ let export_theorem_proof n =
 
 let export_theorem_deps b n =
   for i = 1 to !cur_part do
-    let f = part_name n i in
-    export f "_deps" (fun oc -> theorem_deps oc b n (i - 1));
+    let f = n ^ part i in
+    export (f^"_deps") (fun oc -> theorem_deps oc b n (i - 1));
     concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")
   done;
   log "generate %s.lp ...\n%!" n;
@@ -718,12 +746,11 @@ let types() =
 ;;
 
 let export_types b =
-  export b "_types" (fun oc -> list decl_typ oc (types()))
+  export_with_deps (b^"_types") [] (fun oc -> list decl_typ oc (types()))
 ;;
 
-let export_type_abbrevs b n s =
-  export n (s ^ "_type_abbrevs")
-    (fun oc -> require oc b "_types"; decl_type_abbrevs oc)
+let export_type_abbrevs b n =
+  export_with_deps (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 ;;
 
 let constants() =
@@ -732,44 +759,34 @@ let constants() =
 ;;
 
 let export_terms b =
-  export b "_terms"
-    (fun oc -> require oc b "_types"; list decl_sym oc (constants()))
+  export_with_deps (b^"_terms") [b^"_types"]
+    (fun oc -> list decl_sym oc (constants()))
 ;;
 
-let export_term_abbrevs b n s =
-  export n (s ^ "_term_abbrevs")
-    (fun oc ->
-      List.iter (require oc b) ["_types"; "_terms"];
-      require oc n (s ^ "_type_abbrevs");
-      if !use_sharing then require oc n (s ^ "_subterm_abbrevs");
-      decl_term_abbrevs oc);
+let export_term_abbrevs b n =
+  let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
+  export_with_deps (n^"_term_abbrevs")
+    (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
+    decl_term_abbrevs;
   if !use_sharing then
-    export n (s ^ "_subterm_abbrevs")
-      (fun oc ->
-        List.iter (require oc b) ["_types"; "_terms"];
-        require oc n (s ^ "_type_abbrevs");
-        decl_subterm_abbrevs oc)
+    export_with_deps (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
 ;;
 
 let new_export_term_abbrevs b n =
   new_decl_term_abbrevs b n;
   if !use_sharing then
-    export n "_subterm_abbrevs"
-      (fun oc ->
-        List.iter (require oc b) ["_types"; "_terms"];
-        require oc n "_type_abbrevs";
-        decl_subterm_abbrevs oc)
+    export_with_deps (n^"_subterm_abbrevs")
+      [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
+      decl_subterm_abbrevs
 ;;
 
 let export_axioms b =
-  export b "_axioms"
-    (fun oc ->
-      List.iter (require oc b) ["_types"; "_terms"];
-      decl_axioms oc (axioms()))
+  export_with_deps (b^"_axioms") [b^"_types"; b^"_terms"]
+    (fun oc -> decl_axioms oc (axioms()))
 ;;
 
 let export_proofs b n r =
-  export n "_proofs" (fun oc -> theorem_deps oc b n 0; proofs_in_range oc r)
+  export (n^"_proofs") (fun oc -> theorem_deps oc b n 0; proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =
@@ -780,43 +797,37 @@ let out_map_thid_name as_axiom oc map_thid_name =
 ;;
 
 let export_theorems b map_thid_name =
-  export b ""
-    (fun oc ->
-      List.iter (require oc b) ["_types";"_type_abbrevs";"_terms"];
-      require_term_abbrevs oc b;
-      List.iter (require oc b) ["_axioms";"_proofs"];
-      out_map_thid_name false oc map_thid_name)
+  export_with_deps b
+    ([b^"_types";b^"_type_abbrevs";b^"_terms"]
+     @ term_abbrevs_deps b @ [b^"_axioms";b^"_proofs"])
+    (fun oc -> out_map_thid_name false oc map_thid_name)
 ;;
 
 let export_theorems_as_axioms b map_thid_name =
-  export b "_opam"
-    (fun oc ->
-      List.iter (require oc b) ["_types";"_terms";"_axioms"];
-      out_map_thid_name true oc map_thid_name)
+  export_with_deps (b^"_opam") [b^"_types";b^"_terms";b^"_axioms"]
+    (fun oc -> out_map_thid_name true oc map_thid_name)
 ;;
 
 (* for hol2dk part *)
 
-let export_proofs_part =
-  let part i s = "_part_" ^ string_of_int i ^ s in
-  fun b dg k x y ->
+let export_proofs_part b dg k x y =
   part_max_idx := y;
-  export b ("_part_" ^ string_of_int k)
+  export (b^part k)
     (fun oc ->
-      List.iter (require oc b)
-        ["_types"; part k "_type_abbrevs"; "_terms"; part k "_term_abbrevs";
-         "_axioms"];
+      List.iter (require oc)
+        [b^"_types"; b^part k^"_type_abbrevs"; b^"_terms";
+         b^part k^"_term_abbrevs"; b^"_axioms"];
       for i = 1 to k-1 do
-        if dg.(k-1).(i-1) > 0 then require oc b ("_part_" ^ string_of_int i)
+        if dg.(k-1).(i-1) > 0 then require oc (b^part i)
       done;
       proofs_in_interval oc x y)
 ;;
 
 let export_theorems_part k b map_thid_name =
-  export b ""
+  export b
     (fun oc ->
-      List.iter (require oc b) ["_types";"_terms";"_axioms"];
-      for i = 1 to k do require oc b ("_part_" ^ string_of_int i) done;
+      List.iter (require oc) [b^"_types";b^"_terms";b^"_axioms"];
+      for i = 1 to k do require oc (b^part i) done;
       out_map_thid_name false oc map_thid_name)
 ;;
 (*
