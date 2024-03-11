@@ -111,14 +111,14 @@ jobs:
           make dep
           make -j3 lpo
           hol2dk resize thm75360.lp 500
-          make dep
+          make recompute-deps
           make -j3 lpo
           hol2dk resize thm75360.lp 100
-          make dep
+          make recompute-deps
           make -j3 lpo
           hol2dk resize thm75360_term_abbrevs.lp 300
-          make dep
+          make recompute-deps
           make -j3 lpo
           hol2dk resize thm75360_term_abbrevs.lp 100
-          make dep
+          make recompute-deps
           make -j3 lpo

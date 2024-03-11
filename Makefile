@@ -52,8 +52,13 @@ lpo.mk:
 
 .PHONY: dep-lpo
 dep-lpo:
-	cat *.lpo.mk > lpo.mk
-#	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
+	echo 'theory_hol.lpo:' > lpo.mk
+	cat *.lpo.mk >> lpo.mk
+
+.PHONY: recompute-deps
+recompute-deps:
+	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
+	$(MAKE) dep-vo
 
 .PHONY: clean-dep-lpo
 clean-dep-lpo:

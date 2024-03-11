@@ -372,7 +372,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   in
   match ty_su with
   | [] ->
-     out oc "(thm_%d%a%a%a)" i2 (list_prefix " " typ) tvs2
+     out oc "(lem%d%a%a%a)" i2 (list_prefix " " typ) tvs2
        (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
   | _ ->
      (* vs2 is now the application of ty_su on vs2 *)
@@ -381,7 +381,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
      let ts2 = List.map (inst ty_su) ts2 in
      (* bs is the list of types obtained by applying ty_su on tvs2 *)
      let bs = List.map (type_subst ty_su) tvs2 in
-     out oc "(thm_%d%a%a%a)" i2 (list_prefix " " typ) bs
+     out oc "(lem%d%a%a%a)" i2 (list_prefix " " typ) bs
        (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
 ;;
 
@@ -599,7 +599,7 @@ let decl_theorem oc k p d =
        List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
      let hyps oc ts =
        List.iteri (fun i t -> out oc "h%d : Prf %a => " (i+1) term t) ts in
-     out oc "thm thm_%d : %a%a%aPrf %a := %a%a%a%a.\n" k
+     out oc "thm lem%d : %a%a%aPrf %a := %a%a%a%a.\n" k
        (list (decl_typ_param tvs)) tvs
        (list (decl_param tvs rmap)) xs hyps_typ ts term t
        (list (typ_param tvs)) tvs (list (param tvs rmap)) xs hyps ts
@@ -608,14 +608,14 @@ let decl_theorem oc k p d =
      let term = unabbrev_term tvs rmap in
      let hyps_typ oc ts =
        List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-     out oc "thm_%d : %a%a%aPrf %a.\n" k
+     out oc "lem%d : %a%a%aPrf %a.\n" k
        (list (decl_typ_param tvs)) tvs
        (list (decl_param tvs rmap)) xs hyps_typ ts term t
   | Named_thm n ->
      let term = unabbrev_term tvs rmap in
      let hyps_typ oc ts =
        List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-     out oc "thm thm_%s : %a%a%aPrf %a := thm_%d.\n" n
+     out oc "thm lem%s : %a%a%aPrf %a := lem%d.\n" n
        (list (decl_typ_param tvs)) tvs
        (list (unabbrev_decl_param tvs rmap)) xs hyps_typ ts term t k
 ;;

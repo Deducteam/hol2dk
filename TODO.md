@@ -35,8 +35,6 @@ TODO
 
 - improve efficiency of code outputing dk/lp (avoid multiple term traversals)
 
-- generate lp.mk and coq.mk at the same time as lp files
-
 - extend split command to dedukti output
 
 - get rid of use file? in pos files, set pos to -1 for unused theorems?
