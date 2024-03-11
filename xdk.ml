@@ -88,10 +88,10 @@ let unabbrev_typ tvs =
   in typ
 ;;
 
-let part : int option ref = ref None;;
+let cur_part : int option ref = ref None;;
 
 let typ_abbrev oc k =
-  match !part with
+  match !cur_part with
   | None -> out oc "type%d" k
   | Some i -> out oc "type%d_%d" i k
 ;;
@@ -238,7 +238,7 @@ let unabbrev_term tvs =
 ;;
 
 let term_abbrev oc k =
-  match !part with
+  match !cur_part with
   | None -> out oc "term%d" k
   | Some i -> out oc "term%d_%d" i k
 ;;
@@ -709,8 +709,8 @@ def or_elim : p : El bool -> q : El bool -> Prf (or p q)
 (* Dedukti file generation with type and term abbreviations. *)
 (****************************************************************************)
 
-let export basename suffix f =
-  let filename = basename ^ suffix ^ ".dk" in
+let export n f =
+  let filename = n ^ ".dk" in
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
   f oc;
@@ -720,14 +720,14 @@ let export basename suffix f =
 let export_types =
   let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
   fun b ->
-  export b "_types"
+  export (b^"_types")
     (fun oc ->
       out oc "\n(; type constructors ;)\n";
       list decl_typ oc (List.filter f (types())))
 ;;
 
-let export_type_abbrevs b s =
-  export b (s ^ "_type_abbrevs")
+let export_type_abbrevs b =
+  export (b^"_type_abbrevs")
     (fun oc -> out oc "\n(; type abbreviations ;)\n"; decl_map_typ oc)
 ;;
 
@@ -739,19 +739,19 @@ let export_terms =
     | _ -> true
   in
   fun b ->
-  export b "_terms"
+  export (b^"_terms")
     (fun oc ->
       out oc "\n(; constants ;)\n";
       list decl_sym oc (List.filter f (constants())))
 ;;
 
-let export_term_abbrevs b s =
-  export b (s ^ "_term_abbrevs")
+let export_term_abbrevs b =
+  export (b^"_term_abbrevs")
     (fun oc -> out oc "\n(; term abbreviations ;)\n"; decl_map_term oc)
 ;;
 
 let export_axioms b =
-  export b "_axioms"
+  export (b^"_axioms")
     (fun oc ->
       out oc "\n(; axioms ;)\n";
       decl_axioms oc (axioms());
@@ -760,11 +760,11 @@ let export_axioms b =
 ;;
 
 let export_proofs b r =
-  export b "_proofs"
+  export (b^"_proofs")
     (fun oc -> out oc "\n(; theorems ;)\n"; proofs_in_range oc r);;
 
 let export_theorems b map_thid_name =
-  export b "_theorems"
+  export (b^"_theorems")
     (fun oc ->
       out oc "\n(; named theorems ;)\n";
       MapInt.iter
@@ -773,7 +773,7 @@ let export_theorems b map_thid_name =
 ;;
 
 let export_theorems_as_axioms b map_thid_name =
-  export b "_opam"
+  export (b^"_opam")
     (fun oc ->
       out oc "\n(; named theorems ;)\n";
       MapInt.iter
@@ -782,8 +782,8 @@ let export_theorems_as_axioms b map_thid_name =
 ;;
 
 let export_proofs_part b k x y =
-  part := Some k;
-  export b ("_part_" ^ string_of_int k) (fun oc -> proofs_in_interval oc x y)
+  cur_part := Some k;
+  export (b^part k) (fun oc -> proofs_in_interval oc x y)
 ;;
 
 (****************************************************************************)

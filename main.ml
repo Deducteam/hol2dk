@@ -826,8 +826,8 @@ and command = function
      if is_dk f then
        begin
          Xdk.export_proofs_part b k x y;
-         Xdk.export_term_abbrevs b (b^part k);
-         Xdk.export_type_abbrevs b (b^part k)
+         Xdk.export_term_abbrevs (b^part k);
+         Xdk.export_type_abbrevs (b^part k)
        end
      else
        begin
@@ -926,8 +926,8 @@ and command = function
        begin
          Xdk.export_proofs b r;
          if r = All then Xdk.export_theorems b (read_val (b ^ ".thm"));
-         Xdk.export_term_abbrevs b "";
-         Xdk.export_type_abbrevs b "";
+         Xdk.export_term_abbrevs b;
+         Xdk.export_type_abbrevs b;
          log "generate %s.dk ...\n%!" b;
          let infiles =
            List.map (fun s -> b ^ "_" ^ s ^ ".dk")

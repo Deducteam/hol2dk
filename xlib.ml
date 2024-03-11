@@ -50,6 +50,7 @@ let percent k n = (100 * k) / n;;
 
 let part i = "_part_" ^ string_of_int i;;
 
+(* Because [List.init n f] fails if [n < 0]. *)
 let init n f = if n <= 0 then [] else List.init n f;;
 
 (* [pos_first f l] returns the position (counting from 0) of the first
