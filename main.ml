@@ -833,7 +833,7 @@ and command = function
        begin
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         Xlp.export_term_abbrevs b (b^part k);
+         Xlp.export_term_abbrevs_in_one_file b (b^part k);
          Xlp.export_type_abbrevs b (b^part k)
        end;
      close_in ic;
@@ -943,7 +943,7 @@ and command = function
        begin
          Xlp.export_proofs b r;
          if r = All then Xlp.export_theorems b (read_val (b ^ ".thm"));
-         Xlp.export_term_abbrevs b b;
+         Xlp.export_term_abbrevs_in_one_file b b;
          Xlp.export_type_abbrevs b b
        end;
      close_in !Xproof.ic_prf;
