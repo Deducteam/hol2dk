@@ -730,8 +730,11 @@ let require_theorem_deps oc b n k =
 let export_theorem_deps b n =
   for i = 1 to !cur_part do
     let f = n ^ part i in
-    export_no_dep (f^"_deps") (fun oc -> require_theorem_deps oc b n (i-1));
-    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp")
+    let deps = "theory_hol"::theorem_deps b n (i-1) in
+    export_no_dep (f^"_deps") (fun oc -> List.iter (require oc) deps);
+    concat (f^"_deps.lp") (f^"_proofs.lp") (f^".lp");
+    export_deps f "lpo" deps;
+    export_deps f "vo" ("coq"::deps)
   done;
   log "generate %s.lp ...\n%!" n;
   command (Printf.sprintf "mv -f %s_part_%d.lp %s.lp" n !cur_part n)
@@ -786,8 +789,11 @@ let export_axioms b =
 ;;
 
 let export_proofs b r =
-  export_no_dep (b^"_proofs")
-    (fun oc -> require_theorem_deps oc b b 0; proofs_in_range oc r)
+  export (b^"_proofs")
+    ([b^"_types"; b^"_terms"; b^"_axioms"; b^"_type_abbrevs"]
+     @ (if !use_sharing then [b^"_subterm_abbrevs"] else [])
+     @ term_abbrevs_deps b)
+    (fun oc -> proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =
