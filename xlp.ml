@@ -272,6 +272,43 @@ let term rmap oc t = abbrev_term oc (rename rmap t);;
   else unabbrev_term rmap oc (rename rmap t);;*)
 
 (****************************************************************************)
+(* Handling of file dependencies. *)
+(****************************************************************************)
+
+let require oc n = out oc "require open hol-light.%s;\n" n;;
+
+(* [create n iter_deps] creates a file [n^".lp"] and returns its
+   out_channel. It also adds in it require commands following the
+   dependency iterator [iter_deps], and creates the files
+   [n^".lpo.mk"] and [n^".vo.mk"] to record the dependencies of
+   [n^".lpo"] and [n^".vo"] respectively. *)
+let create (p:string) (iter_deps:(string->unit)->unit) =
+  let oc_lp = open_file (p^".lp")
+  and oc_lpo_mk = open_file (p^".lpo.mk")
+  and oc_vo_mk = open_file (p^".vo.mk") in
+  out oc_lpo_mk "%s.lpo:" p;
+  out oc_vo_mk "%s.vo: coq.vo" p;
+  let handle dep =
+    require oc_lp dep;
+    out oc_lpo_mk " %s.lpo" dep;
+    out oc_vo_mk " %s.vo" dep
+  in
+  handle "theory_hol";
+  iter_deps handle;
+  out oc_lpo_mk "\n";
+  close_out oc_lpo_mk;
+  out oc_vo_mk "\n";
+  close_out oc_vo_mk;
+  oc_lp
+;;
+
+let export_iter p iter_deps f =
+  let oc = create p iter_deps in f oc; close_out oc
+;;
+
+let export p deps = export_iter p (fun h -> List.iter h deps);;
+
+(****************************************************************************)
 (* Translation of term abbreviations. *)
 (****************************************************************************)
 
@@ -299,8 +336,6 @@ let max_abbrevs = ref max_int;;
 (* Number of term_abbrevs_part files. *)
 let abbrev_part = ref 0;;
 
-let require oc n = out oc "require open hol-light.%s;\n" n;;
-
 let iter_term_abbrevs_deps n f =
   f (n^"_term_abbrevs");
   for k = 2 to !abbrev_part do f (n^"_term_abbrevs"^part k) done
@@ -314,15 +349,15 @@ let export_term_abbrevs b n =
   let cur_oc = ref stdout in
   let create_new_part() =
     incr abbrev_part;
-    let f = if !abbrev_part = 1 then n ^ "_term_abbrevs.lp"
-            else n ^ "_term_abbrevs" ^ part !abbrev_part ^ ".lp" in
-    log "generate %s ...\n%!" f;
-    let oc = open_out f in
-    cur_oc := oc;
-    require oc "theory_hol";
-    List.iter (require oc) [b^"_types"; b^"_terms"];
-    require oc (n^"_type_abbrevs");
-    if !use_sharing then require oc (n^"_subterm_abbrevs")
+    let f = if !abbrev_part = 1 then n ^ "_term_abbrevs"
+            else n ^ "_term_abbrevs" ^ part !abbrev_part in
+    let iter_deps f =
+      f (b^"_types");
+      f (n^"_type_abbrevs");
+      f (b^"_terms");
+      if !use_sharing then f (n^"_subterm_abbrevs")
+    in
+    cur_oc := create f iter_deps
   in
   let handle_abbrev t x =
     incr cur_abbrev;
@@ -634,35 +669,6 @@ print lem%d;\n" x*)
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
 
-(* [export n iter_deps f] creates a file [n^".lp"], adds in it require
-   commands following the dependency iterator [iter_deps], and calls
-   [f] with the corresponding out_channel, and creates the files
-   [n^".lpo.mk"] and [n^".vo.mk"] to record the dependencies of
-   [n^".lpo"] and [n^".vo"] respectively. *)
-let export_iter
-      (p:string) (iter_deps:(string->unit)->unit) (f:out_channel->unit) =
-  let oc_lp = open_file (p^".lp")
-  and oc_lpo_mk = open_file (p^".lpo.mk")
-  and oc_vo_mk = open_file (p^".vo.mk") in
-  out oc_lpo_mk "%s.lpo:" p;
-  out oc_vo_mk "%s.vo: coq.vo" p;
-  let handle dep =
-    require oc_lp dep;
-    out oc_lpo_mk " %s.lpo" dep;
-    out oc_vo_mk " %s.vo" dep
-  in
-  handle "theory_hol";
-  iter_deps handle;
-  out oc_lpo_mk "\n";
-  close_out oc_lpo_mk;
-  out oc_vo_mk "\n";
-  close_out oc_vo_mk;
-  f oc_lp;
-  close_out oc_lp;
-;;
-
-let export p deps = export_iter p (fun h -> List.iter h deps);;
-
 (* Maximum number of proof steps in a proof file. *)
 let max_steps = ref max_int;;
 
@@ -742,7 +748,9 @@ let export_theorem_deps b n =
     iter_theorem_deps f b n;
     for j = 1 to i-1 do f (n^part j) done;
     close_out oc_lp;
+    out oc_lpo_mk "\n";
     close_out oc_lpo_mk;
+    out oc_vo_mk "\n";
     close_out oc_vo_mk;
     concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
   done
