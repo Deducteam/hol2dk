@@ -127,7 +127,11 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-dep-lpo clean-lpo clean-v clean-dep-vo clean-vo clean-opam
+clean-all: clean-split clean-lp clean-dep-lpo clean-lpo clean-v clean-dep-vo clean-vo clean-opam clean-mk
+
+.PHONY: clean-mk
+clean-mk:
+	find . -maxdepth 1 -name '*.lpo.mk' -delete
 
 .PHONY: all
 all:

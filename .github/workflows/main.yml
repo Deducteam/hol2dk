@@ -96,7 +96,7 @@ jobs:
           make split
           make -j3 lp
           make -j3 v
-          make dep
+          #make dep
           make -j3 lpo
       - name: Check resizing
         run: |
@@ -108,17 +108,17 @@ jobs:
           hol2dk link xci
           make split
           make -j3 HOL2DK_OPTIONS='--max-steps 250 --max-abbrevs 200' lp
-          make dep
+          #make dep
           make -j3 lpo
           hol2dk resize thm75360.lp 500
-          make recompute-deps
+          #make dep
           make -j3 lpo
           hol2dk resize thm75360.lp 100
-          make recompute-deps
+          #make dep
           make -j3 lpo
           hol2dk resize thm75360_term_abbrevs.lp 300
-          make recompute-deps
+          #make dep
           make -j3 lpo
           hol2dk resize thm75360_term_abbrevs.lp 100
-          make recompute-deps
+          #make dep
           make -j3 lpo
