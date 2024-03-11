@@ -1,6 +1,14 @@
 NOTES
 -----
 
+## 11/03/24
+
+generation of .lpo.mk files:
+
+hol.ml:
+  - without generation: make -j32 lp 47s dep-lpo 42s
+  - with generation: make -j32 lp 46s dep-lpo 0.4s
+
 ## 07/03/24
 
   * URYSOHN_LEMMA*.vo: --max-size 500000 --max-abbrevs 250 -j16 ~20m
