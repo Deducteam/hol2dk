@@ -284,21 +284,16 @@ let require oc n = out oc "require open hol-light.%s;\n" n;;
    [n^".lpo"] and [n^".vo"] respectively. *)
 let create (p:string) (iter_deps:(string->unit)->unit) =
   let oc_lp = open_file (p^".lp")
-  and oc_lpo_mk = open_file (p^".lpo.mk")
-  and oc_vo_mk = open_file (p^".vo.mk") in
+  and oc_lpo_mk = open_file (p^".lpo.mk") in
   out oc_lpo_mk "%s.lpo:" p;
-  out oc_vo_mk "%s.vo: coq.vo" p;
   let handle dep =
     require oc_lp dep;
     out oc_lpo_mk " %s.lpo" dep;
-    out oc_vo_mk " %s.vo" dep
   in
   handle "theory_hol";
   iter_deps handle;
   out oc_lpo_mk "\n";
   close_out oc_lpo_mk;
-  out oc_vo_mk "\n";
-  close_out oc_vo_mk;
   oc_lp
 ;;
 
@@ -736,22 +731,17 @@ let export_theorem_deps b n =
   for i = 1 to !cur_part do
     let p = if i < !cur_part then n^part i else n in
     let oc_lp = open_file (p^"_deps.lp")
-    and oc_lpo_mk = open_file (p^".lpo.mk")
-    and oc_vo_mk = open_file (p^".vo.mk") in
+    and oc_lpo_mk = open_file (p^".lpo.mk") in
     out oc_lpo_mk "%s.lpo:" p;
-    out oc_vo_mk "%s.vo: coq.vo" p;
     let f dep =
       require oc_lp dep;
       out oc_lpo_mk " %s.lpo" dep;
-      out oc_vo_mk " %s.vo" dep
     in
     iter_theorem_deps f b n;
     for j = 1 to i-1 do f (n^part j) done;
     close_out oc_lp;
     out oc_lpo_mk "\n";
     close_out oc_lpo_mk;
-    out oc_vo_mk "\n";
-    close_out oc_vo_mk;
     concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
   done
 ;;
