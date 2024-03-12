@@ -361,8 +361,6 @@ let export_term_abbrevs b n =
     if !cur_abbrevs >= !max_abbrevs then
       begin
         close_out !cur_oc;
-        (*log "%s_term_abbrevs_part_%d  size: %d\n%!"
-          n !abbrev_part !cur_abbrevs;*)
         create_new_part()
       end;
     abbrev !cur_oc t x
