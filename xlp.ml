@@ -174,7 +174,7 @@ let unabbrev_decl_param rmap oc v = out oc " (%a)" (unabbrev_decl_var rmap) v;;
 (****************************************************************************)
 
 (* Record the size of printed terms. *)
-let cur_abbrevs = ref 0;;
+let abbrev_part_size = ref 0;;
 
 let rec raw_term oc t =
   match t with
@@ -188,14 +188,17 @@ let rec raw_term oc t =
         out oc "(@%a%a)" cst_name n typ_args ps
      end
   | Comb _ ->
-     let h, ts, n = head_args_size t in cur_abbrevs := !cur_abbrevs + n;
+     let h, ts, n = head_args_size t in
+     abbrev_part_size := !abbrev_part_size + n;
      begin match h, ts with
      | Const(("=") as n,_), [_;_]
      | Const(("!"|"?") as n,_), [_] ->
         out oc "(%a%a)" cst_name n (list_prefix " " raw_term) ts
      | _ -> out oc "(%a%a)" raw_term h (list_prefix " " raw_term) ts
      end
-  | Abs(u,v) -> incr cur_abbrevs; out oc "(λ %a, %a)" raw_decl_var u raw_term v
+  | Abs(u,v) ->
+     incr abbrev_part_size;
+     out oc "(λ %a, %a)" raw_decl_var u raw_term v
 ;;
 
 (* [unabbrev_term rmap oc t] prints on [oc] the term [t] with term
@@ -327,47 +330,6 @@ let abbrev oc t (k,n,bs) =
 
 (* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
 let decl_term_abbrevs oc = TrmHashtbl.iter (abbrev oc) htbl_term_abbrev;;
-
-(* Maximum size of a term_abbrev file. *)
-let max_abbrevs = ref max_int;;
-
-(* Number of term_abbrevs_part files. *)
-let abbrev_part = ref 0;;
-
-let iter_term_abbrevs_deps n f =
-  f (n^"_term_abbrevs");
-  for k = 2 to !abbrev_part do f (n^"_term_abbrevs"^part k) done
-;;
-
-(* [export_term_abbrevs b n] writes the term abbreviations in
-   [n^"_term_abbrevs.lp"] and the files
-   [n^"_term_abbrevs"^part(k)^".lp"] if needed. *)
-let export_term_abbrevs b n =
-  let cur_oc = ref stdout in
-  let create_new_part() =
-    incr abbrev_part;
-    cur_abbrevs := 0;
-    let f = if !abbrev_part = 1 then n ^ "_term_abbrevs"
-            else n ^ "_term_abbrevs" ^ part !abbrev_part in
-    let iter_deps f =
-      f (b^"_types");
-      f (n^"_type_abbrevs");
-      f (b^"_terms");
-      if !use_sharing then f (n^"_subterm_abbrevs")
-    in
-    cur_oc := create f iter_deps
-  in
-  let handle_abbrev t x =
-    if !cur_abbrevs >= !max_abbrevs then
-      begin
-        close_out !cur_oc;
-        create_new_part()
-      end;
-    abbrev !cur_oc t x
-  in
-  create_new_part();
-  TrmHashtbl.iter handle_abbrev htbl_term_abbrev
-;;
 
 (* [decl_subterm_abbrevs oc] outputs on [oc] the subterm abbreviations
    with no variables. *)
@@ -665,11 +627,122 @@ print lem%d;\n" x*)
   | Inter(x,y) -> proofs_in_interval oc x y
 ;;
 
+(****************************************************************************)
+(* Generate term abbreviation files. *)
+(****************************************************************************)
+
+let export_term_abbrevs_in_one_file b n =
+  let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
+  export (n^"_term_abbrevs")
+    (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
+    decl_term_abbrevs;
+  if !use_sharing then
+    export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
+;;
+
+(* Maximum size of a term_abbrev file. *)
+let max_abbrevs = ref max_int;;
+
+(* Number of term_abbrevs_part files. *)
+let abbrev_part = ref 0;;
+
+(* Map every abbrev part to its maximal abbrev index. *)
+let htbl_abbrev_part = Hashtbl.create 1000;;
+
+(* [abbrev_part_of i] returns the abbrev part number containing the
+   abbreviation number [i]. *)
+let abbrev_part_of i =
+  let htbl oc = Hashtbl.iter (out oc "(%d,%d)") in
+  let res = ref !abbrev_part in
+  let f part index_max = if index_max >= i then res := min !res part in
+  Hashtbl.iter f htbl_abbrev_part;
+  log "abbrev_part_of %d in %a = %d\n%!" i htbl htbl_abbrev_part !res;
+  !res
+;;
+
+(* [abbrev_parts_of i j] returns the abbrev part numbers containing
+   the abbreviation numbers [i] and [j] respectively. *)
+let _abbrev_parts_of i j =
+  let pi = ref !abbrev_part and pj = ref !abbrev_part in
+  (*let f part index_max =
+    if index_max >= i then pi := min !pi part;
+    if index_max >= j then pj := min !pj part
+  in
+  Hashtbl.iter f htbl_abbrev_part;*)
+  (* optimization: *)
+  let f_j_ge_i part index_max =
+    if index_max >= j then (pj := min !pj part; pi := min !pi part)
+    else if index_max >= i then pi := min !pi part
+  in
+  let f_i_ge_j part index_max =
+    if index_max >= i then (pi := min !pi part; pj := min !pj part)
+    else if index_max >= j then pj := min !pj part
+  in
+  let f = if j >= i then f_j_ge_i else f_i_ge_j in
+  Hashtbl.iter f htbl_abbrev_part;
+  !pi, !pj
+;;
+
+let abbrev_parts_of i j = abbrev_part_of i, abbrev_part_of j;;
+
+(* [export_theorem_term_abbrevs b n] writes the term abbreviations in
+   the files [n^"_term_abbrevs"^part(k)^".lp"]. *)
+let export_theorem_term_abbrevs b n =
+  let cur_oc = ref stdout in
+  let abbrev_idx = ref (-1) in
+  let create_new_part() =
+    incr abbrev_part;
+    abbrev_part_size := 0;
+    let f = n^"_term_abbrevs"^part !abbrev_part in
+    let iter_deps f =
+      f (b^"_types");
+      f (n^"_type_abbrevs");
+      f (b^"_terms");
+      if !use_sharing then f (n^"_subterm_abbrevs")
+    in
+    cur_oc := create f iter_deps
+  in
+  let handle_abbrev t x =
+    incr abbrev_idx;
+    if !abbrev_part_size >= !max_abbrevs then
+      begin
+        close_out !cur_oc;
+        log "abbrev_part %d: index max = %d\n%!" !abbrev_part !abbrev_idx;
+        Hashtbl.add htbl_abbrev_part !abbrev_part !abbrev_idx;
+        create_new_part();
+      end;
+    abbrev !cur_oc t x
+  in
+  create_new_part();
+  (*TrmHashtbl.iter handle_abbrev htbl_term_abbrev*)
+  let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
+  let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
+  let l = List.sort cmp l in
+  List.iter (fun (t,x) -> handle_abbrev t x) l;
+  log "abbrev_part %d: index max = %d\n%!" !abbrev_part !abbrev_idx;
+  Hashtbl.add htbl_abbrev_part !abbrev_part !abbrev_idx
+;;
+
+let export_theorem_term_abbrevs b n =
+  export_theorem_term_abbrevs b n;
+  if !use_sharing then
+    export (n^"_subterm_abbrevs") [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
+      decl_subterm_abbrevs
+;;
+
+(****************************************************************************)
+(* Generate proof files. *)
+(****************************************************************************)
+
 (* Maximum number of proof steps in a proof file. *)
 let max_steps = ref max_int;;
 
 (* Current proof part. *)
-let cur_part = ref 1;;
+let proof_part = ref 1;;
+
+(* Maximum abbreviation index used by each proof part. *)
+let htbl_proof_part = Hashtbl.create 1000;;
+let _ = Hashtbl.add htbl_proof_part 0 (-1);;
 
 (* [export_proofs_in_interval n x y] generates the proof steps of
    index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
@@ -677,8 +750,8 @@ let export_proofs_in_interval n x y =
   let nb_steps = ref 0 in
   let cur_oc = ref stdout in
   let start_part k =
-    incr cur_part;
-    let f = n ^ part !cur_part ^ "_proofs.lp" in
+    incr proof_part;
+    let f = n ^ part !proof_part ^ "_proofs.lp" in
     log "generate %s ...\n%!" f;
     cur_oc := open_out f;
     nb_steps := 0;
@@ -690,47 +763,49 @@ let export_proofs_in_interval n x y =
     done;
     part_max_idx := !i - 2
   in
-  cur_part := 0;
+  proof_part := 0;
   start_part x;
   for k = x to y do
     if get_use k >= 0 then
       begin
         incr nb_steps;
-        if !nb_steps > !max_steps then (close_out !cur_oc; start_part k);
+        if !nb_steps > !max_steps then
+          begin
+            close_out !cur_oc;
+            log "proof_part %d: index max = %d\n%!" !proof_part
+              (TrmHashtbl.length htbl_term_abbrev - 1);
+            Hashtbl.add htbl_proof_part !proof_part
+              (TrmHashtbl.length htbl_term_abbrev - 1);
+            start_part k
+          end;
         (*log "proof %d ...\n%!" k;*)
         theorem !cur_oc k (proof_at k)
       end
   done;
-  close_out !cur_oc
+  close_out !cur_oc;
+  log "proof_part %d: index max = %d\n%!" !proof_part
+    (TrmHashtbl.length htbl_term_abbrev - 1);
+  Hashtbl.add htbl_proof_part !proof_part
+    (TrmHashtbl.length htbl_term_abbrev - 1);
 ;;
 
 (* [export_theorem_proof n] generates the files
-   [n^part(k)^"_proofs.lp"] for some [1<=k<!cur_part] and the file
+   [n^part(k)^"_proofs.lp"] for some [1<=k<!proof_part] and the file
    [n^"_proofs.lp"]. *)
 let export_theorem_proof n =
   export_proofs_in_interval n !the_start_idx
     (!the_start_idx + Array.length !prf_pos - 1);
-  log "rename %s_part_%d_proofs.lp into %s.lp ...\n%!" n !cur_part n;
+  log "rename %s_part_%d_proofs.lp into %s.lp ...\n%!" n !proof_part n;
   command
-    (Printf.sprintf "mv -f %s_part_%d_proofs.lp %s_proofs.lp" n !cur_part n)
+    (Printf.sprintf "mv -f %s_part_%d_proofs.lp %s_proofs.lp" n !proof_part n)
 ;;
 
-let iter_theorem_deps f b n =
-  f "theory_hol";
-  f (b^"_types");
-  f (b^"_terms");
-  f (b^"_axioms");
-  f (n^"_type_abbrevs");
-  if !use_sharing then f (n^"_subterm_abbrevs");
-  iter_term_abbrevs_deps n f;
-  SetStr.iter f !thdeps
-;;
-
-(* [export_theorem_deps n] generates the files [n^part(k)^".lp"]
-   for some [1<=k<!cur_part] and the file [n^".lp"]. *)
+(* [export_theorem_deps n] generates for [1<=i<=!proof_part] the files
+   [n^part(i)^"_deps.lp"] and [n^part(i)^".lp"] assuming that the files
+   [n^part(i)^"_proofs.lp"] are already generated. *)
 let export_theorem_deps b n =
-  for i = 1 to !cur_part do
-    let p = if i < !cur_part then n^part i else n in
+  for i = 1 to !proof_part do
+    let p = if i < !proof_part then n^part i else n in
     let oc_lp = open_file (p^"_deps.lp")
     and oc_lpo_mk = open_file (p^".lpo.mk") in
     out oc_lpo_mk "%s.lpo:" p;
@@ -738,8 +813,20 @@ let export_theorem_deps b n =
       require oc_lp dep;
       out oc_lpo_mk " %s.lpo" dep;
     in
-    iter_theorem_deps f b n;
-    for j = 1 to i-1 do f (n^part j) done;
+    f "theory_hol";
+    f (b^"_types");
+    f (b^"_terms");
+    f (b^"_axioms");
+    f (n^"_type_abbrevs");
+    if !use_sharing then f (n^"_subterm_abbrevs");
+    (*TO BE OPTIMIZED*)
+    (*for j = 1 to !abbrev_part do f (n^"_term_abbrevs"^part j) done;*)
+    let x = Hashtbl.find htbl_proof_part (i-1)
+    and y = Hashtbl.find htbl_proof_part i in
+    let px, py = abbrev_parts_of x y in
+    for j = px to py do f (n^"_term_abbrevs"^part j) done;
+    SetStr.iter f !thdeps;
+    for j = 1 to i-1 do f (n^part j) done; (*TO BE OPTIMIZED*)
     close_out oc_lp;
     out oc_lpo_mk "\n";
     close_out oc_lpo_mk;
@@ -773,22 +860,6 @@ let export_terms b =
   export (b^"_terms") [b^"_types"] (fun oc -> list decl_sym oc (constants()))
 ;;
 
-let export_term_abbrevs_in_one_file b n =
-  let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
-  export (n^"_term_abbrevs")
-    (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
-    decl_term_abbrevs;
-  if !use_sharing then
-    export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
-;;
-
-let export_theorem_term_abbrevs b n =
-  export_term_abbrevs b n;
-  if !use_sharing then
-    export (n^"_subterm_abbrevs") [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
-      decl_subterm_abbrevs
-;;
-
 let export_axioms b =
   export (b^"_axioms") [b^"_types"; b^"_terms"]
     (fun oc -> decl_axioms oc (axioms()))
@@ -800,7 +871,7 @@ let iter_proofs_deps b f =
   f (b^"_terms");
   f (b^"_axioms");
   if !use_sharing then f (b^"_subterm_abbrevs");
-  iter_term_abbrevs_deps b f
+  for k = 1 to !abbrev_part do f (b^"_term_abbrevs"^part k) done
 ;;
 
 let export_proofs b r =

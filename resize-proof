@@ -62,5 +62,5 @@ do
 done
 rm -f $h
 
-echo "warning: all theorems are exported"
+echo "warning: all theorems are exported and dependencies are not optimal"
 echo "do \"make $1\" to optimize this"

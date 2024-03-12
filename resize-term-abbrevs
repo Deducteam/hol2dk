@@ -44,8 +44,7 @@ n=`ls x[0-9]* | wc -l`
 for p in `ls x[0-9]*`
 do
     k=`expr ${p#x} + 0` # remove leading zeros
-    if test $k -eq 1; then s=''; else s=_part_$k; fi
-    g=${b}_term_abbrevs$s.lp
+    g=${b}_term_abbrevs_part_$k.lp
     echo "generate $g ..."
     cat $h $p > $g
     echo "generate ${g}o.mk ..."
