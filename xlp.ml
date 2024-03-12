@@ -661,15 +661,12 @@ let abbrev_part_of i =
 ;;
 
 (* [abbrev_parts_of i j] returns the abbrev part numbers containing
-   the abbreviation numbers [i] and [j] respectively. *)
-let _abbrev_parts_of i j =
+   the abbreviation numbers [i] and [j] respectively. We implement an
+   optimization of [let abbrev_parts_of i j = abbrev_part_of i,
+   abbrev_part_of j] doing only one traversal of
+   [htbl_abbrev_part]. *)
+let abbrev_parts_of i j =
   let pi = ref !abbrev_part and pj = ref !abbrev_part in
-  (*let f part index_max =
-    if index_max >= i then pi := min !pi part;
-    if index_max >= j then pj := min !pj part
-  in
-  Hashtbl.iter f htbl_abbrev_part;*)
-  (* optimization: *)
   let f_j_ge_i part index_max =
     if index_max >= j then (pj := min !pj part; pi := min !pi part)
     else if index_max >= i then pi := min !pi part
@@ -682,8 +679,6 @@ let _abbrev_parts_of i j =
   Hashtbl.iter f htbl_abbrev_part;
   !pi, !pj
 ;;
-
-let abbrev_parts_of i j = abbrev_part_of i, abbrev_part_of j;;
 
 (* [export_theorem_term_abbrevs b n] writes the term abbreviations in
    the files [n^"_term_abbrevs"^part(k)^".lp"]. *)
