@@ -6,13 +6,7 @@ STI_FILES := $(wildcard *.sti)
 
 .PHONY: default
 default:
-	@echo "targets: split lp dep lpo v vo opam clean-<target> clean-all"
-
-.PHONY: dep
-dep: dep-lpo dep-vo
-
-.PHONY: clean-dep
-clean-dep: clean-dep-lpo clean-dep-vo
+	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
 
 .PHONY: split
 split:
@@ -47,18 +41,14 @@ clean-lp: clean-lpo clean-v clean-vo
 
 include lpo.mk
 
-lpo.mk:
-	touch $@
-
-.PHONY: dep-lpo
-dep-lpo:
-	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
-
-.PHONY: clean-dep-lpo
-clean-dep-lpo:
-	rm -f lpo.mk
-
 LP_FILES := $(wildcard *.lp)
+
+lpo.mk: $(LP_FILES:%.lp=%.lpo.mk)
+	cat *.lpo.mk > lpo.mk
+#	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
+
+theory_hol.lpo.mk: theory_hol.lp
+	$(HOL2DK_DIR)/dep-lpo $< > $@
 
 .PHONY: lpo
 lpo: $(LP_FILES:%.lp=%.lpo)
@@ -81,19 +71,11 @@ v: $(LP_FILES:%.lp=%.v)
 clean-v: clean-vo
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
-.PHONY: dep-vo
-dep-vo: lpo.mk
+vo.mk: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
-#find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-vo {} \; > vo.mk
+#	find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-vo {} \; > vo.mk
 
 include vo.mk
-
-vo.mk:
-	touch $@
-
-.PHONY: clean-dep-vo
-clean-dep-vo:
-	rm -f vo.mk
 
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
@@ -123,15 +105,18 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-dep-lpo clean-lpo clean-v clean-dep-vo clean-vo clean-opam
+clean-all: clean-split clean-lp clean-lpo clean-v clean-vo clean-opam clean-mk
+
+.PHONY: clean-mk
+clean-mk:
+	find . -maxdepth 1 -name '*.lpo.mk' -delete
+	rm -f lpo.mk vo.mk
 
 .PHONY: all
 all:
 	$(MAKE) clean-all
 	$(MAKE) split
 	$(MAKE) lp
-	$(MAKE) dep-lpo
 	$(MAKE) lpo
 	$(MAKE) v
-	$(MAKE) dep-vo
 	$(MAKE) vo

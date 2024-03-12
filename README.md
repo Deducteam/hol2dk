@@ -253,11 +253,10 @@ After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check fi
 - `split` to do `hol2dk split`
 - `lp` to generate lp files
 - `v` to translate lp files to Coq
-- `dep` to generate dependencies to check lp or v files in parallel
 - `lpo` to check lp files
 - `vo` to check Coq files
 
-The order of targets is important: `split` must be done first, `v` will do `lp`, and `dep` must be done after `lp` and before `lpo` or `vo`.
+The order of targets is important: `split` must be done first and `lp` second.
 
 You can also write in a file called `FILES_WITH_SHARING` a space-separated list of theorem names for which sharing is needed.
 

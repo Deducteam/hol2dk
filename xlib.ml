@@ -9,6 +9,8 @@ REMOVE*)
 open Xprelude
 open Fusion
 
+let open_file n = log "generate %s ...\n%!" n; open_out n;;
+
 let command s =
   if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
 
@@ -46,7 +48,9 @@ let iter_parts nb_proofs nb_parts f =
 (* Functions on basic data structures. *)
 (****************************************************************************)
 
-let percent k n = (100 * k) / n
+let percent k n = (100 * k) / n;;
+
+let part i = "_part_" ^ string_of_int i;;
 
 (* [pos_first f l] returns the position (counting from 0) of the first
    element of [l] satisfying [f]. Raises Not_found if there is no such

@@ -16,6 +16,8 @@ case $1 in
     *) error "not a filename ending with _term_abbrevs.lp";;
 esac
 
+if test -z "$HOL2DK_DIR"; then error '$HOL2DK_DIR is not set'; fi
+
 if test ! -f $1; then error "$1 does not exist"; fi
 max=$2
 
@@ -46,6 +48,8 @@ do
     g=${b}_term_abbrevs$s.lp
     echo "generate $g ..."
     cat $h $p > $g
+    echo "generate ${g}o.mk ..."
+    $HOL2DK_DIR/dep-lpo $g > ${g}o.mk
     rm -f $p
 done
 rm -f $h
@@ -61,4 +65,6 @@ do
         sed -i -e "${l}i require open hol-light.${b}_term_abbrevs_part_$k;" $f
         k=`expr $k + 1`
     done
+    echo "update ${f}o.mk ..."
+    $HOL2DK_DIR/dep-lpo $f > ${f}o.mk
 done

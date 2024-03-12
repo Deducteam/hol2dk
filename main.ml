@@ -117,6 +117,12 @@ hol2dk env
 hol2dk nbp $file
   print the number of proof steps in $file.prf
 
+hol2dk resize $file_term_abbrevs.lp $n
+  rebuild the term abbreviation files of $file.lp with --max-abbrevs $n
+
+hol2dk resize $file.lp $n
+  rebuild the proof files of $file.lp with --max-steps $n
+
 hol2dk proof $file $x $y
   print proof steps between theorem indexes $x and $y
 
@@ -820,22 +826,21 @@ and command = function
      let k = integer k and x = integer x and y = integer y in
      if k < 1 || k > nb_parts || x < 0 || y < x then wrong_arg();
      read_sig b;
-     let suffix = "_part_" ^ string_of_int k in
      read_pos b;
      init_proof_reading b;
      read_use b;
      if is_dk f then
        begin
          Xdk.export_proofs_part b k x y;
-         Xdk.export_term_abbrevs b suffix;
-         Xdk.export_type_abbrevs b suffix
+         Xdk.export_term_abbrevs (b^part k);
+         Xdk.export_type_abbrevs (b^part k)
        end
      else
        begin
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         Xlp.export_term_abbrevs b b suffix;
-         Xlp.export_type_abbrevs b b suffix
+         Xlp.export_term_abbrevs_in_one_file b (b^part k);
+         Xlp.export_type_abbrevs b (b^part k)
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
@@ -896,9 +901,9 @@ and command = function
        begin
          Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
-         Xlp.new_export_term_abbrevs b n;
+         Xlp.export_theorem_term_abbrevs b n;
          Xlp.export_theorem_deps b n;
-         Xlp.export_type_abbrevs b n "";
+         Xlp.export_type_abbrevs b n;
          0
        end
 
@@ -927,8 +932,8 @@ and command = function
        begin
          Xdk.export_proofs b r;
          if r = All then Xdk.export_theorems b (read_val (b ^ ".thm"));
-         Xdk.export_term_abbrevs b "";
-         Xdk.export_type_abbrevs b "";
+         Xdk.export_term_abbrevs b;
+         Xdk.export_type_abbrevs b;
          log "generate %s.dk ...\n%!" b;
          let infiles =
            List.map (fun s -> b ^ "_" ^ s ^ ".dk")
@@ -942,10 +947,10 @@ and command = function
        end
      else
        begin
-         Xlp.export_proofs b b r;
+         Xlp.export_proofs b r;
          if r = All then Xlp.export_theorems b (read_val (b ^ ".thm"));
-         Xlp.export_term_abbrevs b b "";
-         Xlp.export_type_abbrevs b b ""
+         Xlp.export_term_abbrevs_in_one_file b b;
+         Xlp.export_type_abbrevs b b
        end;
      close_in !Xproof.ic_prf;
      0

@@ -1,6 +1,21 @@
 NOTES
 -----
 
+## 11/03/24
+
+generation of .lpo.mk files:
+
+hol.ml:
+  - without generation: make -j32 lp 47s dep-lpo 42s
+  - with generation: make -j32 lp 46s dep-lpo 0.4s
+
+## 07/03/24
+
+  * URYSOHN_LEMMA*.vo: --max-size 500000 --max-abbrevs 250 -j16 ~20m
+  * CHAIN_BOUNDARY_BOUNDARY*.vo: --max-size 500000 --max-abbrevs 250 -j16 ~120m
+  * GRASSMANN_PLUCKER_4: --max-size 20000 --max-abbrevs 100 -j1 ~40m
+  * HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS: --max-size 20000 --max-abbrevs 250 out of memory
+
 ## 06/03/24
 
   * CHAIN_BOUNDARY_BOUNDARY.lp: 38m50s

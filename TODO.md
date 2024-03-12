@@ -1,9 +1,15 @@
 TODO
 ----
 
+- name lemmas with prefix "lem" instead of "thm_"
+
+- split abbrevs according to size, not number
+
 - generate proof parts in parallel like with hol2dk mk
 
 - generate term_abbrevs parts in parallel by dumping the htable and then reading the dumped list in parallel
+
+- optimize dependencies of a proof part wrt term abbrevs by defining term abbrevs in order and recording the term abbrevs used by each proof part
 
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 
@@ -25,11 +31,9 @@ TODO
 
 - remove the need for sed after lambdapi export -o stt_coq
 
-- remove/comment code for mk (i.e. use split as default)
+- remove/comment code for mk? (i.e. use split as default)
 
 - improve efficiency of code outputing dk/lp (avoid multiple term traversals)
-
-- generate lp.mk and coq.mk at the same time as lp files
 
 - extend split command to dedukti output
 
