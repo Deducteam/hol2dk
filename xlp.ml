@@ -173,6 +173,9 @@ let unabbrev_decl_param rmap oc v = out oc " (%a)" (unabbrev_decl_var rmap) v;;
 (* Translation of terms. *)
 (****************************************************************************)
 
+(* Record the size of printed terms. *)
+let cur_abbrevs = ref 0;;
+
 let rec raw_term oc t =
   match t with
   | Var(n,_) -> name oc n
@@ -185,14 +188,14 @@ let rec raw_term oc t =
         out oc "(@%a%a)" cst_name n typ_args ps
      end
   | Comb _ ->
-     let h, ts = head_args t in
+     let h, ts, n = head_args_size t in cur_abbrevs := !cur_abbrevs + n;
      begin match h, ts with
      | Const(("=") as n,_), [_;_]
      | Const(("!"|"?") as n,_), [_] ->
         out oc "(%a%a)" cst_name n (list_prefix " " raw_term) ts
      | _ -> out oc "(%a%a)" raw_term h (list_prefix " " raw_term) ts
      end
-  | Abs(u,v) -> out oc "(λ %a, %a)" raw_decl_var u raw_term v
+  | Abs(u,v) -> incr cur_abbrevs; out oc "(λ %a, %a)" raw_decl_var u raw_term v
 ;;
 
 (* [unabbrev_term rmap oc t] prints on [oc] the term [t] with term
@@ -325,7 +328,7 @@ let abbrev oc t (k,n,bs) =
 (* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
 let decl_term_abbrevs oc = TrmHashtbl.iter (abbrev oc) htbl_term_abbrev;;
 
-(* Maximum number of abbreviations in a term_abbrev file. *)
+(* Maximum size of a term_abbrev file. *)
 let max_abbrevs = ref max_int;;
 
 (* Number of term_abbrevs_part files. *)
@@ -340,10 +343,10 @@ let iter_term_abbrevs_deps n f =
    [n^"_term_abbrevs.lp"] and the files
    [n^"_term_abbrevs"^part(k)^".lp"] if needed. *)
 let export_term_abbrevs b n =
-  let cur_abbrev = ref 0 in
   let cur_oc = ref stdout in
   let create_new_part() =
     incr abbrev_part;
+    cur_abbrevs := 0;
     let f = if !abbrev_part = 1 then n ^ "_term_abbrevs"
             else n ^ "_term_abbrevs" ^ part !abbrev_part in
     let iter_deps f =
@@ -355,12 +358,12 @@ let export_term_abbrevs b n =
     cur_oc := create f iter_deps
   in
   let handle_abbrev t x =
-    incr cur_abbrev;
-    if !cur_abbrev >= !max_abbrevs then
+    if !cur_abbrevs >= !max_abbrevs then
       begin
         close_out !cur_oc;
-        create_new_part();
-        cur_abbrev := 0;
+        (*log "%s_term_abbrevs_part_%d  size: %d\n%!"
+          n !abbrev_part !cur_abbrevs;*)
+        create_new_part()
       end;
     abbrev !cur_oc t x
   in

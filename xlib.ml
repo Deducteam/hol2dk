@@ -410,14 +410,25 @@ module SetTrm = Set.Make(OrdTrm);;
 
 let ormap oc m = MapTrm.iter (fun t n -> out oc "(%a,%s)" oterm t n) m;;
 
-(* [head_args t] returns the pair [h,ts] such that [t] is of the t is
-   the Comb application of [h] to [ts]. *)
+(* [head_args t] returns the pair [h,ts] such that [t] is the
+   application of [h] to [ts] and [h] is not a [Comb]. *)
 let head_args =
   let rec aux acc t =
     match t with
     | Comb(t1,t2) -> aux (t2::acc) t1
     | _ -> t, acc
   in aux []
+;;
+
+(* [head_args_size t] returns the tuple [h,ts,n] such that [t] is the
+   application of [h] to [ts] and [h] is not a [Comb], and [n] is the
+   length of [ts]. *)
+let head_args_size =
+  let rec aux (acc,n) t =
+    match t with
+    | Comb(t1,t2) -> aux (t2::acc,n+1) t1
+    | _ -> t, acc, n
+  in aux ([],0)
 ;;
 
 (* [binop_args t] returns the terms [u,v] assuming that [t] is of the
@@ -577,15 +588,17 @@ let canonical_term =
 (* Canonical term for alpha-equivalence with sharing. *)
 (****************************************************************************)
 
-(* [canonical_term t] returns [tvs,vs,bs,u] where [tvs] are the type
-   variables of [t], [vs] are the free term variables of [t], [bs] are
-   the types of [vs], and [u] is a term similar to [t] except that
-   [tvs] are replaced by canonical type variables [a0, a1, ...], [vs]
-   are replaced by canonical term variables [x0, x1, ...], and the
-   abstracted term variables are replaced by canonical variables [y0,
-   y1, ...]. Hence, if [t'] is alpha-equivalent to [t], then
-   [canonical_term t' = u]. *)
-let canonical_term =
+(* [canonical_term t] returns [tvs,vs,bs,u,n] where:
+- [tvs] are the type variables of [t],
+- [vs] are the free term variables of [t],
+- [bs] are the types of [vs],
+- [u] is a term similar to [t] except that [tvs] are replaced by
+   canonical type variables [a0, a1, ...], [vs] are replaced by
+   canonical term variables [x0, x1, ...], and the abstracted term
+   variables are replaced by canonical variables [y0, y1, ...]. Hence,
+   if [t'] is alpha-equivalent to [t], then [canonical_term t' = u]. *)
+let canonical_term
+    : term -> hol_type list * term list * hol_type list * term =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
   let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted

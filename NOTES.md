@@ -1,6 +1,12 @@
 NOTES
 -----
 
+## 12/03/24
+
+splitting term abbrevs by size instead of by number:
+
+hol.lp --max-abbrevs 10000: make -j32 lp 41s v 47s vo
+
 ## 11/03/24
 
 generation of .lpo.mk files:
