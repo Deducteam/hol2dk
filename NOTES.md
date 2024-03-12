@@ -5,7 +5,7 @@ NOTES
 
 splitting term abbrevs by size instead of by number:
 
-hol.lp --max-abbrevs 10000: make -j32 lp 41s v 47s vo ~35m
+hol.lp --max-abbrevs 10000: make -j32 lp 41s v 47s vo -j16 39m50s
 
 ## 11/03/24
 
