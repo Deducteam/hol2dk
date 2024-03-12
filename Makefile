@@ -46,7 +46,8 @@ include lpo.mk
 LP_FILES := $(wildcard *.lp)
 
 lpo.mk: $(LP_FILES:%.lp=%.lpo.mk)
-	cat *.lpo.mk > lpo.mk
+	echo > lpo.mk
+	find . -maxdepth 1 -name '*.lpo.mk' -exec cat {} > lpo.mk \;
 #	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
 
 %.lpo.mk: %.lp

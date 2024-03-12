@@ -1,10 +1,6 @@
 TODO
 ----
 
-- name lemmas with prefix "lem" instead of "thm_"
-
-- split abbrevs according to size, not number
-
 - generate proof parts in parallel like with hol2dk mk
 
 - generate term_abbrevs parts in parallel by dumping the htable and then reading the dumped list in parallel
