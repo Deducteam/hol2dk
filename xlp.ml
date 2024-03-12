@@ -698,7 +698,6 @@ let export_theorem_term_abbrevs b n =
     cur_oc := create f iter_deps
   in
   let handle_abbrev t x =
-    incr abbrev_idx;
     if !abbrev_part_size >= !max_abbrevs then
       begin
         close_out !cur_oc;
@@ -706,6 +705,7 @@ let export_theorem_term_abbrevs b n =
         Hashtbl.add htbl_abbrev_part !abbrev_part !abbrev_idx;
         create_new_part();
       end;
+    incr abbrev_idx;
     abbrev !cur_oc t x
   in
   create_new_part();

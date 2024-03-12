@@ -30,7 +30,7 @@ lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
 HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 10000
 
-%.lp: %.sti
+%.lp %.lpo.mk &: %.sti
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
 
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
@@ -46,11 +46,10 @@ include lpo.mk
 LP_FILES := $(wildcard *.lp)
 
 lpo.mk: $(LP_FILES:%.lp=%.lpo.mk)
-	echo > lpo.mk
-	find . -maxdepth 1 -name '*.lpo.mk' -exec cat {} > lpo.mk \;
+	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 #	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
 
-%.lpo.mk: %.lp
+theory_hol.lpo.mk: theory_hol.lp
 	$(HOL2DK_DIR)/dep-lpo $< > $@
 
 .PHONY: lpo
