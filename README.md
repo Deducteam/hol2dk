@@ -408,8 +408,8 @@ Performance on a machine with 32 processors i9-13950HX and 64G RAM:
 
 Dumping, simplification and translation of `Logic/make.ml` with `split`:
   * dump-simp 10m29s 10G 83% useless (including hol.ml)
-  * lp 57s 1.2G mklp 1m24s
-  * v 43s mkv 50s vo (-j20) 34m10s
+  * lp 57s 1.2G
+  * v 43s vo (-j20) 34m10s
 
 Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
   * dump-simp 11m42s 10G 21.2M steps (83% unused including hol.ml) +1729 named theorems
@@ -417,8 +417,8 @@ Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analy
 
 Dumping, simplification and translation of `Arithmetic/make.ml` with `split`:
   * dump-simp 6m2s 5.4G 82% useless (including hol.ml) 2.5M steps
-  * lp 21s 734M mklp 1m6s
-  * v 31s 682M mkv 23s vo (-j20) 32m
+  * lp 21s 734M
+  * v 31s 682M vo (-j20) 32m
 
 Dumping of `hol.ml`:
   * checking time without proof dumping: 1m14s
@@ -456,10 +456,8 @@ Dumping of `hol.ml`:
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
   * make split: <1s
   * make -j32 lp: 42s 1.1G (41s 1.2G with sharing)
-  * make mklp: 36s 2.7M (45s 3.5M with sharing)
   * make -j16 lpo: 51m10s 9G
   * make -j32 v: 45s 1.1G (47s 1.1G with sharing)
-  * make mkv: <1s 2.6M (3.4M with sharing)
   * make -j16 vo: 31m35s 3.1G (40m37s 3.5G with sharing)
 
 Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
