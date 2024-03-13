@@ -850,7 +850,13 @@ let out_map_thid_name as_axiom oc map_thid_name =
     map_thid_name
 ;;
 
-let iter_theorems_deps b f = iter_proofs_deps b f; f (b^"_proofs");;
+let iter_theorems_deps b f =
+  f (b^"_types");
+  f (b^"_type_abbrevs");
+  f (b^"_terms");
+  f (b^"_axioms");
+  f (b^"_proofs")
+;;
 
 let export_theorems b map_thid_name =
   export_iter b (iter_theorems_deps b)

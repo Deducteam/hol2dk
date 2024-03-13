@@ -1,6 +1,12 @@
 NOTES
 -----
 
+## 13/03/24
+
+optimizing dependencies:
+
+hol.lp --max-abbrevs 20000: make -j32 lp 42s v 41s -j16 vo 32m40s
+
 ## 12/03/24
 
 splitting term abbrevs by size instead of by number:
