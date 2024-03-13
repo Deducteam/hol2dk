@@ -132,6 +132,9 @@ let rec change_prefixes l s =
      if starts_with p s then q ^ String.sub s n (String.length s - n)
      else change_prefixes l s
 
+(* [bindings ht] returns the list of bindings in the hash table [ht]. *)
+let bindings ht = Hashtbl.fold (fun x y acc -> (x,y)::acc) ht [];;
+
 (****************************************************************************)
 (* Printing functions. *)
 (****************************************************************************)
@@ -142,9 +145,9 @@ let string oc s = out oc "%s" s;;
 
 let ostring oc s = out oc "\"%s\"" s;;
 
-let pair f g oc (x, y) = out oc "%a, %a" f x g y;;
+let pair f g oc (x, y) = out oc "%a,%a" f x g y;;
 
-let opair f g oc (x, y) = out oc "(%a, %a)" f x g y;;
+let opair f g oc (x, y) = out oc "(%a,%a)" f x g y;;
 
 let prefix p elt oc x = out oc "%s%a" p elt x;;
 
@@ -159,6 +162,10 @@ let list elt oc xs = list_sep "" elt oc xs;;
 let olist elt oc xs = out oc "[%a]" (list_sep "; " elt) xs;;
 
 let list_prefix p elt oc xs = list (prefix p elt) oc xs;;
+
+let htbl ppkey ppval oc ht =
+  (*Hashtbl.iter (opair oc)*)
+  List.iter (opair ppkey ppval oc) (List.sort Stdlib.compare (bindings ht));;
 
 let hstats oc hs =
   let open Hashtbl in

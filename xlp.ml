@@ -227,6 +227,9 @@ let unabbrev_term =
   in term
 ;;
 
+(* Index of the current term_abbrevs_part file. *)
+let abbrev_part = ref 0;;
+
 let abbrev_term =
   (*let oc_abbrevs = open_out "term_abbrevs" in*)
   let idx = ref (-1) in
@@ -643,22 +646,19 @@ let export_term_abbrevs_in_one_file b n =
 (* Maximum size of a term_abbrev file. *)
 let max_abbrevs = ref max_int;;
 
-(* Number of term_abbrevs_part files. *)
-let abbrev_part = ref 0;;
-
 (* Map every abbrev part to its maximal abbrev index. *)
 let htbl_abbrev_part = Hashtbl.create 1000;;
 
 (* [abbrev_part_of i] returns the abbrev part number containing the
    abbreviation number [i]. *)
-let abbrev_part_of i =
+(*let abbrev_part_of i =
   let htbl oc = Hashtbl.iter (out oc "(%d,%d)") in
   let res = ref !abbrev_part in
   let f part index_max = if index_max >= i then res := min !res part in
   Hashtbl.iter f htbl_abbrev_part;
   log "abbrev_part_of %d in %a = %d\n%!" i htbl htbl_abbrev_part !res;
   !res
-;;
+;;*)
 
 (* [abbrev_parts_of i j] returns the abbrev part numbers containing
    the abbreviation numbers [i] and [j] respectively. We implement an
@@ -677,6 +677,9 @@ let abbrev_parts_of i j =
   in
   let f = if j >= i then f_j_ge_i else f_i_ge_j in
   Hashtbl.iter f htbl_abbrev_part;
+  let htbl = htbl int int in
+  log "abbrev_part_of %d in %a = %d\n%!" i htbl htbl_abbrev_part !pi;
+  log "abbrev_part_of %d in %a = %d\n%!" j htbl htbl_abbrev_part !pj;
   !pi, !pj
 ;;
 
