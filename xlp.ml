@@ -661,7 +661,7 @@ print lem%d;\n" x*)
 
 let export_term_abbrevs_in_one_file b n =
   let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
-  export (n^"_term_abbrevs_part_1")
+  export (n^"_term_abbrevs")
     (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
     decl_term_abbrevs;
   if !use_sharing then
@@ -834,7 +834,8 @@ let iter_proofs_deps b f =
   f (b^"_terms");
   f (b^"_axioms");
   if !use_sharing then f (b^"_subterm_abbrevs");
-  for k = 1 to !abbrev_part do f (b^"_term_abbrevs"^part k) done
+  f (b^"_term_abbrevs");
+  for k = 2 to !abbrev_part do f (b^"_term_abbrevs"^part k) done
 ;;
 
 let export_proofs b r =
