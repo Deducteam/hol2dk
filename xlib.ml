@@ -427,17 +427,6 @@ let head_args =
   in aux []
 ;;
 
-(* [head_args_size t] returns the tuple [h,ts,n] such that [t] is the
-   application of [h] to [ts] and [h] is not a [Comb], and [n] is the
-   length of [ts]. *)
-let head_args_size =
-  let rec aux (acc,n) t =
-    match t with
-    | Comb(t1,t2) -> aux (t2::acc,n+1) t1
-    | _ -> t, acc, n
-  in aux ([],0)
-;;
-
 (* [binop_args t] returns the terms [u,v] assuming that [t] is of the
    form [Comb(Comb(_,u),v)]. *)
 let binop_args t =

@@ -259,7 +259,8 @@ let abbrev_term =
       | Some (k,_,_) ->
          proof_abdeps := SetInt.add (part_of k) !proof_abdeps; k
       | None ->
-         abbrev_part_size := !abbrev_part_size + n;
+         let ltvs = List.length tvs and lvs = List.length vs in
+         abbrev_part_size := !abbrev_part_size + n + 1 + ltvs + lvs;
          if !abbrev_part_size > !max_abbrev_part_size then
            (Hashtbl.add htbl_part_abbrev_max !abbrev_part !cur_abbrev;
             incr abbrev_part);
@@ -267,7 +268,7 @@ let abbrev_term =
          (*if k mod 1000 = 0 then log "term abbrev %d\n%!" k;*)
          (*out oc_abbrevs "%a\n\n" raw_term t;*)
          cur_abbrev := k;
-         let x = (k, List.length tvs, bs) in
+         let x = (k, ltvs, bs) in
          TrmHashtbl.add htbl_term_abbrev t x;
          Hashtbl.add htbl_abbrev_part k !abbrev_part;
          proof_abdeps := SetInt.add !abbrev_part !proof_abdeps;
@@ -660,7 +661,7 @@ print lem%d;\n" x*)
 
 let export_term_abbrevs_in_one_file b n =
   let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
-  export (n^"_term_abbrevs")
+  export (n^"_term_abbrevs_part_1")
     (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
     decl_term_abbrevs;
   if !use_sharing then
@@ -679,7 +680,7 @@ let export_theorem_term_abbrevs b n =
     f (b^"_terms");
     if !use_sharing then f (n^"_subterm_abbrevs")
   in
-  let part_abbrev i min =
+  let part_abbrev (i,min) =
     let abbrevs oc =
       for _ = min to Hashtbl.find htbl_part_abbrev_max i do
         match !l with
@@ -689,7 +690,8 @@ let export_theorem_term_abbrevs b n =
     in
     export_iter (n^"_term_abbrevs"^part i) iter_deps abbrevs
   in
-  Hashtbl.iter part_abbrev htbl_part_abbrev_min
+  List.iter part_abbrev
+    (List.sort Stdlib.compare (bindings htbl_part_abbrev_min))
 ;;
 
 let export_theorem_term_abbrevs b n =
