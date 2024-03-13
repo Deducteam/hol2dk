@@ -76,15 +76,15 @@ jobs:
           export HOL2DK_DIR=`pwd`
           cd hol-light
           hol2dk mk 3 xci
-          gmake -f xci.mk -j3 dk
+          make -f xci.mk -j3 dk
           dk check xci.dk
       - name: Generate and check multi-threaded lp output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           cd hol-light
-          gmake -f xci.mk -j3 lp
-          gmake -f xci.mk -j3 lpo
+          make -f xci.mk -j3 lp
+          make -f xci.mk -j3 lpo
       - name: Generate and check multi-threaded lp output with split
         run: |
           eval `opam env`
@@ -93,10 +93,10 @@ jobs:
           mkdir -p output/xci
           cd output/xci
           hol2dk link xci
-          gmake split
-          gmake -j3 lp
-          gmake -j3 v
-          gmake -j3 lpo
+          make split
+          make -j3 lp
+          make -j3 v
+          make -j3 lpo
       - name: Check resizing
         run: |
           eval `opam env`
@@ -105,14 +105,14 @@ jobs:
           mkdir -p output/xci
           cd output/xci
           hol2dk link xci
-          gmake split
-          gmake -j3 HOL2DK_OPTIONS='--max-steps 250 --max-abbrevs 200' lp
-          gmake -j3 lpo
+          make split
+          make -j3 HOL2DK_OPTIONS='--max-steps 250 --max-abbrevs 200' lp
+          make -j3 lpo
           hol2dk resize thm75360.lp 500
-          gmake -j3 lpo
+          make -j3 lpo
           hol2dk resize thm75360.lp 100
-          gmake -j3 lpo
+          make -j3 lpo
           hol2dk resize thm75360_term_abbrevs.lp 300
-          gmake -j3 lpo
+          make -j3 lpo
           hol2dk resize thm75360_term_abbrevs.lp 100
-          gmake -j3 lpo
+          make -j3 lpo

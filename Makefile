@@ -31,7 +31,7 @@ lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 10000
 
 %.lp %.lpo.mk &: %.sti
-	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
+	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
 
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
