@@ -603,22 +603,24 @@ let canonical_term =
    canonical type variables [a0, a1, ...], [vs] are replaced by
    canonical term variables [x0, x1, ...], and the abstracted term
    variables are replaced by canonical variables [y0, y1, ...]. Hence,
-   if [t'] is alpha-equivalent to [t], then [canonical_term t' = u]. *)
+   if [t'] is alpha-equivalent to [t], then [canonical_term t' = u],
+- [n] is the size of [t]. *)
 let canonical_term
-    : term -> hol_type list * term list * hol_type list * term =
+    : term -> hol_type list * term list * hol_type list * term * int =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
   let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted
      variables as well by incrementing the integer [i]. [su] is a term
      substitution mapping term variables abstracted in [t] by the
      canonical term variables [y0, y1, ...]. *)
+  let size = ref 0 in
   let rec subst i su t =
     (*log "subst %d %a %a\n%!" i (olist (opair oterm oterm)) su oterm t;*)
     match t with
     | Var _ -> (try List.assoc t su with Not_found -> assert false)
     | Const(s,b) -> hmk_const(s,b)
-    | Comb(u,v) -> hmk_comb(subst i su u, subst i su v)
-    | Abs(u,v) ->
+    | Comb(u,v) -> incr size; hmk_comb(subst i su u, subst i su v)
+    | Abs(u,v) -> incr size;
        match u with
        | Var(_,b) ->
           let s =
@@ -630,6 +632,7 @@ let canonical_term
        | _ -> assert false
   in
   fun t ->
+  size := 0;
   let tvs = type_vars_in_term t and vs = frees t in
   (* Type substitution mapping type variables of [t] to the canonical
      type variables [a0, a1, ...]. *)
@@ -639,7 +642,7 @@ let canonical_term
   (* Term substitution mapping term variables of [t] to the canonical
      term variables [x0, x1, ...]. *)
   and su' = List.mapi term_var vs' in
-  tvs, vs, bs, subst 0 su' t'
+  tvs, vs, bs, subst 0 su' t', !size
 ;;
 
 (****************************************************************************)
