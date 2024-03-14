@@ -255,7 +255,6 @@ let abbrev_term =
     let k =
       match TrmHashtbl.find_opt htbl_term_abbrev t with
       | Some (k,_,_) ->
-         log "add proof_abdeps %d\n%!" (part_of k);
          proof_abdeps := SetInt.add (part_of k) !proof_abdeps;
          k
       | None ->
@@ -263,18 +262,14 @@ let abbrev_term =
          let ltvs = List.length tvs and lvs = List.length vs in
          abbrev_part_size := !abbrev_part_size + n + 1 + ltvs + lvs;
          if !abbrev_part_size > !max_abbrev_part_size then
-           (log "add htbl_abbrev_part_max %d %d\n%!" !abbrev_part !cur_abbrev;
-            Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
-            log "incr abbrev_part\n%!";
+           (Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
             incr abbrev_part;
-            log "add htbl_abbrev_part_min %d %d\n%!" !abbrev_part k;
             Hashtbl.add htbl_abbrev_part_min !abbrev_part k);
          (*if k mod 1000 = 0 then log "term abbrev %d\n%!" k;*)
          (*out oc_abbrevs "%a\n\n" raw_term t;*)
          cur_abbrev := k;
          let x = (k, ltvs, bs) in
          TrmHashtbl.add htbl_term_abbrev t x;
-         log "add htbl_abbrev_part %d %d\n%!" k !abbrev_part;
          Hashtbl.add htbl_abbrev_part k !abbrev_part;
          proof_abdeps := SetInt.add !abbrev_part !proof_abdeps;
          k
@@ -679,7 +674,6 @@ let export_theorem_term_abbrevs b n =
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
   let l = ref (List.sort cmp l) in
-  log "htbl_term_abbrev: %a\n%!" (olist (fun oc (_,(k,_,_)) -> int oc k)) !l;
   let iter_deps f =
     f (b^"_types");
     f (n^"_type_abbrevs");
@@ -689,7 +683,6 @@ let export_theorem_term_abbrevs b n =
   let part_abbrev (i,min) =
     let abbrevs oc =
       let max = Hashtbl.find htbl_abbrev_part_max i in
-      log "abbrevs %d .. %d\n%!" min max;
       for _ = min to max do
         match !l with
         | [] -> assert false
@@ -738,7 +731,6 @@ let export_proofs_in_interval n x y =
     done;
     proof_part_max_idx := !i - 2
   in
-  log "add htbl_abbrev_part_min 1 0\n%!";
   Hashtbl.add htbl_abbrev_part_min 1 0;
   proof_part := 0;
   start_part x;
@@ -749,8 +741,6 @@ let export_proofs_in_interval n x y =
         if !nb_steps > !max_steps then
           begin
             close_out !cur_oc;
-            log "%d: %a\n%!" !proof_part
-              (olist int) (SetInt.elements !proof_abdeps);
             Hashtbl.add htbl_proof_abdeps !proof_part !proof_abdeps;
             start_part k
           end;
@@ -760,7 +750,6 @@ let export_proofs_in_interval n x y =
   done;
   close_out !cur_oc;
   Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
-  log "%d: %a\n%!" !proof_part (olist int) (SetInt.elements !proof_abdeps);
   Hashtbl.add htbl_proof_abdeps !proof_part !proof_abdeps
 ;;
 
