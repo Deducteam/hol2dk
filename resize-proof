@@ -29,7 +29,7 @@ n=`expr $n - 1`
 if test ! -f $1; then echo "error: $1 does not exist"; exit 1; fi
 h=${b}_header.lp
 echo "generate $h ..."
-awk '/^require /{print;next}{nextfile}' $1 > $h
+awk '/^require /{print;next}{nextfile}' $1 ${b}_part_*.lp | sort -u > $h
 sed -i -e "/^require open hol-light.${b}_part_/d" $h
 
 p=${b}_proofs.lp
