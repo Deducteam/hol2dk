@@ -238,10 +238,10 @@ let abbrev_part_size = ref 0;;
 let max_abbrev_part_size = ref max_int;;
 
 (* Htable recording the maximum index of each abbrevs part. *)
-let htbl_part_abbrev_max : (int,int) Hashtbl.t = Hashtbl.create 1_000;;
+let htbl_abbrev_part_max : (int,int) Hashtbl.t = Hashtbl.create 1_000;;
 
 (* Htable recording the minimum index of each abbrevs part. *)
-let htbl_part_abbrev_min : (int,int) Hashtbl.t = Hashtbl.create 1_000;;
+let htbl_abbrev_part_min : (int,int) Hashtbl.t = Hashtbl.create 1_000;;
 
 (* Index of the last abbreviation. *)
 let cur_abbrev = ref (-1);;
@@ -251,25 +251,30 @@ let cur_abbrev = ref (-1);;
 let abbrev_term =
   (*let oc_abbrevs = open_out "term_abbrevs" in*)
   let abbrev oc t =
-    (* check whether the term is already abbreviated; add a new
-       abbreviation if needed *)
     let tvs, vs, bs, t, n = canonical_term t in
     let k =
       match TrmHashtbl.find_opt htbl_term_abbrev t with
       | Some (k,_,_) ->
-         proof_abdeps := SetInt.add (part_of k) !proof_abdeps; k
+         log "add proof_abdeps %d\n%!" (part_of k);
+         proof_abdeps := SetInt.add (part_of k) !proof_abdeps;
+         k
       | None ->
+         let k = !cur_abbrev + 1 in
          let ltvs = List.length tvs and lvs = List.length vs in
          abbrev_part_size := !abbrev_part_size + n + 1 + ltvs + lvs;
          if !abbrev_part_size > !max_abbrev_part_size then
-           (Hashtbl.add htbl_part_abbrev_max !abbrev_part !cur_abbrev;
-            incr abbrev_part);
-         let k = !cur_abbrev + 1 in
+           (log "add htbl_abbrev_part_max %d %d\n%!" !abbrev_part !cur_abbrev;
+            Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
+            log "incr abbrev_part\n%!";
+            incr abbrev_part;
+            log "add htbl_abbrev_part_min %d %d\n%!" !abbrev_part k;
+            Hashtbl.add htbl_abbrev_part_min !abbrev_part k);
          (*if k mod 1000 = 0 then log "term abbrev %d\n%!" k;*)
          (*out oc_abbrevs "%a\n\n" raw_term t;*)
          cur_abbrev := k;
          let x = (k, ltvs, bs) in
          TrmHashtbl.add htbl_term_abbrev t x;
+         log "add htbl_abbrev_part %d %d\n%!" k !abbrev_part;
          Hashtbl.add htbl_abbrev_part k !abbrev_part;
          proof_abdeps := SetInt.add !abbrev_part !proof_abdeps;
          k
@@ -674,6 +679,7 @@ let export_theorem_term_abbrevs b n =
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
   let l = ref (List.sort cmp l) in
+  log "htbl_term_abbrev: %a\n%!" (olist (fun oc (_,(k,_,_)) -> int oc k)) !l;
   let iter_deps f =
     f (b^"_types");
     f (n^"_type_abbrevs");
@@ -682,7 +688,9 @@ let export_theorem_term_abbrevs b n =
   in
   let part_abbrev (i,min) =
     let abbrevs oc =
-      for _ = min to Hashtbl.find htbl_part_abbrev_max i do
+      let max = Hashtbl.find htbl_abbrev_part_max i in
+      log "abbrevs %d .. %d\n%!" min max;
+      for _ = min to max do
         match !l with
         | [] -> assert false
         | (t,x)::l' -> abbrev oc t x; l := l'
@@ -691,11 +699,7 @@ let export_theorem_term_abbrevs b n =
     export_iter (n^"_term_abbrevs"^part i) iter_deps abbrevs
   in
   List.iter part_abbrev
-    (List.sort Stdlib.compare (bindings htbl_part_abbrev_min))
-;;
-
-let export_theorem_term_abbrevs b n =
-  export_theorem_term_abbrevs b n;
+    (List.sort Stdlib.compare (Xlib.bindings htbl_abbrev_part_min));
   if !use_sharing then
     export (n^"_subterm_abbrevs") [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
       decl_subterm_abbrevs
@@ -720,12 +724,12 @@ let export_proofs_in_interval n x y =
   let nb_steps = ref 0 in
   let cur_oc = ref stdout in
   let start_part k =
-    proof_abdeps := SetInt.empty;
     incr proof_part;
     let f = n ^ part !proof_part ^ "_proofs.lp" in
     log "generate %s ...\n%!" f;
     cur_oc := open_out f;
     nb_steps := 0;
+    proof_abdeps := SetInt.empty;
     (* compute proof_part_max_idx *)
     let i = ref k and c = ref 0 in
     while (!i <= y && !c < !max_steps) do
@@ -734,7 +738,8 @@ let export_proofs_in_interval n x y =
     done;
     proof_part_max_idx := !i - 2
   in
-  Hashtbl.add htbl_part_abbrev_min 1 0;
+  log "add htbl_abbrev_part_min 1 0\n%!";
+  Hashtbl.add htbl_abbrev_part_min 1 0;
   proof_part := 0;
   start_part x;
   for k = x to y do
@@ -744,6 +749,8 @@ let export_proofs_in_interval n x y =
         if !nb_steps > !max_steps then
           begin
             close_out !cur_oc;
+            log "%d: %a\n%!" !proof_part
+              (olist int) (SetInt.elements !proof_abdeps);
             Hashtbl.add htbl_proof_abdeps !proof_part !proof_abdeps;
             start_part k
           end;
@@ -752,7 +759,8 @@ let export_proofs_in_interval n x y =
       end
   done;
   close_out !cur_oc;
-  Hashtbl.add htbl_part_abbrev_max !abbrev_part !cur_abbrev;
+  Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
+  log "%d: %a\n%!" !proof_part (olist int) (SetInt.elements !proof_abdeps);
   Hashtbl.add htbl_proof_abdeps !proof_part !proof_abdeps
 ;;
 

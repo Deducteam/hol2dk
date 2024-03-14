@@ -364,7 +364,7 @@ let print_hstats() =
     hstats (TrmHashtbl.stats htbl_term_abbrev)
     hstats (TrmHashtbl.stats htbl_subterms)
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part)
-    hstats (Hashtbl.stats Xlp.htbl_part_abbrev_max)
+    hstats (Hashtbl.stats Xlp.htbl_abbrev_part_max)
 
 let valid_coq_filename s = match s with "at" -> "_" ^ s | _ -> s;;
 
