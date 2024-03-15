@@ -18,16 +18,17 @@ esac
 
 if test -z "$HOL2DK_DIR"; then error '$HOL2DK_DIR is not set'; fi
 
-if test ! -f $1; then error "$1 does not exist"; fi
+f=${b}_term_abbrevs_part_1.lp
+if test ! -f $f; then error "$f does not exist"; fi
 max=$2
 
 h=${b}_term_abbrevs_header.lp
 echo "generate $h ..."
-awk '/^symbol /{nextfile}{print}' $1 > $h
+awk '/^symbol /{nextfile}{print}' $f > $h
 
 a=${b}_term_abbrevs_without_header.lp
 echo "generate $a ..."
-cat $1 `find . -name "${b}_term_abbrevs_part_*.lp"` > $a
+cat `find . -name "${b}_term_abbrevs_part_*.lp"` > $a
 sed -i -e '/^require /d' $a
 
 ls x[0-9]* 2> /dev/null
@@ -37,15 +38,14 @@ split --numeric-suffixes=1 -a5 -l$max $a
 
 echo "generate $1.bak ..."
 cat $h $a > $1.bak
-rm -f $a $1 ${b}_term_abbrevs_part_*.lp
+rm -f $a ${b}_term_abbrevs_part_*.lp
 
 n=`ls x[0-9]* | wc -l`
 
 for p in `ls x[0-9]*`
 do
     k=`expr ${p#x} + 0` # remove leading zeros
-    if test $k -eq 1; then s=''; else s=_part_$k; fi
-    g=${b}_term_abbrevs$s.lp
+    g=${b}_term_abbrevs_part_$k.lp
     echo "generate $g ..."
     cat $h $p > $g
     echo "generate ${g}o.mk ..."
@@ -58,7 +58,7 @@ for f in $b.lp `find . -name "${b}_part_*.lp"`
 do
     echo "update $f ..."
     sed -i -e "/^require open hol-light.${b}_term_abbrevs_part_/d" $f
-    k=2
+    k=1
     while test $k -le $n
     do
         l=`expr $k + 5`
@@ -68,3 +68,6 @@ do
     echo "update ${f}o.mk ..."
     $HOL2DK_DIR/dep-lpo $f > ${f}o.mk
 done
+
+echo "warning: dependencies are not optimal"
+echo "do \"make $1\" to optimize this"

@@ -132,6 +132,9 @@ let rec change_prefixes l s =
      if starts_with p s then q ^ String.sub s n (String.length s - n)
      else change_prefixes l s
 
+(* [bindings ht] returns the list of bindings in the hash table [ht]. *)
+let bindings ht = Hashtbl.fold (fun x y acc -> (x,y)::acc) ht [];;
+
 (****************************************************************************)
 (* Printing functions. *)
 (****************************************************************************)
@@ -142,9 +145,9 @@ let string oc s = out oc "%s" s;;
 
 let ostring oc s = out oc "\"%s\"" s;;
 
-let pair f g oc (x, y) = out oc "%a, %a" f x g y;;
+let pair f g oc (x, y) = out oc "%a,%a" f x g y;;
 
-let opair f g oc (x, y) = out oc "(%a, %a)" f x g y;;
+let opair f g oc (x, y) = out oc "(%a,%a)" f x g y;;
 
 let prefix p elt oc x = out oc "%s%a" p elt x;;
 
@@ -158,7 +161,14 @@ let list elt oc xs = list_sep "" elt oc xs;;
 
 let olist elt oc xs = out oc "[%a]" (list_sep "; " elt) xs;;
 
+let set_int oc s = olist int oc (SetInt.elements s);;
+let set_str oc s = olist string oc (SetStr.elements s);;
+
 let list_prefix p elt oc xs = list (prefix p elt) oc xs;;
+
+let htbl ppkey ppval oc ht =
+  (*Hashtbl.iter (opair oc)*)
+  List.iter (opair ppkey ppval oc) (List.sort Stdlib.compare (bindings ht));;
 
 let hstats oc hs =
   let open Hashtbl in
@@ -378,6 +388,14 @@ let arity =
   in arity 0
 ;;
 
+(* [size_type b] computes the size of a type [b]. *)
+let rec size_type = function
+  | Tyvar _ -> 1
+  | Tyapp(_,bs) -> add_size_types 1 bs
+
+and add_size_types acc bs =
+  List.fold_left (fun acc b -> acc + size_type b) acc bs;;
+
 (****************************************************************************)
 (* Functions on terms. *)
 (****************************************************************************)
@@ -385,11 +403,16 @@ let arity =
 (* [get_vartype t] returns the type of [t] assuming that [t] is a variable. *)
 let get_vartype = function Var(_,b) -> b | _ -> assert false;;
 
-(* [size t] computes the number of term constructors in [t]. *)
-let rec size = function
+(* [nb_cons t] computes the number of term constructors in the term [t]. *)
+let rec nb_cons = function
   | Var _ | Const _ -> 1
-  | Comb(u,v) -> 1 + size u + size v
-  | Abs(_,v) -> 2 + size v
+  | Comb(u,v) | Abs(u,v) -> 1 + nb_cons u + nb_cons v
+;;
+
+(* [size t] computes the size of the term [t]. *)
+let rec size = function
+  | Var (_,b) | Const(_,b) -> 1 + size_type b
+  | Comb(u,v) | Abs(u,v) -> 1 + size u + size v
 ;;
 
 (* Printing function for debug. *)
@@ -418,17 +441,6 @@ let head_args =
     | Comb(t1,t2) -> aux (t2::acc) t1
     | _ -> t, acc
   in aux []
-;;
-
-(* [head_args_size t] returns the tuple [h,ts,n] such that [t] is the
-   application of [h] to [ts] and [h] is not a [Comb], and [n] is the
-   length of [ts]. *)
-let head_args_size =
-  let rec aux (acc,n) t =
-    match t with
-    | Comb(t1,t2) -> aux (t2::acc,n+1) t1
-    | _ -> t, acc, n
-  in aux ([],0)
 ;;
 
 (* [binop_args t] returns the terms [u,v] assuming that [t] is of the
@@ -596,24 +608,28 @@ let canonical_term =
    canonical type variables [a0, a1, ...], [vs] are replaced by
    canonical term variables [x0, x1, ...], and the abstracted term
    variables are replaced by canonical variables [y0, y1, ...]. Hence,
-   if [t'] is alpha-equivalent to [t], then [canonical_term t' = u]. *)
+   if [t'] is alpha-equivalent to [t], then [canonical_term t' = u],
+- [n] is the size of [t]. *)
 let canonical_term
-    : term -> hol_type list * term list * hol_type list * term =
+    : term -> hol_type list * term list * hol_type list * term * int =
   (*let a_max = ref 0 and x_max = ref 0 and y_max = ref 0 in*)
   let sy = Array.init 50 (fun i -> "y" ^ string_of_int i) in
   (* [subst i su t] applies [su] on [t] and rename abstracted
      variables as well by incrementing the integer [i]. [su] is a term
      substitution mapping term variables abstracted in [t] by the
      canonical term variables [y0, y1, ...]. *)
-  let rec subst i su t =
+  let size = ref 0 in
+  let rec subst i su t = incr size;
     (*log "subst %d %a %a\n%!" i (olist (opair oterm oterm)) su oterm t;*)
     match t with
     | Var _ -> (try List.assoc t su with Not_found -> assert false)
-    | Const(s,b) -> hmk_const(s,b)
+    | Const(s,b) ->
+       size := !size + size_type b;
+       hmk_const(s,b)
     | Comb(u,v) -> hmk_comb(subst i su u, subst i su v)
     | Abs(u,v) ->
        match u with
-       | Var(_,b) ->
+       | Var(_,b) -> size := !size + size_type b;
           let s =
             if i < Array.length sy then sy.(i)
             else (log "y_max = %d\n%!" i; "y" ^ string_of_int i)
@@ -623,6 +639,7 @@ let canonical_term
        | _ -> assert false
   in
   fun t ->
+  size := 0;
   let tvs = type_vars_in_term t and vs = frees t in
   (* Type substitution mapping type variables of [t] to the canonical
      type variables [a0, a1, ...]. *)
@@ -632,7 +649,7 @@ let canonical_term
   (* Term substitution mapping term variables of [t] to the canonical
      term variables [x0, x1, ...]. *)
   and su' = List.mapi term_var vs' in
-  tvs, vs, bs, subst 0 su' t'
+  tvs, vs, bs, subst 0 su' t', !size
 ;;
 
 (****************************************************************************)

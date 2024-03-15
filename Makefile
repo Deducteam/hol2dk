@@ -28,29 +28,33 @@ $(BASE_FILES:%=%.lp) &:
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
 
-HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 10000
+HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 20000
 
-%.lp: %.sti
-	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $@
+%.lp %.lpo.mk &: %.sti
+	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
 
 FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
-#$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 100000 #--use-sharing
+#$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 20000 #--use-sharing
 
 .PHONY: clean-lp
-clean-lp: clean-lpo clean-v clean-vo
+clean-lp: clean-mk clean-lpo clean-v clean-vo
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+
+.PHONY: clean-mk
+clean-mk:
+	find . -maxdepth 1 -name '*.lpo.mk' -delete
+	rm -f lpo.mk vo.mk
 
 include lpo.mk
 
 LP_FILES := $(wildcard *.lp)
 
 lpo.mk: $(LP_FILES:%.lp=%.lpo.mk)
-	echo > lpo.mk
-	find . -maxdepth 1 -name '*.lpo.mk' -exec cat {} > lpo.mk \;
+	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 #	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
 
-%.lpo.mk: %.lp
+theory_hol.lpo.mk: theory_hol.lp
 	$(HOL2DK_DIR)/dep-lpo $< > $@
 
 .PHONY: lpo
@@ -89,11 +93,20 @@ COQC_OPTIONS = # -w -coercions
 	@coqc $(COQC_OPTIONS) -R . HOLLight $<
 
 .PHONY: clean-vo
-clean-vo:
-	find . -maxdepth 1 -name '*.vo*' -delete
-	find . -maxdepth 1 -name '*.glob' -delete
-	find . -maxdepth 1 -name '.*.aux' -delete
+clean-vo: clean-vos clean-glob clean-aux
 	rm -f .lia.cache .nia.cache
+
+.PHONY: clean-vos
+clean-vos:
+	find . -maxdepth 1 -name '*.vo*' -delete
+
+.PHONY: clean-glob
+clean-glob:
+	find . -maxdepth 1 -name '*.glob' -delete
+
+.PHONY: clean-aux
+clean-aux:
+	find . -maxdepth 1 -name '.*.aux' -delete
 
 .PHONY: opam
 opam: $(BASE)_opam.vo
@@ -108,12 +121,7 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-lpo clean-v clean-vo clean-opam clean-mk
-
-.PHONY: clean-mk
-clean-mk:
-	find . -maxdepth 1 -name '*.lpo.mk' -delete
-	rm -f lpo.mk vo.mk
+clean-all: clean-split clean-lp clean-lpo clean-v clean-vo clean-opam
 
 .PHONY: all
 all:

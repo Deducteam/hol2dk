@@ -5,8 +5,6 @@ TODO
 
 - generate term_abbrevs parts in parallel by dumping the htable and then reading the dumped list in parallel
 
-- optimize dependencies of a proof part wrt term abbrevs by defining term abbrevs in order and recording the term abbrevs used by each proof part
-
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 
 - remove base argument in all commands by using BASE file

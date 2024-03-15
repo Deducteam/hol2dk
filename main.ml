@@ -356,13 +356,15 @@ let basename_ml f =
 
 let print_hstats() =
   log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a\
-       \nsubterms: %a"
+       \nsubterms: %a\nabbrev_part: %a\npart_abbrev_max: %a"
     hstats (StrHashtbl.stats htbl_string)
     hstats (TypHashtbl.stats htbl_type)
     hstats (TrmHashtbl.stats htbl_term)
     hstats (TypHashtbl.stats htbl_type_abbrev)
     hstats (TrmHashtbl.stats htbl_term_abbrev)
     hstats (TrmHashtbl.stats htbl_subterms)
+    hstats (Hashtbl.stats Xlp.htbl_abbrev_part)
+    hstats (Hashtbl.stats Xlp.htbl_abbrev_part_max)
 
 let valid_coq_filename s = match s with "at" -> "_" ^ s | _ -> s;;
 
@@ -400,7 +402,8 @@ and command = function
 
   | "--use-sharing"::args -> use_sharing := true; command args
 
-  | "--max-abbrevs"::k::args -> Xlp.max_abbrevs := integer k; command args
+  | "--max-abbrevs"::k::args ->
+     Xlp.max_abbrev_part_size := integer k; command args
 
   | "--max-steps"::k::args -> Xlp.max_steps := integer k; command args
 
@@ -524,7 +527,7 @@ and command = function
      and nb_terms_gtl = ref 0 in
      let handle_term t =
        incr nb_terms;
-       let s = size t in
+       let s = nb_cons t in
        if s > !max_size then max_size := s;
        if s > l then incr nb_terms_gtl;
        sum_size := s + !sum_size

@@ -34,6 +34,7 @@ let print_time =
 (* Maps on integers. *)
 module OrdInt = struct type t = int let compare = (-) end;;
 module MapInt = Map.Make(OrdInt);;
+module SetInt = Set.Make(OrdInt);;
 
 (* [map_thm_id_name] is used to hold the map from theorem numbers to
    theorem names. *)
