@@ -385,6 +385,15 @@ let arity =
   in arity 0
 ;;
 
+(* [size_type b] computes the size of a type [b]. *)
+let rec size_type = function
+  | Tyvar _ -> 1
+  | Tyapp(n,bs) ->
+     List.fold_left (fun acc b -> acc + size_type b) (String.length n) bs
+;;
+
+let add_size_types = List.fold_left (fun acc b -> acc + size_type b);;
+
 (****************************************************************************)
 (* Functions on terms. *)
 (****************************************************************************)
@@ -392,11 +401,16 @@ let arity =
 (* [get_vartype t] returns the type of [t] assuming that [t] is a variable. *)
 let get_vartype = function Var(_,b) -> b | _ -> assert false;;
 
-(* [size t] computes the number of term constructors in [t]. *)
-let rec size = function
+(* [nb_cons t] computes the number of term constructors in the term [t]. *)
+let rec nb_cons = function
   | Var _ | Const _ -> 1
-  | Comb(u,v) -> 1 + size u + size v
-  | Abs(_,v) -> 2 + size v
+  | Comb(u,v) | Abs(u,v) -> 1 + nb_cons u + nb_cons v
+;;
+
+(* [size t] computes the size of the term [t]. *)
+let rec size = function
+  | Var (_,b) | Const(_,b) -> 1 + size_type b
+  | Comb(u,v) | Abs(u,v) -> 1 + size u + size v
 ;;
 
 (* Printing function for debug. *)
@@ -603,13 +617,13 @@ let canonical_term
      substitution mapping term variables abstracted in [t] by the
      canonical term variables [y0, y1, ...]. *)
   let size = ref 0 in
-  let rec subst i su t =
+  let rec subst i su t = incr size;
     (*log "subst %d %a %a\n%!" i (olist (opair oterm oterm)) su oterm t;*)
     match t with
     | Var _ -> (try List.assoc t su with Not_found -> assert false)
     | Const(s,b) -> hmk_const(s,b)
-    | Comb(u,v) -> incr size; hmk_comb(subst i su u, subst i su v)
-    | Abs(u,v) -> incr size;
+    | Comb(u,v) -> hmk_comb(subst i su u, subst i su v)
+    | Abs(u,v) ->
        match u with
        | Var(_,b) ->
           let s =

@@ -527,7 +527,7 @@ and command = function
      and nb_terms_gtl = ref 0 in
      let handle_term t =
        incr nb_terms;
-       let s = size t in
+       let s = nb_cons t in
        if s > !max_size then max_size := s;
        if s > l then incr nb_terms_gtl;
        sum_size := s + !sum_size

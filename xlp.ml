@@ -252,15 +252,20 @@ let abbrev_term =
   (*let oc_abbrevs = open_out "term_abbrevs" in*)
   let abbrev oc t =
     let tvs, vs, bs, t, n = canonical_term t in
+    let lvs = List.length vs in
     let k =
       match TrmHashtbl.find_opt htbl_term_abbrev t with
-      | Some (k,_,_) ->
+      | Some (k,_,bs) ->
+         let size = add_size_types (1 + lvs) bs in
+         abbrev_part_size := !abbrev_part_size + size;
          proof_abdeps := SetInt.add (part_of k) !proof_abdeps;
          k
       | None ->
          let k = !cur_abbrev + 1 in
-         let ltvs = List.length tvs and lvs = List.length vs in
-         abbrev_part_size := !abbrev_part_size + n + 1 + ltvs + lvs;
+         let ltvs = List.length tvs in
+         let size = add_size_types (1 + lvs) bs in
+         let size = size + 1 + ltvs + lvs + n in (* for the declaration *)
+         abbrev_part_size := !abbrev_part_size + size;
          if !abbrev_part_size > !max_abbrev_part_size then
            begin
              Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
@@ -285,8 +290,14 @@ let abbrev_term =
   in
   let rec term oc t =
     match t with
-    | Var(_,_) | Const(_,_) -> raw_term oc t
+    | Var(_,_) ->
+       incr abbrev_part_size;
+       raw_term oc t
+    | Const(_,b) ->
+       abbrev_part_size := !abbrev_part_size + size_type b;
+       raw_term oc t
     | Comb(Comb(Const("=",b),u),v) ->
+       abbrev_part_size := !abbrev_part_size + size_type b;
        out oc "(@= %a %a %a)" typ (get_domain b) term u term v
     | _ -> abbrev oc t
   in term
