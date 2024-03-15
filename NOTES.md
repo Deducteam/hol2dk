@@ -1,17 +1,24 @@
 NOTES
 -----
 
-## 13/03/24
+## 15/03/24
 
 optimizing dependencies:
 
-hol.lp --max-abbrevs 20000: make -j32 lp 42s v 41s -j16 vo 32m40s
+hol.ml --max-abbrevs 20000: make -j32 lp 45s v 41s -j16 vo 37m28s
+hol.ml --max-abbrevs 10000: make -j32 lp 47s v 47s -j16 vo 42m30s
+
+## 13/03/24
+
+optimizing dependencies on term_abbrevs:
+
+hol.ml --max-abbrevs 20000: make -j32 lp 42s v 41s -j16 vo 32m40s
 
 ## 12/03/24
 
 splitting term abbrevs by size instead of by number:
 
-hol.lp --max-abbrevs 20000: make -j32 lp 41s v 47s -j16 vo 37m3s
+hol.ml --max-abbrevs 20000: make -j32 lp 41s v 47s -j16 vo 37m3s
 
 ## 11/03/24
 
@@ -187,9 +194,9 @@ a solution is to use (maximal) sharing when building the map of term abbreviatio
 
 but sharing increases generation time significantly
 
-with split and -j32, hol.lp is generated in 40s instead of 32s (+25%)
+with split and -j32, hol.ml is translated to lp in 40s instead of 32s (+25%)
 
-in singly-threaded mode, hol.lp is generated in 4m59s instead of 4m7s (+21%)
+in singly-threaded mode, hol.ml is translated to lp in 4m59s instead of 4m7s (+21%)
 
 however GRASSMANN_PLUCKER_4.lp can now be generated in 2 hours (119m23s)
 
