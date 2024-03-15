@@ -262,9 +262,12 @@ let abbrev_term =
          let ltvs = List.length tvs and lvs = List.length vs in
          abbrev_part_size := !abbrev_part_size + n + 1 + ltvs + lvs;
          if !abbrev_part_size > !max_abbrev_part_size then
-           (Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
-            incr abbrev_part;
-            Hashtbl.add htbl_abbrev_part_min !abbrev_part k);
+           begin
+             Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
+             incr abbrev_part;
+             Hashtbl.add htbl_abbrev_part_min !abbrev_part k;
+             abbrev_part_size := 0
+           end;
          (*if k mod 1000 = 0 then log "term abbrev %d\n%!" k;*)
          (*out oc_abbrevs "%a\n\n" raw_term t;*)
          cur_abbrev := k;

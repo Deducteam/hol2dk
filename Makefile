@@ -38,8 +38,13 @@ FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_
 #$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 100000 #--use-sharing
 
 .PHONY: clean-lp
-clean-lp: clean-lpo clean-v clean-vo
+clean-lp: clean-mk clean-lpo clean-v clean-vo
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+
+.PHONY: clean-mk
+clean-mk:
+	find . -maxdepth 1 -name '*.lpo.mk' -delete
+	rm -f lpo.mk vo.mk
 
 include lpo.mk
 
@@ -88,11 +93,20 @@ COQC_OPTIONS = # -w -coercions
 	@coqc $(COQC_OPTIONS) -R . HOLLight $<
 
 .PHONY: clean-vo
-clean-vo:
-	find . -maxdepth 1 -name '*.vo*' -delete
-	find . -maxdepth 1 -name '*.glob' -delete
-	find . -maxdepth 1 -name '.*.aux' -delete
+clean-vo: clean-vos clean-glob clean-aux
 	rm -f .lia.cache .nia.cache
+
+.PHONY: clean-vos
+clean-vos:
+	find . -maxdepth 1 -name '*.vo*' -delete
+
+.PHONY: clean-glob
+clean-glob:
+	find . -maxdepth 1 -name '*.glob' -delete
+
+.PHONY: clean-aux
+clean-aux:
+	find . -maxdepth 1 -name '.*.aux' -delete
 
 .PHONY: opam
 opam: $(BASE)_opam.vo
@@ -107,12 +121,7 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-lpo clean-v clean-vo clean-opam clean-mk
-
-.PHONY: clean-mk
-clean-mk:
-	find . -maxdepth 1 -name '*.lpo.mk' -delete
-	rm -f lpo.mk vo.mk
+clean-all: clean-split clean-lp clean-lpo clean-v clean-vo clean-opam
 
 .PHONY: all
 all:
