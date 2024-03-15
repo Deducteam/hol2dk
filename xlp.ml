@@ -223,10 +223,10 @@ let unabbrev_term =
 
 (* Htable recording the part of each abbreviation. *)
 let htbl_abbrev_part : (int,int) Hashtbl.t = Hashtbl.create 100_000;;
-let part_of = Hashtbl.find htbl_abbrev_part;;
+let abbrev_part_of = Hashtbl.find htbl_abbrev_part;;
 
 (* Dependencies on term abbreviations parts of the current proof part. *)
-let proof_abdeps = ref SetInt.empty;;
+let abbrev_deps = ref SetInt.empty;;
 
 (* Index of the current term_abbrevs_part file. *)
 let abbrev_part = ref 1;;
@@ -258,7 +258,7 @@ let abbrev_term =
       | Some (k,_,bs) ->
          let size = add_size_types (1 + lvs) bs in
          abbrev_part_size := !abbrev_part_size + size;
-         proof_abdeps := SetInt.add (part_of k) !proof_abdeps;
+         abbrev_deps := SetInt.add (abbrev_part_of k) !abbrev_deps;
          k
       | None ->
          let k = !cur_abbrev + 1 in
@@ -279,7 +279,7 @@ let abbrev_term =
          let x = (k, ltvs, bs) in
          TrmHashtbl.add htbl_term_abbrev t x;
          Hashtbl.add htbl_abbrev_part k !abbrev_part;
-         proof_abdeps := SetInt.add !abbrev_part !proof_abdeps;
+         abbrev_deps := SetInt.add !abbrev_part !abbrev_deps;
          k
     in
     match tvs, vs with
@@ -297,7 +297,7 @@ let abbrev_term =
        abbrev_part_size := !abbrev_part_size + size_type b;
        raw_term oc t
     | Comb(Comb(Const("=",b),u),v) ->
-       abbrev_part_size := !abbrev_part_size + size_type b;
+       abbrev_part_size := !abbrev_part_size + 4 + size_type b;
        out oc "(@= %a %a %a)" typ (get_domain b) term u term v
     | _ -> abbrev oc t
   in term
@@ -647,8 +647,7 @@ let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
    [x] .. [y]. *)
 let proofs_in_interval oc x y =
   for k = x to y do
-    if get_use k >= 0 then
-      begin (*log "proof %d ...\n%!" k;*) theorem oc k (proof_at k) end
+    if get_use k >= 0 then theorem oc k (proof_at k)
   done
 ;;
 
@@ -696,7 +695,9 @@ let export_theorem_term_abbrevs b n =
   in
   let part_abbrev (i,min) =
     let abbrevs oc =
-      let max = Hashtbl.find htbl_abbrev_part_max i in
+      let max =
+        try Hashtbl.find htbl_abbrev_part_max i with Not_found -> assert false
+      in
       for _ = min to max do
         match !l with
         | [] -> assert false
@@ -723,7 +724,27 @@ let max_steps = ref max_int;;
 let proof_part = ref 0;;
 
 (* Dependencies on term abbreviations parts of each proof part. *)
-let htbl_proof_abdeps = Hashtbl.create 1_000;;
+let htbl_abbrev_deps = Hashtbl.create 1_000;;
+
+(* Dependencies on previous parts of each proof part. *)
+let htbl_proof_deps = Hashtbl.create 1_000;;
+
+(* Dependencies on named theorems of each proof part. *)
+let htbl_thm_deps = Hashtbl.create 1_000;;
+
+(* Htable recording in which proof part is every theorem. *)
+let htbl_thm_part = Hashtbl.create 1_000_000;;
+let proof_part_of = Hashtbl.find htbl_thm_part;;
+
+(* Dependencies on previous proof parts of the current proof part. *)
+let proof_deps = ref SetInt.empty;;
+
+let add_dep d =
+  try
+    let pd = proof_part_of d in
+    if pd < !proof_part then proof_deps := SetInt.add pd !proof_deps
+  with Not_found -> ()
+;;
 
 (* [export_proofs_in_interval n x y] generates the proof steps of
    index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
@@ -736,7 +757,9 @@ let export_proofs_in_interval n x y =
     log "generate %s ...\n%!" f;
     cur_oc := open_out f;
     nb_steps := 0;
-    proof_abdeps := SetInt.empty;
+    abbrev_deps := SetInt.empty;
+    proof_deps := SetInt.empty;
+    thdeps := SetStr.empty;
     (* compute proof_part_max_idx *)
     let i = ref k and c = ref 0 in
     while (!i <= y && !c < !max_steps) do
@@ -745,6 +768,12 @@ let export_proofs_in_interval n x y =
     done;
     proof_part_max_idx := !i - 2
   in
+  let end_part() =
+    close_out !cur_oc;
+    Hashtbl.add htbl_abbrev_deps !proof_part !abbrev_deps;
+    Hashtbl.add htbl_proof_deps !proof_part !proof_deps;
+    Hashtbl.add htbl_thm_deps !proof_part !thdeps;
+  in
   Hashtbl.add htbl_abbrev_part_min 1 0;
   proof_part := 0;
   start_part x;
@@ -752,19 +781,15 @@ let export_proofs_in_interval n x y =
     if get_use k >= 0 then
       begin
         incr nb_steps;
-        if !nb_steps > !max_steps then
-          begin
-            close_out !cur_oc;
-            Hashtbl.add htbl_proof_abdeps !proof_part !proof_abdeps;
-            start_part k
-          end;
-        (*log "proof %d ...\n%!" k;*)
-        theorem !cur_oc k (proof_at k)
+        if !nb_steps > !max_steps then (end_part(); start_part k);
+        Hashtbl.add htbl_thm_part k !proof_part;
+        let p = proof_at k in
+        List.iter add_dep (deps p);
+        theorem !cur_oc k p
       end
   done;
-  close_out !cur_oc;
-  Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
-  Hashtbl.add htbl_proof_abdeps !proof_part !proof_abdeps
+  end_part();
+  Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev
 ;;
 
 (* [export_theorem_proof n] generates the files
@@ -798,9 +823,9 @@ let export_theorem_deps b n =
     f (n^"_type_abbrevs");
     if !use_sharing then f (n^"_subterm_abbrevs");
     SetInt.iter (fun j -> f (n^"_term_abbrevs"^part j))
-      (Hashtbl.find htbl_proof_abdeps i);
-    SetStr.iter f !thdeps;
-    for j = 1 to i-1 do f (n^part j) done; (*TO BE OPTIMIZED*)
+      (Hashtbl.find htbl_abbrev_deps i);
+    SetInt.iter (fun j -> f (n^part j)) (Hashtbl.find htbl_proof_deps i);
+    SetStr.iter f (Hashtbl.find htbl_thm_deps i);
     close_out oc_lp;
     out oc_lpo_mk "\n";
     close_out oc_lpo_mk;

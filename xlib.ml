@@ -161,6 +161,9 @@ let list elt oc xs = list_sep "" elt oc xs;;
 
 let olist elt oc xs = out oc "[%a]" (list_sep "; " elt) xs;;
 
+let set_int oc s = olist int oc (SetInt.elements s);;
+let set_str oc s = olist string oc (SetStr.elements s);;
+
 let list_prefix p elt oc xs = list (prefix p elt) oc xs;;
 
 let htbl ppkey ppval oc ht =
@@ -388,11 +391,10 @@ let arity =
 (* [size_type b] computes the size of a type [b]. *)
 let rec size_type = function
   | Tyvar _ -> 1
-  | Tyapp(n,bs) ->
-     List.fold_left (fun acc b -> acc + size_type b) (String.length n) bs
-;;
+  | Tyapp(_,bs) -> add_size_types 1 bs
 
-let add_size_types = List.fold_left (fun acc b -> acc + size_type b);;
+and add_size_types acc bs =
+  List.fold_left (fun acc b -> acc + size_type b) acc bs;;
 
 (****************************************************************************)
 (* Functions on terms. *)
@@ -621,11 +623,13 @@ let canonical_term
     (*log "subst %d %a %a\n%!" i (olist (opair oterm oterm)) su oterm t;*)
     match t with
     | Var _ -> (try List.assoc t su with Not_found -> assert false)
-    | Const(s,b) -> hmk_const(s,b)
+    | Const(s,b) ->
+       size := !size + size_type b;
+       hmk_const(s,b)
     | Comb(u,v) -> hmk_comb(subst i su u, subst i su v)
     | Abs(u,v) ->
        match u with
-       | Var(_,b) ->
+       | Var(_,b) -> size := !size + size_type b;
           let s =
             if i < Array.length sy then sy.(i)
             else (log "y_max = %d\n%!" i; "y" ^ string_of_int i)
