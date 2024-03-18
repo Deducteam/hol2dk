@@ -249,23 +249,17 @@ let cur_abbrev = ref (-1);;
 (* [abbrev_term oc t] prints on [oc] the term [t] or its abbreviation
    if [t] has already been abbreviated. *)
 let abbrev_term =
-  (*let oc_abbrevs = open_out "term_abbrevs" in*)
   let abbrev oc t =
-    let tvs, vs, bs, t, n = canonical_term t in
-    let lvs = List.length vs in
+    let tvs, vs, bs, t = canonical_term t in
     let k =
       match TrmHashtbl.find_opt htbl_term_abbrev t with
-      | Some (k,_,bs) ->
-         let size = add_size_types (1 + lvs) bs in
-         abbrev_part_size := !abbrev_part_size + size;
+      | Some (k,_,_) ->
          abbrev_deps := SetInt.add (abbrev_part_of k) !abbrev_deps;
          k
       | None ->
          let k = !cur_abbrev + 1 in
          let ltvs = List.length tvs in
-         let size = add_size_types (1 + lvs) bs in
-         let size = size + 1 + ltvs + lvs + n in (* for the declaration *)
-         abbrev_part_size := !abbrev_part_size + size;
+         abbrev_part_size := !abbrev_part_size + !Xproof.step_size;
          if !abbrev_part_size > !max_abbrev_part_size then
            begin
              Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev;
@@ -273,8 +267,6 @@ let abbrev_term =
              Hashtbl.add htbl_abbrev_part_min !abbrev_part k;
              abbrev_part_size := 0
            end;
-         (*if k mod 1000 = 0 then log "term abbrev %d\n%!" k;*)
-         (*out oc_abbrevs "%a\n\n" raw_term t;*)
          cur_abbrev := k;
          let x = (k, ltvs, bs) in
          TrmHashtbl.add htbl_term_abbrev t x;
@@ -290,14 +282,8 @@ let abbrev_term =
   in
   let rec term oc t =
     match t with
-    | Var(_,_) ->
-       incr abbrev_part_size;
-       raw_term oc t
-    | Const(_,b) ->
-       abbrev_part_size := !abbrev_part_size + size_type b;
-       raw_term oc t
+    | Var _ | Const _ -> raw_term oc t
     | Comb(Comb(Const("=",b),u),v) ->
-       abbrev_part_size := !abbrev_part_size + 4 + size_type b;
        out oc "(@= %a %a %a)" typ (get_domain b) term u term v
     | _ -> abbrev oc t
   in term
@@ -784,6 +770,7 @@ let export_proofs_in_interval n x y =
         if !nb_steps > !max_steps then (end_part(); start_part k);
         Hashtbl.add htbl_thm_part k !proof_part;
         let p = proof_at k in
+        abbrev_part_size := !abbrev_part_size + !Xproof.step_size;
         List.iter add_dep (deps p);
         theorem !cur_oc k p
       end

@@ -248,7 +248,7 @@ let abbrev_term =
   let abbrev oc t =
     (* check whether the term is already abbreviated; add a new
        abbreviation if needed *)
-    let tvs, vs, bs, t, _ = canonical_term t in
+    let tvs, vs, bs, t = canonical_term t in
     let k =
       match TrmHashtbl.find_opt htbl_term_abbrev t with
       | Some (k,_,_) -> k
