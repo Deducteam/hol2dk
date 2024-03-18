@@ -900,7 +900,6 @@ and command = function
      read_pos n;
      read_use n;
      the_start_idx := read_val (n^".sti");
-     (*log "the_start_idx = %d\n%!" !the_start_idx;*)
      init_proof_reading b;
      if is_dk f then (log "dk output not available for this command\n"; 1)
      else
@@ -910,7 +909,7 @@ and command = function
          Xlp.dump_theorem_term_abbrevs n;
          if !use_sharing then
            Xlp.export (n^"_subterm_abbrevs")
-             [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
+             [b^"_types"; b^"_terms"; n^"_type_abbrevs"]
              Xlp.decl_subterm_abbrevs;
          Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n;
