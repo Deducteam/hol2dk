@@ -667,9 +667,41 @@ let export_term_abbrevs_in_one_file b n =
     export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
 ;;
 
+(* [dump_theorem_term_abbrevs n] writes the term abbreviations in
+   the file [n^"_term_abbrevs.brv"]. *)
+let dump_theorem_term_abbrevs n =
+  let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
+  let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
+  let l = List.sort cmp l in
+  let dump_file = n^".brv" in
+  log "write %s ...\n%!" dump_file;
+  let oc = open_out_bin dump_file in
+  List.iter (output_value oc) l;
+  close_out oc;
+  let len = TrmHashtbl.length htbl_term_abbrev in
+  let pos = Array.make len 0 in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  for k = 0 to len - 1 do
+    Array.set pos k (pos_in ic);
+    ignore (input_value ic)
+  done;
+  close_in ic;
+  write_val (n^".brp") pos;
+  log "htbl_abbrev_part_min: %a\n%!" (htbl int int) htbl_abbrev_part_min;
+  log "htbl_abbrev_part_max: %a\n%!" (htbl int int) htbl_abbrev_part_max;
+  (* For some reason, writing of just m doesn't work! Hence, the Some. *)
+  Hashtbl.iter
+    (fun k m -> write_val (n^"_term_abbrevs"^part k^".min") (Some m))
+    htbl_abbrev_part_min;
+  Hashtbl.iter
+    (fun k m -> write_val (n^"_term_abbrevs"^part k^".max") (Some m))
+    htbl_abbrev_part_max
+;;
+
 (* [export_theorem_term_abbrevs b n] writes the term abbreviations in
    the files [n^"_term_abbrevs"^part(k)^".lp"]. *)
-let export_theorem_term_abbrevs b n =
+(*let export_theorem_term_abbrevs b n =
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
   let l = ref (List.sort cmp l) in
@@ -697,6 +729,34 @@ let export_theorem_term_abbrevs b n =
   if !use_sharing then
     export (n^"_subterm_abbrevs") [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
       decl_subterm_abbrevs
+;;*)
+
+(* [export_theorem_term_abbrevs b n k] writes the term abbreviations
+   file [n^"_term_abbrevs"^part(k)^".lp"]. *)
+let export_theorem_term_abbrevs b n k =
+  let pos : int array = read_val (n^".brp")
+  and min : int option = read_val (n^"_term_abbrevs"^part k^".min")
+  and max : int option = read_val (n^"_term_abbrevs"^part k^".max") in
+  let get_val = function Some x -> x | None -> assert false in
+  let max = get_val max and min = get_val min in
+  let dump_file = n^".brv" in
+  log "read %s ...\n%!" dump_file;
+  let ic = open_in_bin dump_file in
+  if max >= 0 then seek_in ic pos.(min);
+  let iter_deps f =
+    f (b^"_types");
+    f (b^"_terms");
+    f (n^"_type_abbrevs");
+    if !use_sharing then f (n^"_subterm_abbrevs")
+  in
+  let abbrevs oc =
+    for _ = min to max do
+      let t,x = input_value ic in
+      abbrev oc t x
+    done
+  in
+  export_iter (n^"_term_abbrevs"^part k) iter_deps abbrevs;
+  close_in ic
 ;;
 
 (****************************************************************************)

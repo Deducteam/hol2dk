@@ -89,6 +89,9 @@ hol2dk split $file
 hol2dk theorem $file $t.lp
   generate the lp proof of the theorem named $t
 
+hol2dk abbrev $file $t.lp $k
+  generate $t_term_abbrevs_part_$k
+
 Multi-threaded dk/lp file generation by splitting proofs in $n parts
 --------------------------------------------------------------------
 
@@ -164,7 +167,7 @@ let is_dk filename =
   | _ -> wrong_arg()
 
 let read_sig b =
-  let dump_file = b ^ ".sig" in
+  let dump_file = b^".sig" in
   let ic = open_in_bin dump_file in
   log "read %s ...\n%!" dump_file;
   the_type_constants := List.rev (input_value ic);
@@ -183,7 +186,7 @@ let integer s = try int_of_string s with Failure _ -> wrong_arg()
    between parts [dg]. *)
 let make nb_proofs dg b =
   let nb_parts = Array.length dg in
-  let dump_file = b ^ ".mk" in
+  let dump_file = b^".mk" in
   log "generate %s ...\n%!" dump_file;
   let oc = open_out dump_file in
   out oc "# file generated with: hol2dk mk %d %s\n" nb_parts b;
@@ -366,12 +369,12 @@ let print_hstats() =
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part)
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part_max)
 
-let valid_coq_filename s = match s with "at" -> "_" ^ s | _ -> s;;
+let valid_coq_filename s = match s with "at" -> "_"^s | _ -> s;;
 
 let call_script s args =
   match Sys.getenv_opt "HOL2DK_DIR" with
-  | None -> log "set $HOL2DK_DIR first"; 1
-  | Some d -> Sys.command (d ^ "/" ^ s ^ " " ^ String.concat " " args)
+  | None -> log "set $HOL2DK_DIR first\n"; 1
+  | Some d -> Sys.command (d^"/"^s^" "^String.concat " " args)
 ;;
 
 let print_env_var n =
@@ -381,7 +384,7 @@ let print_env_var n =
 ;;
 
 let rec log_command l =
-  log "\nhol2dk"; List.iter (log " %s") l; log " ...\n"; command l
+  log "\nhol2dk"; List.iter (log " %s") l; log " ...\n%!"; command l
 
 and dump_and_simp after_hol f =
   let b = basename_ml f in
@@ -440,7 +443,7 @@ and command = function
 
   | ["resize";f;k] ->
      let dk = is_dk f in
-     if dk then (log "dk output not available for this command"; 1)
+     if dk then (log "dk output not available for this command\n"; 1)
      else
        if String.ends_with ~suffix:"_term_abbrevs.lp" f then
          call_script "resize-term-abbrevs" [f;k]
@@ -452,9 +455,9 @@ and command = function
   | ["dump-simp-use";f] -> dump_and_simp false f
 
   | ["pos";b] ->
-     let nb_proofs = read_val (b ^ ".nbp") in
+     let nb_proofs = read_val (b^".nbp") in
      let pos = Array.make nb_proofs 0 in
-     let dump_file = b ^ ".prf" in
+     let dump_file = b^".prf" in
      log "read %s ...\n%!" dump_file;
      let ic = open_in_bin dump_file in
      let idx = ref 0 in
@@ -468,7 +471,7 @@ and command = function
        with End_of_file -> assert false
      end;
      close_in ic;
-     let dump_file = b ^ ".pos" in
+     let dump_file = b^".pos" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
      output_value oc pos;
@@ -476,7 +479,7 @@ and command = function
      0
 
   | ["stat";b] ->
-     let nb_proofs = read_val (b ^ ".nbp") in
+     let nb_proofs = read_val (b^".nbp") in
      let thm_uses = Array.make nb_proofs 0 in
      let rule_uses = Array.make nb_rules 0 in
      let unused = ref 0 in
@@ -493,15 +496,15 @@ and command = function
      0
 
   | ["stat";b;s] ->
-     let nb_proofs = read_val (s ^ ".nbp") in
+     let nb_proofs = read_val (s^".nbp") in
      let thm_uses = Array.make nb_proofs 0 in
      let rule_uses = Array.make nb_rules 0 in
      let unused = ref 0 in
      read_use s;
-     let dump_file = b ^ ".prf" in
+     let dump_file = b^".prf" in
      log "read %s ...\n%!" dump_file;
      let ic = open_in_bin dump_file in
-     the_start_idx := read_val (s ^ ".sti");
+     the_start_idx := read_val (s^".sti");
      read_pos b;
      seek_in ic (get_pos !the_start_idx);
      let f k p =
@@ -516,7 +519,7 @@ and command = function
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
 
-  | ["nbp";b] -> log "%#d proof steps\n" (read_val (b ^ ".nbp")); 0
+  | ["nbp";b] -> log "%#d proof steps\n" (read_val (b^".nbp")); 0
 
   | ["size";b] -> command ["size";b;"0"]
   | ["size";b;l] ->
@@ -549,12 +552,12 @@ and command = function
 
   | ["proof";b;x;y] ->
      let x = integer x and y = integer y in
-     let nb_proofs = read_val (b ^ ".nbp") in
+     let nb_proofs = read_val (b^".nbp") in
      if x < 0 || y < x || y >= nb_proofs then wrong_arg();
      read_pos b;
      init_proof_reading b;
      read_use b;
-     let map_thid_name = read_val (b ^ ".thm") in
+     let map_thid_name = read_val (b^".thm") in
      for k = x to y do
        log "%8d: %a" k proof (proof_at k);
        begin match Array.get !Xproof.last_use k with
@@ -573,7 +576,7 @@ and command = function
      read_pos b;
      init_proof_reading b;
      read_use b;
-     let dump_file = b ^ "-simp.prf" in
+     let dump_file = b^"-simp.prf" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
      (* count the number of simplications *)
@@ -659,7 +662,7 @@ and command = function
      (* compute useful theorems *)
      read_pos b;
      init_proof_reading b;
-     let map_thid_name = read_val (b ^ ".thm") in
+     let map_thid_name = read_val (b^".thm") in
      let nb_proofs = Array.length !prf_pos in
      let useful = Array.make nb_proofs false in
      let rec mark_as_useful = function
@@ -680,7 +683,7 @@ and command = function
        (fun k b ->
          if b then decr nb_useless else Array.set !Xproof.last_use k (-1))
        useful;
-     let dump_file = b ^ ".use" in
+     let dump_file = b^".use" in
      log "generate %s ...\n" dump_file;
      let oc = open_out_bin dump_file in
      output_value oc !Xproof.last_use;
@@ -698,12 +701,12 @@ and command = function
      (* The .use file records an array [last_use] such that
         [last_use.(i) = 0] if [i] is a named theorem, the highest
         theorem index using [i] if there is one, and -1 otherwise. *)
-     let nb_proofs = read_val (b ^ ".nbp") in
+     let nb_proofs = read_val (b^".nbp") in
      let last_use = Array.make nb_proofs (-1) in
      read_prf b
        (fun i p -> List.iter (fun k -> Array.set last_use k i) (deps p));
-     MapInt.iter (fun k _ -> Array.set last_use k 0) (read_val (b ^ ".thm"));
-     let dump_file = b ^ ".use" in
+     MapInt.iter (fun k _ -> Array.set last_use k 0) (read_val (b^".thm"));
+     let dump_file = b^".use" in
      log "generate %s ...\n" dump_file;
      let oc = open_out_bin dump_file in
      output_value oc last_use;
@@ -722,7 +725,7 @@ and command = function
 
   | ["print";"use";b;k] ->
      let k = integer k in
-     let nb_proofs = read_val (b ^ ".nbp") in
+     let nb_proofs = read_val (b^".nbp") in
      if k < 0 || k >= nb_proofs then wrong_arg();
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k);
@@ -731,7 +734,7 @@ and command = function
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
      if nb_parts < 2 then wrong_arg();
-     let nb_proofs = read_val (b ^ ".nbp") in
+     let nb_proofs = read_val (b^".nbp") in
      let part_size = nb_proofs / nb_parts in
      let part idx =
        let k = idx / part_size in
@@ -763,7 +766,7 @@ and command = function
        done;
        log "\n"
      done;
-     let dump_file = b ^ ".dg" in
+     let dump_file = b^".dg" in
      log "generate %s ...\n%!" dump_file;
      let oc = open_out_bin dump_file in
      output_value oc nb_parts;
@@ -793,12 +796,12 @@ and command = function
      let dk = is_dk f in
      let b = Filename.chop_extension f in
      read_sig b;
-     let map_thid_name = read_val (b ^ ".thm") in
+     let map_thid_name = read_val (b^".thm") in
      read_pos b;
      init_proof_reading b;
      begin
        if dk then Xdk.export_theorems b map_thid_name
-       else let nb_parts = read_val (b ^ ".dg") in
+       else let nb_parts = read_val (b^".dg") in
             Xlp.export_theorems_part nb_parts b map_thid_name
      end;
      close_in !Xproof.ic_prf;
@@ -808,7 +811,7 @@ and command = function
      let dk = is_dk f in
      let b = Filename.chop_extension f in
      read_sig b;
-     let map_thid_name = read_val (b ^ ".thm") in
+     let map_thid_name = read_val (b^".thm") in
      read_pos b;
      init_proof_reading b;
      begin
@@ -821,7 +824,7 @@ and command = function
   | ["part";k;x;y;f] ->
      let b = Filename.chop_extension f in
 
-     let dump_file = b ^ ".dg" in
+     let dump_file = b^".dg" in
      log "read %s ...\n%!" dump_file;
      let ic = open_in_bin dump_file in
      let nb_parts = input_value ic in
@@ -853,19 +856,19 @@ and command = function
      read_pos b;
      read_use b;
      (*init_proof_reading b;*)
-     let map_thid_name = read_val (b ^ ".thm") in
+     let map_thid_name = read_val (b^".thm") in
      let map = ref MapInt.empty in
      let create_segment start_index end_index =
        let n = try valid_coq_filename (MapInt.find end_index map_thid_name)
-               with Not_found -> "thm" ^ string_of_int end_index in
+               with Not_found -> "thm"^string_of_int end_index in
        let len = end_index - start_index + 1 in
-       write_val (n ^ ".nbp") len;
-       write_val (n ^ ".sti") start_index;
-       write_val (n ^ ".pos") (Array.sub !prf_pos start_index len);
-       write_val (n ^ ".use") (Array.sub !last_use start_index len);
+       write_val (n^".nbp") len;
+       write_val (n^".sti") start_index;
+       write_val (n^".pos") (Array.sub !prf_pos start_index len);
+       write_val (n^".use") (Array.sub !last_use start_index len);
        let p = Array.get !prf_pos end_index in
        map := MapInt.add end_index (n,p) !map;
-       (*let dump_file = n ^ ".prf" in
+       (*let dump_file = n^".prf" in
        log "write %s ...\n%!" dump_file;
        let oc = open_out_bin dump_file in
        seek_in !ic_prf (get_pos start_index);
@@ -887,28 +890,58 @@ and command = function
      done;
      create_segment 0 !end_idx;
      (*MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;*)
-     write_val (b ^ ".thp") !map;
+     write_val (b^".thp") !map;
      0
 
   | ["theorem";b;f] ->
      read_sig b;
-     map_thid_pos := read_val (b ^ ".thp");
+     map_thid_pos := read_val (b^".thp");
      let n = Filename.chop_extension f in
      read_pos n;
      read_use n;
-     the_start_idx := read_val (n ^ ".sti");
+     the_start_idx := read_val (n^".sti");
      (*log "the_start_idx = %d\n%!" !the_start_idx;*)
      init_proof_reading b;
-     if is_dk f then (log "dk output not available for this command"; 1)
+     if is_dk f then (log "dk output not available for this command\n"; 1)
      else
        begin
          Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
-         Xlp.export_theorem_term_abbrevs b n;
+         Xlp.dump_theorem_term_abbrevs n;
+         if !use_sharing then
+           Xlp.export (n^"_subterm_abbrevs")
+             [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
+             Xlp.decl_subterm_abbrevs;
          Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n;
          0
        end
+
+  | ["abbrev";b;f] ->
+     begin
+       try
+         let dk = is_dk f in
+         let s = Filename.chop_extension f in
+         let len = String.length s in
+         let i = ref (len - 1) in
+         let k = (* compute part number *)
+           while !i >= 0 && s.[!i] <> '_' do decr i done;
+           if !i < 0 then raise Exit;
+           integer (String.sub s (!i+1) (len - 1 - !i))
+         in
+         (* compute theorem name *)
+         if !i < 17 then raise Exit;
+         let n = String.sub s 0 (!i - 18) in
+         if dk then (log "dk output not available for this command\n"; 1)
+         else
+           begin
+             read_sig b;
+             map_thid_pos := read_val (b^".thp");
+             Xlp.export_theorem_term_abbrevs b n k;
+             0
+           end;
+       with Exit -> log "invalid argument\n"; 1
+     end
 
   | f::args ->
      let r = range args in
@@ -934,24 +967,23 @@ and command = function
      if dk then
        begin
          Xdk.export_proofs b r;
-         if r = All then Xdk.export_theorems b (read_val (b ^ ".thm"));
+         if r = All then Xdk.export_theorems b (read_val (b^".thm"));
          Xdk.export_term_abbrevs b;
          Xdk.export_type_abbrevs b;
          log "generate %s.dk ...\n%!" b;
          let infiles =
-           List.map (fun s -> b ^ "_" ^ s ^ ".dk")
+           List.map (fun s -> b^"_"^s^".dk")
              (["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
               ;"proofs"] @ if r = All then ["theorems"] else [])
          in
          exit
            (Sys.command
-              ("cat theory_hol.dk " ^ String.concat " " infiles
-               ^ " > " ^ b ^ ".dk"))
+              ("cat theory_hol.dk "^String.concat " " infiles^" > "^b^".dk"))
        end
      else
        begin
          Xlp.export_proofs b r;
-         if r = All then Xlp.export_theorems b (read_val (b ^ ".thm"));
+         if r = All then Xlp.export_theorems b (read_val (b^".thm"));
          Xlp.export_term_abbrevs_in_one_file b b;
          Xlp.export_type_abbrevs b b
        end;

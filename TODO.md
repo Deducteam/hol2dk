@@ -1,9 +1,9 @@
 TODO
 ----
 
-- generate proof parts in parallel like with hol2dk mk
+- do hol2dk resize term_abbrevs in hol2dk using brv file
 
-- generate term_abbrevs parts in parallel by dumping the htable and then reading the dumped list in parallel
+- generate proof parts in parallel like with hol2dk mk
 
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 
