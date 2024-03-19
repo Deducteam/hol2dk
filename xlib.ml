@@ -83,7 +83,7 @@ let read_val dump_file =
 
 (* [write_val f v] write [v] in file [f]. *)
 let write_val dump_file v =
-  log "write %s ...\n%!" dump_file;
+  log "generate %s ...\n%!" dump_file;
   let oc = open_out_bin dump_file in
   output_value oc v;
   close_out oc

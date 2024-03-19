@@ -112,6 +112,7 @@ let typ = abbrev_typ;;
 (* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
 let decl_type_abbrevs oc =
   let abbrev b (k,n) =
+    log "symbol type%d\n%!" k;
     out oc "symbol type%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
     (* We can use [raw_typ] here since [b] is canonical. *)
@@ -673,7 +674,7 @@ let dump_theorem_term_abbrevs n =
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
   let l = List.sort cmp l in
   let dump_file = n^".brv" in
-  log "write %s ...\n%!" dump_file;
+  log "generate %s ...\n%!" dump_file;
   let oc = open_out_bin dump_file in
   List.iter (output_value oc) l;
   close_out oc;
@@ -688,7 +689,7 @@ let dump_theorem_term_abbrevs n =
   close_in ic;
   write_val (n^".brp") pos;
   write_val (n^".brt") htbl_type_abbrev;
-  (* For some reason, writing of just m doesn't work! Hence, the pair. *)
+  (* For some reason, writing just m doesn't work! Hence, the pair. *)
   Hashtbl.iter
     (fun k m -> write_val (n^"_term_abbrevs"^part k^".min") (m,0))
     htbl_abbrev_part_min;
@@ -736,8 +737,6 @@ let export_theorem_term_abbrevs b n k =
   and min : int = fst (read_val (n^"_term_abbrevs"^part k^".min"))
   and max : int = fst (read_val (n^"_term_abbrevs"^part k^".max"))
   and ht : (int * int) TypHashtbl.t = read_val (n^".brt") in
-  (*let get_val = function Some x -> x | None -> assert false in
-  let max = get_val max and min = get_val min in*)
   TypHashtbl.iter (fun b v ->
       let _tvs, b = canonical_typ b in
       TypHashtbl.add htbl_type_abbrev b v) ht;
