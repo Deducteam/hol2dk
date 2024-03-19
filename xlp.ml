@@ -846,7 +846,7 @@ let export_proofs_in_interval n x y =
 let export_theorem_proof n =
   export_proofs_in_interval n !the_start_idx
     (!the_start_idx + Array.length !prf_pos - 1);
-  log "rename %s_part_%d_proofs.lp into %s.lp ...\n%!" n !proof_part n;
+  log "rename %s_part_%d_proofs.lp into %s_proofs.lp ...\n%!" n !proof_part n;
   command
     (Printf.sprintf "mv -f %s_part_%d_proofs.lp %s_proofs.lp" n !proof_part n)
 ;;
