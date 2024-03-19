@@ -112,7 +112,6 @@ let typ = abbrev_typ;;
 (* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
 let decl_type_abbrevs oc =
   let abbrev b (k,n) =
-    log "symbol type%d\n%!" k;
     out oc "symbol type%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
     (* We can use [raw_typ] here since [b] is canonical. *)
@@ -673,8 +672,9 @@ let export_term_abbrevs_in_one_file b n =
     export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
 ;;
 
-(* [dump_theorem_term_abbrevs n] writes the term abbreviations in
-   the file [n^"_term_abbrevs.brv"]. *)
+(* [dump_theorem_term_abbrevs n] generates the files
+   [n^"_term_abbrevs.brv"], [n^"_term_abbrevs.min"] and
+   [n^"_term_abbrevs.max"]. *)
 let dump_theorem_term_abbrevs n =
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
@@ -700,7 +700,7 @@ let dump_theorem_term_abbrevs n =
   Hashtbl.iter (fun k m -> write_val (f k^".max") (m,0)) htbl_abbrev_part_max
 ;;
 
-(* [export_theorem_term_abbrevs b n k] writes the term abbreviations
+(* [export_theorem_term_abbrevs b n k] writes the term abbreviation
    file [n^"_term_abbrevs"^part(k)^".lp"]. *)
 let export_theorem_term_abbrevs b n k =
   let pos : int array = read_val (n^".brp")

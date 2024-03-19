@@ -1,6 +1,8 @@
 TODO
 ----
 
+- share a single type_abbrev file ?
+
 - do hol2dk resize term_abbrevs in hol2dk using brv file
 
 - generate proof parts in parallel like with hol2dk mk
