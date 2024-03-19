@@ -673,9 +673,10 @@ let export_term_abbrevs_in_one_file b n =
 ;;
 
 (* [dump_theorem_term_abbrevs n] generates the files
-   [n^"_term_abbrevs.brv"], [n^"_term_abbrevs.min"] and
-   [n^"_term_abbrevs.max"]. *)
+   [n^"_term_abbrevs.brv"], [n^"_term_abbrevs.brp"] and
+   [n^"_term_abbrevs.min"]. *)
 let dump_theorem_term_abbrevs n =
+  (* generate the file [n^"_term_abbrevs.brv"]. *)
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
   let l = List.sort cmp l in
@@ -684,6 +685,7 @@ let dump_theorem_term_abbrevs n =
   let oc = open_out_bin dump_file in
   List.iter (output_value oc) l;
   close_out oc;
+  (* generate the file [n^"_term_abbrevs.brp"]. *)
   let len = TrmHashtbl.length htbl_term_abbrev in
   let pos = Array.make len 0 in
   log "read %s ...\n%!" dump_file;
@@ -694,18 +696,21 @@ let dump_theorem_term_abbrevs n =
   done;
   close_in ic;
   write_val (n^".brp") pos;
-  let f k = n^"_term_abbrevs"^part k in
-  (* For some reason, writing just m doesn't work! Hence, the pair. *)
-  Hashtbl.iter (fun k m -> write_val (f k^".min") (m,0)) htbl_abbrev_part_min;
-  Hashtbl.iter (fun k m -> write_val (f k^".max") (m,0)) htbl_abbrev_part_max
+  (* generate the file [n^"_term_abbrevs.min"]. *)
+  let max_of_part k =
+    try Hashtbl.find htbl_abbrev_part_max k with Not_found -> assert false
+  in
+  Hashtbl.iter
+    (fun k min ->
+      write_val (n^"_term_abbrevs"^part k^".min") (min,max_of_part k))
+    htbl_abbrev_part_min
 ;;
 
 (* [export_theorem_term_abbrevs b n k] writes the term abbreviation
    file [n^"_term_abbrevs"^part(k)^".lp"]. *)
 let export_theorem_term_abbrevs b n k =
   let pos : int array = read_val (n^".brp")
-  and min : int = fst (read_val (n^"_term_abbrevs"^part k^".min"))
-  and max : int = fst (read_val (n^"_term_abbrevs"^part k^".max")) in
+  and (min, max) : int * int = read_val (n^"_term_abbrevs"^part k^".min") in
   let dump_file = n^".brv" in
   log "read %s ...\n%!" dump_file;
   let ic = open_in_bin dump_file in

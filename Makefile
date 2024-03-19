@@ -46,11 +46,11 @@ FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_
 %.lp %.lpo.mk %.brv %.brp &: %.sti
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
 
-%.lp : %.min
+%.lp %_type_abbrevs.lp &: %.min
 	hol2dk abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: clean-mk clean-min clean-max clean-brv clean-brp clean-lpo clean-v clean-vo
+clean-lp: clean-mk clean-min clean-brv clean-brp clean-lpo clean-v clean-vo
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
 .PHONY: clean-mk
@@ -61,10 +61,6 @@ clean-mk:
 .PHONY: clean-min
 clean-min:
 	find . -maxdepth 1 -name '*.min' -delete
-
-.PHONY: clean-max
-clean-max:
-	find . -maxdepth 1 -name '*.max' -delete
 
 .PHONY: clean-brv
 clean-brv:
