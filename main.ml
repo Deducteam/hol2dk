@@ -89,8 +89,8 @@ hol2dk split $file
 hol2dk theorem $file $t.lp
   generate the lp proof of the theorem named $t
 
-hol2dk abbrev $file $t.lp $k
-  generate $t_term_abbrevs_part_$k
+hol2dk abbrev $file ${t}_term_abbrevs_part_$k.lp
+  generate ${t}_term_abbrevs_part_$k.lp
 
 Multi-threaded dk/lp file generation by splitting proofs in $n parts
 --------------------------------------------------------------------

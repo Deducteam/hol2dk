@@ -700,38 +700,6 @@ let dump_theorem_term_abbrevs n =
   Hashtbl.iter (fun k m -> write_val (f k^".max") (m,0)) htbl_abbrev_part_max
 ;;
 
-(* [export_theorem_term_abbrevs b n] writes the term abbreviations in
-   the files [n^"_term_abbrevs"^part(k)^".lp"]. *)
-(*let export_theorem_term_abbrevs b n =
-  let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
-  let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
-  let l = ref (List.sort cmp l) in
-  let iter_deps f =
-    f (b^"_types");
-    f (n^"_type_abbrevs");
-    f (b^"_terms");
-    if !use_sharing then f (n^"_subterm_abbrevs")
-  in
-  let part_abbrev (i,min) =
-    let abbrevs oc =
-      let max =
-        try Hashtbl.find htbl_abbrev_part_max i with Not_found -> assert false
-      in
-      for _ = min to max do
-        match !l with
-        | [] -> assert false
-        | (t,x)::l' -> decl_term_abbrev oc t x; l := l'
-      done
-    in
-    export_iter (n^"_term_abbrevs"^part i) iter_deps abbrevs
-  in
-  List.iter part_abbrev
-    (List.sort Stdlib.compare (Xlib.bindings htbl_abbrev_part_min));
-  if !use_sharing then
-    export (n^"_subterm_abbrevs") [b^"_types"; n^"_type_abbrevs"; b^"_terms"]
-      decl_subterm_abbrevs
-;;*)
-
 (* [export_theorem_term_abbrevs b n k] writes the term abbreviations
    file [n^"_term_abbrevs"^part(k)^".lp"]. *)
 let export_theorem_term_abbrevs b n k =
