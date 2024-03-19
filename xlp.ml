@@ -345,7 +345,7 @@ let export p deps = export_iter p (fun h -> List.iter h deps);;
 let print_let oc (t,t',_,_) =
   out oc "\n  let %a ≔ %a in" raw_term t' raw_term t;;
 
-let decl_abbrev oc t (k,n,bs) =
+let decl_term_abbrev oc t (k,n,bs) =
   out oc "symbol term%d" k;
   for i=0 to n-1 do out oc " a%d" i done;
   List.iteri (fun i b -> out oc " (x%d: El %a)" i abbrev_typ b) bs;
@@ -357,7 +357,9 @@ let decl_abbrev oc t (k,n,bs) =
 ;;
 
 (* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
-let decl_term_abbrevs oc = TrmHashtbl.iter (decl_abbrev oc) htbl_term_abbrev;;
+let decl_term_abbrevs oc =
+  TrmHashtbl.iter (decl_term_abbrev oc) htbl_term_abbrev
+;;
 
 (* [decl_subterm_abbrevs oc] outputs on [oc] the subterm abbreviations
    with no variables. *)
@@ -655,8 +657,12 @@ print lem%d;\n" x*)
 ;;
 
 (****************************************************************************)
-(* Generate term abbreviation files. *)
+(* Generate type and term abbreviation files. *)
 (****************************************************************************)
+
+let export_type_abbrevs b n =
+  export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
+;;
 
 let export_term_abbrevs_in_one_file b n =
   let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
@@ -688,14 +694,10 @@ let dump_theorem_term_abbrevs n =
   done;
   close_in ic;
   write_val (n^".brp") pos;
-  write_val (n^".brt") htbl_type_abbrev;
+  let f k = n^"_term_abbrevs"^part k in
   (* For some reason, writing just m doesn't work! Hence, the pair. *)
-  Hashtbl.iter
-    (fun k m -> write_val (n^"_term_abbrevs"^part k^".min") (m,0))
-    htbl_abbrev_part_min;
-  Hashtbl.iter
-    (fun k m -> write_val (n^"_term_abbrevs"^part k^".max") (m,0))
-    htbl_abbrev_part_max
+  Hashtbl.iter (fun k m -> write_val (f k^".min") (m,0)) htbl_abbrev_part_min;
+  Hashtbl.iter (fun k m -> write_val (f k^".max") (m,0)) htbl_abbrev_part_max
 ;;
 
 (* [export_theorem_term_abbrevs b n] writes the term abbreviations in
@@ -718,7 +720,7 @@ let dump_theorem_term_abbrevs n =
       for _ = min to max do
         match !l with
         | [] -> assert false
-        | (t,x)::l' -> decl_abbrev oc t x; l := l'
+        | (t,x)::l' -> decl_term_abbrev oc t x; l := l'
       done
     in
     export_iter (n^"_term_abbrevs"^part i) iter_deps abbrevs
@@ -735,29 +737,27 @@ let dump_theorem_term_abbrevs n =
 let export_theorem_term_abbrevs b n k =
   let pos : int array = read_val (n^".brp")
   and min : int = fst (read_val (n^"_term_abbrevs"^part k^".min"))
-  and max : int = fst (read_val (n^"_term_abbrevs"^part k^".max"))
-  and ht : (int * int) TypHashtbl.t = read_val (n^".brt") in
-  TypHashtbl.iter (fun b v ->
-      let _tvs, b = canonical_typ b in
-      TypHashtbl.add htbl_type_abbrev b v) ht;
+  and max : int = fst (read_val (n^"_term_abbrevs"^part k^".max")) in
   let dump_file = n^".brv" in
   log "read %s ...\n%!" dump_file;
   let ic = open_in_bin dump_file in
   if max >= 0 then seek_in ic pos.(min);
+  let p = n^"_term_abbrevs"^part k in
   let iter_deps f =
     f (b^"_types");
     f (b^"_terms");
-    f (n^"_type_abbrevs");
+    f (p^"_type_abbrevs");
     if !use_sharing then f (n^"_subterm_abbrevs")
   in
   let abbrevs oc =
     for _ = min to max do
       let t,x = input_value ic in
-      decl_abbrev oc t x
+      decl_term_abbrev oc t x
     done
   in
-  export_iter (n^"_term_abbrevs"^part k) iter_deps abbrevs;
-  close_in ic
+  export_iter p iter_deps abbrevs;
+  close_in ic;
+  export_type_abbrevs b p
 ;;
 
 (****************************************************************************)
@@ -892,10 +892,6 @@ let types() =
 
 let export_types b =
   export (b^"_types") [] (fun oc -> list decl_typ oc (types()))
-;;
-
-let export_type_abbrevs b n =
-  export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 ;;
 
 let constants() =

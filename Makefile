@@ -27,7 +27,7 @@ STI_FILES := $(wildcard *.sti)
 MIN_FILES := $(wildcard *.min)
 
 .PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp) $(MIN_FILES:%.min=%.lp)
+lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp) $(MIN_FILES:%.min=%.lp) $(MIN_FILES:%.min=%_type_abbrevs.lp)
 
 HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 1000000
 
