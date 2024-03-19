@@ -23,11 +23,19 @@ BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
 
+.PHONY: lp
+lp: lp-stage1
+	$(MAKE) lp-stage2
+
 STI_FILES := $(wildcard *.sti)
+
+.PHONY: lp-stage1
+lp-stage1: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
+
 MIN_FILES := $(wildcard *.min)
 
-.PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp) $(MIN_FILES:%.min=%.lp) $(MIN_FILES:%.min=%_type_abbrevs.lp)
+.PHONY: lp-stage2
+lp-stage2: $(MIN_FILES:%.min=%.lp) $(MIN_FILES:%.min=%_type_abbrevs.lp)
 
 HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 1000000
 
