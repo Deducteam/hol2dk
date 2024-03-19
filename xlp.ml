@@ -718,7 +718,7 @@ let dump_theorem_term_abbrevs n =
       for _ = min to max do
         match !l with
         | [] -> assert false
-        | (t,x)::l' -> abbrev oc t x; l := l'
+        | (t,x)::l' -> decl_abbrev oc t x; l := l'
       done
     in
     export_iter (n^"_term_abbrevs"^part i) iter_deps abbrevs
