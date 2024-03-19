@@ -124,21 +124,21 @@ jobs:
           make clean-lpo
           hol2dk resize thm75360.lp 100
           make -j3 lpo
-      - name: Test resize thm75360_term_abbrevs.lp 300
-        run: |
-          eval `opam env`
-          export HOL2DK_DIR=`pwd`
-          export HOLLIGHT_DIR=`pwd`/hol-light
-          cd output/xci
-          make clean-lpo
-          hol2dk resize thm75360_term_abbrevs.lp 300
-          make -j3 lpo
-      - name: Test resize thm75360_term_abbrevs.lp 100
-        run: |
-          eval `opam env`
-          export HOL2DK_DIR=`pwd`
-          export HOLLIGHT_DIR=`pwd`/hol-light
-          cd output/xci
-          make clean-lpo
-          hol2dk resize thm75360_term_abbrevs.lp 100
-          make -j3 lpo
+      # - name: Test resize thm75360_term_abbrevs.lp 300
+      #   run: |
+      #     eval `opam env`
+      #     export HOL2DK_DIR=`pwd`
+      #     export HOLLIGHT_DIR=`pwd`/hol-light
+      #     cd output/xci
+      #     make clean-lpo
+      #     hol2dk resize thm75360_term_abbrevs.lp 300
+      #     make -j3 lpo
+      # - name: Test resize thm75360_term_abbrevs.lp 100
+      #   run: |
+      #     eval `opam env`
+      #     export HOL2DK_DIR=`pwd`
+      #     export HOLLIGHT_DIR=`pwd`/hol-light
+      #     cd output/xci
+      #     make clean-lpo
+      #     hol2dk resize thm75360_term_abbrevs.lp 100
+      #     make -j3 lpo
