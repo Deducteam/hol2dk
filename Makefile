@@ -70,13 +70,12 @@ clean-brv:
 clean-brp:
 	find . -maxdepth 1 -name '*.brp' -delete
 
-include lpo.mk
-
 LP_FILES := $(wildcard *.lp)
 
-lpo.mk: $(LP_FILES:%.lp=%.lpo.mk)
+include lpo.mk
+
+lpo.mk: $(wildcard *.lpo.mk) #$(LP_FILES:%.lp=%.lpo.mk)
 	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
-#	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
 
 theory_hol.lpo.mk: theory_hol.lp
 	$(HOL2DK_DIR)/dep-lpo $< > $@
