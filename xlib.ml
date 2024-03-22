@@ -11,6 +11,8 @@ open Fusion
 
 let open_file n = log "generate %s ...\n%!" n; open_out n;;
 
+let create_file n f = let oc = open_file n in f oc; close_out oc;;
+
 let command s =
   if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
 

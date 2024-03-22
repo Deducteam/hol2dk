@@ -906,10 +906,7 @@ and command = function
          Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
          Xlp.dump_theorem_term_abbrevs n;
-         if !use_sharing then
-           Xlp.export (n^"_subterm_abbrevs")
-             [b^"_types"; b^"_terms"; n^"_type_abbrevs"]
-             Xlp.decl_subterm_abbrevs;
+         if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n;
          0
