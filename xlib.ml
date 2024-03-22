@@ -11,6 +11,8 @@ open Fusion
 
 let open_file n = log "generate %s ...\n%!" n; open_out n;;
 
+let create_file n f = let oc = open_file n in f oc; close_out oc;;
+
 let command s =
   if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
 
@@ -83,7 +85,7 @@ let read_val dump_file =
 
 (* [write_val f v] write [v] in file [f]. *)
 let write_val dump_file v =
-  log "write %s ...\n%!" dump_file;
+  log "generate %s ...\n%!" dump_file;
   let oc = open_out_bin dump_file in
   output_value oc v;
   close_out oc
@@ -134,6 +136,7 @@ let rec change_prefixes l s =
 
 (* [bindings ht] returns the list of bindings in the hash table [ht]. *)
 let bindings ht = Hashtbl.fold (fun x y acc -> (x,y)::acc) ht [];;
+let sorted_bindings ht = List.sort Stdlib.compare (bindings ht);;
 
 (****************************************************************************)
 (* Printing functions. *)
@@ -158,17 +161,18 @@ let list_sep sep elt oc xs =
 ;;
 
 let list elt oc xs = list_sep "" elt oc xs;;
-
 let olist elt oc xs = out oc "[%a]" (list_sep "; " elt) xs;;
-
-let set_int oc s = olist int oc (SetInt.elements s);;
-let set_str oc s = olist string oc (SetStr.elements s);;
-
 let list_prefix p elt oc xs = list (prefix p elt) oc xs;;
+
+let array elt oc a =
+  out oc "["; Array.iter (fun x -> out oc "%a;" elt x) a; out oc "]";;
+
+let set_int oc s = out oc "{"; SetInt.iter (out oc "%d;") s; out oc "}";;
+let set_str oc s = out oc "{"; SetStr.iter (out oc "%s;") s; out oc "}";;
 
 let htbl ppkey ppval oc ht =
   (*Hashtbl.iter (opair oc)*)
-  List.iter (opair ppkey ppval oc) (List.sort Stdlib.compare (bindings ht));;
+  List.iter (opair ppkey ppval oc) (sorted_bindings ht);;
 
 let hstats oc hs =
   let open Hashtbl in

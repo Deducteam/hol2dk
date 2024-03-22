@@ -1,16 +1,22 @@
 NOTES
 -----
 
+## 22/03/24
+
+generation of term abbreviations in parallel
+
+make lp-stage2 can be run in parallel of make lp-stage1 after some time
+
 ## 15/03/24
 
-optimizing dependencies:
+optimize dependencies on proofs too:
 
 hol.ml --max-abbrevs 20000: make -j32 lp 45s v 41s -j16 vo 37m28s
 hol.ml --max-abbrevs 10000: make -j32 lp 47s v 47s -j16 vo 42m30s
 
 ## 13/03/24
 
-optimizing dependencies on term_abbrevs:
+optimize dependencies on term_abbrevs:
 
 hol.ml --max-abbrevs 20000: make -j32 lp 42s v 41s -j16 vo 32m40s
 

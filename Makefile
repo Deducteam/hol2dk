@@ -2,8 +2,6 @@
 
 BASE = $(shell if test -f BASE; then cat BASE; fi)
 
-STI_FILES := $(wildcard *.sti)
-
 .PHONY: default
 default:
 	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
@@ -26,7 +24,18 @@ $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
 
 .PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
+lp: lp-stage1
+	$(MAKE) lp-stage2
+
+STI_FILES := $(wildcard *.sti)
+
+.PHONY: lp-stage1
+lp-stage1: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
+
+MIN_FILES := $(wildcard *.min)
+
+.PHONY: lp-stage2
+lp-stage2: $(MIN_FILES:%.min=%.lp) $(MIN_FILES:%.min=%_type_abbrevs.lp)
 
 HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 1000000
 
@@ -34,11 +43,14 @@ FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_
 
 #$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 20000 #--use-sharing
 
-%.lp %.lpo.mk &: %.sti
+%.lp %.lpo.mk %.brv %.brp &: %.sti
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
 
+%.lp %_type_abbrevs.lp &: %.min
+	hol2dk abbrev $(BASE) $*.lp
+
 .PHONY: clean-lp
-clean-lp: clean-mk clean-lpo clean-v clean-vo
+clean-lp: clean-mk clean-min clean-brv clean-brp clean-lpo clean-v clean-vo
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
 .PHONY: clean-mk
@@ -46,13 +58,24 @@ clean-mk:
 	find . -maxdepth 1 -name '*.lpo.mk' -delete
 	rm -f lpo.mk vo.mk
 
-include lpo.mk
+.PHONY: clean-min
+clean-min:
+	find . -maxdepth 1 -name '*.min' -delete
+
+.PHONY: clean-brv
+clean-brv:
+	find . -maxdepth 1 -name '*.brv' -delete
+
+.PHONY: clean-brp
+clean-brp:
+	find . -maxdepth 1 -name '*.brp' -delete
 
 LP_FILES := $(wildcard *.lp)
 
-lpo.mk: $(LP_FILES:%.lp=%.lpo.mk)
+include lpo.mk
+
+lpo.mk: $(wildcard *.lpo.mk) #$(LP_FILES:%.lp=%.lpo.mk)
 	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
-#	find . -maxdepth 1 -name '*.lp' -exec $(HOL2DK_DIR)/dep-lpo {} \; > lpo.mk
 
 theory_hol.lpo.mk: theory_hol.lp
 	$(HOL2DK_DIR)/dep-lpo $< > $@
