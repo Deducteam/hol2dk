@@ -401,8 +401,8 @@ The part of HOL-Light that is aligned with Coq is gathered in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam).
 
-Performance
------------
+Performance on 25/02/24
+-----------------------
 
 Performance on a machine with 32 processors i9-13950HX and 64G RAM:
 
