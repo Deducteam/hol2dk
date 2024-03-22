@@ -827,7 +827,7 @@ let export_proofs_in_interval n x y =
 ;;
 
 (* [export_theorem_proof n] generates the files
-   [n^part(k)^"_proofs.lp"] for some [1<=k<!proof_part] and the file
+   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part] and the file
    [n^"_proofs.lp"]. *)
 let export_theorem_proof n =
   export_proofs_in_interval n !the_start_idx
