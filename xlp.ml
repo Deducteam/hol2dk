@@ -1000,10 +1000,9 @@ let export_theorem_proof_part b n k =
     if !use_sharing then f (p^"_subterm_abbrevs");
     for j = 1 to nb_parts do f (p^"_term_abbrevs"^part j) done
   in
-  let f = if k = Array.length max_of - 1 then p else n in
-  create_file_with_deps (p^"_deps") f iter_deps (fun _ -> ());
-  (* generate [n^".lp"] *)
-  concat (p^"_deps.lp") (p^"_proofs.lp") (f^".lp")
+  create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
+  (* generate [n^part(k)^".lp"] *)
+  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp")
 ;;
 
 (****************************************************************************)
