@@ -380,6 +380,26 @@ let print_env_var n =
   | Some v -> log "%s = \"%s\"\n" n v
 ;;
 
+(* [theorem_part s suffix] returns [Some(n,k)] if [s =
+   n^suffix^part(k)], and [None] otherwise. *)
+let theorem_part s suffix =
+  try
+    let len_s = String.length s in
+    let i = ref (len_s - 1) in
+    (* compute part number *)
+    let k =
+      while !i >= 0 && s.[!i] <> '_' do decr i done;
+      if !i < 0 then raise Exit;
+      integer (String.sub s (!i+1) (len_s - 1 - !i))
+    in
+    (* compute theorem name *)
+    let len_suffix = String.length suffix + String.length "_part_" in
+    if !i < len_suffix then raise Exit;
+    let n = String.sub s 0 (!i - len_suffix + 1) in
+    Some(n,k)
+  with Exit -> None
+;;
+
 let rec log_command l =
   log "\nhol2dk"; List.iter (log " %s") l; log " ...\n%!"; command l
 
@@ -892,6 +912,35 @@ and command = function
      write_val (b^".thp") !map;
      0
 
+  | ["thmsplit";b;f] ->
+     let n = Filename.chop_extension f in
+     read_use n;
+     the_start_idx := read_val (n^".sti");
+     (* to generate [n^".lp"] *)
+     read_sig b;
+     map_thid_pos := read_val (b^".thp");
+     read_pos n;
+     init_proof_reading b;
+     if is_dk f then (log "dk output not available for this command\n"; 1)
+     else (Xlp.split_theorem_proof b n; 0)
+
+  | ["thmpart";b;f] ->
+     begin
+       let dk = is_dk f in
+       let f = Filename.chop_extension f in
+       match theorem_part f "" with
+       | None -> log "invalid argument\n"; 1
+       | Some(n,k) ->
+          read_sig b;
+          map_thid_pos := read_val (b^".thp");
+          read_pos n;
+          read_use n;
+          the_start_idx := read_val (n^".sti");
+          init_proof_reading b;
+          if dk then (log "dk output not available for this command\n"; 1)
+          else (Xlp.export_theorem_proof_part b n k; 0)
+     end
+
   | ["theorem";b;f] ->
      read_sig b;
      map_thid_pos := read_val (b^".thp");
@@ -914,19 +963,11 @@ and command = function
 
   | ["abbrev";b;f] ->
      begin
-       try
-         let dk = is_dk f in
-         let s = Filename.chop_extension f in
-         let len = String.length s in
-         let i = ref (len - 1) in
-         let k = (* compute part number *)
-           while !i >= 0 && s.[!i] <> '_' do decr i done;
-           if !i < 0 then raise Exit;
-           integer (String.sub s (!i+1) (len - 1 - !i))
-         in
-         (* compute theorem name *)
-         if !i < 17 then raise Exit;
-         let n = String.sub s 0 (!i - 18) in
+       let dk = is_dk f in
+       let f = Filename.chop_extension f in
+       match theorem_part f "_term_abbrevs" with
+       | None -> log "invalid argument\n"; 1
+       | Some(n,k) ->
          if dk then (log "dk output not available for this command\n"; 1)
          else
            begin
@@ -934,8 +975,7 @@ and command = function
              map_thid_pos := read_val (b^".thp");
              Xlp.export_theorem_term_abbrevs b n k;
              0
-           end;
-       with Exit -> log "invalid argument\n"; 1
+           end
      end
 
   | f::args ->

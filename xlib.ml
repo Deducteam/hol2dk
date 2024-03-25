@@ -21,6 +21,11 @@ let concat f1 f2 f3 =
   command (Printf.sprintf "cat %s %s > %s && rm -f %s %s" f1 f2 f3 f1 f2)
 ;;
 
+let rename f1 f2 =
+  log "rename %s into %s ...\n%!" f1 f2;
+  command (Printf.sprintf "mv -f %s %s" f1 f2)
+;;
+
 (****************************************************************************)
 (* Ranges of proof indexes. *)
 (****************************************************************************)
@@ -137,6 +142,11 @@ let rec change_prefixes l s =
 (* [bindings ht] returns the list of bindings in the hash table [ht]. *)
 let bindings ht = Hashtbl.fold (fun x y acc -> (x,y)::acc) ht [];;
 let sorted_bindings ht = List.sort Stdlib.compare (bindings ht);;
+
+(* [array_of_hashtbl ht] turns an hash table into an array. *)
+let array_of_hashtbl ht =
+  Array.init (Hashtbl.length ht) (Hashtbl.find ht)
+;;
 
 (****************************************************************************)
 (* Printing functions. *)
