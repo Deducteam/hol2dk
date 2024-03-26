@@ -18,7 +18,7 @@ clean-split:
 	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
 	rm -f $(BASE).thp
 
-HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 1000000
+HOL2DK_OPTIONS = --max-steps 20000 --max-abbrevs 500000
 
 #FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
