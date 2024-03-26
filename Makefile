@@ -18,7 +18,7 @@ clean-split:
 	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
 	rm -f $(BASE).thp
 
-HOL2DK_OPTIONS = --max-steps 20000 --max-abbrevs 500000
+#HOL2DK_OPTIONS = --max-steps 20000 --max-abbrevs 500000
 
 #FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
@@ -143,17 +143,17 @@ clean-v: rm-v clean-vo
 rm-v:
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
-vo.mk: lpo.mk
-	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
-
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
+
+vo.mk: lpo.mk
+	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
 endif
 
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
 ifneq ($(INCLUDE_VO_MK),1)
-	$(MAKE) SET_LP_FILES=1 INCLUDE_VO_MK=1 $@
+	$(MAKE) SET_LP_FILES=1 INCLUDE_LPO_MK=1 INCLUDE_VO_MK=1 $@
 endif
 
 COQC_OPTIONS = -no-glob # -w -coercions
