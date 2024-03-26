@@ -863,7 +863,7 @@ let export_theorem_deps b n =
 let split_theorem_proof b n =
   let x = !the_start_idx
   and y = !the_start_idx + Array.length !last_use - 1
-  and nb_steps = ref 0
+  and part_size = ref 0
   and min = ref !the_start_idx
   and ht_part_max = Hashtbl.create 1_000 in
   proof_part := 1;
@@ -871,15 +871,20 @@ let split_theorem_proof b n =
   for k = x to y do
     if get_use k >= 0 then
       begin
-        incr nb_steps;
-        if !nb_steps > !max_steps then
+        let size =
+          if k+1 - !the_start_idx < Array.length !prf_pos
+          then get_pos(k+1) - get_pos(k)
+          else 1_500
+        in
+        part_size := !part_size + size;
+        if !part_size > !max_steps then
           begin
             let max = k-1 in
             write_val (n^part !proof_part^".idx") (!min,max);
             Hashtbl.add ht_part_max !proof_part max;
             incr proof_part;
             min := k;
-            nb_steps := 0
+            part_size := 0
           end
       end;
   done;

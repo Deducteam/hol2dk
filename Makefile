@@ -18,7 +18,7 @@ clean-split:
 	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
 	rm -f $(BASE).thp
 
-#HOL2DK_OPTIONS = --max-steps 20000 --max-abbrevs 500000
+HOL2DK_OPTIONS = --max-steps 10000000 --max-abbrevs 500000
 
 #FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
@@ -30,9 +30,10 @@ $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
 
 .PHONY: lp
-lp: $(BASE_FILES:%=%.lp) lp-stage1
-	$(MAKE) lp-stage2
-	$(MAKE) lp-stage3
+lp: $(BASE_FILES:%=%.lp)
+	$(MAKE) SET_LP_FILES=1 lp-stage1
+	$(MAKE) SET_LP_FILES=1 lp-stage2
+	$(MAKE) SET_LP_FILES=1 lp-stage3
 
 ifeq ($(INCLUDE_VO_MK),1)
 INCLUDE_LPO_MK=1
