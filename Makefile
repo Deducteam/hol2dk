@@ -30,32 +30,38 @@ $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
 
 .PHONY: lp
-lp: lp-stage1
+lp: $(BASE_FILES:%=%.lp) lp-stage1
 	$(MAKE) lp-stage2
 	$(MAKE) lp-stage3
 
+ifneq ($(NO_DEP),1)
 STI_FILES := $(wildcard *.sti)
 
 .PHONY: lp-stage1
-lp-stage1: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.max)
+lp-stage1: $(STI_FILES:%.sti=%.max)
+endif
 
-%.max &: %.sti
+%.max: %.sti
 	hol2dk $(HOL2DK_OPTIONS) thmsplit $(BASE) $*.lp
 
+ifneq ($(NO_DEP),1)
 IDX_FILES := $(wildcard *.idx)
 
 .PHONY: lp-stage2
 lp-stage2: $(IDX_FILES:%.idx=%.lp)
+endif
 
 %.lp: %.idx
 	hol2dk $(HOL2DK_OPTIONS) thmpart $(BASE) $*.lp
 
+ifneq ($(NO_DEP),1)
 MIN_FILES := $(wildcard *.min)
 
 .PHONY: lp-stage3
-lp-stage3: $(MIN_FILES:%.min=%.lp) $(MIN_FILES:%.min=%_type_abbrevs.lp)
+lp-stage3: $(MIN_FILES:%.min=%.lp)
+endif
 
-%.lp %_type_abbrevs.lp &: %.min
+%.lp: %.min
 	hol2dk abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
@@ -90,18 +96,25 @@ rm-brp:
 rm-min:
 	find . -maxdepth 1 -name '*.min' -delete
 
+ifeq ($(SET_LP_FILES),1)
 LP_FILES := $(wildcard *.lp)
+endif
 
+ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
 
-lpo.mk: theory_hol.lpo.mk $(wildcard *.lpo.mk) #$(LP_FILES:%.lp=%.lpo.mk)
+lpo.mk: theory_hol.lpo.mk $(wildcard *.lpo.mk)
 	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 
 theory_hol.lpo.mk: theory_hol.lp
 	$(HOL2DK_DIR)/dep-lpo $< > $@
+endif
 
 .PHONY: lpo
 lpo: $(LP_FILES:%.lp=%.lpo)
+ifneq ($(INCLUDE_LPO_MK),1)
+	$(MAKE) SET_LP_FILES=1 INCLUDE_LPO_MK=1 $@
+endif
 
 %.lpo: %.lp
 	lambdapi check -c -w -v0 $<
@@ -115,6 +128,9 @@ rm-lpo:
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
+ifneq ($(SET_LP_FILES),1)
+	$(MAKE) SET_LP_FILES=1 $@
+endif
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
@@ -129,12 +145,16 @@ rm-v:
 
 vo.mk: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
-#	find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-vo {} \; > vo.mk
 
+ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
+endif
 
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
+ifneq ($(INCLUDE_VO_MK),1)
+	$(MAKE) SET_LP_FILES=1 INCLUDE_VO_MK=1 $@
+endif
 
 COQC_OPTIONS = -no-glob # -w -coercions
 %.vo: %.v
