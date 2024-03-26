@@ -34,7 +34,15 @@ lp: $(BASE_FILES:%=%.lp) lp-stage1
 	$(MAKE) lp-stage2
 	$(MAKE) lp-stage3
 
-ifneq ($(NO_DEP),1)
+ifeq ($(INCLUDE_VO_MK),1)
+INCLUDE_LPO_MK=1
+endif
+
+ifeq ($(INCLUDE_LPO_MK),1)
+SET_LP_FILES=1
+endif
+
+ifeq ($(SET_LP_FILES),1)
 STI_FILES := $(wildcard *.sti)
 
 .PHONY: lp-stage1
@@ -44,7 +52,7 @@ endif
 %.max: %.sti
 	hol2dk $(HOL2DK_OPTIONS) thmsplit $(BASE) $*.lp
 
-ifneq ($(NO_DEP),1)
+ifeq ($(SET_LP_FILES),1)
 IDX_FILES := $(wildcard *.idx)
 
 .PHONY: lp-stage2
@@ -54,7 +62,7 @@ endif
 %.lp: %.idx
 	hol2dk $(HOL2DK_OPTIONS) thmpart $(BASE) $*.lp
 
-ifneq ($(NO_DEP),1)
+ifeq ($(SET_LP_FILES),1)
 MIN_FILES := $(wildcard *.min)
 
 .PHONY: lp-stage3
