@@ -380,9 +380,9 @@ let print_env_var n =
   | Some v -> log "%s = \"%s\"\n" n v
 ;;
 
-(* [theorem_part s suffix] returns [Some(n,k)] if [s =
+(* [get_part s suffix] returns [Some(n,k)] if [s =
    n^suffix^part(k)], and [None] otherwise. *)
-let theorem_part s suffix =
+let get_part s suffix =
   try
     let len_s = String.length s in
     let i = ref (len_s - 1) in
@@ -928,7 +928,7 @@ and command = function
      begin
        let dk = is_dk f in
        let f = Filename.chop_extension f in
-       match theorem_part f "" with
+       match get_part f "" with
        | None -> log "invalid argument\n"; 1
        | Some(n,k) ->
           read_sig b;
@@ -965,7 +965,7 @@ and command = function
      begin
        let dk = is_dk f in
        let f = Filename.chop_extension f in
-       match theorem_part f "_term_abbrevs" with
+       match get_part f "_term_abbrevs" with
        | None -> log "invalid argument\n"; 1
        | Some(n,k) ->
          if dk then (log "dk output not available for this command\n"; 1)
