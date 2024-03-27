@@ -33,10 +33,6 @@ rm-use:
 rm-thp:
 	rm -f $(BASE).thp
 
-#FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
-
-#$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 20000 #--use-sharing
-
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 
 $(BASE_FILES:%=%.lp) &:
@@ -66,37 +62,28 @@ ifeq ($(SET_IDX_FILES),1)
 IDX_FILES := $(wildcard *.idx)
 endif
 
-.PHONY: lp
-ifeq ($(SPLIT_PROOFS),1)
-HOL2DK_OPTIONS = --max-steps 10000000 --max-abbrevs 500000
+BIG_FILES = $(shell if test -f BIG_FILES; then cat BIG_FILES; fi)
 
-lp: $(BASE_FILES:%=%.lp)
-	$(MAKE) SET_STI_FILES=1 lp-split
-	$(MAKE) SET_IDX_FILES=1 lp-proofs
+.PHONY: lp
+lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
+	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 
-.PHONY: lp-split
-lp-split: $(STI_FILES:%.sti=%.max)
+.PHONY: lp-proofs
+lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
+
+MAX_PROOF = --max-steps 10000000
 
 %.max: %.sti
-	hol2dk $(HOL2DK_OPTIONS) thmsplit $(BASE) $*.lp
+	hol2dk $(MAX_PROOF) thmsplit $(BASE) $*.lp
 
-.PHONY: lp-proofs
-lp-proofs: $(IDX_FILES:%.idx=%.lp)
+MAX_ABBREV = --max-abbrevs 500000
 
 %.lp: %.idx
-	hol2dk $(HOL2DK_OPTIONS) thmpart $(BASE) $*.lp
-else
-lp: $(BASE_FILES:%=%.lp)
-	$(MAKE) SET_STI_FILES=1 lp-proofs
-	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
-
-.PHONY: lp-proofs
-lp-proofs: $(STI_FILES:%.sti=%.lp)
+	hol2dk $(MAX_ABBREV) thmpart $(BASE) $*.lp
 
 %.lp: %.sti
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
-endif
 
 .PHONY: lp-abbrevs
 lp-abbrevs: $(MIN_FILES:%.min=%.lp)

@@ -256,9 +256,10 @@ After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check fi
 - `lpo` to check lp files
 - `vo` to check Coq files
 
-The order of targets is important: `split` must be done first and `lp` second.
+The order targets are done important: `split` must be done first, then
+`lp`, etc.
 
-You can also write in a file called `FILES_WITH_SHARING` a space-separated list of theorem names for which sharing is needed.
+To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a space-separated list of theorem names.
 
 **By splitting proofs in several parts: command `mk`**
 

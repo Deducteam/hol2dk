@@ -752,7 +752,7 @@ let export_theorem_term_abbrevs b n k =
 (****************************************************************************)
 
 (* Maximum number of proof steps in a proof file. *)
-let max_steps = ref max_int;;
+let max_proof_part_size = ref max_int;;
 
 (* Current proof part. *)
 let proof_part = ref 0;;
@@ -783,21 +783,21 @@ let add_dep d =
 (* [export_proofs_in_interval n x y] generates the proof steps of
    index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
 let export_proofs_in_interval n x y =
-  let nb_steps = ref 0 in
+  let proof_part_size = ref 0 in
   let cur_oc = ref stdout in
   let start_part k =
     incr proof_part;
     let f = n ^ part !proof_part ^ "_proofs.lp" in
     log "generate %s ...\n%!" f;
     cur_oc := open_out f;
-    nb_steps := 0;
+    proof_part_size := 0;
     abbrev_deps := SetInt.empty;
     proof_deps := SetInt.empty;
     thdeps := SetStr.empty;
     (* compute proof_part_max_idx *)
-    let i = ref k and c = ref 0 in
-    while (!i <= y && !c < !max_steps) do
-      if get_use !i >= 0 then incr c;
+    let i = ref k and size = ref 0 in
+    while (!i <= y && !size < !max_proof_part_size) do
+      if get_use !i >= 0 then size := !size + proof_size !i;
       incr i
     done;
     proof_part_max_idx := !i - 2
@@ -814,8 +814,8 @@ let export_proofs_in_interval n x y =
   for k = x to y do
     if get_use k >= 0 then
       begin
-        incr nb_steps;
-        if !nb_steps > !max_steps then (end_part(); start_part k);
+        proof_part_size := !proof_part_size + proof_size k;
+        if !proof_part_size > !max_proof_part_size then (end_part(); start_part k);
         Hashtbl.add htbl_thm_part k !proof_part;
         let p = proof_at k in
         abbrev_part_size := !abbrev_part_size + !Xproof.step_size;
@@ -871,13 +871,8 @@ let split_theorem_proof b n =
   for k = x to y do
     if get_use k >= 0 then
       begin
-        let size =
-          if k+1 - !the_start_idx < Array.length !prf_pos
-          then get_pos(k+1) - get_pos(k)
-          else 1_500
-        in
-        part_size := !part_size + size;
-        if !part_size > !max_steps then
+        part_size := !part_size + proof_size k;
+        if !part_size > !max_proof_part_size then
           begin
             let max = k-1 in
             write_val (n^part !proof_part^".idx") (!min,max);

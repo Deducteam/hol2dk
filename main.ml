@@ -20,9 +20,9 @@ hol2dk options command arguments
 Options
 -------
 
---max-steps INT: maximum number of proof steps in a proof file
+--max-proof-size INT: maximum size of proof files
 
---max-abbrevs INT: maximum number of definitions in a term abbreviation file
+--max-abbrev-size INT: maximum size of term abbreviation files
 
 --use-sharing: define term abbreviations using let's
 
@@ -40,57 +40,64 @@ hol2dk unpatch
 Dumping commands
 ----------------
 
-hol2dk dump-simp $file.[ml|hl]
+hol2dk dump-simp $file.(ml|hl)
   compose the commands dump, pos, use, rewrite and purge
-  for $file depending on hol.ml
+  for a $file depending on hol.ml
 
-hol2dk dump-simp-use $file.[ml|hl]
+hol2dk dump-simp-use $file.(ml|hl)
   same as hol2dk dump except that hol.ml is not loaded first
 
-hol2dk dump $file.[ml|hl]
-  run OCaml toplevel to check $file.[ml|hl] and generate
+hol2dk dump $file.(ml|hl)
+  run OCaml toplevel to check $file.(ml|hl) and generate
   $file.sig (type and term constants), $file.prf (proof steps)
   and $file.thm (named theorems)
 
-hol2dk dump-use $file.[ml|hl]
+hol2dk dump-use $file.(ml|hl)
   same as hol2dk dump except that hol.ml is not loaded first
 
 hol2dk pos $file
-  generate $file.pos, the positions of proofs in $file.prf
+  generate $file.pos, the positions of proof steps in $file.prf
 
 hol2dk use $file
-  generate $file.use, some data to know whether a theorem is used or not
+  generate $file.use, some data to know whether a proof step is used or not
 
 hol2dk rewrite $file
   simplify $file.prf and update $file.pos and $file.use
 
 hol2dk purge $file
-  compute theorems that can be discarded in $file.use
+  set as unused the proof steps that do not contribute to a named theorem
 
 Single-threaded dk/lp file generation
 -------------------------------------
 
-hol2dk $file.[dk|lp]
-  generate $file.[dk|lp]
+hol2dk $file.(dk|lp)
+  generate $file.(dk|lp)
 
-hol2dk $file.[dk|lp] $thm_id
-  generate $file.[dk|lp] but with theorem index $thm_id only (for debug)
+hol2dk $file.(dk|lp) $thm_id
+  generate $file.(dk|lp) but with theorem index $thm_id only (for debug)
 
 Multi-threaded lp file generation by having a file for each named theorem
 -------------------------------------------------------------------------
 
 hol2dk link $file
-  add links to files needed to translate and check $file.prf
+  add links to hol2dk files needed to translate $file.prf
 
 hol2dk split $file
   generate $file.thp and the files $t.sti, $t.pos and $t.use
-  for each named theorem $t
+  for each named theorem
 
-hol2dk theorem $file $t.lp
-  generate the lp proof of the theorem named $t
+hol2dk theorem $file $thm.lp
+  generate the lp proof of the theorem named $thm
 
-hol2dk abbrev $file ${t}_term_abbrevs_part_$k.lp
-  generate ${t}_term_abbrevs_part_$k.lp
+hol2dk thmsplit $file $thm.lp
+  split the proof of $thm in various pieces according to --max-proof-size
+
+hol2dk thmpart $file ${thm}_part_$k.lp
+  generate ${thm}_part_$k.lp and its term abbreviations
+  according to --max-abbrev-size
+
+hol2dk abbrev $file ${thm}_term_abbrevs_part_$k.lp
+  generate ${thm}_term_abbrevs_part_$k.lp
 
 Multi-threaded dk/lp file generation by splitting proofs in $n parts
 --------------------------------------------------------------------
@@ -99,17 +106,17 @@ hol2dk mk $n $file
   generate $file.dg, the dependency graph between parts when $file.prf is
   split in $n parts, and $file.mk for handling parts in parallel
 
-hol2dk part $k $x $y $file.[dk|lp]
+hol2dk part $k $x $y $file.(dk|lp)
   generate dk/lp proof files of part $k from proof index $x to proof index $y
 
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
 
-hol2dk thm $file.[dk|lp]
-  generate $file.[dk|lp] from $file.thm
+hol2dk thm $file.(dk|lp)
+  generate $file.(dk|lp) from $file.thm
 
-hol2dk axm $file.[dk|lp]
-  generate $file_opam.[dk|lp] from $file.thm (same as thm but without proofs)
+hol2dk axm $file.(dk|lp)
+  generate $file_opam.(dk|lp) from $file.thm (same as thm but without proofs)
 
 Other commands
 --------------
@@ -121,7 +128,7 @@ hol2dk nbp $file
   print the number of proof steps in $file.prf
 
 hol2dk resize $file.lp $n
-  rebuild the proof files of $file.lp with --max-steps $n
+  rebuild the proof files of $file.lp with --max-proof-size $n
 
 hol2dk proof $file $x $y
   print proof steps between theorem indexes $x and $y
@@ -422,10 +429,11 @@ and command = function
 
   | "--use-sharing"::args -> use_sharing := true; command args
 
-  | "--max-abbrevs"::k::args ->
+  | "--max-abbrev-size"::k::args ->
      Xlp.max_abbrev_part_size := integer k; command args
 
-  | "--max-steps"::k::args -> Xlp.max_steps := integer k; command args
+  | "--max-proof-size"::k::args ->
+     Xlp.max_proof_part_size := integer k; command args
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
@@ -459,7 +467,7 @@ and command = function
   | ["link";arg] -> call_script "add-links" [arg]
 
 (*hol2dk resize $file_term_abbrevs.lp $n
-  rebuild the term abbreviation files of $file.lp with --max-abbrevs $n*)
+  rebuild the term abbreviation files of $file.lp with --max-abbrev-size $n*)
   | ["resize";f;k] ->
      let dk = is_dk f in
      if dk then (log "dk output not available for this command\n"; 1)
