@@ -11,14 +11,27 @@ split:
 	hol2dk split $(BASE)
 
 .PHONY: clean-split
-clean-split:
-	find . -maxdepth 1 -name '*.sti' -delete
-	find . -maxdepth 1 -name '*.nbp' -delete
-	find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
-	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
-	rm -f $(BASE).thp
+clean-split: rm-sti rm-nbp rm-pos rm-use rm-thp
 
-HOL2DK_OPTIONS = --max-steps 10000000 --max-abbrevs 500000
+.PHONY: rm-sti
+rm-sti:
+	find . -maxdepth 1 -name '*.sti' -delete
+
+.PHONY: rm-nbp
+rm-nbp:
+	find . -maxdepth 1 -name '*.nbp' -delete
+
+.PHONY: rm-pos
+rm-pos:
+	find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
+
+.PHONY: rm-use
+rm-use:
+	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
+
+.PHONY: rm-thp
+rm-thp:
+	rm -f $(BASE).thp
 
 #FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
 
@@ -29,12 +42,6 @@ BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
 
-.PHONY: lp
-lp: $(BASE_FILES:%=%.lp)
-	$(MAKE) SET_LP_FILES=1 lp-stage1
-	$(MAKE) SET_LP_FILES=1 lp-stage2
-	$(MAKE) SET_LP_FILES=1 lp-stage3
-
 ifeq ($(INCLUDE_VO_MK),1)
 INCLUDE_LPO_MK=1
 endif
@@ -44,45 +51,72 @@ SET_LP_FILES=1
 endif
 
 ifeq ($(SET_LP_FILES),1)
-STI_FILES := $(wildcard *.sti)
-
-.PHONY: lp-stage1
-lp-stage1: $(STI_FILES:%.sti=%.max)
+LP_FILES := $(wildcard *.lp)
 endif
+
+ifeq ($(SET_STI_FILES),1)
+STI_FILES := $(wildcard *.sti)
+endif
+
+ifeq ($(SET_MIN_FILES),1)
+MIN_FILES := $(wildcard *.min)
+endif
+
+ifeq ($(SET_IDX_FILES),1)
+IDX_FILES := $(wildcard *.idx)
+endif
+
+.PHONY: lp
+ifeq ($(SPLIT_PROOFS),1)
+HOL2DK_OPTIONS = --max-steps 10000000 --max-abbrevs 500000
+
+lp: $(BASE_FILES:%=%.lp)
+	$(MAKE) SET_STI_FILES=1 lp-split
+	$(MAKE) SET_IDX_FILES=1 lp-proofs
+	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
+
+.PHONY: lp-split
+lp-split: $(STI_FILES:%.sti=%.max)
 
 %.max: %.sti
 	hol2dk $(HOL2DK_OPTIONS) thmsplit $(BASE) $*.lp
 
-ifeq ($(SET_LP_FILES),1)
-IDX_FILES := $(wildcard *.idx)
-
-.PHONY: lp-stage2
-lp-stage2: $(IDX_FILES:%.idx=%.lp)
-endif
+.PHONY: lp-proofs
+lp-proofs: $(IDX_FILES:%.idx=%.lp)
 
 %.lp: %.idx
 	hol2dk $(HOL2DK_OPTIONS) thmpart $(BASE) $*.lp
+else
+lp: $(BASE_FILES:%=%.lp)
+	$(MAKE) SET_STI_FILES=1 lp-proofs
+	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 
-ifeq ($(SET_LP_FILES),1)
-MIN_FILES := $(wildcard *.min)
+.PHONY: lp-proofs
+lp-proofs: $(STI_FILES:%.sti=%.lp)
 
-.PHONY: lp-stage3
-lp-stage3: $(MIN_FILES:%.min=%.lp)
+%.lp: %.sti
+	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
 endif
+
+.PHONY: lp-abbrevs
+lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 
 %.lp: %.min
 	hol2dk abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: rm-lp rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-lpo clean-v rm-vo
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-lpo clean-lpo clean-v
 
 .PHONY: rm-lp
 rm-lp:
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
+.PHONY: rm-lpo-mk
+rm-lpo-mk:
+	find . -maxdepth 1 -name '*.lpo.mk' -delete
+
 .PHONY: rm-mk
 rm-mk:
-	find . -maxdepth 1 -name '*.lpo.mk' -delete
 	rm -f lpo.mk vo.mk
 
 .PHONY: rm-max
@@ -105,14 +139,12 @@ rm-brp:
 rm-min:
 	find . -maxdepth 1 -name '*.min' -delete
 
-ifeq ($(SET_LP_FILES),1)
-LP_FILES := $(wildcard *.lp)
-endif
-
 ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
 
-lpo.mk: theory_hol.lpo.mk $(wildcard *.lpo.mk)
+LPO_MK_FILES := $(wildcard *.lpo.mk)
+
+lpo.mk: theory_hol.lpo.mk $(LPO_MK_FILES)
 	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 
 theory_hol.lpo.mk: theory_hol.lp
@@ -122,7 +154,7 @@ endif
 .PHONY: lpo
 lpo: $(LP_FILES:%.lp=%.lpo)
 ifneq ($(INCLUDE_LPO_MK),1)
-	$(MAKE) SET_LP_FILES=1 INCLUDE_LPO_MK=1 $@
+	$(MAKE) INCLUDE_LPO_MK=1 $@
 endif
 
 %.lpo: %.lp
@@ -162,7 +194,7 @@ endif
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
 ifneq ($(INCLUDE_VO_MK),1)
-	$(MAKE) SET_LP_FILES=1 INCLUDE_LPO_MK=1 INCLUDE_VO_MK=1 $@
+	$(MAKE) INCLUDE_VO_MK=1 $@
 endif
 
 COQC_OPTIONS = -no-glob # -w -coercions
@@ -202,7 +234,7 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-lpo clean-v clean-vo clean-opam
+clean-all: clean-split clean-lp clean-opam
 
 .PHONY: all
 all:

@@ -777,7 +777,7 @@ let add_dep d =
   try
     let pd = proof_part_of d in
     if pd < !proof_part then proof_deps := SetInt.add pd !proof_deps
-  with Not_found -> assert false
+  with Not_found -> ()
 ;;
 
 (* [export_proofs_in_interval n x y] generates the proof steps of
