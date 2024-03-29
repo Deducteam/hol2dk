@@ -971,7 +971,6 @@ and command = function
      let r = range args in
      let dk = is_dk f in
      let b = Filename.chop_extension f in
-     (* read and translate sig file *)
      read_sig b;
      if dk then
        begin
