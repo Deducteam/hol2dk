@@ -797,7 +797,7 @@ let export_proofs_in_interval n x y =
     (* compute proof_part_max_idx *)
     let i = ref k and size = ref 0 in
     while (!i <= y && !size < !max_proof_part_size) do
-      if get_use !i >= 0 then size := !size + proof_size !i;
+      if get_use !i >= 0 then size := !size + size_proof_at !i;
       incr i
     done;
     proof_part_max_idx := !i - 2
@@ -814,13 +814,13 @@ let export_proofs_in_interval n x y =
   for k = x to y do
     if get_use k >= 0 then
       begin
-        proof_part_size := !proof_part_size + proof_size k;
-        if !proof_part_size > !max_proof_part_size then (end_part(); start_part k);
+        proof_part_size := !proof_part_size + size_proof_at k;
+        if !proof_part_size > !max_proof_part_size then
+          (end_part(); start_part k);
         Hashtbl.add htbl_thm_part k !proof_part;
         let p = proof_at k in
-        abbrev_part_size := !abbrev_part_size + !Xproof.step_size;
         List.iter add_dep (deps p);
-        theorem !cur_oc k p
+        theorem !cur_oc k p;
       end
   done;
   end_part();
@@ -871,7 +871,7 @@ let split_theorem_proof b n =
   for k = x to y do
     if get_use k >= 0 then
       begin
-        part_size := !part_size + proof_size k;
+        part_size := !part_size + size_proof_at k;
         if !part_size > !max_proof_part_size then
           begin
             let max = k-1 in

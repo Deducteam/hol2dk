@@ -66,8 +66,8 @@ let proof_at k =
   v
 ;;
 
-(* [proof_size k] gives the size of the proof of index [k]. *)
-let proof_size k =
+(* [size_proof_at k] gives the size of the proof of index [k]. *)
+let size_proof_at k =
   let k' = k - !the_start_idx in
   if k'+1 < Array.length !prf_pos
   then Array.get !prf_pos (k'+1) - Array.get !prf_pos k'

@@ -402,7 +402,7 @@ let arity =
   in arity 0
 ;;
 
-(* [size_type b] computes the size of a type [b]. *)
+(* [size_type b] computes the tree size of a type [b]. *)
 let rec size_type = function
   | Tyvar _ -> 1
   | Tyapp(_,bs) -> add_size_types 1 bs
@@ -423,10 +423,10 @@ let rec nb_cons = function
   | Comb(u,v) | Abs(u,v) -> 1 + nb_cons u + nb_cons v
 ;;
 
-(* [size t] computes the size of the term [t]. *)
-let rec size = function
+(* [size_term t] computes the tree size of the term [t]. *)
+let rec size_term = function
   | Var (_,b) | Const(_,b) -> 1 + size_type b
-  | Comb(u,v) | Abs(u,v) -> 1 + size u + size v
+  | Comb(u,v) | Abs(u,v) -> 1 + size_term u + size_term v
 ;;
 
 (* Printing function for debug. *)
@@ -664,6 +664,58 @@ let canonical_term
 (****************************************************************************)
 (* Functions on proofs. *)
 (****************************************************************************)
+
+(* [size_content nb_type_vars nb_term_vars content] computes an
+   approximation of the tree size of the Dedukti representation of the
+   proof [content]. *)
+let size_content nb_type_vars nb_term_vars nb_hyps c =
+  let typ = 1 + 2*nb_type_vars in
+  let trm = typ + 2*nb_term_vars in
+  let prf = trm + 2*nb_hyps in
+  let step(nb_types,nb_terms,nb_proofs) =
+    1 + nb_types*(1+typ) + nb_terms*(1+trm) + nb_proofs*(1+prf) in
+  match c with
+  | Prefl _ -> step(1,1,0)
+  | Psym _ -> step(1,2,1)
+  | Ptrans _ -> step(1,3,2)
+  | Pmkcomb _ -> step(2,4,2)
+  | Pabs _ -> step(3,2,1)
+  | Pbeta _ -> step(1,1,0)
+  | Passume _ -> 1
+  | Peqmp _ -> step(0,2,2)
+  | Pdeduct _ -> step(0,4,2)
+  | Pinst(_,s) -> let n = List.length s in step(n,n,1)
+  | Pinstt(_,s) -> let n = List.length s in step(n,n,1)
+  | Paxiom _ -> step(1,1,0)
+  | Pdef _ -> step(1,1,0)
+  | Pdeft _ -> step(1,1,0)
+  | Ptruth -> 1
+  | Pconj _ -> step(0,2,2)
+  | Pconjunct1 _ -> step(0,2,2)
+  | Pconjunct2 _ -> step(0,2,2)
+  | Pmp _ -> step(0,0,2)
+  | Pdisch _ -> step(0,1,1)
+  | Pspec _ -> step(0,1,1)
+  | Pgen _ -> step(1,0,1)
+  | Pexists _ -> step(1,2,1)
+  | Pdisj1 _ -> step(0,2,1)
+  | Pdisj2 _ -> step(0,2,1)
+  | Pdisj_cases _ -> step(0,5,3)
+  | Pchoose _ -> step(3,3,2)
+;;
+
+(* [size_proof p] computes an approximation of the tree size of the
+   Dedukti representation of the proof [p]. *)
+let size_proof (Proof(thm, content)) =
+  let (ts,t) = dest_thm thm in
+  let nb_type_vars = List.length (type_vars_in_thm thm)
+  and nb_term_vars = List.length (Fusion.freesl (t::ts))
+  and nb_hyps = List.length ts in
+  let typ = 1 + 2*nb_type_vars in
+  let trm = typ + 2*nb_term_vars in
+  1 + 2*nb_type_vars + 2*nb_term_vars*typ + 2*nb_hyps*trm
+  + size_content nb_type_vars nb_term_vars nb_hyps content
+;;
 
 (* [proof oc p] prints the proof [p] on out_channel [oc] in a user
    readable format. *)

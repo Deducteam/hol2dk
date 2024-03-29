@@ -72,12 +72,12 @@ lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
 
-MAX_PROOF = --max-steps 10000000
+MAX_PROOF = --max-steps 50_000_000
 
 %.max: %.sti
 	hol2dk $(MAX_PROOF) thmsplit $(BASE) $*.lp
 
-MAX_ABBREV = --max-abbrevs 500000
+MAX_ABBREV = --max-abbrevs 500_000
 
 %.lp: %.idx
 	hol2dk $(MAX_ABBREV) thmpart $(BASE) $*.lp

@@ -3,12 +3,18 @@ NOTES
 
 ## 26/03/24
 
-generation time for big files improved significantly with #108 and #109:
+The PR #108 and #109 improves the generation time of big theorems very significantly:
 
 - URYSOHN_LEMMA: 1m6s instead of 6m30s
 - CHAIN_BOUNDARY_BOUNDARY: 3m40s instead of 56m
 - GRASSMANN_PLUCKER_4: 12m11s instead of 3h25m
 - HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS: 17m23s instead of 6h49m
+
+It however has a negative impact on small libraries:
+
+- hol.ml: lp 56s v 47s vo 43m13s instead of lp 42s v 45s vo 31m35s
+
+This is because much more files are generated: each term abbreviation file now has its own type abbreviation file and, when splitting proof files, each proof part file has its own term abbreviation files.
 
 ## 22/03/24
 

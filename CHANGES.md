@@ -9,10 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - hol2dk can now generate term abbreviations and proofs in several files
 in parallel:
-  * The option --max-abbrevs allows to fix the maximum size for term
-  abbreviations files.
-  * The option --max-steps allows to fix the maximum number of proof steps
-  in a proof file.
+  * The option --max-size-abbrev allows to fix the maximum size for term abbreviations files.
+  * The option --max-size-proof allows to fix the maximum size for proof files.
 - optimization of lp file dependencies in generated lp files.
 - generation of Makefile lpo dependencies at the same time as lp files.
 - Makefile: lpo and vo dependencies are recomputed automatically.
