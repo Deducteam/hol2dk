@@ -162,13 +162,12 @@ hol2dk name
   in the working directory and all its subdirectories recursively
 %!"
 
-let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
-
-let is_dk filename =
-  match Filename.extension filename with
+let is_dk f =
+  match Filename.extension f with
   | ".dk"  -> true
   | ".lp" -> false
-  | _ -> wrong_arg()
+  | _ -> err "\"%s\" does not end with \".dk\" or \".lp\"\n%!" f; exit 1
+;;
 
 let read_sig b =
   let dump_file = b^".sig" in
@@ -182,8 +181,13 @@ let read_sig b =
   close_in ic;
   update_map_const_typ_vars_pos();
   update_reserved()
+;;
 
-let integer s = try int_of_string s with Failure _ -> wrong_arg()
+let integer s =
+  try int_of_string s
+  with Failure _ ->
+    Printf.eprintf "\"%s\" is not a valid integer\n%!" s; exit 1
+;;
 
 (* [make nb_proofs dg b] generates a makefile for translating the
    proofs of [b] in parallel, according to the dependency graph
@@ -311,21 +315,23 @@ let make nb_proofs dg b =
           clean-dk clean-lp clean-lpo clean-v clean-vo\n";
   close_out oc;
   0
+;;
 
 let range args =
   match args with
   | [] -> All
   | [x] ->
      let x = integer x in
-     if x < 0 then wrong_arg();
+     if x < 0 then (err "%d is negative\n%!" x; exit 1);
      Only x
   | [x;y] ->
      let x = integer x in
-     if x < 0 then wrong_arg();
+     if x < 0 then (err "%d is negative\n%!" x; exit 1);
      let y = integer y in
-     if y < x then wrong_arg();
+     if y < x then (err "%d is smaller than %d\n%!" y x; exit 1);
      if x=0 then Upto y else Inter(x,y)
-  | _ -> wrong_arg()
+  | _ -> (err "too many arguments\n%!"; exit 1)
+;;
 
 let dump after_hol f b =
   let ml_file = Printf.sprintf "/tmp/dump%d.ml" (Unix.getpid()) in
@@ -355,11 +361,13 @@ dump_map_thid_name "%s.thm" %a;;
 (olist ostring) (trans_file_deps (dep_graph (files())) f);
   close_out oc;
   Sys.command ("ocaml -w -A -I . "^ml_file)
+;;
 
 let basename_ml f =
   match Filename.extension f with
   | ".ml" | ".hl" -> Filename.chop_extension f
-  | _ -> wrong_arg()
+  | _ -> err "\"%s\" does not end with \".ml\" or \".hl\"\n%!" f; exit 1
+;;
 
 let print_hstats() =
   log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a\
@@ -372,6 +380,7 @@ let print_hstats() =
     hstats (TrmHashtbl.stats htbl_subterms)
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part)
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part_max)
+;;
 
 let valid_coq_filename s = match s with "at" -> "_"^s | _ -> s;;
 
@@ -385,26 +394,6 @@ let print_env_var n =
   match Sys.getenv_opt n with
   | None -> log "%s is undefined\n" n
   | Some v -> log "%s = \"%s\"\n" n v
-;;
-
-(* [get_part s suffix] returns [Some(n,k)] if [s =
-   n^suffix^part(k)], and [None] otherwise. *)
-let get_part s suffix =
-  try
-    let len_s = String.length s in
-    let i = ref (len_s - 1) in
-    (* compute part number *)
-    let k =
-      while !i >= 0 && s.[!i] <> '_' do decr i done;
-      if !i < 0 then raise Exit;
-      integer (String.sub s (!i+1) (len_s - 1 - !i))
-    in
-    (* compute theorem name *)
-    let len_suffix = String.length suffix + String.length "_part_" in
-    if !i < len_suffix then raise Exit;
-    let n = String.sub s 0 (!i - len_suffix + 1) in
-    Some(n,k)
-  with Exit -> None
 ;;
 
 let rec log_command l =
@@ -580,7 +569,8 @@ and command = function
   | ["proof";b;x;y] ->
      let x = integer x and y = integer y in
      let nb_proofs = read_val (b^".nbp") in
-     if x < 0 || y < x || y >= nb_proofs then wrong_arg();
+     if x < 0 || y < x || y >= nb_proofs then
+       (err "[%d,%d] is not a valid interval\n%!" x y; exit 1);
      read_pos b;
      init_proof_reading b;
      read_use b;
@@ -753,14 +743,15 @@ and command = function
   | ["print";"use";b;k] ->
      let k = integer k in
      let nb_proofs = read_val (b^".nbp") in
-     if k < 0 || k >= nb_proofs then wrong_arg();
+     if k < 0 || k >= nb_proofs then
+       (err "%d is not a valid proof index\n%!" k; exit 1);
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k);
      0
 
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
-     if nb_parts < 2 then wrong_arg();
+     if nb_parts < 2 then (err "the number of parts must be > 1\n%!"; exit 1);
      let nb_proofs = read_val (b^".nbp") in
      let part_size = nb_proofs / nb_parts in
      let part idx =
@@ -857,7 +848,8 @@ and command = function
      let nb_parts = input_value ic in
 
      let k = integer k and x = integer x and y = integer y in
-     if k < 1 || k > nb_parts || x < 0 || y < x then wrong_arg();
+     if k < 1 || k > nb_parts || x < 0 || y < x then
+       (err "wrong part number or invalid interval\n%!"; exit 1);
      read_sig b;
      read_pos b;
      init_proof_reading b;

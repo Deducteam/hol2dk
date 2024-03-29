@@ -59,6 +59,26 @@ let percent k n = (100 * k) / n;;
 
 let part i = "_part_" ^ string_of_int i;;
 
+(* [get_part s suffix] returns [Some(n,k)] if [s=n^suffix^part(k)],
+   and [None] otherwise. *)
+let get_part s suffix =
+  try
+    let len_s = String.length s in
+    let i = ref (len_s - 1) in
+    (* compute part number *)
+    let k =
+      while !i >= 0 && s.[!i] <> '_' do decr i done;
+      if !i < 0 then raise Exit;
+      int_of_string (String.sub s (!i+1) (len_s - 1 - !i))
+    in
+    (* compute theorem name *)
+    let len_suffix = String.length suffix + String.length "_part_" in
+    if !i < len_suffix then raise Exit;
+    let n = String.sub s 0 (!i - len_suffix + 1) in
+    Some(n,k)
+  with Exit -> None
+;;
+
 (* [pos_first f l] returns the position (counting from 0) of the first
    element of [l] satisfying [f]. Raises Not_found if there is no such
    element. *)
