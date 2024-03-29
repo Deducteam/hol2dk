@@ -383,7 +383,7 @@ let valid_coq_filename s = match s with "at" -> "_"^s | _ -> s;;
 
 let call_script s args =
   match Sys.getenv_opt "HOL2DK_DIR" with
-  | None -> log "set $HOL2DK_DIR first\n"; 1
+  | None -> err "set $HOL2DK_DIR first\n"; 1
   | Some d -> Sys.command (d^"/"^s^" "^String.concat " " args)
 ;;
 
@@ -908,7 +908,7 @@ and command = function
      map_thid_pos := read_val (b^".thp");
      read_pos n;
      init_proof_reading b;
-     if is_dk f then (log "dk output not available for this command\n"; 1)
+     if is_dk f then (err "dk output not available for this command\n"; 1)
      else (Xlp.split_theorem_proof b n; 0)
 
   | ["thmpart";b;f] ->
@@ -916,7 +916,8 @@ and command = function
        let dk = is_dk f in
        let f = Filename.chop_extension f in
        match get_part f "" with
-       | None -> log "invalid argument\n"; 1
+       | None -> err "\"%s\" does not end with \"_part_\" \
+                      followed by an integer\n" f; 1
        | Some(n,k) ->
           read_sig b;
           map_thid_pos := read_val (b^".thp");
@@ -924,7 +925,7 @@ and command = function
           read_use n;
           the_start_idx := read_val (n^".sti");
           init_proof_reading b;
-          if dk then (log "dk output not available for this command\n"; 1)
+          if dk then (err "dk output not available for this command\n"; 1)
           else (Xlp.export_theorem_proof_part b n k; 0)
      end
 
@@ -936,7 +937,7 @@ and command = function
      read_use n;
      the_start_idx := read_val (n^".sti");
      init_proof_reading b;
-     if is_dk f then (log "dk output not available for this command\n"; 1)
+     if is_dk f then (err "dk output not available for this command\n"; 1)
      else
        begin
          Xlp.export_theorem_proof n;
@@ -953,9 +954,10 @@ and command = function
        let dk = is_dk f in
        let f = Filename.chop_extension f in
        match get_part f "_term_abbrevs" with
-       | None -> log "invalid argument\n"; 1
+       | None -> err "\"%s\" does not end with \"_term_abbrevs_part_\"\
+                      followed by an integer\n%!" f; 1
        | Some(n,k) ->
-         if dk then (log "dk output not available for this command\n"; 1)
+         if dk then (err "dk output not available for this command\n"; 1)
          else
            begin
              read_sig b;

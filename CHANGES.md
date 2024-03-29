@@ -15,6 +15,10 @@ in parallel:
 - generation of Makefile lpo dependencies at the same time as lp files.
 - Makefile: lpo and vo dependencies are recomputed automatically.
 
+### Changed
+
+- FILES_WITH_SHARING renamed into BIG_FILES and added by add-links anymore
+
 ## 1.0.0 (2024-02-25)
 
 ### Added
