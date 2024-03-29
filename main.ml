@@ -421,6 +421,9 @@ and command = function
   | "--max-proof-size"::k::args ->
      Xlp.max_proof_part_size := integer k; command args
 
+  | s::_ when String.starts_with ~prefix:"--" s ->
+     err "unknown option \"%s\"\n" s; 1
+
   | ["dep";f] ->
      let dg = dep_graph (files()) in
      log "%a\n" (list_sep " " string) (trans_file_deps dg f);
@@ -557,7 +560,7 @@ and command = function
      let x = integer x and y = integer y in
      let nb_proofs = read_val (b^".nbp") in
      if x < 0 || y < x || y >= nb_proofs then
-       (err "[%d,%d] is not a valid interval\n%!" x y; exit 1);
+       (err "[%d,%d] is not a valid interval\n" x y; exit 1);
      read_pos b;
      init_proof_reading b;
      read_use b;
@@ -731,14 +734,14 @@ and command = function
      let k = integer k in
      let nb_proofs = read_val (b^".nbp") in
      if k < 0 || k >= nb_proofs then
-       (err "%d is not a valid proof index\n%!" k; exit 1);
+       (err "%d is not a valid proof index\n" k; exit 1);
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k);
      0
 
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
-     if nb_parts < 2 then (err "the number of parts must be > 1\n%!"; exit 1);
+     if nb_parts < 2 then (err "the number of parts must be > 1\n"; exit 1);
      let nb_proofs = read_val (b^".nbp") in
      let part_size = nb_proofs / nb_parts in
      let part idx =
@@ -836,7 +839,7 @@ and command = function
 
      let k = integer k and x = integer x and y = integer y in
      if k < 1 || k > nb_parts || x < 0 || y < x then
-       (err "wrong part number or invalid interval\n%!"; exit 1);
+       (err "wrong part number or invalid interval\n"; exit 1);
      read_sig b;
      read_pos b;
      init_proof_reading b;
@@ -856,6 +859,26 @@ and command = function
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
+     0
+
+  | ["prfsize";b] ->
+     read_use b;
+     let size = Array.make (Array.length !Xproof.last_use) 0 in
+     read_prf b (fun k p ->
+         if get_use k >= 0 then Array.set size k (size_proof p));
+     write_val (b^".siz") size;
+     0
+
+  | ["thmsize";b;n] ->
+     read_use b;
+     read_pos n;
+     the_start_idx := read_val (n^".sti");
+     let size = Array.make (Array.length !Xproof.prf_pos) 0 in
+     Array.iteri (fun k _ ->
+         let k' = !the_start_idx + k in
+         if get_use k' >= 0 then Array.set size k (size_proof (proof_at k')))
+       !Xproof.prf_pos;
+     write_val (n^".siz") size;
      0
 
   | ["split";b] ->
@@ -955,7 +978,7 @@ and command = function
        let f = Filename.chop_extension f in
        match get_part f "_term_abbrevs" with
        | None -> err "\"%s\" does not end with \"_term_abbrevs_part_\"\
-                      followed by an integer\n%!" f; 1
+                      followed by an integer\n" f; 1
        | Some(n,k) ->
          if dk then (err "dk output not available for this command\n"; 1)
          else

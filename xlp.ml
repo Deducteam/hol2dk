@@ -671,7 +671,7 @@ let export_subterm_abbrevs b n =
 
 let export_term_abbrevs_in_one_file b n =
   let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
-  export (n^"_term_abbrevs_part_1")
+  export (n^"_term_abbrevs")
     (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
     decl_term_abbrevs;
   if !use_sharing then
@@ -773,13 +773,6 @@ let proof_part_of = Hashtbl.find htbl_thm_part;;
 (* Dependencies on previous proof parts of the current proof part. *)
 let proof_deps = ref SetInt.empty;;
 
-let add_dep d =
-  try
-    let pd = proof_part_of d in
-    if pd < !proof_part then proof_deps := SetInt.add pd !proof_deps
-  with Not_found -> ()
-;;
-
 (* [export_proofs_in_interval n x y] generates the proof steps of
    index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
 let export_proofs_in_interval n x y =
@@ -811,6 +804,12 @@ let export_proofs_in_interval n x y =
   Hashtbl.add htbl_abbrev_part_min 1 0;
   proof_part := 0;
   start_part x;
+  let add_dep d =
+    try
+      let pd = proof_part_of d in
+      if pd < !proof_part then proof_deps := SetInt.add pd !proof_deps
+    with Not_found -> ()
+  in
   for k = x to y do
     if get_use k >= 0 then
       begin
@@ -1032,18 +1031,17 @@ let export_axioms b =
     (fun oc -> decl_axioms oc (axioms()))
 ;;
 
-let iter_proofs_deps b f =
-  f (b^"_types");
-  f (b^"_type_abbrevs");
-  f (b^"_terms");
-  f (b^"_axioms");
-  if !use_sharing then f (b^"_subterm_abbrevs");
-  for k = 1 to !abbrev_part do f (b^"_term_abbrevs"^part k) done
-;;
-
 let export_proofs b r =
-  export_iter (b^"_proofs") (iter_proofs_deps b)
-    (fun oc -> proofs_in_range oc r)
+  let iter_proofs_deps f =
+    f (b^"_types");
+    f (b^"_type_abbrevs");
+    f (b^"_terms");
+    f (b^"_axioms");
+    if !use_sharing then f (b^"_subterm_abbrevs");
+    f (b^"_term_abbrevs")(*;
+    for k = 2 to !abbrev_part do f (b^"_term_abbrevs"^part k) done*)
+  in
+  export_iter (b^"_proofs") iter_proofs_deps (fun oc -> proofs_in_range oc r)
 ;;
 
 let out_map_thid_name as_axiom oc map_thid_name =
@@ -1053,16 +1051,15 @@ let out_map_thid_name as_axiom oc map_thid_name =
     map_thid_name
 ;;
 
-let iter_theorems_deps b f =
-  f (b^"_types");
-  f (b^"_type_abbrevs");
-  f (b^"_terms");
-  f (b^"_axioms");
-  f (b^"_proofs")
-;;
-
 let export_theorems b map_thid_name =
-  export_iter b (iter_theorems_deps b)
+  let iter_theorems_deps f =
+    f (b^"_types");
+    f (b^"_type_abbrevs");
+    f (b^"_terms");
+    f (b^"_axioms");
+    f (b^"_proofs")
+  in
+  export_iter b iter_theorems_deps
     (fun oc -> out_map_thid_name false oc map_thid_name)
 ;;
 
