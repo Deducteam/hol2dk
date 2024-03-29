@@ -1038,8 +1038,7 @@ let iter_proofs_deps b f =
   f (b^"_terms");
   f (b^"_axioms");
   if !use_sharing then f (b^"_subterm_abbrevs");
-  f (b^"_term_abbrevs");
-  for k = 2 to !abbrev_part do f (b^"_term_abbrevs"^part k) done
+  for k = 1 to !abbrev_part do f (b^"_term_abbrevs"^part k) done
 ;;
 
 let export_proofs b r =
