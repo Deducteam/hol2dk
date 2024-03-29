@@ -127,9 +127,6 @@ hol2dk env
 hol2dk nbp $file
   print the number of proof steps in $file.prf
 
-hol2dk resize $file.lp $n
-  rebuild the proof files of $file.lp with --max-proof-size $n
-
 hol2dk proof $file $x $y
   print proof steps between theorem indexes $x and $y
 
@@ -147,14 +144,14 @@ hol2dk dep
   print on stdout a Makefile giving the dependencies of all HOL-Light files
   in the working directory and all its subdirectories recursively
 
-hol2dk dep file.[ml|hl]
-  print on stdout all the HOL-Light files required to check file.[ml|hl]
+hol2dk dep file.(ml|hl)
+  print on stdout all the HOL-Light files required to check file.(ml|hl)
 
-hol2dk name file.[ml|hl]
-  print on stdout the named theorems proved in file.[ml|hl]
+hol2dk name file.(ml|hl)
+  print on stdout the named theorems proved in file.(ml|hl)
 
-hol2dk name upto file.[ml|hl]
-  print on stdout the named theorems proved in file.[ml|hl]
+hol2dk name upto file.(ml|hl)
+  print on stdout the named theorems proved in file.(ml|hl)
   and all its dependencies
 
 hol2dk name
@@ -454,16 +451,6 @@ and command = function
   | ["patch" as s] -> call_script s []
   | ["unpatch" as s] -> call_script s []
   | ["link";arg] -> call_script "add-links" [arg]
-
-(*hol2dk resize $file_term_abbrevs.lp $n
-  rebuild the term abbreviation files of $file.lp with --max-abbrev-size $n*)
-  | ["resize";f;k] ->
-     let dk = is_dk f in
-     if dk then (log "dk output not available for this command\n"; 1)
-     else
-       (*if String.ends_with ~suffix:"_term_abbrevs.lp" f then
-         call_script "resize-term-abbrevs" [f;k]
-       else*) call_script "resize-proof" [f;k]
 
   | ["dump";f] -> dump true f (basename_ml f)
   | ["dump-use";f] -> dump false f (basename_ml f)
