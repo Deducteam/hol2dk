@@ -671,7 +671,7 @@ let export_subterm_abbrevs b n =
 
 let export_term_abbrevs_in_one_file b n =
   let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
-  export (n^"_term_abbrevs")
+  export (n^"_term_abbrevs_part_1")
     (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
     decl_term_abbrevs;
   if !use_sharing then
@@ -715,7 +715,7 @@ let dump_theorem_term_abbrevs n =
 (* [export_theorem_term_abbrevs b n k] generates the files
    [n^"_term_abbrevs"^part(k)^".lp"] and
    [n^"_term_abbrevs"^part(k)^"_type_abbrevs.lp"]. *)
-let export_theorem_term_abbrevs b n k =
+let export_theorem_term_abbrevs_part b n k =
   let p = n^"_term_abbrevs"^part k in
   (* generate [p^"_tail.lp"] *)
   let pos : int array = read_val (n^".brp")

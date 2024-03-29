@@ -954,7 +954,7 @@ and command = function
        begin
          Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
-         Xlp.dump_theorem_term_abbrevs n;
+         Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n;
@@ -973,7 +973,7 @@ and command = function
            begin
              read_sig b;
              map_thid_pos := read_val (b^".thp");
-             Xlp.export_theorem_term_abbrevs b n k;
+             Xlp.export_theorem_term_abbrevs_part b n k;
              0
            end
      end
