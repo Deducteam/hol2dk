@@ -672,10 +672,9 @@ let export_subterm_abbrevs b n =
 let export_term_abbrevs_in_one_file b n =
   let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
   export (n^"_term_abbrevs")
-    (deps @ if !use_sharing then [n^"_subterm_abbrevs"] else [])
+    (if !use_sharing then deps @ [n^"_subterm_abbrevs"] else deps)
     decl_term_abbrevs;
-  if !use_sharing then
-    export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
+  if !use_sharing then export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
 ;;
 
 (* [dump_theorem_term_abbrevs n] generates the files
@@ -847,7 +846,8 @@ let export_theorem_deps b n =
       f (b^"_axioms");
       f (n^"_type_abbrevs");
       if !use_sharing then f (n^"_subterm_abbrevs");
-      SetInt.iter (fun j -> f (n^"_term_abbrevs"^part j))
+      SetInt.iter (fun j -> if j=1 then f (n^"_term_abbrevs")
+                            else f (n^"_term_abbrevs"^part j))
         (Hashtbl.find htbl_abbrev_deps i);
       SetInt.iter (fun j -> f (n^part j)) (Hashtbl.find htbl_proof_deps i);
       SetStr.iter f (Hashtbl.find htbl_thm_deps i);
