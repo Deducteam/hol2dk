@@ -1,13 +1,15 @@
 TODO
 ----
 
+- what if we do not print types? and just "opaque symbol lem999 := ... ;" and "Definition lem999 := ... . Opaque lem999." ?
+
+- really remove useless proof steps to save memory (=> use files are not necessary afterwards)
+
 - record times to generate proofs and term_abbrevs files of each theorem
 
 - share a single type_abbrev file ?
 
 - do hol2dk resize term_abbrevs in hol2dk using brv file
-
-- generate proof parts in parallel like with hol2dk mk
 
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 

@@ -6,13 +6,16 @@
 unset_jrh_lexer;;
 REMOVE*)
 
-(* We use Printf since it is more efficient than Format. *)
+(* Remark: we use Printf since it is more efficient than Format. *)
 
 (* [out oc s args] outputs [s] with [args] on out_channel [oc]. *)
 let out = Printf.fprintf;;
 
 (* [log oc s args] outputs [s] with [args] on stdout. *)
 let log = Printf.printf;;
+
+(* [err oc s args] outputs [s] with [args] on stderr. *)
+let err = Printf.eprintf;;
 
 (* [time_of p] executes [p:unit -> unit] and prints on stdout the time
    taken to execute [p]. *)

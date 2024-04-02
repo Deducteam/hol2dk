@@ -11,11 +11,26 @@ split:
 	hol2dk split $(BASE)
 
 .PHONY: clean-split
-clean-split:
+clean-split: rm-sti rm-nbp rm-pos rm-use rm-thp
+
+.PHONY: rm-sti
+rm-sti:
 	find . -maxdepth 1 -name '*.sti' -delete
+
+.PHONY: rm-nbp
+rm-nbp:
 	find . -maxdepth 1 -name '*.nbp' -delete
+
+.PHONY: rm-pos
+rm-pos:
 	find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
+
+.PHONY: rm-use
+rm-use:
 	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
+
+.PHONY: rm-thp
+rm-thp:
 	rm -f $(BASE).thp
 
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
@@ -23,113 +38,175 @@ BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
 
-.PHONY: lp
-lp: lp-stage1
-	$(MAKE) lp-stage2
+ifeq ($(INCLUDE_VO_MK),1)
+INCLUDE_LPO_MK=1
+endif
 
+ifeq ($(INCLUDE_LPO_MK),1)
+SET_LP_FILES=1
+endif
+
+ifeq ($(SET_LP_FILES),1)
+LP_FILES := $(wildcard *.lp)
+endif
+
+ifeq ($(SET_STI_FILES),1)
 STI_FILES := $(wildcard *.sti)
+endif
 
-.PHONY: lp-stage1
-lp-stage1: $(BASE_FILES:%=%.lp) $(STI_FILES:%.sti=%.lp)
-
+ifeq ($(SET_MIN_FILES),1)
 MIN_FILES := $(wildcard *.min)
+endif
 
-.PHONY: lp-stage2
-lp-stage2: $(MIN_FILES:%.min=%.lp) $(MIN_FILES:%.min=%_type_abbrevs.lp)
+ifeq ($(SET_IDX_FILES),1)
+IDX_FILES := $(wildcard *.idx)
+endif
 
-HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 1000000
+BIG_FILES = $(shell if test -f BIG_FILES; then cat BIG_FILES; fi)
 
-FILES_WITH_SHARING = $(shell if test -f FILES_WITH_SHARING; then cat FILES_WITH_SHARING; fi)
+.PHONY: lp
+lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
+	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
+	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 
-#$(FILES_WITH_SHARING:%=%.lp): HOL2DK_OPTIONS = --max-steps 100000 --max-abbrevs 20000 #--use-sharing
+.PHONY: lp-proofs
+lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
 
-%.lp %.lpo.mk %.brv %.brp &: %.sti
+MAX_PROOF = --max-proof-size 50_000_000
+
+%.max: %.sti
+	hol2dk $(MAX_PROOF) thmsplit $(BASE) $*.lp
+
+MAX_ABBREV = --max-abbrev-size 500_000
+
+%.lp: %.idx
+	hol2dk $(MAX_ABBREV) thmpart $(BASE) $*.lp
+
+%.lp: %.sti
 	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
 
-%.lp %_type_abbrevs.lp &: %.min
+.PHONY: lp-abbrevs
+lp-abbrevs: $(MIN_FILES:%.min=%.lp)
+
+%.lp: %.min
 	hol2dk abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: clean-mk clean-min clean-brv clean-brp clean-lpo clean-v clean-vo
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-lpo clean-lpo clean-v
+
+.PHONY: rm-lp
+rm-lp:
 	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
-.PHONY: clean-mk
-clean-mk:
+.PHONY: rm-lpo-mk
+rm-lpo-mk:
 	find . -maxdepth 1 -name '*.lpo.mk' -delete
+
+.PHONY: rm-mk
+rm-mk:
 	rm -f lpo.mk vo.mk
 
-.PHONY: clean-min
-clean-min:
-	find . -maxdepth 1 -name '*.min' -delete
+.PHONY: rm-max
+rm-max:
+	find . -maxdepth 1 -name '*.max' -delete
 
-.PHONY: clean-brv
-clean-brv:
+.PHONY: rm-idx
+rm-idx:
+	find . -maxdepth 1 -name '*.idx' -delete
+
+.PHONY: rm-brv
+rm-brv:
 	find . -maxdepth 1 -name '*.brv' -delete
 
-.PHONY: clean-brp
-clean-brp:
+.PHONY: rm-brp
+rm-brp:
 	find . -maxdepth 1 -name '*.brp' -delete
 
-LP_FILES := $(wildcard *.lp)
+.PHONY: rm-min
+rm-min:
+	find . -maxdepth 1 -name '*.min' -delete
 
+ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
 
-lpo.mk: $(wildcard *.lpo.mk) #$(LP_FILES:%.lp=%.lpo.mk)
+LPO_MK_FILES := $(wildcard *.lpo.mk)
+
+lpo.mk: theory_hol.lpo.mk $(LPO_MK_FILES)
 	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 
 theory_hol.lpo.mk: theory_hol.lp
 	$(HOL2DK_DIR)/dep-lpo $< > $@
+endif
 
 .PHONY: lpo
 lpo: $(LP_FILES:%.lp=%.lpo)
+ifneq ($(INCLUDE_LPO_MK),1)
+	$(MAKE) INCLUDE_LPO_MK=1 $@
+endif
 
 %.lpo: %.lp
 	lambdapi check -c -w -v0 $<
 
 .PHONY: clean-lpo
-clean-lpo:
+clean-lpo: rm-lpo
+
+.PHONY: rm-lpo
+rm-lpo:
 	find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
+ifneq ($(SET_LP_FILES),1)
+	$(MAKE) SET_LP_FILES=1 $@
+endif
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring coq.v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
 
 .PHONY: clean-v
-clean-v: clean-vo
+clean-v: rm-v clean-vo
+
+.PHONY: rm-v
+rm-v:
 	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
+
+ifeq ($(INCLUDE_VO_MK),1)
+include vo.mk
 
 vo.mk: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
-#	find . -maxdepth 1 -name '*.v' -exec $(HOL2DK_DIR)/dep-vo {} \; > vo.mk
-
-include vo.mk
+endif
 
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
+ifneq ($(INCLUDE_VO_MK),1)
+	$(MAKE) INCLUDE_VO_MK=1 $@
+endif
 
-COQC_OPTIONS = # -w -coercions
+COQC_OPTIONS = -no-glob # -w -coercions
 %.vo: %.v
 	@echo coqc $<
 	@coqc $(COQC_OPTIONS) -R . HOLLight $<
 
 .PHONY: clean-vo
-clean-vo: clean-vos clean-glob clean-aux
-	rm -f .lia.cache .nia.cache
+clean-vo: rm-vo rm-glob rm-aux rm-cache
 
-.PHONY: clean-vos
-clean-vos:
+.PHONY: rm-vo
+rm-vo:
 	find . -maxdepth 1 -name '*.vo*' -delete
 
-.PHONY: clean-glob
-clean-glob:
+.PHONY: rm-glob
+rm-glob:
 	find . -maxdepth 1 -name '*.glob' -delete
 
-.PHONY: clean-aux
-clean-aux:
+.PHONY: rm-aux
+rm-aux:
 	find . -maxdepth 1 -name '.*.aux' -delete
+
+.PHONY: rm-cache
+rm-cache:
+	rm -f .lia.cache .nia.cache
 
 .PHONY: opam
 opam: $(BASE)_opam.vo
@@ -144,7 +221,7 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-lpo clean-v clean-vo clean-opam
+clean-all: clean-split clean-lp clean-opam
 
 .PHONY: all
 all:

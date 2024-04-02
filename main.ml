@@ -20,9 +20,9 @@ hol2dk options command arguments
 Options
 -------
 
---max-steps INT: maximum number of proof steps in a proof file
+--max-proof-size INT: maximum size of proof files
 
---max-abbrevs INT: maximum number of definitions in a term abbreviation file
+--max-abbrev-size INT: maximum size of term abbreviation files
 
 --use-sharing: define term abbreviations using let's
 
@@ -40,57 +40,64 @@ hol2dk unpatch
 Dumping commands
 ----------------
 
-hol2dk dump-simp $file.[ml|hl]
+hol2dk dump-simp $file.(ml|hl)
   compose the commands dump, pos, use, rewrite and purge
-  for $file depending on hol.ml
+  for a $file depending on hol.ml
 
-hol2dk dump-simp-use $file.[ml|hl]
+hol2dk dump-simp-use $file.(ml|hl)
   same as hol2dk dump except that hol.ml is not loaded first
 
-hol2dk dump $file.[ml|hl]
-  run OCaml toplevel to check $file.[ml|hl] and generate
+hol2dk dump $file.(ml|hl)
+  run OCaml toplevel to check $file.(ml|hl) and generate
   $file.sig (type and term constants), $file.prf (proof steps)
   and $file.thm (named theorems)
 
-hol2dk dump-use $file.[ml|hl]
+hol2dk dump-use $file.(ml|hl)
   same as hol2dk dump except that hol.ml is not loaded first
 
 hol2dk pos $file
-  generate $file.pos, the positions of proofs in $file.prf
+  generate $file.pos, the positions of proof steps in $file.prf
 
 hol2dk use $file
-  generate $file.use, some data to know whether a theorem is used or not
+  generate $file.use, some data to know whether a proof step is used or not
 
 hol2dk rewrite $file
   simplify $file.prf and update $file.pos and $file.use
 
 hol2dk purge $file
-  compute theorems that can be discarded in $file.use
+  set as unused the proof steps that do not contribute to a named theorem
 
 Single-threaded dk/lp file generation
 -------------------------------------
 
-hol2dk $file.[dk|lp]
-  generate $file.[dk|lp]
+hol2dk $file.(dk|lp)
+  generate $file.(dk|lp)
 
-hol2dk $file.[dk|lp] $thm_id
-  generate $file.[dk|lp] but with theorem index $thm_id only (for debug)
+hol2dk $file.(dk|lp) $thm_id
+  generate $file.(dk|lp) but with theorem index $thm_id only (for debug)
 
 Multi-threaded lp file generation by having a file for each named theorem
 -------------------------------------------------------------------------
 
 hol2dk link $file
-  add links to files needed to translate and check $file.prf
+  add links to hol2dk files needed to translate $file.prf
 
 hol2dk split $file
   generate $file.thp and the files $t.sti, $t.pos and $t.use
-  for each named theorem $t
+  for each named theorem
 
-hol2dk theorem $file $t.lp
-  generate the lp proof of the theorem named $t
+hol2dk theorem $file $thm.lp
+  generate the lp proof of the theorem named $thm
 
-hol2dk abbrev $file ${t}_term_abbrevs_part_$k.lp
-  generate ${t}_term_abbrevs_part_$k.lp
+hol2dk thmsplit $file $thm.lp
+  split the proof of $thm in various pieces according to --max-proof-size
+
+hol2dk thmpart $file ${thm}_part_$k.lp
+  generate ${thm}_part_$k.lp and its term abbreviations
+  according to --max-abbrev-size
+
+hol2dk abbrev $file ${thm}_term_abbrevs_part_$k.lp
+  generate ${thm}_term_abbrevs_part_$k.lp
 
 Multi-threaded dk/lp file generation by splitting proofs in $n parts
 --------------------------------------------------------------------
@@ -99,17 +106,17 @@ hol2dk mk $n $file
   generate $file.dg, the dependency graph between parts when $file.prf is
   split in $n parts, and $file.mk for handling parts in parallel
 
-hol2dk part $k $x $y $file.[dk|lp]
+hol2dk part $k $x $y $file.(dk|lp)
   generate dk/lp proof files of part $k from proof index $x to proof index $y
 
 hol2dk sig $file
   generate dk/lp signature files from $file.sig
 
-hol2dk thm $file.[dk|lp]
-  generate $file.[dk|lp] from $file.thm
+hol2dk thm $file.(dk|lp)
+  generate $file.(dk|lp) from $file.thm
 
-hol2dk axm $file.[dk|lp]
-  generate $file_opam.[dk|lp] from $file.thm (same as thm but without proofs)
+hol2dk axm $file.(dk|lp)
+  generate $file_opam.(dk|lp) from $file.thm (same as thm but without proofs)
 
 Other commands
 --------------
@@ -119,9 +126,6 @@ hol2dk env
 
 hol2dk nbp $file
   print the number of proof steps in $file.prf
-
-hol2dk resize $file.lp $n
-  rebuild the proof files of $file.lp with --max-steps $n
 
 hol2dk proof $file $x $y
   print proof steps between theorem indexes $x and $y
@@ -140,14 +144,14 @@ hol2dk dep
   print on stdout a Makefile giving the dependencies of all HOL-Light files
   in the working directory and all its subdirectories recursively
 
-hol2dk dep file.[ml|hl]
-  print on stdout all the HOL-Light files required to check file.[ml|hl]
+hol2dk dep file.(ml|hl)
+  print on stdout all the HOL-Light files required to check file.(ml|hl)
 
-hol2dk name file.[ml|hl]
-  print on stdout the named theorems proved in file.[ml|hl]
+hol2dk name file.(ml|hl)
+  print on stdout the named theorems proved in file.(ml|hl)
 
-hol2dk name upto file.[ml|hl]
-  print on stdout the named theorems proved in file.[ml|hl]
+hol2dk name upto file.(ml|hl)
+  print on stdout the named theorems proved in file.(ml|hl)
   and all its dependencies
 
 hol2dk name
@@ -155,13 +159,12 @@ hol2dk name
   in the working directory and all its subdirectories recursively
 %!"
 
-let wrong_arg() = Printf.eprintf "wrong argument(s)\n%!"; exit 1
-
-let is_dk filename =
-  match Filename.extension filename with
+let is_dk f =
+  match Filename.extension f with
   | ".dk"  -> true
   | ".lp" -> false
-  | _ -> wrong_arg()
+  | _ -> err "\"%s\" does not end with \".dk\" or \".lp\"\n%!" f; exit 1
+;;
 
 let read_sig b =
   let dump_file = b^".sig" in
@@ -175,8 +178,13 @@ let read_sig b =
   close_in ic;
   update_map_const_typ_vars_pos();
   update_reserved()
+;;
 
-let integer s = try int_of_string s with Failure _ -> wrong_arg()
+let integer s =
+  try int_of_string s
+  with Failure _ ->
+    Printf.eprintf "\"%s\" is not a valid integer\n%!" s; exit 1
+;;
 
 (* [make nb_proofs dg b] generates a makefile for translating the
    proofs of [b] in parallel, according to the dependency graph
@@ -304,21 +312,23 @@ let make nb_proofs dg b =
           clean-dk clean-lp clean-lpo clean-v clean-vo\n";
   close_out oc;
   0
+;;
 
 let range args =
   match args with
   | [] -> All
   | [x] ->
      let x = integer x in
-     if x < 0 then wrong_arg();
+     if x < 0 then (err "%d is negative\n%!" x; exit 1);
      Only x
   | [x;y] ->
      let x = integer x in
-     if x < 0 then wrong_arg();
+     if x < 0 then (err "%d is negative\n%!" x; exit 1);
      let y = integer y in
-     if y < x then wrong_arg();
+     if y < x then (err "%d is smaller than %d\n%!" y x; exit 1);
      if x=0 then Upto y else Inter(x,y)
-  | _ -> wrong_arg()
+  | _ -> (err "too many arguments\n%!"; exit 1)
+;;
 
 let dump after_hol f b =
   let ml_file = Printf.sprintf "/tmp/dump%d.ml" (Unix.getpid()) in
@@ -348,11 +358,13 @@ dump_map_thid_name "%s.thm" %a;;
 (olist ostring) (trans_file_deps (dep_graph (files())) f);
   close_out oc;
   Sys.command ("ocaml -w -A -I . "^ml_file)
+;;
 
 let basename_ml f =
   match Filename.extension f with
   | ".ml" | ".hl" -> Filename.chop_extension f
-  | _ -> wrong_arg()
+  | _ -> err "\"%s\" does not end with \".ml\" or \".hl\"\n%!" f; exit 1
+;;
 
 let print_hstats() =
   log "\nstring: %a\ntype: %a\nterm: %a\ntype_abbrev: %a\nterm_abbrev: %a\
@@ -365,12 +377,13 @@ let print_hstats() =
     hstats (TrmHashtbl.stats htbl_subterms)
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part)
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part_max)
+;;
 
 let valid_coq_filename s = match s with "at" -> "_"^s | _ -> s;;
 
 let call_script s args =
   match Sys.getenv_opt "HOL2DK_DIR" with
-  | None -> log "set $HOL2DK_DIR first\n"; 1
+  | None -> err "set $HOL2DK_DIR first\n"; 1
   | Some d -> Sys.command (d^"/"^s^" "^String.concat " " args)
 ;;
 
@@ -402,10 +415,14 @@ and command = function
 
   | "--use-sharing"::args -> use_sharing := true; command args
 
-  | "--max-abbrevs"::k::args ->
+  | "--max-abbrev-size"::k::args ->
      Xlp.max_abbrev_part_size := integer k; command args
 
-  | "--max-steps"::k::args -> Xlp.max_steps := integer k; command args
+  | "--max-proof-size"::k::args ->
+     Xlp.max_proof_part_size := integer k; command args
+
+  | s::_ when String.starts_with ~prefix:"--" s ->
+     err "unknown option \"%s\"\n" s; 1
 
   | ["dep";f] ->
      let dg = dep_graph (files()) in
@@ -437,16 +454,6 @@ and command = function
   | ["patch" as s] -> call_script s []
   | ["unpatch" as s] -> call_script s []
   | ["link";arg] -> call_script "add-links" [arg]
-
-(*hol2dk resize $file_term_abbrevs.lp $n
-  rebuild the term abbreviation files of $file.lp with --max-abbrevs $n*)
-  | ["resize";f;k] ->
-     let dk = is_dk f in
-     if dk then (log "dk output not available for this command\n"; 1)
-     else
-       (*if String.ends_with ~suffix:"_term_abbrevs.lp" f then
-         call_script "resize-term-abbrevs" [f;k]
-       else*) call_script "resize-proof" [f;k]
 
   | ["dump";f] -> dump true f (basename_ml f)
   | ["dump-use";f] -> dump false f (basename_ml f)
@@ -552,7 +559,8 @@ and command = function
   | ["proof";b;x;y] ->
      let x = integer x and y = integer y in
      let nb_proofs = read_val (b^".nbp") in
-     if x < 0 || y < x || y >= nb_proofs then wrong_arg();
+     if x < 0 || y < x || y >= nb_proofs then
+       (err "[%d,%d] is not a valid interval\n" x y; exit 1);
      read_pos b;
      init_proof_reading b;
      read_use b;
@@ -725,14 +733,15 @@ and command = function
   | ["print";"use";b;k] ->
      let k = integer k in
      let nb_proofs = read_val (b^".nbp") in
-     if k < 0 || k >= nb_proofs then wrong_arg();
+     if k < 0 || k >= nb_proofs then
+       (err "%d is not a valid proof index\n" k; exit 1);
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k);
      0
 
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
-     if nb_parts < 2 then wrong_arg();
+     if nb_parts < 2 then (err "the number of parts must be > 1\n"; exit 1);
      let nb_proofs = read_val (b^".nbp") in
      let part_size = nb_proofs / nb_parts in
      let part idx =
@@ -829,7 +838,8 @@ and command = function
      let nb_parts = input_value ic in
 
      let k = integer k and x = integer x and y = integer y in
-     if k < 1 || k > nb_parts || x < 0 || y < x then wrong_arg();
+     if k < 1 || k > nb_parts || x < 0 || y < x then
+       (err "wrong part number or invalid interval\n"; exit 1);
      read_sig b;
      read_pos b;
      init_proof_reading b;
@@ -849,6 +859,26 @@ and command = function
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
+     0
+
+  | ["prfsize";b] ->
+     read_use b;
+     let size = Array.make (Array.length !Xproof.last_use) 0 in
+     read_prf b (fun k p ->
+         if get_use k >= 0 then Array.set size k (size_proof p));
+     write_val (b^".siz") size;
+     0
+
+  | ["thmsize";b;n] ->
+     read_use b;
+     read_pos n;
+     the_start_idx := read_val (n^".sti");
+     let size = Array.make (Array.length !Xproof.prf_pos) 0 in
+     Array.iteri (fun k _ ->
+         let k' = !the_start_idx + k in
+         if get_use k' >= 0 then Array.set size k (size_proof (proof_at k')))
+       !Xproof.prf_pos;
+     write_val (n^".siz") size;
      0
 
   | ["split";b] ->
@@ -892,6 +922,36 @@ and command = function
      write_val (b^".thp") !map;
      0
 
+  | ["thmsplit";b;f] ->
+     let n = Filename.chop_extension f in
+     read_use n;
+     the_start_idx := read_val (n^".sti");
+     (* to generate [n^".lp"] *)
+     read_sig b;
+     map_thid_pos := read_val (b^".thp");
+     read_pos n;
+     init_proof_reading b;
+     if is_dk f then (err "dk output not available for this command\n"; 1)
+     else (Xlp.split_theorem_proof b n; 0)
+
+  | ["thmpart";b;f] ->
+     begin
+       let dk = is_dk f in
+       let f = Filename.chop_extension f in
+       match get_part f "" with
+       | None -> err "\"%s\" does not end with \"_part_\" \
+                      followed by an integer\n" f; 1
+       | Some(n,k) ->
+          read_sig b;
+          map_thid_pos := read_val (b^".thp");
+          read_pos n;
+          read_use n;
+          the_start_idx := read_val (n^".sti");
+          init_proof_reading b;
+          if dk then (err "dk output not available for this command\n"; 1)
+          else (Xlp.export_theorem_proof_part b n k; 0)
+     end
+
   | ["theorem";b;f] ->
      read_sig b;
      map_thid_pos := read_val (b^".thp");
@@ -900,12 +960,12 @@ and command = function
      read_use n;
      the_start_idx := read_val (n^".sti");
      init_proof_reading b;
-     if is_dk f then (log "dk output not available for this command\n"; 1)
+     if is_dk f then (err "dk output not available for this command\n"; 1)
      else
        begin
          Xlp.export_theorem_proof n;
          close_in !Xproof.ic_prf;
-         Xlp.dump_theorem_term_abbrevs n;
+         Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
          Xlp.export_type_abbrevs b n;
@@ -914,35 +974,26 @@ and command = function
 
   | ["abbrev";b;f] ->
      begin
-       try
-         let dk = is_dk f in
-         let s = Filename.chop_extension f in
-         let len = String.length s in
-         let i = ref (len - 1) in
-         let k = (* compute part number *)
-           while !i >= 0 && s.[!i] <> '_' do decr i done;
-           if !i < 0 then raise Exit;
-           integer (String.sub s (!i+1) (len - 1 - !i))
-         in
-         (* compute theorem name *)
-         if !i < 17 then raise Exit;
-         let n = String.sub s 0 (!i - 18) in
-         if dk then (log "dk output not available for this command\n"; 1)
+       let dk = is_dk f in
+       let f = Filename.chop_extension f in
+       match get_part f "_term_abbrevs" with
+       | None -> err "\"%s\" does not end with \"_term_abbrevs_part_\"\
+                      followed by an integer\n" f; 1
+       | Some(n,k) ->
+         if dk then (err "dk output not available for this command\n"; 1)
          else
            begin
              read_sig b;
              map_thid_pos := read_val (b^".thp");
-             Xlp.export_theorem_term_abbrevs b n k;
+             Xlp.export_theorem_term_abbrevs_part b n k;
              0
-           end;
-       with Exit -> log "invalid argument\n"; 1
+           end
      end
 
   | f::args ->
      let r = range args in
      let dk = is_dk f in
      let b = Filename.chop_extension f in
-     (* read and translate sig file *)
      read_sig b;
      if dk then
        begin

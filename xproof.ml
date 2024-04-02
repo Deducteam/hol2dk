@@ -66,6 +66,14 @@ let proof_at k =
   v
 ;;
 
+(* [size_proof_at k] gives the size of the proof of index [k]. *)
+let size_proof_at k =
+  let k' = k - !the_start_idx in
+  if k'+1 < Array.length !prf_pos
+  then Array.get !prf_pos (k'+1) - Array.get !prf_pos k'
+  else 1_500
+;;
+
 (* [(!last_use).(i) = 0] if [i] is a named theorem, the highest
    theorem index using [i] if there is one, and -1 otherwise. *)
 let last_use : int array ref = ref [||];;
