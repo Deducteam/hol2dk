@@ -1017,10 +1017,11 @@ and command = function
          Xdk.export_term_abbrevs b;
          Xdk.export_type_abbrevs b;
          log "generate %s.dk ...\n%!" b;
+         let deps = ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
+                     ;"proofs"] in
          let infiles =
            List.map (fun s -> b^"_"^s^".dk")
-             (["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
-              ;"proofs"] @ if r = All then ["theorems"] else [])
+             (if r = All then deps @ ["theorems"] else deps)
          in
          exit
            (Sys.command

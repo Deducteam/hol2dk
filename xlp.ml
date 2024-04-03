@@ -616,9 +616,9 @@ let decl_theorem oc k p d =
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
      let hyps oc ts = List.iteri (fun i _ -> out oc " h%d" (i+1)) ts in
-     out oc "opaque symbol lem%s%a%a%a ≔ lem%d%a%a;\n" n
-       typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts
-       k (list_prefix " " (var rmap)) xs hyps ts
+     out oc "opaque symbol %s%a%a%a ≔ @lem%d%a%a%a;\n"
+       n typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts
+       k (list_prefix " " raw_typ) tvs (list_prefix " " (var rmap)) xs hyps ts
   | Named_axm n ->
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
