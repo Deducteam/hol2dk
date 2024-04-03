@@ -737,6 +737,15 @@ let size_proof (Proof(thm, content)) =
   + size_content nb_type_vars nb_term_vars nb_hyps content
 ;;
 
+(* [size_abbrev a] computes an approximation of the tree size of the
+   Dedukti representation of the term abbreviation [a]. *)
+let size_abbrev (t,(_,ltvs,bs)) =
+  let nb_type_vars = ltvs in
+  let nb_term_vars = List.length bs in
+  let typ = 1 + 2*ltvs in
+  1 + 2*nb_type_vars + 2*nb_term_vars*typ + size_term t
+;;
+
 (* [proof oc p] prints the proof [p] on out_channel [oc] in a user
    readable format. *)
 let proof oc (Proof(_,c)) =

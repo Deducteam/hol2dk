@@ -1,6 +1,11 @@
 NOTES
 -----
 
+## 03/04/24
+
+With PR #110:
+- GRASSMANN_PLUCKER_4: size 4m lp 8m v 7m14s
+
 ## 26/03/24
 
 The PR #108 and #109 improves the generation time of big theorems very significantly:
