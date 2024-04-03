@@ -17,7 +17,7 @@ in parallel:
 
 ### Changed
 
-- FILES_WITH_SHARING renamed into BIG_FILES and added by add-links anymore
+- FILES_WITH_SHARING renamed into BIG_FILES and not added by add-links anymore
 
 ## 1.0.0 (2024-02-25)
 

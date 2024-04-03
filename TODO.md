@@ -3,13 +3,13 @@ TODO
 
 - pre-compute once and for all the type and term variables of axioms and definitions
 
+- compute proof tree sizes in parallel ?
+
 - really remove useless proof steps to save memory (=> use files are not necessary afterwards)
 
-- record times to generate proofs and term_abbrevs files of each theorem
+- record times to generate proofs and term_abbrevs files of each theorem ?
 
-- share a single type_abbrev file ?
-
-- do hol2dk resize term_abbrevs in hol2dk using brv file
+- share a single type_abbrev file
 
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 
@@ -17,7 +17,7 @@ TODO
 
 - rename file _term by _sig
 
-- keep subterm_abbrevs?
+- use subterm_abbrevs even without using --sharing ? keep subterm_abbrevs at all ?
 
 - Makefile: add targets for dk output
 

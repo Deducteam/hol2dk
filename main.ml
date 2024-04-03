@@ -870,15 +870,23 @@ and command = function
      0
 
   | ["thmsize";b;n] ->
-     read_use b;
+     init_proof_reading b;
+     read_use n;
      read_pos n;
      the_start_idx := read_val (n^".sti");
      let size = Array.make (Array.length !Xproof.prf_pos) 0 in
-     Array.iteri (fun k _ ->
-         let k' = !the_start_idx + k in
-         if get_use k' >= 0 then Array.set size k (size_proof (proof_at k')))
+     (*let total = ref 0 in*)
+     Array.iteri (fun k pos ->
+         if Array.get !last_use k >= 0 then
+           begin
+             seek_in !ic_prf pos;
+             let s = size_proof (input_value !ic_prf) in
+             Array.set size k s;
+             (*total := !total + s*)
+           end)
        !Xproof.prf_pos;
      write_val (n^".siz") size;
+     (*log "size: %#d\n" !total;*)
      0
 
   | ["split";b] ->
@@ -926,6 +934,7 @@ and command = function
      let n = Filename.chop_extension f in
      read_use n;
      the_start_idx := read_val (n^".sti");
+     Xproof.thm_size := read_val (n^".siz");
      (* to generate [n^".lp"] *)
      read_sig b;
      map_thid_pos := read_val (b^".thp");

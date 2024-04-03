@@ -1,7 +1,12 @@
 NOTES
 -----
 
-Not printing types for lemmas (proof steps) slightly reduces Coq compilation time. For instance, checking hol.ml in Coq takes 28m3s instead of 31m35s (-11%).
+## 03/04/24
+
+With PR #111: Not printing types for lemmas (proof steps) slightly reduces Coq compilation time. For instance, checking hol.ml in Coq takes 28m3s instead of 31m35s (-11%).
+
+With PR #110:
+- GRASSMANN_PLUCKER_4: size 4m lp 8m v 7m14s
 
 ## 26/03/24
 
