@@ -1,6 +1,8 @@
 NOTES
 -----
 
+Not printing types for lemmas (proof steps) slightly reduces Coq compilation time. For instance, checking hol.ml in Coq takes 28m3s instead of 31m35s (-11%).
+
 ## 26/03/24
 
 The PR #108 and #109 improves the generation time of big theorems very significantly:
