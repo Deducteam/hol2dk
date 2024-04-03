@@ -1,9 +1,9 @@
 TODO
 ----
 
-- compute proof tree sizes in parallel ?
+- pre-compute once and for all the type and term variables of axioms and definitions
 
-- what if we do not print types? and just "opaque symbol lem999 := ... ;" and "Definition lem999 := ... . Opaque lem999." ?
+- compute proof tree sizes in parallel ?
 
 - really remove useless proof steps to save memory (=> use files are not necessary afterwards)
 

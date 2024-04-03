@@ -461,10 +461,13 @@ let proof tvs rmap =
     | Pinst(k,s) -> out oc "%a" (subproof tvs rmap [] s ts k) (proof_at k)
     | Pinstt(k,s) -> out oc "%a" (subproof tvs rmap s [] ts k) (proof_at k)
     | Paxiom(t) ->
-       out oc "axiom_%d%a"
+       out oc "@axiom_%d%a%a"
          (pos_first (fun th -> concl th = t) (axioms()))
+         (list_prefix " " typ) (type_vars_in_term t)
          (list_prefix " " term) (frees t)
-    | Pdef(_,n,_) -> out oc "%a_def" cst_name n
+    | Pdef(t,n,_) ->
+       out oc "@%a_def%a" cst_name n
+         (list_prefix " " typ) (type_vars_in_term t)
     | Pdeft(_,t,_,_) ->
        out oc "@axiom_%d%a%a"
          (pos_first (fun th -> concl th = t) (axioms()))
@@ -598,9 +601,9 @@ let decl_theorem oc k p d =
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
      let prv = let l = get_use k in l > 0 && l <= !proof_part_max_idx in
-     out oc "%s symbol lem%d%a%a%a : Prf %a ≔ %a;\n"
+     out oc "%s symbol lem%d%a%a%a ≔ %a;\n"
        (if prv then "private" else "opaque") k
-       typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
+       typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts
        (proof tvs rmap) p
   | Axiom ->
      let term = unabbrev_term rmap in
@@ -613,9 +616,9 @@ let decl_theorem oc k p d =
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
      let hyps oc ts = List.iteri (fun i _ -> out oc " h%d" (i+1)) ts in
-     out oc "opaque symbol lem%s%a%a%a : Prf %a ≔ lem%d%a%a;\n" n
-       typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
-       k (list_prefix " " (var rmap)) xs hyps ts
+     out oc "opaque symbol %s%a%a%a ≔ @lem%d%a%a%a;\n"
+       n typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts
+       k (list_prefix " " raw_typ) tvs (list_prefix " " (var rmap)) xs hyps ts
   | Named_axm n ->
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
