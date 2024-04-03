@@ -916,9 +916,10 @@ let split_theorem_abbrevs n =
   let pos = Array.make len 0 in
   log "read %s ...\n%!" dump_file;
   let ic = open_in_bin dump_file in
+  let size = Array.make len 0 in
   for k = 0 to len - 1 do
     Array.set pos k (pos_in ic);
-    ignore (input_value ic)
+    Array.set size k (size_abbrev (input_value ic))
   done;
   close_in ic;
   write_val (n^".brp") pos;
@@ -928,15 +929,16 @@ let split_theorem_abbrevs n =
   and min = ref 0
   and ht_part_max = Hashtbl.create 1_000
   and k = ref 0
-  and start_pos = ref 0 in
+  and abbrev_part_size = ref 0 in
   Hashtbl.add ht_part_max 0 (-1);
   while !k < len do
     min := !k;
-    start_pos := pos.(!k);
-    let max_pos = !start_pos + !max_abbrev_part_size in
-    incr k;
-    while !k < len && pos.(!k) < max_pos do incr k done;
-    if !k < len then (* pos.(!k) >= max_pos *)
+    abbrev_part_size := 0;
+    while !k < len && !abbrev_part_size < !max_abbrev_part_size do
+      abbrev_part_size := !abbrev_part_size + size.(!k);
+      incr k;
+    done;
+    if !k < len then
       begin
         let max = !k - 1 in
         write_val (f^part !nb_parts^".min") (!min,max);

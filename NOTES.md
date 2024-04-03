@@ -1,6 +1,11 @@
 NOTES
 -----
 
+## 01/04/24
+
+computing proof tree sizes:
+- GRASSMANN_PLUCKER_4: 4m2s
+
 ## 26/03/24
 
 The PR #108 and #109 improves the generation time of big theorems very significantly:
