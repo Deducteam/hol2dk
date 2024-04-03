@@ -72,10 +72,6 @@ let thm_size : int Array.t ref  = ref [||];;
 (* [size_proof_at k] gives the size of the proof of index [k]. *)
 let size_proof_at k =
   if Array.length !thm_size > 0 then !thm_size.(k - !the_start_idx) else 0
-  (*let k' = k - !the_start_idx in
-  if k'+1 < Array.length !prf_pos
-  then Array.get !prf_pos (k'+1) - Array.get !prf_pos k'
-  else 1_500*)
 ;;
 
 (* [(!last_use).(i) = 0] if [i] is a named theorem, the highest

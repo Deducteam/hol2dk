@@ -1,10 +1,10 @@
 NOTES
 -----
 
-## 01/04/24
+## 03/04/24
 
-computing proof tree sizes:
-- GRASSMANN_PLUCKER_4: 4m2s
+With PR #110:
+- GRASSMANN_PLUCKER_4: size 4m lp 8m v 7m14s
 
 ## 26/03/24
 
