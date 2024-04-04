@@ -899,7 +899,7 @@ let split_theorem_proof b n =
   in
   export_iter n iter_deps
     (fun oc ->
-      decl_theorem oc max (proof_at max) (Named_thm (string_of_int max)))
+      decl_theorem oc max (proof_at max) (Named_thm ("lem"^string_of_int max)))
 ;;
 
 (* [split_theorem_abbrevs n] generates the files [n^".brv"],
