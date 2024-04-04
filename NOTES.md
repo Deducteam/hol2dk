@@ -5,8 +5,10 @@ NOTES
 
 With PR #111: Not printing types for lemmas (proof steps) slightly reduces Coq compilation time. For instance, checking hol.ml in Coq takes 28m3s instead of 31m35s (-11%).
 
-With PR #110:
-- GRASSMANN_PLUCKER_4: size 4m lp 8m v 7m14s
+With PR #110, --max-proof-size 500_000 --max-abbrev-size 2_000_000:
+- GRASSMANN_PLUCKER_4: size 4m55s lp 1m35s v 1m41s vo -j16 60m22s
+- HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS: lp 8m9s v 2m vo -j32 9h37m
+- CHAIN_BOUNDARY_BOUNDARY: lp 2m33 v 39s vo -j32
 
 ## 26/03/24
 
