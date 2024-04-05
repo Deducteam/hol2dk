@@ -601,9 +601,9 @@ let decl_theorem oc k p d =
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
      let prv = let l = get_use k in l > 0 && l <= !proof_part_max_idx in
-     out oc "%s symbol lem%d%a%a%a ≔ %a;\n"
+     out oc "%s symbol lem%d%a%a%a : Prf %a ≔ %a;\n"
        (if prv then "private" else "opaque") k
-       typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts
+       typ_vars tvs (list (decl_param rmap)) xs decl_hyps ts term t
        (proof tvs rmap) p
   | Axiom ->
      let term = unabbrev_term rmap in
@@ -623,7 +623,7 @@ let decl_theorem oc k p d =
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     out oc "symbol lem%s%a%a%a : Prf %a;\n" n
+     out oc "symbol thm_%s%a%a%a : Prf %a;\n" n
        typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
 ;;
 
@@ -1049,10 +1049,13 @@ let export_proofs b r =
   export_iter (b^"_proofs") iter_proofs_deps (fun oc -> proofs_in_range oc r)
 ;;
 
-let out_map_thid_name as_axiom oc map_thid_name =
-  MapInt.iter
-    (fun k n -> decl_theorem oc k (proof_at k)
-                  (if as_axiom then Named_axm n else Named_thm n))
+let out_map_thid_name_as_axioms map_thid_name oc =
+  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (Named_axm n))
+    map_thid_name
+;;
+
+let out_map_thid_name map_thid_name oc =
+  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (Named_thm n))
     map_thid_name
 ;;
 
@@ -1064,13 +1067,12 @@ let export_theorems b map_thid_name =
     f (b^"_axioms");
     f (b^"_proofs")
   in
-  export_iter b iter_theorems_deps
-    (fun oc -> out_map_thid_name false oc map_thid_name)
+  export_iter b iter_theorems_deps (out_map_thid_name map_thid_name)
 ;;
 
 let export_theorems_as_axioms b map_thid_name =
   export (b^"_opam") [b^"_types";b^"_terms";b^"_axioms"]
-    (fun oc -> out_map_thid_name true oc map_thid_name)
+    (out_map_thid_name_as_axioms map_thid_name)
 ;;
 
 let iter_proofs_part_deps b k dg f =
@@ -1097,7 +1099,7 @@ let iter_theorems_part_deps b k f =
 
 let export_theorems_part k b map_thid_name =
   export_iter b (iter_theorems_part_deps b k)
-    (fun oc -> out_map_thid_name false oc map_thid_name)
+    (out_map_thid_name map_thid_name)
 ;;
 (*
 (****************************************************************************)

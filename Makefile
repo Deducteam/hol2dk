@@ -62,7 +62,11 @@ ifeq ($(SET_IDX_FILES),1)
 IDX_FILES := $(wildcard *.idx)
 endif
 
-BIG_FILES = $(shell if test -f BIG_FILES; then cat BIG_FILES; fi)
+BIG_FILES = $(shell for f in `cat BIG_FILES 2> /dev/null | sed -e '/^#/d'`; do if test -f $$f.sti; then echo $$f; fi; done)
+
+.PHONY: print-big-files
+print-big-files:
+	@echo $(BIG_FILES)
 
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)

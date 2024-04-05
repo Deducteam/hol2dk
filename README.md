@@ -62,17 +62,17 @@ Axiom proof_irrelevance : forall (P:Prop) (p1 p2:P), p1 = p2.
 Bibliography
 ------------
 
-- [Translating HOL-Light proofs to Coq](https://files.inria.fr/blanqui/blanqui24draft.pdf), Frédéric Blanqui, 21 February 2024
+- [Translating HOL-Light proofs to Coq](https://files.inria.fr/blanqui/lpar24.pdf), Frédéric Blanqui, 4 April 2024
 
 Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- hol-light >= af186e9f3c685f5acab16097b05717c10ebb030d (28/01/23)
+- hol-light >= af186e9f3c685f5acab16097b05717c10ebb030d (28/01/23) <= c153f40da8deb3bcc7aaef39126ad15e4713e68c (20/03/24)
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml 4.14.1
-- camlp5 8.00.05
+- camlp5 8.02.01
 - ocamlfind
 - num
 
@@ -259,7 +259,7 @@ After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check fi
 The order targets are done important: `split` must be done first, then
 `lp`, etc.
 
-To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a space-separated list of theorem names.
+To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored).
 
 **By splitting proofs in several parts: command `mk`**
 
