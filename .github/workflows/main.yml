@@ -41,11 +41,13 @@ jobs:
           opam install -y lambdapi
       - name: Get hol-light and patch it
         run: |
-          git clone --depth 1 https://github.com/jrh13/hol-light
           eval `opam env`
-          make -C hol-light
           export HOL2DK_DIR=`pwd`
-          export HOLLIGHT_DIR=`pwd`/hol-light
+          git clone https://github.com/jrh13/hol-light
+          cd hol-light
+          git checkout c153f40da8deb3bcc7aaef39126ad15e4713e68c
+          export HOLLIGHT_DIR=`pwd`
+          make
           hol2dk patch
       - name: Dump proofs
         run: |
