@@ -43,7 +43,7 @@ jobs:
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
-          git clone --depth 1 https://github.com/jrh13/hol-light
+          git clone https://github.com/jrh13/hol-light
           cd hol-light
           git checkout bfb2ea95cf4b20f40136d5f08102875400c8cba7
           export HOLLIGHT_DIR=`pwd`
