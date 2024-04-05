@@ -259,7 +259,7 @@ After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check fi
 The order targets are done important: `split` must be done first, then
 `lp`, etc.
 
-To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a space-separated list of theorem names.
+To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored).
 
 **By splitting proofs in several parts: command `mk`**
 
