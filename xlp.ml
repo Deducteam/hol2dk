@@ -623,7 +623,7 @@ let decl_theorem oc k p d =
      let term = unabbrev_term rmap in
      let decl_hyps oc ts =
        List.iteri (fun i t -> out oc " (h%d : Prf %a)" (i+1) term t) ts in
-     out oc "symbol %s%a%a%a : Prf %a;\n" n
+     out oc "symbol thm_%s%a%a%a : Prf %a;\n" n
        typ_vars tvs (list (unabbrev_decl_param rmap)) xs decl_hyps ts term t
 ;;
 
