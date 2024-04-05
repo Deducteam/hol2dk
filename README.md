@@ -62,13 +62,13 @@ Axiom proof_irrelevance : forall (P:Prop) (p1 p2:P), p1 = p2.
 Bibliography
 ------------
 
-- [Translating HOL-Light proofs to Coq](https://files.inria.fr/blanqui/blanqui24draft.pdf), Frédéric Blanqui, 21 February 2024
+- [Translating HOL-Light proofs to Coq](https://files.inria.fr/blanqui/lpar24.pdf), Frédéric Blanqui, 4 April 2024
 
 Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- hol-light >= af186e9f3c685f5acab16097b05717c10ebb030d (28/01/23)
+- hol-light >= af186e9f3c685f5acab16097b05717c10ebb030d (28/01/23) <= c153f40da8deb3bcc7aaef39126ad15e4713e68c (20/03/24)
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml 4.14.1
