@@ -234,3 +234,41 @@ all:
 	$(MAKE) lpo
 	$(MAKE) v
 	$(MAKE) vo
+
+ifeq ($(SET_THM_FILES),1)
+THM_FILES := $(shell find . -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_abbrevs.v' -a ! -name '*_types.v' -a ! -name '*_terms.v' -a ! -name '*_axioms.v' -a ! -name '*_subterms.v' -a ! -name 'theory_hol.v' -a ! -name 'coq.v')
+endif
+
+.PHONY: spec
+spec: $(THM_FILES:%.v=%_spec.v) $(THM_FILES:%.v=%_spec.lpo.mk)
+	$(MAKE) INCLUDE_VO_MK=1
+
+%_spec.v: %.v
+	sed -i -e 's/Require Import \([^\.]*\)\./Require Import \1_spec./' -e '/^Require /s/abbrevs_spec/abbrevs/' -e '/^Require /s/coq_spec/coq/' -e '/^Require /s/theory_hol_spec/theory_hol/' -e '/^Require /s/types_spec/types/' -e '/^Require /s/terms_spec/terms/' -e '/^Require /s/axioms_spec/axioms/' $<
+	sed -i -e 's/\.lpo/_spec.lpo/g' -e 's/_spec\.lpo:/.lpo:/' -e 's/_abbrevs_spec\.lpo/_abbrevs.lpo/g' -e 's/theory_hol_spec\.lpo/theory_hol.lpo/' -e 's/_types_spec\.lpo/_types.lpo/' -e 's/_terms_spec\.lpo/_terms.lpo/' -e 's/_axioms_spec\.lpo/_axioms.lpo/' $*.lpo.mk
+	for f in coq theory_hol $(BASE_FILES) $*_type_abbrevs $*_term_abbrevs; do printf "Require Import %s.\n" $$f; done > $@
+	sed -e '/^Require /d' -e '/^Proof. /d' -e 's/^Lemma /Axiom /' -e 's/) :/),/' -e 's/} :/},/' -e 's/^Axiom \([^ ]*\) /Axiom \1 : /' -e 's/: :/:/' -e 's/: \(.*\),/: forall \1,/' $< >> $@
+
+%_spec.lpo.mk:
+	echo -n "$*_spec.lpo:" > $@
+	for f in theory_hol $(BASE_FILES) $*_type_abbrevs $*_term_abbrevs; do printf " %s.lpo" $$f; done >> $@
+	echo >> $@
+
+.PHONY: undo-spec
+undo-spec: clean-spec
+	$(MAKE) $(THM_FILES:%.v=%.v.undo-spec)
+
+%.v.undo-spec:
+	sed -i -e '/^Require /s/_spec//' $*.v
+	sed -i -e 's/_spec\.lpo/.lpo/g' $*.lpo.mk
+
+.PHONY: clean-spec
+clean-spec: rm-spec rm-spec-lpo-mk
+
+.PHONY: rm-spec
+rm-spec:
+	find . -maxdepth 1 -name '*_spec.v' -delete
+
+.PHONY: rm-spec-lpo-mk
+rm-spec-lpo-mk: rm-mk
+	find . -maxdepth 1 -name '*_spec.lpo.mk' -delete
