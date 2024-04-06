@@ -81,8 +81,16 @@ let rec raw_typ oc b =
   | Tyapp(n,bs) -> out oc "(%a%a)" typ_name n (list_prefix " " raw_typ) bs
 ;;
 
+let rec string_of_typ = function
+  | Tyvar n
+  | Tyapp(n,[]) -> n
+  | Tyapp(n,bs) -> "("^n^" "^String.concat " " (List.map string_of_typ bs)^")"
+;;
+
+let map_typ_abbrev = ref MapStr.empty;;
+
 let abbrev_typ =
-  let idx = ref (-1) in
+  (*let idx = ref (-1) in*)
   fun oc b ->
   match b with
   | Tyvar n
@@ -91,36 +99,44 @@ let abbrev_typ =
      (* check whether the type is already abbreviated; add a new
         abbreviation if needed *)
      let tvs, b = canonical_typ b in
-     let k =
-       match TypHashtbl.find_opt htbl_type_abbrev b with
+     let s = string_of_typ b in
+     let k = Digest.string s
+       (*match TypHashtbl.find_opt htbl_type_abbrev b with
        | Some (k,_) -> k
        | None ->
           let k = !idx + 1 in
           idx := k;
           let x = (k, List.length tvs) in
           TypHashtbl.add htbl_type_abbrev b x;
-          k
+          k*)
      in
+     map_typ_abbrev := MapStr.add s (k, List.length tvs) !map_typ_abbrev;
      match tvs with
-     | [] -> out oc "type%d" k
-     | _ -> out oc "(type%d%a)" k (list_prefix " " raw_typ) tvs
+     | [] -> out oc "type%a" Digest.output k
+     | _ -> out oc "(type%a%a)" Digest.output k (list_prefix " " raw_typ) tvs
 ;;
 
 let typ = abbrev_typ;;
-  (*if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;*)
 
 (* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
-let decl_type_abbrevs oc =
+(*let decl_type_abbrevs oc =
   let abbrev b (k,n) =
     out oc "symbol type%d" k;
     for i=0 to n-1 do out oc " a%d" i done;
     (* We can use [raw_typ] here since [b] is canonical. *)
     out oc " ≔ %a;\n" raw_typ b
   in
-  (*List.iter abbrev
-    (List.sort (fun (_,(k1,_)) (_,(k2,_)) -> k1 - k2)
-       (MapTyp.fold (fun b x l -> (b,x)::l) m []))*)
   TypHashtbl.iter abbrev htbl_type_abbrev
+  ;;*)
+
+let decl_type_abbrevs oc =
+  let abbrev s (k,n) =
+    out oc "symbol type%a" Digest.output k;
+    for i=0 to n-1 do out oc " a%d" i done;
+    (* We can use [raw_typ] here since [b] is canonical. *)
+    out oc " ≔ %s;\n" s
+  in
+  MapStr.iter abbrev !map_typ_abbrev
 ;;
 
 (****************************************************************************)
