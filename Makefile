@@ -84,6 +84,8 @@ MAX_PROOF = --max-proof-size 500_000
 %.siz: %.sti
 	hol2dk thmsize $(BASE) $*
 
+.PRECIOUS: $(BIG_FILES:%=%.siz)
+
 MAX_ABBREV = --max-abbrev-size 2_000_000
 
 %.lp: %.idx
@@ -259,12 +261,15 @@ spec: $(THM_FILES:%.v=%_spec.v) $(THM_FILES:%.v=%_spec.lpo.mk)
 	echo >> $@
 
 .PHONY: undo-spec
-undo-spec: clean-spec
+undo-spec: clean-spec lpo.mk.undo-spec
 	$(MAKE) $(THM_FILES:%.v=%.v.undo-spec)
 
 %.v.undo-spec:
 	sed -i -e '/^Require /s/_spec//' $*.v
 	sed -i -e 's/_spec\.lpo/.lpo/g' $*.lpo.mk
+
+lpo.mk.undo-spec:
+	sed -i -e '/_spec\.lpo:/d' -e 's/_spec\.lpo/.lpo/g' lpo.mk
 
 .PHONY: clean-spec
 clean-spec: rm-spec rm-spec-lpo-mk
@@ -274,5 +279,5 @@ rm-spec:
 	find . -maxdepth 1 -name '*_spec.v' -delete
 
 .PHONY: rm-spec-lpo-mk
-rm-spec-lpo-mk: rm-mk
+rm-spec-lpo-mk:
 	find . -maxdepth 1 -name '*_spec.lpo.mk' -delete
