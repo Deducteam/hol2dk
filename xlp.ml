@@ -301,7 +301,7 @@ let abbrev_term =
     match h,ts with
     | Const("=",_b),[u;v] ->
       string oc "(= "; (*typ oc (get_domain b); char oc ' ';*)
-      term oc u; char oc ' '; term oc v
+      term oc u; char oc ' '; term oc v; char oc ')'
     | _ -> abbrev oc t
   in term
 ;;
