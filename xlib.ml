@@ -169,20 +169,30 @@ let array_of_hashtbl ht =
 ;;
 
 (****************************************************************************)
-(* Printing functions. *)
+(* Printing functions. See
+https://www.lexifi.com/blog/ocaml/note-about-performance-printf-and-format/#*)
 (****************************************************************************)
 
-let int oc k = out oc "%d" k;;
+let char = output_char;;
 
-let string oc s = out oc "%s" s;;
+let string = output_string;;
 
-let ostring oc s = out oc "\"%s\"" s;;
+let int oc k = string oc (string_of_int k);;
 
-let pair f g oc (x, y) = out oc "%a,%a" f x g y;;
+let quote f oc x = char oc '\"'; f oc x; char oc '\"';;
+let paren f oc x = char oc '('; f oc x; char oc ')';;
+let set f oc x = char oc '{'; f oc x; char oc '}';;
+let bracket f oc x = char oc '['; f oc x; char oc ']';;
 
-let opair f g oc (x, y) = out oc "(%a,%a)" f x g y;;
+let ostring = quote string;;
 
-let prefix p elt oc x = out oc "%s%a" p elt x;;
+let digest oc d = string oc (Digest.to_hex d);;
+
+let pair f g oc (x,y) = f oc x; char oc ','; g oc y;;
+let opair f g = paren (pair f g);;
+
+let prefix pre elt oc x = string oc pre; elt oc x;;
+let suffix elt suf oc x = elt oc x; string oc suf;;
 
 let list_sep sep elt oc xs =
   match xs with
@@ -190,15 +200,17 @@ let list_sep sep elt oc xs =
   | x::xs -> elt oc x; List.iter (prefix sep elt oc) xs
 ;;
 
-let list elt oc xs = list_sep "" elt oc xs;;
-let olist elt oc xs = out oc "[%a]" (list_sep "; " elt) xs;;
+let list elt oc = List.iter (elt oc);;
+let olist elt = bracket (list_sep "; " elt);;
 let list_prefix p elt oc xs = list (prefix p elt) oc xs;;
 
-let array elt oc a =
-  out oc "["; Array.iter (fun x -> out oc "%a;" elt x) a; out oc "]";;
+let array elt oc = Array.iter (elt oc);;
+let oarray elt = bracket (array (suffix elt "; "));;
 
-let set_int oc s = out oc "{"; SetInt.iter (out oc "%d;") s; out oc "}";;
-let set_str oc s = out oc "{"; SetStr.iter (out oc "%s;") s; out oc "}";;
+let set_int oc s =
+  char oc '{'; SetInt.iter (fun k -> int oc k; char oc ';') s; char oc '}';;
+let set_str oc s =
+  char oc '{'; SetStr.iter (fun s -> string oc s; char oc ';') s; char oc '}';;
 
 let htbl ppkey ppval oc ht =
   (*Hashtbl.iter (opair oc)*)
