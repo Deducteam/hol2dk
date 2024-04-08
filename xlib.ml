@@ -9,7 +9,7 @@ REMOVE*)
 open Xprelude
 open Fusion
 
-let open_file n = log "generate %s ...\n%!" n; open_out n;;
+let open_file n = log_gen n; open_out n;;
 
 let create_file n f = let oc = open_file n in f oc; close_out oc;;
 

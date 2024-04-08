@@ -132,8 +132,7 @@ let typ = abbrev_typ;;
     string oc " ≔ "; raw_typ oc b; string oc ";\n"
   in
   TypHashtbl.iter abbrev htbl_type_abbrev
-  ;;*)
-
+;;*)
 let decl_type_abbrevs oc =
   let abbrev s (k,n) =
     string oc "symbol type"; digest oc k;
@@ -728,8 +727,9 @@ print lem%d;\n" x*)
 (* Generate type and term abbreviation files. *)
 (****************************************************************************)
 
-let export_type_abbrevs b n =
-  export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
+let export_type_abbrevs n =
+  (*export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs*)
+  create_file (n^"_type_abbrevs.lp") decl_type_abbrevs
 ;;
 
 let export_subterm_abbrevs b n =
@@ -1055,7 +1055,7 @@ let export_theorem_proof_part b n k =
   (* dump term abbreviations *)
   let nb_parts = split_theorem_abbrevs p in
   (* generate [n^part(k)^"_type_abbrevs.lp"] *)
-  export_type_abbrevs b p;
+  export_type_abbrevs p;
   (* generate [n^part(k)^"_subterms.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;
   (* generate [n^part(k)^"_deps.lp"] and [n^".lpo.mk"] *)
