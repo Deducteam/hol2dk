@@ -14,6 +14,14 @@ let out = Printf.fprintf;;
 (* [log oc s args] outputs [s] with [args] on stdout. *)
 let log = Printf.printf;;
 
+let log_gen s =
+  print_string "generate "; print_string s; print_string " ...\n";
+  flush stdout;;
+
+let log_read s =
+  print_string "read "; print_string s; print_string " ...\n";
+  flush stdout;;
+
 (* [err oc s args] outputs [s] with [args] on stderr. *)
 let err = Printf.eprintf;;
 

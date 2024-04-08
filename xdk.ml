@@ -52,15 +52,13 @@ let typ_name oc n =
      | n -> valid_name n)
   (*match !stage with
   | Types | No_abbrev -> name oc n
-  | _ -> out oc "%s_types.%a" !basename name n*)
+  | _ -> string oc !basename; string oc "_types."; name oc n*)
 
 let cst_name = name
   (*match !stage with
   | Terms | No_abbrev -> name oc n
-  | _ -> out oc "%s_terms.%a" !basename name n*)
+  | _ -> string oc !basename; string oc "_terms."; name oc n*)
 ;;
-
-let suffix s oc n = name oc (n ^ s);;
 
 (****************************************************************************)
 (* Translation of types. *)
@@ -70,7 +68,8 @@ let rec raw_typ oc b =
   match b with
   | Tyvar n -> name oc n
   | Tyapp(n,[]) -> typ_name oc n
-  | Tyapp(n,bs) -> out oc "(%a%a)" typ_name n (list_prefix " " raw_typ) bs
+  | Tyapp(n,bs) ->
+    char oc '('; typ_name oc n; list_prefix " " raw_typ oc bs; char oc ')'
 ;;
 
 (* [unabbrev_typ tvs oc b] prints on [oc] the type [b]. Type variables
@@ -82,9 +81,10 @@ let unabbrev_typ tvs =
     match b with
     | Tyvar n ->
        if List.mem b tvs then name oc n
-       else out oc "(;%a;)%a" name n typ_name "bool"
+       else (string oc "(;"; name oc n; string oc ";)bool")
     | Tyapp(n,[]) -> typ_name oc n
-    | Tyapp(n,bs) -> out oc "(%a%a)" typ_name n (list_prefix " " typ) bs
+    | Tyapp(n,bs) ->
+      char oc '('; typ_name oc n; list_prefix " " typ oc bs; char oc ')'
   in typ
 ;;
 
@@ -92,8 +92,8 @@ let cur_part : int option ref = ref None;;
 
 let typ_abbrev oc k =
   match !cur_part with
-  | None -> out oc "type%d" k
-  | Some i -> out oc "type%d_%d" i k
+  | None -> string oc "type"; int oc k
+  | Some i -> string oc "type"; int oc i; char oc '_'; int oc k
 ;;
 
 let abbrev_typ =
@@ -118,7 +118,9 @@ let abbrev_typ =
      in
      match tvs with
      | [] -> typ_abbrev oc k
-     | _ -> out oc "(%a%a)" typ_abbrev k (list_prefix " " raw_typ) tvs
+     | _ ->
+       char oc '('; typ_abbrev oc k; list_prefix " " raw_typ oc tvs;
+       char oc ')'
 ;;
 
 let typ tvs oc b = abbrev_typ oc (missing_as_bool tvs b);;
@@ -126,10 +128,10 @@ let typ tvs oc b = abbrev_typ oc (missing_as_bool tvs b);;
 (* [decl_map_typ oc] outputs on [oc] the type abbreviations. *)
 let decl_map_typ oc =
   let abbrev b (k,n) =
-    out oc "def %a := " typ_abbrev k;
-    for i=0 to n-1 do out oc "a%d : %a => " i typ_name "Set" done;
+    string oc "def "; typ_abbrev oc k; string oc " := ";
+    for i=0 to n-1 do char oc 'a'; int oc i; string oc " : Set => " done;
     (* We can use [raw_type] here because [b] is canonical. *)
-    out oc "%a.\n" raw_typ b
+    raw_typ oc b; string oc ".\n"
   in
   (*List.iter abbrev
     (List.sort (fun (_,(k1,_)) (_,(k2,_)) -> k1 - k2)
@@ -157,35 +159,34 @@ let var rmap oc t =
   try name oc (List.assoc t rmap)
   with Not_found -> assert false
     (*match t with
-    | Var(n,_) -> out oc "%a (;not found;)" name n
+    | Var(n,_) -> name oc n; string oc " (;not found;)"
     | _ -> assert false*)
 ;;
 
 let raw_decl_var oc t =
   match t with
-  | Var(n,b) -> out oc "%a : %a %a" name n cst_name "El" raw_typ b
+  | Var(n,b) -> name oc n; string oc " : El "; raw_typ oc b
   | _ -> assert false
 ;;
 
 let decl_var tvs rmap oc t =
   match t with
-  | Var(_,b) -> out oc "%a : %a %a" (var rmap) t cst_name "El" (typ tvs) b
+  | Var(_,b) -> var rmap oc t; string oc " : El "; typ tvs oc b
   | _ -> assert false
 ;;
 
 let unabbrev_decl_var tvs rmap oc t =
   match t with
-  | Var(_,b) ->
-     out oc "%a : %a %a" (var rmap) t cst_name "El" (unabbrev_typ tvs) b
+  | Var(_,b) -> var rmap oc t; string oc " : El "; unabbrev_typ tvs oc b
   | _ -> assert false
 ;;
 
-let decl_param tvs rmap oc v = out oc "%a -> " (decl_var tvs rmap) v;;
+let decl_param tvs rmap oc v = decl_var tvs rmap oc v; string oc " -> ";;
 
 let unabbrev_decl_param tvs rmap oc v =
-  out oc "%a -> " (unabbrev_decl_var tvs rmap) v;;
+  unabbrev_decl_var tvs rmap oc v; string oc " -> ";;
 
-let param tvs rmap oc v = out oc "%a => " (decl_var tvs rmap) v;;
+let param tvs rmap oc v = decl_var tvs rmap oc v; string oc " => ";;
 
 (****************************************************************************)
 (* Translation of terms. *)
@@ -198,14 +199,15 @@ let raw_term =
     | Var(n,_) -> name oc n
     | Const(n,b) ->
        begin match List.map (subtyp b) (const_typ_vars_pos n) with
-       | [] -> out oc "%a" cst_name n
-       | bs -> out oc "(%a%a)" cst_name n (list_prefix " " raw_typ) bs
+       | [] -> cst_name oc n
+       | bs ->
+         char oc '('; cst_name oc n; list_prefix " " raw_typ oc bs; char oc ')'
        end
     | Comb(_,_) ->
-       let h, ts = head_args t in
-       out oc "(%a%a)" term h (list_prefix " " term) ts
+      let h, ts = head_args t in
+      char oc '('; term oc h; list_prefix " " term oc ts; char oc ')'
     | Abs(u,v) ->
-       out oc "(%a => %a)" raw_decl_var u term v
+      char oc '('; raw_decl_var oc u; string oc " => "; term oc v; char oc ')'
   in term
 ;;
 
@@ -220,27 +222,31 @@ let unabbrev_term tvs =
     | Var(n,b) ->
        begin
          try name oc (List.assoc t rmap)
-         with Not_found -> out oc "(;%a;)(%a %a)" name n cst_name "el" typ b
+         with Not_found ->
+           string oc "(;"; name oc n; string oc ";)(el "; typ oc b; char oc ')'
        end
     | Const(n,b) ->
        begin match List.map (subtyp b) (const_typ_vars_pos n) with
        | [] -> cst_name oc n
        | bs ->
-          out oc "(%a%a)" cst_name n (list_prefix " " (unabbrev_typ tvs)) bs
+         char oc '('; cst_name oc n; list_prefix " " (unabbrev_typ tvs) oc bs;
+         char oc ')'
        end
     | Comb(_,_) ->
-       let h, ts = head_args t in
-       out oc "(%a%a)" (term rmap) h (list_prefix " " (term rmap)) ts
+      let h, ts = head_args t in
+      char oc '('; term rmap oc h; list_prefix " " (term rmap) oc ts;
+      char oc ')'
     | Abs(t,u) ->
-       let rmap' = add_var rmap t in
-       out oc "(%a => %a)" (unabbrev_decl_var tvs rmap') t (term rmap') u
+      let rmap' = add_var rmap t in
+      char oc '('; unabbrev_decl_var tvs rmap' oc t; string oc " => ";
+      term rmap' oc u; char oc ')'
   in term
 ;;
 
 let term_abbrev oc k =
   match !cur_part with
-  | None -> out oc "term%d" k
-  | Some i -> out oc "term%d_%d" i k
+  | None -> string oc "term"; int oc k
+  | Some i -> string oc "term"; int oc i; char oc '_'; int oc k
 ;;
 
 let abbrev_term =
@@ -259,8 +265,8 @@ let abbrev_term =
          TrmHashtbl.add htbl_term_abbrev t x;
          k
     in
-    out oc "(%a%a%a)" term_abbrev k
-      (list_prefix " " raw_typ) tvs (list_prefix " " raw_var) vs
+    char oc '('; term_abbrev oc k; list_prefix " " raw_typ oc tvs;
+    list_prefix " " raw_var oc vs; char oc ')'
   in
   fun tvs ->
   let rec term oc t =
@@ -269,10 +275,13 @@ let abbrev_term =
     | Const(n,b) ->
        begin match List.map (subtyp b) (const_typ_vars_pos n) with
        | [] -> cst_name oc n
-       | bs -> out oc "(%a%a)" cst_name n (list_prefix " " (typ tvs)) bs
+       | bs ->
+         char oc '('; cst_name oc n; list_prefix " " (typ tvs) oc bs;
+         char oc ')'
        end
     | Comb(Comb(Const("=",b),u),v) ->
-       out oc "(eq %a %a %a)" (typ tvs) (get_domain b) term u term v
+      string oc "(eq "; typ tvs oc (get_domain b); char oc ' ';
+      term oc u; char oc ' '; term oc v; char oc ')'
     | _ -> abbrev oc t
   in term
 ;;
@@ -313,13 +322,15 @@ let term tvs rmap oc t = abbrev_term tvs oc (rename tvs rmap t);;
 (* [decl_map_term oc] outputs on [oc] the term abbreviations. *)
 let decl_map_term oc =
   let abbrev t (k,n,bs) =
-    out oc "def %a := " term_abbrev k;
-    for i=0 to n-1 do out oc "a%d : %a => " i typ_name "Set" done;
+    string oc "def "; term_abbrev oc k; string oc " := ";
+    for i=0 to n-1 do char oc 'a'; int oc i; string oc " : Set => " done;
     (* We can use abbrev_typ here since [bs] are canonical. *)
-    List.iteri
-      (fun i b -> out oc "x%d: %a %a => " i cst_name "El" abbrev_typ b) bs;
+    let decl_var i b =
+      char oc 'x'; int oc i; string oc " : El "; abbrev_typ oc b;
+      string oc " => "
+    in
     (* We can use [raw_term] here since [t] is canonical. *)
-    out oc "%a.\n" raw_term t
+    List.iteri decl_var bs; raw_term oc t; string oc ".\n"
   in
   (*List.iter abbrev
     (List.sort (fun (_,(k1,_,_)) (_,(k2,_,_)) -> k1 - k2)
@@ -333,7 +344,7 @@ let decl_map_term oc =
 
 (* In a theorem, the hypotheses [t1;..;tn] are given the names
    ["h1";..;"hn"]. *)
-let hyp_var ts oc t = out oc "h%d" (try 1 + index t ts with _ -> 0);;
+let hyp_var ts oc t = char oc 'h'; int oc (try 1 + index t ts with _ -> 0);;
 
 (* Printing on [oc] of the subproof [p2] of index [i2] given:
 - tvs: list of type variables of the theorem
@@ -372,8 +383,9 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   in
   match ty_su with
   | [] ->
-     out oc "(lem%d%a%a%a)" i2 (list_prefix " " typ) tvs2
-       (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
+     string oc "(lem"; int oc i2; list_prefix " " typ oc tvs2;
+     list_prefix " " term oc vs2; list_prefix " " (hyp_var ts1) oc ts2;
+     char oc ')'
   | _ ->
      (* vs2 is now the application of ty_su on vs2 *)
      let vs2 = List.map (inst ty_su) vs2 in
@@ -381,8 +393,9 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
      let ts2 = List.map (inst ty_su) ts2 in
      (* bs is the list of types obtained by applying ty_su on tvs2 *)
      let bs = List.map (type_subst ty_su) tvs2 in
-     out oc "(lem%d%a%a%a)" i2 (list_prefix " " typ) bs
-       (list_prefix " " term) vs2 (list_prefix " " (hyp_var ts1)) ts2
+     string oc "(lem"; int oc i2; list_prefix " " typ oc bs;
+     list_prefix " " term oc vs2; list_prefix " " (hyp_var ts1) oc ts2;
+     char oc ')'
 ;;
 
 (* [proof tvs rmap oc p] prints on [oc] the proof [p] for a theorem
@@ -397,117 +410,133 @@ let proof tvs rmap =
     let sub_at oc k = sub k oc (proof_at k) in
     match content with
     | Prefl(t) ->
-       out oc "REFL %a %a" typ (get_eq_typ p) term t
+      string oc "REFL "; typ oc (get_eq_typ p); char oc ' '; term oc t
     | Psym(k) ->
        let p = proof_at k in
        let a,x,y = get_eq_typ_args p in
-       out oc "SYM %a %a %a %a" typ a term x term y (sub k) p
+       string oc "SYM "; typ oc a; char oc ' '; term oc x; char oc ' ';
+       term oc y; char oc ' '; sub k oc p
     | Ptrans(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let a,x,y = get_eq_typ_args p1 in
        let _,z = get_eq_args p2 in
-       out oc "TRANS %a %a %a %a %a %a"
-         typ a term x term y term z (sub k1) p1 (sub k2) p2
+       string oc "TRANS "; typ oc a; char oc ' '; term oc x; char oc ' ';
+       term oc y; char oc ' '; term oc z; char oc ' '; sub k1 oc p1;
+       char oc ' '; sub k2 oc p2
     | Pmkcomb(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let ab,s,t = get_eq_typ_args p1 in
        let a,b = match ab with Tyapp("fun",[a;b]) -> a,b | _ -> assert false in
        let u,v = get_eq_args p2 in
-       out oc "MK_COMB %a %a %a %a %a %a %a %a"
-         typ a typ b term s term t term u term v (sub k1) p1 (sub k2) p2
+       string oc "MK_COMB "; typ oc a; char oc ' '; typ oc b; char oc ' ';
+       term oc s; char oc ' '; term oc t; char oc ' '; term oc u; char oc ' ';
+       term oc v; char oc ' '; sub k1 oc p1; char oc ' '; sub k2 oc p2
     | Pabs(k,t) ->
        let ab,f,g = get_eq_typ_args p in
        let a,b = match ab with Tyapp("fun",[a;b]) -> a,b | _ -> assert false in
        let rmap' = add_var rmap t in
-       out oc "fun_ext %a %a %a %a (%a => %a)"
-         typ a typ b term f term g (decl_var tvs rmap') t
-         (subproof tvs rmap' [] [] ts k) (proof_at k)
+       string oc "fun_ext "; typ oc a; char oc ' '; typ oc b; char oc ' ';
+       term oc f; char oc ' '; term oc g; string oc " (";
+       decl_var tvs rmap' oc t; string oc " => ";
+       subproof tvs rmap' [] [] ts k oc (proof_at k); char oc ')'
     | Pbeta(t) ->
-       out oc "REFL %a %a" typ (type_of t) term t
+       string oc "REFL "; typ oc (type_of t); char oc ' '; term oc t
     | Passume(t) ->
        hyp_var (hyp thm) oc t
     | Peqmp(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let p,q = get_eq_args p1 in
-       out oc "EQ_MP %a %a %a %a" term p term q (sub k1) p1 (sub k2) p2
+       string oc "EQ_MP "; term oc p; char oc ' '; term oc q; char oc ' ';
+       sub k1 oc p1; char oc ' '; sub k2 oc p2
     | Pdeduct(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let Proof(th1,_) = p1 and Proof(th2,_) = p2 in
        let t1 = concl th1 and t2 = concl th2 in
        let n = 1 + List.length ts in
-       out oc "prop_ext %a %a (h%d : Prf %a => %a) (h%d : Prf %a => %a)"
-         term t1 term t2
-         n term t1 (subproof tvs rmap [] [] (ts @ [t1]) k2) p2
-         n term t2 (subproof tvs rmap [] [] (ts @ [t2]) k1) p1
+       string oc "prop_ext "; term oc t1; char oc ' '; term oc t2;
+       string oc " (h"; int oc n; string oc " : Prf "; term oc t1;
+       string oc " => "; subproof tvs rmap [] [] (ts @ [t1]) k2 oc p2;
+       string oc ") (h"; int oc n; string oc " : Prf "; term oc t2;
+       string oc " => "; subproof tvs rmap [] [] (ts @ [t2]) k1 oc p1;
+       char oc ')'
     | Pinst(k,[]) -> proof oc (proof_at k)
-    | Pinst(k,s) ->
-       out oc "%a" (subproof tvs rmap [] s ts k) (proof_at k)
+    | Pinst(k,s) -> subproof tvs rmap [] s ts k oc (proof_at k)
     | Pinstt(k,[]) -> proof oc (proof_at k)
-    | Pinstt(k,s) ->
-       out oc "%a" (subproof tvs rmap s [] ts k) (proof_at k)
+    | Pinstt(k,s) -> subproof tvs rmap s [] ts k oc (proof_at k)
     | Pdef(_,n,b) ->
        let ps = const_typ_vars_pos n in
        (*out oc "(;t=%a; b=%a; ps=%a;)" term t typ b type_var_pos_list ps;*)
        begin match List.map (subtyp b) ps with
-       | [] -> out oc "%a" (suffix "_def") n
-       | bs -> out oc "(%a%a)" (suffix "_def") n (list_prefix " " typ) bs
+       | [] -> name oc (n^"_def")
+       | bs ->
+         char oc '('; name oc (n^"_def"); list_prefix " " typ oc bs;
+         char oc ')'
        end
     | Paxiom(t) ->
        let k =
          try pos_first (fun th -> concl th = t) (axioms())
          with Not_found -> assert false
        in
-       out oc "axiom_%d%a%a" k
-         (list_prefix " " typ) (type_vars_in_term t)
-         (list_prefix " " term) (frees t)
+       string oc "axiom_"; int oc k;
+       list_prefix " " typ oc (type_vars_in_term t);
+       list_prefix " " term oc (frees t)
     | Pdeft(_,t,_,_) ->
        let k =
          try pos_first (fun th -> concl th = t) (axioms())
          with Not_found -> assert false
        in
-       out oc "axiom_%d%a%a" k
-         (list_prefix " " typ) (type_vars_in_term t)
-         (list_prefix " " term) (frees t)
-    | Ptruth -> out oc "top_intro"
+       string oc "axiom_"; int oc k;
+       list_prefix " " typ oc (type_vars_in_term t);
+       list_prefix " " term oc (frees t)
+    | Ptruth -> string oc "top_intro"
     | Pconj(k1,k2) ->
        let p1 = proof_at k1 and p2 = proof_at k2 in
        let Proof(th1,_) = p1 and Proof(th2,_) = p2 in
-       out oc "and_intro %a %a %a %a"
-         term (concl th1) (sub k1) p1 term (concl th2) (sub k2) p2
+       string oc "and_intro "; char oc ' '; term oc (concl th1); char oc ' ';
+       sub k1 oc p1; char oc ' '; term oc (concl th2); char oc ' ';
+       sub k2 oc p2
     | Pconjunct1 k ->
        let p = proof_at k in
        let Proof(th,_) = p in
        let l,r = binop_args (concl th) in
-       out oc "and_elim1 %a %a %a" term l term r (sub k) p
+       string oc "and_elim1 "; term oc l; char oc ' '; term oc r; char oc ' ';
+       sub k oc p;
     | Pconjunct2 k ->
        let p = proof_at k in
        let Proof(th,_) = p in
        let l,r = binop_args (concl th) in
-       out oc "and_elim2 %a %a %a" term l term r (sub k) p
-    | Pmp(k1,k2) -> out oc "%a %a" sub_at k1 sub_at k2
-    | Pdisch(t,k) -> out oc "%a : Prf %a => %a" (hyp_var ts) t term t sub_at k
-    | Pspec(t,k) -> out oc "%a %a" sub_at k term t
+       string oc "and_elim2 "; term oc l; char oc ' '; term oc r; char oc ' ';
+       sub k oc p
+    | Pmp(k1,k2) -> sub_at oc k1; char oc ' '; sub_at oc k2
+    | Pdisch(t,k) ->
+      hyp_var ts oc t; string oc " : Prf "; term oc t; string oc " => ";
+      sub_at oc k
+    | Pspec(t,k) -> sub_at oc k; char oc ' '; term oc t
     | Pgen(x,k) ->
        let rmap' = add_var rmap x in
-       out oc "%a => %a"
-         (decl_var tvs rmap') x (subproof tvs rmap' [] [] ts k) (proof_at k)
+       decl_var tvs rmap' oc x; string oc " => ";
+       subproof tvs rmap' [] [] ts k oc (proof_at k)
     | Pexists(p,t,k) ->
-       out oc "ex_intro %a %a %a %a" typ (type_of t) term p term t sub_at k
+      string oc "ex_intro "; typ oc (type_of t); char oc ' '; term oc p;
+      char oc ' '; term oc t; char oc ' '; sub_at oc k
     | Pdisj1(p,k) ->
        let Proof(th,_) = proof_at k in
-       out oc "or_intro1 %a %a %a" term (concl th) sub_at k term p
+       string oc "or_intro1 "; term oc (concl th); char oc ' '; sub_at oc k;
+       char oc ' '; term oc p
     | Pdisj2(p,k) ->
        let Proof(th,_) = proof_at k in
-       out oc "or_intro2 %a %a %a" term p term (concl th) sub_at k
+       string oc "or_intro2 "; term oc p; char oc ' '; term oc (concl th);
+       char oc ' '; sub_at oc k
     | Pdisj_cases(k1,k2,k3) ->
        let p1 = proof_at k1 in
        let Proof(th1,_) = p1 in
        let p2 = proof_at k2 in
        let Proof(th2,_) = p2 in
        let l,r = binop_args (concl th1) in
-       out oc "or_elim %a %a %a %a (h0 : Prf %a => %a) (h0 : Prf %a => %a)"
-         term l term r (sub k1) p1 term (concl th2)
-         term l (sub k2) p2 term r sub_at k3
+       string oc "or_elim "; term oc l; char oc ' '; term oc r; char oc ' ';
+       sub k1 oc p1; char oc ' '; term oc (concl th2); string oc " (h0 : Prf ";
+       term oc l; string oc " => "; sub k2 oc p2; string oc ") (h0 : Prf ";
+       term oc r; string oc " => "; sub_at oc k3; char oc ')'
     | Pchoose(v,k1,k2) ->
        let p1 = proof_at k1 in
        let Proof(th1,_) = p1 in
@@ -516,10 +545,11 @@ let proof tvs rmap =
        begin match concl th1 with
        | Comb(_,p) ->
           let rmap' = add_var rmap v in
-          out oc "ex_elim %a %a %a %a (%a => h0 : Prf(%a %a) => %a)"
-            typ (type_of v) term p (sub k1) p1 term (concl th2)
-            (decl_var tvs rmap') v term p (var rmap') v
-            (subproof tvs rmap' [] [] ts k2) p2
+          string oc "ex_elim "; typ oc (type_of v); char oc ' '; term oc p;
+          char oc ' '; sub k1 oc p1; char oc ' '; term oc (concl th2);
+          string oc " ("; decl_var tvs rmap' oc v; string oc " => h0 : Prf(";
+          term oc p; char oc ' '; var rmap' oc v; string oc ") => ";
+          subproof tvs rmap' [] [] ts k2 oc p2; char oc ')'
        | _ -> assert false
        end
   in proof
@@ -530,19 +560,19 @@ let proof tvs rmap =
 (****************************************************************************)
 
 let typ_arity oc k =
-  for _ = 1 to k do out oc "%a -> " typ_name "Set" done; typ_name oc "Set";;
+  for _ = 1 to k do string oc "Set -> " done; string oc "Set";;
 
 let decl_typ oc (n,k) =
-  out oc "%a : %a.\n" typ_name n typ_arity k;;
+  typ_name oc n; string oc " : "; typ_arity oc k; string oc ".\n";;
 
-let decl_typ_param tvs oc b = out oc "%a : %a -> " (typ tvs) b typ_name "Set";;
+let decl_typ_param tvs oc b = typ tvs oc b; string oc " : Set -> ";;
 
-let typ_param tvs oc b = out oc "%a : %a => " (typ tvs) b typ_name "Set";;
+let typ_param tvs oc b = typ tvs oc b; string oc " : Set => ";;
 
 let decl_sym oc (n,b) =
   let tvs = tyvars b in
-  out oc "%a : %a%a %a.\n" cst_name n
-    (list (decl_typ_param tvs)) tvs cst_name "El" (unabbrev_typ tvs) b
+  cst_name oc n; string oc " : "; list (decl_typ_param tvs) oc tvs;
+  string oc "El "; unabbrev_typ tvs oc b; string oc ".\n"
 ;;
 
 let decl_def oc th =
@@ -552,8 +582,8 @@ let decl_def oc th =
   match t with
   | Comb(Comb(Const("=",_),Const(n,_)),_) ->
      let tvs = type_vars_in_term t in
-     out oc "%a : %aPrf %a.\n" (suffix "_def") n
-       (list (decl_typ_param tvs)) tvs (unabbrev_term tvs rmap) t
+     name oc (n^"_def"); string oc " : "; list (decl_typ_param tvs) oc tvs;
+     string oc "Prf "; unabbrev_term tvs rmap oc t; string oc ".\n"
   | _ -> assert false
 ;;
 
@@ -563,10 +593,10 @@ let decl_axioms oc ths =
     let xs = frees t in
     let tvs = type_vars_in_term t in
     let rmap = renaming_map tvs xs in
-    out oc "def axiom_%d : %a%aPrf %a.\n" i
-      (list (decl_typ_param tvs)) tvs
-      (list (unabbrev_decl_param tvs rmap)) xs
-      (unabbrev_term tvs rmap) t
+    string oc "def axiom_"; int oc i; string oc " : ";
+    list (decl_typ_param tvs) oc tvs;
+    list (unabbrev_decl_param tvs rmap) oc xs;
+    string oc "Prf "; unabbrev_term tvs rmap oc t; string oc ".\n"
   in
   List.iteri axiom ths
 ;;
@@ -592,32 +622,34 @@ let decl_theorem oc k p d =
   let xs = freesl (t::ts) in
   let tvs = type_vars_in_thm thm in
   let rmap = renaming_map tvs xs in
+  let hyp term i t =
+    char oc 'h'; int oc (i+1); string oc " : Prf "; term oc t; string oc " => "
+  in
+  let hyp_typ term i t =
+    char oc 'h'; int oc (i+1); string oc " : Prf "; term oc t; string oc " ->"
+  in
   match d with
   | Unnamed_thm ->
      let term = term tvs rmap in
-     let hyps_typ oc ts =
-       List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-     let hyps oc ts =
-       List.iteri (fun i t -> out oc "h%d : Prf %a => " (i+1) term t) ts in
-     out oc "thm lem%d : %a%a%aPrf %a := %a%a%a%a.\n" k
-       (list (decl_typ_param tvs)) tvs
-       (list (decl_param tvs rmap)) xs hyps_typ ts term t
-       (list (typ_param tvs)) tvs (list (param tvs rmap)) xs hyps ts
-       (proof tvs rmap) p
+     string oc "thm lem"; int oc k; string oc " : ";
+     list (decl_typ_param tvs) oc tvs; list (decl_param tvs rmap) oc xs;
+     List.iteri (hyp_typ term) ts; string oc "Prf "; term oc t;
+     string oc " := "; list (typ_param tvs) oc tvs;
+     list (param tvs rmap) oc xs; List.iteri (hyp term) ts;
+     proof tvs rmap oc p; string oc ".\n"
   | Axiom ->
      let term = unabbrev_term tvs rmap in
-     let hyps_typ oc ts =
-       List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-     out oc "lem%d : %a%a%aPrf %a.\n" k
-       (list (decl_typ_param tvs)) tvs
-       (list (decl_param tvs rmap)) xs hyps_typ ts term t
+     string oc "lem"; int oc k; string oc " : ";
+     list (decl_typ_param tvs) oc tvs;
+     list (decl_param tvs rmap) oc xs; List.iteri (hyp_typ term) ts;
+     string oc "Prf "; term oc t; string oc ".\n"
   | Named_thm n ->
      let term = unabbrev_term tvs rmap in
-     let hyps_typ oc ts =
-       List.iteri (fun i t -> out oc "h%d : Prf %a -> " (i+1) term t) ts in
-     out oc "thm lem%s : %a%a%aPrf %a := lem%d.\n" n
-       (list (decl_typ_param tvs)) tvs
-       (list (unabbrev_decl_param tvs rmap)) xs hyps_typ ts term t k
+     string oc "thm lem"; string oc n; string oc " : ";
+     list (decl_typ_param tvs) oc tvs;
+     list (unabbrev_decl_param tvs rmap) oc xs;
+     List.iteri (hyp_typ term) ts; string oc "Prf "; term oc t;
+     string oc " := lem"; int oc k; string oc ".\n"
 ;;
 
 (* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
@@ -722,13 +754,13 @@ let export_types =
   fun b ->
   export (b^"_types")
     (fun oc ->
-      out oc "\n(; type constructors ;)\n";
+      string oc "\n(; type constructors ;)\n";
       list decl_typ oc (List.filter f (types())))
 ;;
 
 let export_type_abbrevs b =
   export (b^"_type_abbrevs")
-    (fun oc -> out oc "\n(; type abbreviations ;)\n"; decl_map_typ oc)
+    (fun oc -> string oc "\n(; type abbreviations ;)\n"; decl_map_typ oc)
 ;;
 
 let export_terms =
@@ -741,32 +773,32 @@ let export_terms =
   fun b ->
   export (b^"_terms")
     (fun oc ->
-      out oc "\n(; constants ;)\n";
+      string oc "\n(; constants ;)\n";
       list decl_sym oc (List.filter f (constants())))
 ;;
 
 let export_term_abbrevs b =
   export (b^"_term_abbrevs")
-    (fun oc -> out oc "\n(; term abbreviations ;)\n"; decl_map_term oc)
+    (fun oc -> string oc "\n(; term abbreviations ;)\n"; decl_map_term oc)
 ;;
 
 let export_axioms b =
   export (b^"_axioms")
     (fun oc ->
-      out oc "\n(; axioms ;)\n";
+      string oc "\n(; axioms ;)\n";
       decl_axioms oc (axioms());
-      out oc "\n(; definitional axioms ;)\n";
+      string oc "\n(; definitional axioms ;)\n";
       list decl_def oc (definitions()))
 ;;
 
 let export_proofs b r =
   export (b^"_proofs")
-    (fun oc -> out oc "\n(; theorems ;)\n"; proofs_in_range oc r);;
+    (fun oc -> string oc "\n(; theorems ;)\n"; proofs_in_range oc r);;
 
 let export_theorems b map_thid_name =
   export (b^"_theorems")
     (fun oc ->
-      out oc "\n(; named theorems ;)\n";
+      string oc "\n(; named theorems ;)\n";
       MapInt.iter
         (fun k n -> decl_theorem oc k (proof_at k) (Named_thm n))
         map_thid_name)
@@ -775,7 +807,7 @@ let export_theorems b map_thid_name =
 let export_theorems_as_axioms b map_thid_name =
   export (b^"_opam")
     (fun oc ->
-      out oc "\n(; named theorems ;)\n";
+      string oc "\n(; named theorems ;)\n";
       MapInt.iter
         (fun k _ -> decl_theorem oc k (proof_at k) Axiom)
         map_thid_name)
@@ -797,7 +829,7 @@ let theory oc =
   let types = List.filter f (types()) in
   let f (n,_) = match n with "=" | "el" -> false | _ -> true in
   let constants = List.filter f (constants()) in
-  out oc
+  string oc
 "(; Encoding of simple type theory ;)
 Set : Type.
 bool : Set.
@@ -808,18 +840,17 @@ injective Prf : El bool -> Type.
 
 (; HOL-Light axioms and rules ;)
 el : a : Set -> El a.
-eq : a : Set -> El a -> El a -> El bool.
-%s
-(; type constructors ;)
-%a
-(; constants ;)
-%a
-(; axioms ;)
-%a
-(; definitions ;)
-%a\n"
-decl_rules (list decl_typ) types (list decl_sym) constants
-decl_axioms (axioms()) (list decl_def) (definitions())
+eq : a : Set -> El a -> El a -> El bool.\n";
+  string oc decl_rules;
+  string oc "\n(; type constructors ;)\n";
+  list decl_typ oc types;
+  string oc "\n(; constants ;)\n";
+  list decl_sym oc constants;
+  string oc "\n(; axioms ;)\n";
+  decl_axioms oc (axioms());
+  string oc "\n(; definitions ;)\n";
+  list decl_def oc (definitions());
+  string oc "\n"
 ;;
 
 (* [export_to_dk_file_no_abbrev f r] creates a file of name [f.dk] and
@@ -833,7 +864,7 @@ let export_to_dk_file_no_abbrev f r =
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
   theory oc;
-  out oc "(; theorems ;)\n";
+  string oc "(; theorems ;)\n";
   proofs_in_range oc r;
   close_out oc
 ;;
