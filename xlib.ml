@@ -318,6 +318,8 @@ let hmk_abs(t,u) = share_term (Abs(t,u));;
 (* Functions on types. *)
 (****************************************************************************)
 
+let is_var_or_cst_type = function Tyvar _ | Tyapp(_,[]) -> true | _ -> false;;
+
 (* Printing function for debug. *)
 let rec otyp oc b =
   match b with
@@ -445,6 +447,8 @@ and add_size_types acc bs =
 (****************************************************************************)
 (* Functions on terms. *)
 (****************************************************************************)
+
+let is_var_or_cst_term = function Var _ | Const _ -> true | _ -> false;;
 
 (* [get_vartype t] returns the type of [t] assuming that [t] is a variable. *)
 let get_vartype = function Var(_,b) -> b | _ -> assert false;;
