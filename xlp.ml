@@ -95,7 +95,9 @@ let abbrev_typ =
   match b with
   | Tyvar n
   | Tyapp(n,[]) -> typ_name oc n
-  | _ ->
+  | Tyapp(_,bs) ->
+    if List.for_all is_var_or_cst_type bs then raw_typ oc b
+    else
      (* check whether the type is already abbreviated; add a new
         abbreviation if needed *)
      let tvs, b = canonical_typ b in
@@ -297,10 +299,12 @@ let abbrev_term =
          k (list_prefix " " raw_typ) tvs (list_prefix " " raw_term) vs
   in
   let rec term oc t =
-    match t with
-    | Var _ | Const _ -> raw_term oc t
-    | Comb(Comb(Const("=",b),u),v) ->
-       out oc "(@= %a %a %a)" typ (get_domain b) term u term v
+    let h,ts = head_args t in
+    if List.for_all is_var_or_cst_term (h::ts) then raw_term oc t
+    else
+    match h,ts with
+    | Const("=",_b),[u;v] ->
+       out oc "(= %a %a)" (*typ (get_domain b*) term u term v
     | _ -> abbrev oc t
   in term
 ;;
