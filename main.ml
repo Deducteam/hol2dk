@@ -169,7 +169,7 @@ let is_dk f =
 let read_sig b =
   let dump_file = b^".sig" in
   let ic = open_in_bin dump_file in
-  log "read %s ...\n%!" dump_file;
+  log_read dump_file;
   the_type_constants := List.rev (input_value ic);
   (* we add "el" to use mk_const without failing *)
   the_term_constants := ("el",aty)::List.rev (input_value ic);
@@ -192,7 +192,7 @@ let integer s =
 let make nb_proofs dg b =
   let nb_parts = Array.length dg in
   let dump_file = b^".mk" in
-  log "generate %s ...\n%!" dump_file;
+  log_gen dump_file;
   let oc = open_out dump_file in
   out oc "# file generated with: hol2dk mk %d %s\n" nb_parts b;
   out oc "\nLAMBDAPI = lambdapi\n";
@@ -332,7 +332,7 @@ let range args =
 
 let dump after_hol f b =
   let ml_file = Printf.sprintf "/tmp/dump%d.ml" (Unix.getpid()) in
-  log "generate %s ...\n%!" ml_file;
+  log_gen ml_file;
   let oc = open_out ml_file in
   let use oc after_hol =
     if after_hol then out oc "#use \"hol.ml\";;\nneeds \"%s\";;" f
@@ -394,7 +394,10 @@ let print_env_var n =
 ;;
 
 let rec log_command l =
-  log "\nhol2dk"; List.iter (log " %s") l; log " ...\n%!"; command l
+  print_string "\nhol2dk";
+  List.iter (fun s -> print_char ' '; print_string s) l;
+  print_string " ...\n%!";
+  command l
 
 and dump_and_simp after_hol f =
   let b = basename_ml f in
@@ -464,7 +467,7 @@ and command = function
      let nb_proofs = read_val (b^".nbp") in
      let pos = Array.make nb_proofs 0 in
      let dump_file = b^".prf" in
-     log "read %s ...\n%!" dump_file;
+     log_read dump_file;
      let ic = open_in_bin dump_file in
      let idx = ref 0 in
      begin
@@ -478,7 +481,7 @@ and command = function
      end;
      close_in ic;
      let dump_file = b^".pos" in
-     log "generate %s ...\n%!" dump_file;
+     log_gen dump_file;
      let oc = open_out_bin dump_file in
      output_value oc pos;
      close_out oc;
@@ -496,7 +499,7 @@ and command = function
        else incr unused
      in
      read_prf b handle_proof;
-     log "compute statistics ...\n";
+     print_string "compute statistics ...\n";
      print_histogram thm_uses;
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
@@ -508,7 +511,7 @@ and command = function
      let unused = ref 0 in
      read_use s;
      let dump_file = b^".prf" in
-     log "read %s ...\n%!" dump_file;
+     log_read dump_file;
      let ic = open_in_bin dump_file in
      the_start_idx := read_val (s^".sti");
      read_pos b;
@@ -520,7 +523,7 @@ and command = function
      in
      for k = 0 to nb_proofs - 1 do f k (input_value ic) done;
      close_in ic;
-     log "compute statistics ...\n";
+     print_string "compute statistics ...\n";
      print_histogram thm_uses;
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
@@ -584,7 +587,7 @@ and command = function
      init_proof_reading b;
      read_use b;
      let dump_file = b^"-simp.prf" in
-     log "generate %s ...\n%!" dump_file;
+     log_gen dump_file;
      let oc = open_out_bin dump_file in
      (* count the number of simplications *)
      let n = ref 0 in
@@ -691,7 +694,7 @@ and command = function
          if b then decr nb_useless else Array.set !Xproof.last_use k (-1))
        useful;
      let dump_file = b^".use" in
-     log "generate %s ...\n" dump_file;
+     log_gen dump_file;
      let oc = open_out_bin dump_file in
      output_value oc !Xproof.last_use;
      log "%d useless theorems (%d%%)\n"
@@ -714,7 +717,7 @@ and command = function
        (fun i p -> List.iter (fun k -> Array.set last_use k i) (deps p));
      MapInt.iter (fun k _ -> Array.set last_use k 0) (read_val (b^".thm"));
      let dump_file = b^".use" in
-     log "generate %s ...\n" dump_file;
+     log_gen dump_file;
      let oc = open_out_bin dump_file in
      output_value oc last_use;
      let unused = ref 0 in
@@ -775,7 +778,7 @@ and command = function
        log "\n"
      done;
      let dump_file = b^".dg" in
-     log "generate %s ...\n%!" dump_file;
+     log_gen dump_file;
      let oc = open_out_bin dump_file in
      output_value oc nb_parts;
      output_value oc dg;
@@ -833,7 +836,7 @@ and command = function
      let b = Filename.chop_extension f in
 
      let dump_file = b^".dg" in
-     log "read %s ...\n%!" dump_file;
+     log_read dump_file;
      let ic = open_in_bin dump_file in
      let nb_parts = input_value ic in
 
@@ -1025,7 +1028,7 @@ and command = function
          if r = All then Xdk.export_theorems b (read_val (b^".thm"));
          Xdk.export_term_abbrevs b;
          Xdk.export_type_abbrevs b;
-         log "generate %s.dk ...\n%!" b;
+         log_gen f;
          let deps = ["types";"type_abbrevs";"terms";"term_abbrevs";"axioms"
                      ;"proofs"] in
          let infiles =
