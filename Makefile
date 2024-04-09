@@ -104,7 +104,7 @@ MAX_ABBREV = --max-abbrev-size 2_000_000
 	hol2dk $(MAX_ABBREV) thmpart $(BASE) $*.lp
 
 %.lp: %.sti
-	hol2dk $(HOL2DK_OPTIONS) theorem $(BASE) $*.lp
+	hol2dk theorem $(BASE) $*.lp
 
 .PHONY: lp-abbrevs
 lp-abbrevs: $(MIN_FILES:%.min=%.lp)

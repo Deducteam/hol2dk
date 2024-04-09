@@ -72,12 +72,6 @@ let map_file_thms = ref (MapStr.empty : string list MapStr.t);;
    files, that is, the map from file names to their dependencies. *)
 let map_file_deps = ref (MapStr.empty : string list MapStr.t);;
 
-(* indicates whether the constant "el" has been added. *)
-(*let el_added = ref false;;*)
-
-(* indicates whether type and term abbreviations should be used. *)
-let use_abbrev = ref true;;
-
 (*REMOVE
 set_jrh_lexer;;
 REMOVE*)

@@ -856,7 +856,6 @@ eq : a : Set -> El a -> El a -> El bool.\n";
 (* [export_to_dk_file_no_abbrev f r] creates a file of name [f.dk] and
    outputs to this file the proofs in range [r]. *)
 let export_to_dk_file_no_abbrev f r =
-  use_abbrev := false;
   (*stage := No_abbrev;*)
   update_reserved();
   update_map_const_typ_vars_pos();

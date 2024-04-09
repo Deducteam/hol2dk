@@ -3,8 +3,6 @@ TODO
 
 - implement Xlib.rename by using Sys.rename ?
 
-- remove use_abbrev
-
 - pre-compute once and for all the type and term variables of axioms and definitions
 
 - compute proof tree sizes in parallel ?

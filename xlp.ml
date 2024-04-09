@@ -335,8 +335,6 @@ let rec rename rmap t =
 ;;
 
 let term rmap oc t = abbrev_term oc (rename rmap t);;
-  (*if !use_abbrev then abbrev_term oc (rename rmap t)
-  else unabbrev_term rmap oc (rename rmap t);;*)
 
 (****************************************************************************)
 (* Handling file dependencies. *)
@@ -1176,7 +1174,6 @@ let export_theorems_part k b map_thid_name =
 (* [export_one_file_by_prf b x y] creates a lp file for each proof in
    interval [x..y]. *)
 let export_one_file_by_prf b x y =
-  use_abbrev := false;
   update_map_const_typ_vars_pos();
   (* Generate p.lp. *)
   let fname = "p.lp" in
