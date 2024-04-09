@@ -980,7 +980,8 @@ and command = function
          Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
-         Xlp.dump_type_abbrevs n;
+         (*Xlp.dump_type_abbrevs n;*)
+         write_val (Filename.chop_extension f^".typ") !Xlp.map_typ_abbrev;
          0
        end
 
@@ -988,35 +989,28 @@ and command = function
     let idx = ref (-1) and map = ref MapStr.empty in
     let files = Sys.readdir "." in
     let oc = open_file (b^".sed") in
+    let add s ((d,_n) as x) =
+      let upd = function
+        | None ->
+          incr idx;
+          Xlp.map_typ_abbrev := MapStr.add s x !Xlp.map_typ_abbrev;
+          string oc "s/"; digest oc d; char oc '/'; int oc !idx;
+          string oc "/g\n";
+          Some !idx
+        | v -> v
+      in
+      map := MapStr.update s upd !map
+    in
     let read_typ_file f =
-      if String.ends_with ~suffix:".typ" f then
-        begin
-          (*log_read f;*)
-          let ic = open_in_bin f in
-          begin
-            try
-              while true do
-                let (s,((d,_) as x)) = input_value ic in
-                let upd = function
-                  | None ->
-                    incr idx;
-                    Xlp.map_typ_abbrev := MapStr.add s x !Xlp.map_typ_abbrev;
-                    string oc "s/"; digest oc d; char oc '/'; int oc !idx;
-                    string oc "/g\n";
-                    Some !idx
-                  | v -> v
-                in
-                map := MapStr.update s upd !map
-              done
-            with End_of_file -> ()
-          end;
-          close_in ic;
-        end
+      if String.ends_with ~suffix:".typ" f then MapStr.iter add (read_val f)
     in
     Array.iter read_typ_file files;
     close_out oc;
     Xlp.export (b^"_type_abbrevs") [b^"_types"] Xlp.decl_type_abbrevs;
     (*Xlib.command ("find . -name '*.lp' | xargs sed -i -f "^b^".sed");*)
+    (*let rename_abbrevs_in _f = ()
+    in
+      Array.iter rename_abbrevs_in files;*)
     0
 
   | ["abbrev";b;f] ->

@@ -88,7 +88,7 @@ let rec string_of_typ = function
   | Tyapp(n,bs) -> "("^n^" "^String.concat " " (List.map string_of_typ bs)^")"
 ;;
 
-let map_typ_abbrev = ref MapStr.empty;;
+let map_typ_abbrev : (Digest.t * int) MapStr.t ref = ref MapStr.empty;;
 
 let abbrev_typ =
   (*let idx = ref (-1) in*)
@@ -1060,7 +1060,8 @@ let export_theorem_proof_part b n k =
   (* dump term abbreviations *)
   let nb_parts = split_theorem_abbrevs p in
   (* generate [n^part(k)^".typ"] *)
-  dump_type_abbrevs p;
+  (*dump_type_abbrevs p;*)
+  write_val (p^".typ") !map_typ_abbrev;
   (* generate [n^part(k)^"_subterms.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;
   (* generate [n^part(k)^"_deps.lp"] and [n^".lpo.mk"] *)
