@@ -23,7 +23,7 @@ let concat f1 f2 f3 =
 
 let rename f1 f2 =
   log "rename %s into %s ...\n%!" f1 f2;
-  command (Printf.sprintf "mv -f %s %s" f1 f2)
+  Sys.rename f1 f2
 ;;
 
 (****************************************************************************)
