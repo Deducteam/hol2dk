@@ -9,7 +9,7 @@ REMOVE*)
 open Xprelude
 open Fusion
 
-let open_file n = log "generate %s ...\n%!" n; open_out n;;
+let open_file n = log_gen n; open_out n;;
 
 let create_file n f = let oc = open_file n in f oc; close_out oc;;
 
@@ -23,7 +23,7 @@ let concat f1 f2 f3 =
 
 let rename f1 f2 =
   log "rename %s into %s ...\n%!" f1 f2;
-  command (Printf.sprintf "mv -f %s %s" f1 f2)
+  Sys.rename f1 f2
 ;;
 
 (****************************************************************************)
@@ -102,7 +102,7 @@ let string_of_file f =
 
 (* [read_val f] reads value from file [f]. *)
 let read_val dump_file =
-  log "read %s ...\n%!" dump_file;
+  log_read dump_file;
   let ic = open_in_bin dump_file in
   let v = input_value ic in
   close_in ic;
@@ -110,7 +110,7 @@ let read_val dump_file =
 
 (* [write_val f v] write [v] in file [f]. *)
 let write_val dump_file v =
-  log "generate %s ...\n%!" dump_file;
+  log_gen dump_file;
   let oc = open_out_bin dump_file in
   output_value oc v;
   close_out oc

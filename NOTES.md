@@ -1,6 +1,16 @@
 NOTES
 -----
 
+## 09/04/24
+
+Following PR #120 (use a single type_abbrevs file):
+
+hol.ml: lp 38s v 30s vo -j32 23m51s
+
+## 05/04/24
+
+Multivariate/make_upto_topology: lp 36m13s v 24m
+
 ## 03/04/24
 
 With PR #111: Not printing types for lemmas (proof steps) slightly reduces Coq compilation time. For instance, checking hol.ml in Coq takes 28m3s instead of 31m35s (-11%).
@@ -78,7 +88,7 @@ hol.ml:
 
 ## 05/03/24
 
-  * Coq does not handle let's efficiently: https://github.com/coq/coq/issues/18753
+  * Coq does not handle let's efficiently: https://github.com/coq/coq/issues/18753. Currently, on my machine, I can handle a maximum of 4981 let's. But it may rather depends on the height than on the actual number of let's.
 
   * Gulliver: 56 processors Intel Core Processor (Haswell, no TSX) 2.3 Ghz cache 16 Mo RAM 122 Go
 

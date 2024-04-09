@@ -82,49 +82,43 @@ let rec raw_typ oc b =
     char oc '('; typ_name oc n; list_prefix " " raw_typ oc bs; char oc ')'
 ;;
 
-let abbrev_typ =
-  let idx = ref (-1) in
-  fun oc b ->
+let rec string_of_typ = function
+  | Tyvar n
+  | Tyapp(n,[]) -> n
+  | Tyapp(n,bs) -> "("^n^" "^String.concat " " (List.map string_of_typ bs)^")"
+;;
+
+let map_typ_abbrev : (Digest.t * int) MapStr.t ref = ref MapStr.empty;;
+
+let abbrev_typ oc b =
   match b with
   | Tyvar n
   | Tyapp(n,[]) -> typ_name oc n
   | Tyapp(_,bs) ->
     if List.for_all is_var_or_cst_type bs then raw_typ oc b
     else
-     (* check whether the type is already abbreviated; add a new
-        abbreviation if needed *)
-     let tvs, b = canonical_typ b in
-     let k =
-       match TypHashtbl.find_opt htbl_type_abbrev b with
-       | Some (k,_) -> k
-       | None ->
-          let k = !idx + 1 in
-          idx := k;
-          let x = (k, List.length tvs) in
-          TypHashtbl.add htbl_type_abbrev b x;
-          k
-     in
-     match tvs with
-     | [] -> string oc "type"; int oc k
-     | _ ->
-       string oc "(type"; int oc k; list_prefix " " raw_typ oc tvs; char oc ')'
+      let tvs, b = canonical_typ b in
+      let s = string_of_typ b in
+      let d = Digest.string s in
+      map_typ_abbrev := MapStr.add s (d, List.length tvs) !map_typ_abbrev;
+      match tvs with
+      | [] -> string oc "type"; digest oc d
+      | _ ->
+        string oc "(type"; digest oc d; list_prefix " " raw_typ oc tvs;
+        char oc ')'
 ;;
 
 let typ = abbrev_typ;;
-  (*if !use_abbrev then abbrev_typ oc b else raw_typ oc b;;*)
 
 (* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
 let decl_type_abbrevs oc =
-  let abbrev b (k,n) =
-    string oc "symbol type"; int oc k;
+  let abbrev s (k,n) =
+    string oc "symbol type"; digest oc k;
     for i=0 to n-1 do string oc " a"; int oc i done;
     (* We can use [raw_typ] here since [b] is canonical. *)
-    string oc " ≔ "; raw_typ oc b; string oc ";\n"
+    string oc " ≔ "; string oc s; string oc ";\n"
   in
-  (*List.iter abbrev
-    (List.sort (fun (_,(k1,_)) (_,(k2,_)) -> k1 - k2)
-       (MapTyp.fold (fun b x l -> (b,x)::l) m []))*)
-  TypHashtbl.iter abbrev htbl_type_abbrev
+  MapStr.iter abbrev !map_typ_abbrev
 ;;
 
 (****************************************************************************)
@@ -319,8 +313,6 @@ let rec rename rmap t =
 ;;
 
 let term rmap oc t = abbrev_term oc (rename rmap t);;
-  (*if !use_abbrev then abbrev_term oc (rename rmap t)
-  else unabbrev_term rmap oc (rename rmap t);;*)
 
 (****************************************************************************)
 (* Handling file dependencies. *)
@@ -716,16 +708,17 @@ let export_type_abbrevs b n =
 ;;
 
 let export_subterm_abbrevs b n =
-  export (n^"_subterm_abbrevs") [b^"_types"; b^"_terms"; n^"_type_abbrevs"]
+  export (n^"_subterm_abbrevs") [b^"_types";b^"_terms";b^"_type_abbrevs"]
     decl_subterm_abbrevs
 ;;
 
 let export_term_abbrevs_in_one_file b n =
-  let deps = [b^"_types"; n^"_type_abbrevs"; b^"_terms"] in
+  let deps = [b^"_types";b^"_type_abbrevs";b^"_terms"] in
   export (n^"_term_abbrevs")
     (if !use_sharing then deps @ [n^"_subterm_abbrevs"] else deps)
     decl_term_abbrevs;
-  if !use_sharing then export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
+  if !use_sharing then export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs;
+  write_val (n^"_term_abbrevs.typ") !map_typ_abbrev
 ;;
 
 (* [dump_theorem_term_abbrevs n] generates the files
@@ -763,8 +756,7 @@ let dump_theorem_term_abbrevs n =
 ;;
 
 (* [export_theorem_term_abbrevs b n k] generates the files
-   [n^"_term_abbrevs"^part(k)^".lp"] and
-   [n^"_term_abbrevs"^part(k)^"_type_abbrevs.lp"]. *)
+   [n^"_term_abbrevs"^part(k)^".lp"]. *)
 let export_theorem_term_abbrevs_part b n k =
   let p = n^"_term_abbrevs"^part k in
   (* generate [p^"_tail.lp"] *)
@@ -782,14 +774,13 @@ let export_theorem_term_abbrevs_part b n k =
   in
   create_file (p^"_tail.lp") term_abbrevs;
   close_in ic;
-  (* generate [p^"_type_abbrevs.lp"] *)
-  let iter_deps f = f (b^"_types") in
-  export_iter (p^"_type_abbrevs") iter_deps decl_type_abbrevs;
+  (* generate [p^".typ"] *)
+  write_val (p^".typ") !map_typ_abbrev;
   (* generate [p^"_head.lp"] *)
   let iter_deps f =
     f (b^"_types");
     f (b^"_terms");
-    f (p^"_type_abbrevs");
+    f (b^"_type_abbrevs");
     if !use_sharing then f (p^"_subterm_abbrevs")
   in
   create_file_with_deps (p^"_head") p iter_deps (fun _ -> ());
@@ -830,8 +821,8 @@ let export_proofs_in_interval n x y =
   let cur_oc = ref stdout in
   let start_part k =
     incr proof_part;
-    let f = n ^ part !proof_part ^ "_proofs.lp" in
-    log "generate %s ...\n%!" f;
+    let f = n^part !proof_part^"_proofs.lp" in
+    log_gen f;
     cur_oc := open_out f;
     proof_part_size := 0;
     abbrev_deps := SetInt.empty;
@@ -877,12 +868,13 @@ let export_proofs_in_interval n x y =
 ;;
 
 (* [export_theorem_proof n] generates the files
-   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part] and the file
-   [n^"_proofs.lp"]. *)
+   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part],
+   [n^"_proofs.lp"] and [n^".typ"]. *)
 let export_theorem_proof n =
   export_proofs_in_interval n !the_start_idx
     (!the_start_idx + Array.length !prf_pos - 1);
-  Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp")
+  Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp");
+  write_val (n^".typ") !map_typ_abbrev
 ;;
 
 (* [export_theorem_deps b n] generates for [1<=i<=!proof_part] the files
@@ -895,7 +887,7 @@ let export_theorem_deps b n =
       f (b^"_types");
       f (b^"_terms");
       f (b^"_axioms");
-      f (n^"_type_abbrevs");
+      f (b^"_type_abbrevs");
       if !use_sharing then f (n^"_subterm_abbrevs");
       SetInt.iter (fun j -> if j=1 then f (n^"_term_abbrevs")
                             else f (n^"_term_abbrevs"^part j))
@@ -1007,8 +999,7 @@ let split_theorem_abbrevs n =
 (* [export_theorem_proof_part b n k] generates the files
    [n^part(k)^".lp"], [n^part(k)^".brv"], [n^part(k)^".brp"],
    [n^part(k)^"_term_abbrevs"^part(i)^".min"],
-   [n^part(k)^"_type_abbrevs.lp"], [n^part(k)^"_subterms.lp"] (if
-   !use_sharing), [n^part(k)^".lpo.mk"]. *)
+   [n^part(k)^"_subterms.lp"] (if !use_sharing), [n^part(k)^".lpo.mk"]. *)
 let export_theorem_proof_part b n k =
   (* generate [n^part(k)^"_proofs.lp"] *)
   proof_part := k;
@@ -1037,8 +1028,8 @@ let export_theorem_proof_part b n k =
   close_out oc;
   (* dump term abbreviations *)
   let nb_parts = split_theorem_abbrevs p in
-  (* generate [n^part(k)^"_type_abbrevs.lp"] *)
-  export_type_abbrevs b p;
+  (* generate [n^part(k)^".typ"] *)
+  write_val (p^".typ") !map_typ_abbrev;
   (* generate [n^part(k)^"_subterms.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;
   (* generate [n^part(k)^"_deps.lp"] and [n^".lpo.mk"] *)
@@ -1048,7 +1039,7 @@ let export_theorem_proof_part b n k =
     f (b^"_axioms");
     SetStr.iter f !thdeps;
     SetInt.iter (fun j -> f (n^part j)) !part_deps;
-    f (p^"_type_abbrevs");
+    f (b^"_type_abbrevs");
     if !use_sharing then f (p^"_subterm_abbrevs");
     for j = 1 to nb_parts do f (p^"_term_abbrevs"^part j) done
   in
@@ -1161,7 +1152,6 @@ let export_theorems_part k b map_thid_name =
 (* [export_one_file_by_prf b x y] creates a lp file for each proof in
    interval [x..y]. *)
 let export_one_file_by_prf b x y =
-  use_abbrev := false;
   update_map_const_typ_vars_pos();
   (* Generate p.lp. *)
   let fname = "p.lp" in
