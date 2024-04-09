@@ -731,14 +731,6 @@ let export_type_abbrevs b n =
   export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 ;;
 
-let dump_type_abbrevs n =
-  let dump_file = n^".typ" in
-  log_gen dump_file;
-  let oc = open_out_bin dump_file in
-  MapStr.iter (fun s x -> output_value oc (s,x)) !map_typ_abbrev;
-  close_out oc
-;;
-
 let export_subterm_abbrevs b n =
   export (n^"_subterm_abbrevs") [b^"_types";b^"_terms";b^"_type_abbrevs"]
     decl_subterm_abbrevs
@@ -749,7 +741,8 @@ let export_term_abbrevs_in_one_file b n =
   export (n^"_term_abbrevs")
     (if !use_sharing then deps @ [n^"_subterm_abbrevs"] else deps)
     decl_term_abbrevs;
-  if !use_sharing then export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs
+  if !use_sharing then export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs;
+  write_val (n^"_term_abbrevs.typ") !map_typ_abbrev
 ;;
 
 (* [dump_theorem_term_abbrevs n] generates the files
@@ -805,9 +798,8 @@ let export_theorem_term_abbrevs_part b n k =
   in
   create_file (p^"_tail.lp") term_abbrevs;
   close_in ic;
-  (* generate [p^"_type_abbrevs.lp"] *)
-  (*let iter_deps f = f (b^"_types") in
-  export_iter (p^"_type_abbrevs") iter_deps decl_type_abbrevs;*)
+  (* generate [p^".typ"] *)
+  write_val (p^".typ") !map_typ_abbrev;
   (* generate [p^"_head.lp"] *)
   let iter_deps f =
     f (b^"_types");
@@ -853,8 +845,8 @@ let export_proofs_in_interval n x y =
   let cur_oc = ref stdout in
   let start_part k =
     incr proof_part;
-    let f = n ^ part !proof_part ^ "_proofs.lp" in
-    log "generate %s ...\n%!" f;
+    let f = n^part !proof_part^"_proofs.lp" in
+    log_gen f;
     cur_oc := open_out f;
     proof_part_size := 0;
     abbrev_deps := SetInt.empty;
@@ -900,12 +892,13 @@ let export_proofs_in_interval n x y =
 ;;
 
 (* [export_theorem_proof n] generates the files
-   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part] and the file
-   [n^"_proofs.lp"]. *)
+   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part],
+   [n^"_proofs.lp"] and [n^".typ"]. *)
 let export_theorem_proof n =
   export_proofs_in_interval n !the_start_idx
     (!the_start_idx + Array.length !prf_pos - 1);
-  Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp")
+  Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp");
+  write_val (n^".typ") !map_typ_abbrev
 ;;
 
 (* [export_theorem_deps b n] generates for [1<=i<=!proof_part] the files
@@ -1060,7 +1053,6 @@ let export_theorem_proof_part b n k =
   (* dump term abbreviations *)
   let nb_parts = split_theorem_abbrevs p in
   (* generate [n^part(k)^".typ"] *)
-  (*dump_type_abbrevs p;*)
   write_val (p^".typ") !map_typ_abbrev;
   (* generate [n^part(k)^"_subterms.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;

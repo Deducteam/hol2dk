@@ -62,6 +62,10 @@ ifeq ($(SET_IDX_FILES),1)
 IDX_FILES := $(wildcard *.idx)
 endif
 
+ifeq ($(SET_SED_FILES),1)
+SED_FILES := $(wildcard *.sed)
+endif
+
 BIG_FILES = $(shell for f in `cat BIG_FILES 2> /dev/null | sed -e '/^#/d'`; do if test -f $$f.sti; then echo $$f; fi; done)
 
 .PHONY: print-big-files
@@ -73,6 +77,13 @@ lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 	hol2dk type_abbrevs $(BASE)
+	$(MAKE) SET_SED_FILES=1 rename-abbrevs
+
+.PHONY: rename-abbrevs
+rename-abbrevs: $(SED_FILES:%.sed=%.lp.rename-abbrevs)
+
+%.lp.rename-abbrevs: %.sed
+	sed -i -f $*.sed $*.lp
 
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
@@ -102,7 +113,7 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 	hol2dk abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-lpo clean-lpo clean-v
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo clean-lpo clean-v
 
 .PHONY: rm-lp
 rm-lp:
@@ -139,6 +150,10 @@ rm-min:
 .PHONY: rm-typ
 rm-typ:
 	find . -maxdepth 1 -name '*.typ' -delete
+
+.PHONY: rm-sed
+rm-sed:
+	find . -maxdepth 1 -name '*.sed' -delete
 
 ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk

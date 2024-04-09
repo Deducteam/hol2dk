@@ -393,6 +393,8 @@ let print_env_var n =
   | Some v -> log "%s = \"%s\"\n" n v
 ;;
 
+let wrong_nb_args() = err "wrong number of arguments\n"; 1;;
+
 let rec log_command l =
   print_string "\nhol2dk";
   List.iter (fun s -> print_char ' '; print_string s) l;
@@ -436,6 +438,8 @@ and command = function
      out_dep_graph stdout (dep_graph (files()));
      0
 
+  | "dep"::_ -> wrong_nb_args()
+
   | ["name";f] ->
      log "%a\n" (list_sep "\n" string) (thms_of_file f);
      0
@@ -453,15 +457,31 @@ and command = function
        (files());
      0
 
+  | "name"::_ -> wrong_nb_args()
+
   | ["env"] -> print_env_var "HOL2DK_DIR"; print_env_var "HOLLIGHT_DIR"; 0
+  | "env"::_ -> wrong_nb_args()
+
   | ["patch" as s] -> call_script s []
+  | "patch"::_ -> wrong_nb_args()
+
   | ["unpatch" as s] -> call_script s []
+  | "unpatch"::_ -> wrong_nb_args()
+
   | ["link";arg] -> call_script "add-links" [arg]
+  | "link"::_ -> wrong_nb_args()
 
   | ["dump";f] -> dump true f (basename_ml f)
+  | "dump"::_ -> wrong_nb_args()
+
   | ["dump-use";f] -> dump false f (basename_ml f)
+  | "dump-use"::_ -> wrong_nb_args()
+
   | ["dump-simp";f] -> dump_and_simp true f
+  | "dump-simp"::_ -> wrong_nb_args()
+
   | ["dump-simp-use";f] -> dump_and_simp false f
+  | "dump-simp-use"::_ -> wrong_nb_args()
 
   | ["pos";b] ->
      let nb_proofs = read_val (b^".nbp") in
@@ -486,6 +506,8 @@ and command = function
      output_value oc pos;
      close_out oc;
      0
+
+  | "pos"::_ -> wrong_nb_args()
 
   | ["stat";b] ->
      let nb_proofs = read_val (b^".nbp") in
@@ -528,7 +550,11 @@ and command = function
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
 
+  | "stat"::_ -> wrong_nb_args()
+
   | ["nbp";b] -> log "%#d proof steps\n" (read_val (b^".nbp")); 0
+
+  | "nbp"::_ -> wrong_nb_args()
 
   | ["size";b] -> command ["size";b;"0"]
   | ["size";b;l] ->
@@ -559,6 +585,8 @@ and command = function
        !nb_terms_gtl l (percent !nb_terms_gtl !nb_terms);
      0
 
+  | "size"::_ -> wrong_nb_args()
+
   | ["proof";b;x;y] ->
      let x = integer x and y = integer y in
      let nb_proofs = read_val (b^".nbp") in
@@ -581,6 +609,8 @@ and command = function
      0
 
   | ["proof";b;x] -> command ["proof";b;x;x]
+
+  | "proof"::_ -> wrong_nb_args()
 
   | ["rewrite";b] ->
      read_pos b;
@@ -668,6 +698,8 @@ and command = function
      | e -> e
      end
 
+  | "rewrite"::_ -> wrong_nb_args()
+
   | ["purge";b] ->
      (* compute useful theorems *)
      read_pos b;
@@ -701,11 +733,15 @@ and command = function
        !nb_useless (percent !nb_useless nb_proofs);
      0
 
+  | "purge"::_ -> wrong_nb_args()
+
   | ["simp";b] ->
      begin match log_command ["rewrite";b] with
      | 0 -> log_command ["purge";b]
      | e -> e
      end
+
+  | "simp"::_ -> wrong_nb_args()
 
   | ["use";b] ->
      (* The .use file records an array [last_use] such that
@@ -733,6 +769,8 @@ and command = function
      log "first unused: %d\n" !first;
      0
 
+  | "use"::_ -> wrong_nb_args()
+
   | ["print";"use";b;k] ->
      let k = integer k in
      let nb_proofs = read_val (b^".nbp") in
@@ -741,6 +779,8 @@ and command = function
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k);
      0
+
+  | "print"::"use"::_ -> wrong_nb_args()
 
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
@@ -785,6 +825,8 @@ and command = function
      close_out oc;
      make nb_proofs dg b
 
+  | "mk"::_ -> wrong_nb_args()
+
   | ["sig";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
@@ -803,6 +845,8 @@ and command = function
        end;
      0
 
+  | "sig"::_ -> wrong_nb_args()
+
   | ["thm";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
@@ -818,6 +862,8 @@ and command = function
      close_in !Xproof.ic_prf;
      0
 
+  | "thm"::_ -> wrong_nb_args()
+
   | ["axm";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
@@ -831,6 +877,8 @@ and command = function
      end;
      close_in !Xproof.ic_prf;
      0
+
+  | "axm"::_ -> wrong_nb_args()
 
   | ["part";k;x;y;f] ->
      let b = Filename.chop_extension f in
@@ -864,6 +912,8 @@ and command = function
      close_in !Xproof.ic_prf;
      0
 
+  | "part"::_ -> wrong_nb_args()
+
   | ["prfsize";b] ->
      read_use b;
      let size = Array.make (Array.length !Xproof.last_use) 0 in
@@ -871,6 +921,8 @@ and command = function
          if get_use k >= 0 then Array.set size k (size_proof p));
      write_val (b^".siz") size;
      0
+
+  | "prfsize"::_ -> wrong_nb_args()
 
   | ["thmsize";b;n] ->
      init_proof_reading b;
@@ -891,6 +943,8 @@ and command = function
      write_val (n^".siz") size;
      (*log "size: %#d\n" !total;*)
      0
+
+  | "thmsize"::_ -> wrong_nb_args()
 
   | ["split";b] ->
      read_pos b;
@@ -933,6 +987,8 @@ and command = function
      write_val (b^".thp") !map;
      0
 
+  | "split"::_ -> wrong_nb_args()
+
   | ["thmsplit";b;f] ->
      let n = Filename.chop_extension f in
      read_use n;
@@ -945,6 +1001,8 @@ and command = function
      init_proof_reading b;
      if is_dk f then (err "dk output not available for this command\n"; 1)
      else (Xlp.split_theorem_proof b n; 0)
+
+  | "thmsplit"::_ -> wrong_nb_args()
 
   | ["thmpart";b;f] ->
      begin
@@ -964,6 +1022,8 @@ and command = function
           else (Xlp.export_theorem_proof_part b n k; 0)
      end
 
+  | "thmpart"::_ -> wrong_nb_args()
+
   | ["theorem";b;f] ->
      read_sig b;
      map_thid_pos := read_val (b^".thp");
@@ -980,38 +1040,56 @@ and command = function
          Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
-         (*Xlp.dump_type_abbrevs n;*)
-         write_val (Filename.chop_extension f^".typ") !Xlp.map_typ_abbrev;
          0
        end
 
+  | "theorem"::_ -> wrong_nb_args()
+
   | ["type_abbrevs";b] ->
-    let idx = ref (-1) and map = ref MapStr.empty in
-    let files = Sys.readdir "." in
-    let oc = open_file (b^".sed") in
-    let add s ((d,_n) as x) =
-      let upd = function
-        | None ->
-          incr idx;
-          Xlp.map_typ_abbrev := MapStr.add s x !Xlp.map_typ_abbrev;
-          string oc "s/"; digest oc d; char oc '/'; int oc !idx;
-          string oc "/g\n";
-          Some !idx
-        | v -> v
-      in
-      map := MapStr.update s upd !map
-    in
+    let idx = ref (-1)
+    and map = ref MapStr.empty
+    and files = Sys.readdir "." in
+    (* merge all type abbrev maps into [!map] *)
     let read_typ_file f =
-      if String.ends_with ~suffix:".typ" f then MapStr.iter add (read_val f)
+      if String.ends_with ~suffix:".typ" f then
+        MapStr.iter (fun s x -> map := MapStr.add s x !map) (read_val f);
     in
     Array.iter read_typ_file files;
-    close_out oc;
-    Xlp.export (b^"_type_abbrevs") [b^"_types"] Xlp.decl_type_abbrevs;
-    (*Xlib.command ("find . -name '*.lp' | xargs sed -i -f "^b^".sed");*)
-    (*let rename_abbrevs_in _f = ()
+    (* give a unique id to each entry *)
+    let map = MapStr.map (fun x -> (incr idx; (!idx,x))) !map in
+    (* generate sed files *)
+    let gen_sed_file f =
+      if String.ends_with ~suffix:".typ" f then
+        begin
+          let m = read_val f in
+          let oc = open_file (Filename.chop_extension f^".sed") in
+          let add_cmd s (d,_n) =
+            let idx =
+              match MapStr.find_opt s map with
+              | Some(idx,_) -> idx
+              | None -> assert false
+            in
+            string oc "s/"; digest oc d; char oc '/'; int oc idx;
+            string oc "/g\n";
+          in
+          MapStr.iter add_cmd m;
+          close_out oc
+        end
     in
-      Array.iter rename_abbrevs_in files;*)
+    Array.iter gen_sed_file files;
+    (* generate [b^"_type_abbrevs.lp"] *)
+    let decl_type_abbrevs oc =
+      let abbrev s (idx,(_d,n)) =
+        string oc "symbol type"; int oc idx;
+        for i=0 to n-1 do string oc " a"; int oc i done;
+        string oc " ≔ "; string oc s; string oc ";\n"
+      in
+      MapStr.iter abbrev map
+    in
+    Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs;
     0
+
+  | "type_abbrevs"::_ -> wrong_nb_args()
 
   | ["abbrev";b;f] ->
      begin
@@ -1030,6 +1108,8 @@ and command = function
              0
            end
      end
+
+  | "abbrev"::_ -> wrong_nb_args()
 
   | f::args ->
      let r = range args in
