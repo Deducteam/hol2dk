@@ -3,9 +3,10 @@ NOTES
 
 ## 09/04/24
 
-Following PR #120 (use a single type_abbrevs file):
+With PR #120 (use a single type_abbrevs file):
 
-hol.ml: lp 38s v 30s vo -j32 23m51s
+hol: lp 38s v 30s vo -j32 23m51s
+Multivariate/make_upto_topology: lp 18m11s v 23m6s
 
 ## 05/04/24
 
