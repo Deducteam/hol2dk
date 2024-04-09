@@ -727,10 +727,11 @@ print lem%d;\n" x*)
 (* Generate type and term abbreviation files. *)
 (****************************************************************************)
 
-(*let export_type_abbrevs b n =
+let export_type_abbrevs b n =
   export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
-;;*)
-let export_type_abbrevs _b n =
+;;
+
+let dump_type_abbrevs n =
   let dump_file = n^".typ" in
   log_gen dump_file;
   let oc = open_out_bin dump_file in
@@ -1059,7 +1060,7 @@ let export_theorem_proof_part b n k =
   (* dump term abbreviations *)
   let nb_parts = split_theorem_abbrevs p in
   (* generate [n^part(k)^".typ"] *)
-  export_type_abbrevs b p;
+  dump_type_abbrevs p;
   (* generate [n^part(k)^"_subterms.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;
   (* generate [n^part(k)^"_deps.lp"] and [n^".lpo.mk"] *)

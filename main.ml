@@ -980,7 +980,7 @@ and command = function
          Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
-         Xlp.export_type_abbrevs b n;
+         Xlp.dump_type_abbrevs n;
          0
        end
 

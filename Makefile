@@ -72,6 +72,7 @@ print-big-files:
 lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
+	hol2dk type_abbrevs $(BASE)
 
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
