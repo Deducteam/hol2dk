@@ -858,7 +858,7 @@ and command = function
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
          Xlp.export_term_abbrevs_in_one_file b (b^part k);
-         Xlp.export_type_abbrevs (b^part k)
+         Xlp.export_type_abbrevs b (b^part k)
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
@@ -980,9 +980,44 @@ and command = function
          Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
-         Xlp.export_type_abbrevs n;
+         Xlp.export_type_abbrevs b n;
          0
        end
+
+  | ["type_abbrevs";b] ->
+    let idx = ref (-1) and map = ref MapStr.empty in
+    let files = Sys.readdir "." in
+    let oc = open_file (b^".sed") in
+    let read_typ_file f =
+      if String.ends_with ~suffix:".typ" f then
+        begin
+          (*log_read f;*)
+          let ic = open_in_bin f in
+          begin
+            try
+              while true do
+                let (s,((d,_) as x)) = input_value ic in
+                let upd = function
+                  | None ->
+                    incr idx;
+                    Xlp.map_typ_abbrev := MapStr.add s x !Xlp.map_typ_abbrev;
+                    string oc "s/"; digest oc d; char oc '/'; int oc !idx;
+                    string oc "/g\n";
+                    Some !idx
+                  | v -> v
+                in
+                map := MapStr.update s upd !map
+              done
+            with End_of_file -> ()
+          end;
+          close_in ic;
+        end
+    in
+    Array.iter read_typ_file files;
+    close_out oc;
+    Xlp.export (b^"_type_abbrevs") [b^"_types"] Xlp.decl_type_abbrevs;
+    (*Xlib.command ("find . -name '*.lp' | xargs sed -i -f "^b^".sed");*)
+    0
 
   | ["abbrev";b;f] ->
      begin
@@ -1044,7 +1079,7 @@ and command = function
          Xlp.export_proofs b r;
          if r = All then Xlp.export_theorems b (read_val (b^".thm"));
          Xlp.export_term_abbrevs_in_one_file b b;
-         Xlp.export_type_abbrevs b
+         Xlp.export_type_abbrevs b b
        end;
      close_in !Xproof.ic_prf;
      0
