@@ -1046,9 +1046,7 @@ and command = function
   | "theorem"::_ -> wrong_nb_args()
 
   | ["type_abbrevs";b] ->
-    let idx = ref (-1)
-    and map = ref MapStr.empty
-    and files = Sys.readdir "." in
+    let files = Sys.readdir "." and map = ref MapStr.empty in
     (* merge all type abbrev maps into [!map] *)
     let read_typ_file f =
       if String.ends_with ~suffix:".typ" f then
@@ -1056,7 +1054,8 @@ and command = function
     in
     Array.iter read_typ_file files;
     (* give a unique id to each entry *)
-    let map = MapStr.map (fun x -> (incr idx; (!idx,x))) !map in
+    let map =
+      let idx = ref (-1) in MapStr.map (fun x -> (incr idx; (!idx,x))) !map in
     (* generate sed files *)
     let gen_sed_file f =
       if String.ends_with ~suffix:".typ" f then

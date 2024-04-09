@@ -90,49 +90,27 @@ let rec string_of_typ = function
 
 let map_typ_abbrev : (Digest.t * int) MapStr.t ref = ref MapStr.empty;;
 
-let abbrev_typ =
-  (*let idx = ref (-1) in*)
-  fun oc b ->
+let abbrev_typ oc b =
   match b with
   | Tyvar n
   | Tyapp(n,[]) -> typ_name oc n
   | Tyapp(_,bs) ->
     if List.for_all is_var_or_cst_type bs then raw_typ oc b
     else
-     (* check whether the type is already abbreviated; add a new
-        abbreviation if needed *)
-     let tvs, b = canonical_typ b in
-     let s = string_of_typ b in
-     let d = Digest.string s
-       (*match TypHashtbl.find_opt htbl_type_abbrev b with
-       | Some (k,_) -> k
-       | None ->
-          let k = !idx + 1 in
-          idx := k;
-          let x = (k, List.length tvs) in
-          TypHashtbl.add htbl_type_abbrev b x;
-          k*)
-     in
-     map_typ_abbrev := MapStr.add s (d, List.length tvs) !map_typ_abbrev;
-     match tvs with
-     | [] -> string oc "type"; digest oc d
-     | _ ->
-       string oc "(type"; digest oc d; list_prefix " " raw_typ oc tvs;
-       char oc ')'
+      let tvs, b = canonical_typ b in
+      let s = string_of_typ b in
+      let d = Digest.string s in
+      map_typ_abbrev := MapStr.add s (d, List.length tvs) !map_typ_abbrev;
+      match tvs with
+      | [] -> string oc "type"; digest oc d
+      | _ ->
+        string oc "(type"; digest oc d; list_prefix " " raw_typ oc tvs;
+        char oc ')'
 ;;
 
 let typ = abbrev_typ;;
 
 (* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
-(*let decl_type_abbrevs oc =
-  let abbrev b (k,n) =
-    string oc "symbol type"; int oc k;
-    for i=0 to n-1 do string oc " a"; int oc i done;
-    (* We can use [raw_typ] here since [b] is canonical. *)
-    string oc " ≔ "; raw_typ oc b; string oc ";\n"
-  in
-  TypHashtbl.iter abbrev htbl_type_abbrev
-;;*)
 let decl_type_abbrevs oc =
   let abbrev s (k,n) =
     string oc "symbol type"; digest oc k;
