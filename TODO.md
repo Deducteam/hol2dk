@@ -1,6 +1,8 @@
 TODO
 ----
 
+- use a single term_abbrev file for each theorem, and split it
+
 - pre-compute once and for all the type and term variables of axioms and definitions
 
 - compute proof tree sizes in parallel ?
@@ -8,8 +10,6 @@ TODO
 - really remove useless proof steps to save memory (=> use files are not necessary afterwards)
 
 - record times to generate proofs and term_abbrevs files of each theorem ?
-
-- share a single type_abbrev file
 
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 
