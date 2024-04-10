@@ -50,6 +50,7 @@ let name =
     |"sequential"|"simplify"|"solve"|"symbol"|"symmetry"|"type"|"TYPE"
     |"unif_rule"|"verbose"|"why3"|"with" -> "_" ^ n
     (* for Coq *)
+    | "S" -> "S'"
     | "%" -> n
     | _ -> Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
     end
@@ -61,18 +62,16 @@ let cst_name = name;;
 (* Translation of types. *)
 (****************************************************************************)
 
-let typ_name oc n =
-  string oc
-    begin match n with
-     | "" -> assert false
-       (* type names used also as constant names are capitalized *)
-     |"sum"|"topology"|"metric"|"multiset"|"group" ->
-       String.capitalize_ascii n
-     | n ->
-        if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
-        else n
-    end
+let string_of_typ_name n =
+  match n with
+  | "" -> assert false
+  (* type names used also as constant names are capitalized *)
+  |"sum"|"topology"|"metric"|"multiset"|"group" -> String.capitalize_ascii n
+  | _ ->
+    if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1) else n
 ;;
+
+let typ_name oc n = string oc (string_of_typ_name n);;
 
 let rec raw_typ oc b =
   match b with
@@ -84,8 +83,10 @@ let rec raw_typ oc b =
 
 let rec string_of_typ = function
   | Tyvar n
-  | Tyapp(n,[]) -> n
-  | Tyapp(n,bs) -> "("^n^" "^String.concat " " (List.map string_of_typ bs)^")"
+  | Tyapp(n,[]) -> string_of_typ_name n
+  | Tyapp(n,bs) ->
+    "("^string_of_typ_name n^" "
+    ^String.concat " " (List.map string_of_typ bs)^")"
 ;;
 
 let map_typ_abbrev : (Digest.t * int) MapStr.t ref = ref MapStr.empty;;

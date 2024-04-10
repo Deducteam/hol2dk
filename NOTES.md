@@ -3,9 +3,15 @@ NOTES
 
 ## 09/04/24
 
-Following PR #120 (use a single type_abbrevs file):
+Huge improvements in file generation and coq checking:
 
-hol.ml: lp 38s v 30s vo -j32 23m51s
+With PR #120 (use a single type_abbrevs file):
+
+hol: lp 38s v 30s vo -j32 23m51s
+
+With PR #119 (optimization of printing functions):
+
+Multivariate/make_upto_topology: lp 18m11s v 18m43s
 
 ## 05/04/24
 
