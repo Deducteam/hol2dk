@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+Big improvements in Lambdapi and Coq file generation time, and Coq compilation time.
+
 ### Added
 
 - hol2dk can now generate term abbreviations and proofs in several files
