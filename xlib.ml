@@ -9,23 +9,6 @@ REMOVE*)
 open Xprelude
 open Fusion
 
-let open_file n = log_gen n; open_out n;;
-
-let create_file n f = let oc = open_file n in f oc; close_out oc;;
-
-let command s =
-  if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
-
-let concat f1 f2 f3 =
-  log "generate %s ...\n%!" f3;
-  command (Printf.sprintf "cat %s %s > %s && rm -f %s %s" f1 f2 f3 f1 f2)
-;;
-
-let rename f1 f2 =
-  log "rename %s into %s ...\n%!" f1 f2;
-  Sys.rename f1 f2
-;;
-
 (****************************************************************************)
 (* Ranges of proof indexes. *)
 (****************************************************************************)
@@ -52,43 +35,32 @@ let iter_parts nb_proofs nb_parts f =
 ;;
 
 (****************************************************************************)
-(* Functions on basic data structures. *)
+(* Functions on numbers. *)
 (****************************************************************************)
 
 let percent k n = (100 * k) / n;;
 
-let part i = "_part_" ^ string_of_int i;;
+(****************************************************************************)
+(* Functions on system calls. *)
+(****************************************************************************)
 
-(* [get_part s suffix] returns [Some(n,k)] if [s=n^suffix^part(k)],
-   and [None] otherwise. *)
-let get_part s suffix =
-  try
-    let len_s = String.length s in
-    let i = ref (len_s - 1) in
-    (* compute part number *)
-    let k =
-      while !i >= 0 && s.[!i] <> '_' do decr i done;
-      if !i < 0 then raise Exit;
-      int_of_string (String.sub s (!i+1) (len_s - 1 - !i))
-    in
-    (* compute theorem name *)
-    let len_suffix = String.length suffix + String.length "_part_" in
-    if !i < len_suffix then raise Exit;
-    let n = String.sub s 0 (!i - len_suffix + 1) in
-    Some(n,k)
-  with Exit -> None
+let command s =
+  if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
+
+(****************************************************************************)
+(* Functions on files. *)
+(****************************************************************************)
+
+let open_file n = log_gen n; open_out n;;
+
+let create_file n f = let oc = open_file n in f oc; close_out oc;;
+
+let concat f1 f2 f3 =
+  log "generate %s ...\n%!" f3;
+  command (Printf.sprintf "cat %s %s > %s && rm -f %s %s" f1 f2 f3 f1 f2)
 ;;
 
-(* [pos_first f l] returns the position (counting from 0) of the first
-   element of [l] satisfying [f]. Raises Not_found if there is no such
-   element. *)
-let pos_first f =
-  let rec aux k l =
-    match l with
-    | [] -> raise Not_found
-    | y::l -> if f y then k else aux (k+1) l
-  in aux 0
-;;
+let rename f1 f2 = log "rename %s into %s ...\n%!" f1 f2; Sys.rename f1 f2;;
 
 (* [string_of_file f] puts the contents of file [f] in a string. *)
 let string_of_file f =
@@ -114,6 +86,36 @@ let write_val dump_file v =
   let oc = open_out_bin dump_file in
   output_value oc v;
   close_out oc
+
+(****************************************************************************)
+(* Functions on strings. *)
+(****************************************************************************)
+
+let add_prefix prefix f x = prefix^f x;;
+
+let concat_map f xs = String.concat "" (List.map f xs);;
+
+let part i = "_part_" ^ string_of_int i;;
+
+(* [get_part s suffix] returns [Some(n,k)] if [s=n^suffix^part(k)],
+   and [None] otherwise. *)
+let get_part s suffix =
+  try
+    let len_s = String.length s in
+    let i = ref (len_s - 1) in
+    (* compute part number *)
+    let k =
+      while !i >= 0 && s.[!i] <> '_' do decr i done;
+      if !i < 0 then raise Exit;
+      int_of_string (String.sub s (!i+1) (len_s - 1 - !i))
+    in
+    (* compute theorem name *)
+    let len_suffix = String.length suffix + String.length "_part_" in
+    if !i < len_suffix then raise Exit;
+    let n = String.sub s 0 (!i - len_suffix + 1) in
+    Some(n,k)
+  with Exit -> None
+;;
 
 (* [replace c1 c2 s] returns a new string identical to [s] but with
    every character [c1] replaced by [c2]. *)
@@ -158,6 +160,25 @@ let rec change_prefixes l s =
      let n = String.length p in
      if starts_with p s then q ^ String.sub s n (String.length s - n)
      else change_prefixes l s
+
+(****************************************************************************)
+(* Functions on lists. *)
+(****************************************************************************)
+
+(* [pos_first f l] returns the position (counting from 0) of the first
+   element of [l] satisfying [f]. Raises Not_found if there is no such
+   element. *)
+let pos_first f =
+  let rec aux k l =
+    match l with
+    | [] -> raise Not_found
+    | y::l -> if f y then k else aux (k+1) l
+  in aux 0
+;;
+
+(****************************************************************************)
+(* Functions on hash tables. *)
+(****************************************************************************)
 
 (* [bindings ht] returns the list of bindings in the hash table [ht]. *)
 let bindings ht = Hashtbl.fold (fun x y acc -> (x,y)::acc) ht [];;
