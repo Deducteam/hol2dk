@@ -209,13 +209,14 @@ endif
 
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
-ifneq ($(INCLUDE_VO_MK),1)
-	$(MAKE) INCLUDE_VO_MK=1 progress vo
-endif
-
-.PHONY: progress
-progress:
+ifeq ($(PROGRESS),1)
 	$(HOL2DK_DIR)/progress
+endif
+ifneq ($(INCLUDE_VO_MK),1)
+	rm -f .finished
+	$(MAKE) INCLUDE_VO_MK=1 vo
+	touch .finished
+endif
 
 COQC_OPTIONS = -no-glob # -w -coercions
 %.vo: %.v
