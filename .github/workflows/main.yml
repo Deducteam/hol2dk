@@ -26,6 +26,7 @@ jobs:
         run: opam install -y dune.${{ matrix.dune-version }}
       - name: Compile hol2dk
         run: |
+          export HOL2DK_DIR=`pwd`
           eval `opam env`
           dune build
           dune install
@@ -41,13 +42,12 @@ jobs:
           opam install -y lambdapi
       - name: Get hol-light and patch it
         run: |
-          eval `opam env`
-          export HOL2DK_DIR=`pwd`
           git clone https://github.com/jrh13/hol-light
           cd hol-light
           git checkout c153f40da8deb3bcc7aaef39126ad15e4713e68c
           export HOLLIGHT_DIR=`pwd`
           make
+          eval `opam env`
           hol2dk patch
       - name: Dump proofs
         run: |
