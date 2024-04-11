@@ -17,7 +17,6 @@ let name =
     [ "|----", "vdash4"
     ; "|---", "vdash3"
     ; "|--", "vdash2"
-    ; "|->", "mapsto"
     ; "|-", "vdash"
     ; "|=>", "bar_imp"]
   in
@@ -51,6 +50,7 @@ let name =
     |"sequential"|"simplify"|"solve"|"symbol"|"symmetry"|"type"|"TYPE"
     |"unif_rule"|"verbose"|"why3"|"with" -> "_" ^ n
     (* for Coq *)
+    | "S" |-> "S'"
     | "%" -> n
     | _ -> Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
     end
