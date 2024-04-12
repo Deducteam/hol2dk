@@ -1,0 +1,112 @@
+#!/bin/sh
+
+sleep_time=60
+stms=`expr $sleep_time \* 1000`
+
+debug=0
+
+log() {
+    if test $debug -eq 1; then echo "$1"; fi
+}
+
+# total number of coq files to check
+v=`find . -name '*.v' | wc -l`
+log v=$v
+
+# total number of coq files checked
+prevo=0
+
+# current time in seconds
+t0=`date +%s`
+log t0=$t0
+
+hm() {
+    predebug=$debug
+    debug=0
+    log hm
+    m=`expr $1 / 60`
+    log m=$m
+    h=`expr $m / 60`
+    log h=$h
+    m=`expr $m \% 60`
+    echo ${h}h${m}m
+    debug=$predebug
+}
+
+chk() {
+    log chk
+
+    if test -f .finished; then exit; fi
+
+    # total nb of v files checked
+    vo=`find . -name '*.vo' | wc -l`
+    log vo=$vo
+
+    # exit if all v files are compiled
+    if test $vo -eq $v; then exit; fi
+
+    # % of checked files
+    pvo=`expr 100 \* $vo`
+    log pvo=$pvo
+    p=`expr $pvo / $v`
+    log p=$p
+
+    # current time in seconds
+    t=`date +%s`
+    log t=$t
+
+    # elapsed time from the beginning in seconds
+    dt=`expr $t - $t0`
+    log dt=$dt
+
+    # nb of remaining files to check
+    rv=`expr $v - $vo`
+    log rv=$rv
+
+    # nb of v files checked since last chk 
+    dvo=`expr $vo - $prevo`
+    log dvo=$dvo
+
+    if test $dvo -eq 0
+    then
+
+    # elapsed time from the beginning in milliseconds
+    dtms=`expr $dt \* 1000`
+    log dtms=$dtms
+
+    # average elapsed time by file since the beginning in milliseconds
+    if test $vo -eq 0; then exit; fi
+    tvms=`expr $dtms / $vo`
+    log tvms=$tvms
+
+    # remaining time in milliseconds according to average since beginning
+    rtms=`expr $rv \* $tvms`
+    log rtms=$rtms
+
+    else
+        
+    # average elapsed time by file since last chk in milliseconds
+    tvms=`expr $stms / $dvo`
+
+    # remaining time in milliseconds according to average since last chk
+    rtms=`expr $rv \* $tvms`
+    log rtms=$rtms
+
+    fi
+
+    # remaining time in seconds according to average since beginning
+    rt=`expr $rtms / 1000`
+    log rt=$rt
+
+    echo '--------------------------------------------------------------------'
+    echo "$vo files ($p%) in `hm $dt`, remaining $rv files and about `hm $rt`"
+    echo '--------------------------------------------------------------------'
+
+    prevo=$vo
+}
+
+while true
+do
+    sleep $sleep_time
+    chk
+done
