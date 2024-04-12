@@ -76,8 +76,6 @@ builtin "mulmul" ≔ **;
 builtin "mulmul_def" ≔ **_def;
 builtin "ltle" ≔ <<=;
 builtin "ltle_def" ≔ <<=_def;
-builtin "mapsto" ≔ vdash>;
-builtin "mapsto_def" ≔ vdash>_def;
 
 // Multivariate
 builtin "add_c" ≔ +_c;
@@ -90,3 +88,5 @@ builtin "pow_c" ≔ ^_c;
 builtin "pow_c_def" ≔ ^_c_def;
 builtin "_at" ≔ at;
 builtin "_at_def" ≔ at_def;
+builtin "S'" ≔ S;
+builtin "pair'" ≔ pair;
