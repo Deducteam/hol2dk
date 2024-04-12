@@ -216,8 +216,16 @@ nothing:
 
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
+ifeq ($(PROGRESS),1)
+	rm -f .finished
+	$(HOL2DK_DIR)/progress &
+endif
 ifneq ($(INCLUDE_VO_MK),1)
 	$(MAKE) INCLUDE_VO_MK=1 vo
+<<<<<<< HEAD
+=======
+	touch .finished
+>>>>>>> dk/main
 endif
 
 COQC_OPTIONS = -no-glob # -w -coercions
