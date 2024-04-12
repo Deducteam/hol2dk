@@ -291,13 +291,13 @@ ifeq ($(SET_THM_FILES),1)
 	@echo modify $*.lpo.mk
 	@sed -i -e 's/\.lpo/####/g' -e 's/####/_spec.lpo/g' -e 's/_spec\.lpo:/.lpo:/' -e 's/_abbrevs_spec\.lpo/_abbrevs.lpo/g' -e 's/_abbrevs_part_\([^_]*\)_spec/_abbrevs_part_\1/g' -e 's/theory_hol_spec\.lpo/theory_hol.lpo/' -e 's/_types_spec\.lpo/_types.lpo/' -e 's/_terms_spec\.lpo/_terms.lpo/' -e 's/_axioms_spec\.lpo/_axioms.lpo/' $*.lpo.mk
 	@echo generate $@
-	@for f in coq theory_hol $(BASE_FILES) `ls $*_term_abbrevs*.lp | sed -e 's/\.lp//g'`; do printf "Require Import %s.\n" $$f; done > $@
+	@for f in coq theory_hol $(BASE_FILES) `find . -name "$*_term_abbrevs*.lp" -o -name "$*_part_*_term_abbrevs*.lp" | sed -e 's/\.\///g' -e 's/\.lp//g'`; do printf "Require Import %s.\n" $$f; done > $@
 	@sed -e '/^Require /d' -e '/^Proof. /d' -e 's/^Lemma /Axiom /' -e 's/) :/),/' -e 's/} : /}, /' -e 's/^Axiom \([^ ]*\) /Axiom \1 : /' -e 's/: :/:/' -e 's/: \(.*\),/: forall \1,/' $*.v >> $@
 
 %_spec.lpo.mk:
 	@echo generate $@
 	@echo -n "$*_spec.lpo:" > $@
-	@for f in theory_hol $(BASE_FILES) `ls $*_term_abbrevs*.lp | sed -e 's/\.lp//g'`; do printf " %s.lpo" $$f; done >> $@
+	@for f in theory_hol $(BASE_FILES) `find . -name "$*_term_abbrevs*.lp" -o -name "$*_part_*_term_abbrevs*.lp" | sed -e 's/\.\///g' -e 's/\.lp//g'`; do printf " %s.lpo" $$f; done >> $@
 	@echo >> $@
 endif
 
