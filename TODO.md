@@ -1,6 +1,8 @@
 TODO
 ----
 
+- write progress in an ocaml program, and estimate time wrt size of files
+
 - use a single term_abbrev file for each theorem, and split it
 
 - pre-compute once and for all the type and term variables of axioms and definitions
