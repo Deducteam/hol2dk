@@ -222,10 +222,7 @@ ifeq ($(PROGRESS),1)
 endif
 ifneq ($(INCLUDE_VO_MK),1)
 	$(MAKE) INCLUDE_VO_MK=1 vo
-<<<<<<< HEAD
-=======
 	touch .finished
->>>>>>> dk/main
 endif
 
 COQC_OPTIONS = -no-glob # -w -coercions
