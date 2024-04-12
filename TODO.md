@@ -1,6 +1,8 @@
 TODO
 ----
 
+- generate spec files in ocaml to optimize dependencies (spec files should not depend on abbreviations)
+
 - use a single term_abbrev file for each theorem, and split it
 
 - pre-compute once and for all the type and term variables of axioms and definitions
