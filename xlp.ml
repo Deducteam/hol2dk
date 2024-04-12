@@ -658,7 +658,6 @@ let decl_theorem oc k p d =
      let term = unabbrev_term rmap in
      string oc "opaque symbol "; string oc n; typ_vars oc tvs;
      list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
-     string oc " : Prf "; term oc t;
      string oc " ≔ @lem"; int oc k; list_prefix " " raw_typ oc tvs;
      list_prefix " " (var rmap) oc xs;
      List.iteri (fun i _ -> string oc " h"; int oc (i+1)) ts; string oc ";\n"
