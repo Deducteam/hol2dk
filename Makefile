@@ -211,6 +211,9 @@ endif
 dep:
 	$(MAKE) INCLUDE_VO_MK=1 nothing
 
+.PHONY: nothing
+nothing:
+
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
 ifeq ($(PROGRESS),1)
@@ -271,25 +274,22 @@ all:
 	$(MAKE) vo
 
 ifeq ($(SET_THM_FILES),1)
-THM_FILES := $(shell find . -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_term_abbrevs.v' -a ! -name '*_types.v' -a ! -name '*_terms.v' -a ! -name '*_axioms.v' -a ! -name '*_subterms.v' -a ! -name '*_type_abbrevs.v' -a ! -name 'theory_hol.v' -a ! -name 'coq.v')
+THM_FILES := $(shell find . -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_term_abbrevs*.v' -a ! -name '*_types.v' -a ! -name '*_terms.v' -a ! -name '*_axioms.v' -a ! -name '*_subterms.v' -a ! -name '*_type_abbrevs.v' -a ! -name 'theory_hol.v' -a ! -name 'coq.v')
 endif
 
 .PHONY: spec
 spec: $(THM_FILES:%.v=%_spec.v) $(THM_FILES:%.v=%_spec.lpo.mk)
 ifneq ($(SET_THM_FILES),1)
 	$(MAKE) SET_THM_FILES=1 spec
-	$(MAKE) INCLUDE_VO_MK=1 nothing
+	$(MAKE) dep
 endif
-
-.PHONY: nothing
-nothing:
 
 ifeq ($(SET_THM_FILES),1)
 %_spec.v: %.v
 	@echo modify $*.v
-	@sed -i -e 's/Require Import \([^\.]*\)\./Require Import \1_spec./' -e '/^Require /s/abbrevs_spec/abbrevs/' -e '/^Require /s/coq_spec/coq/' -e '/^Require /s/theory_hol_spec/theory_hol/' -e '/^Require /s/types_spec/types/' -e '/^Require /s/terms_spec/terms/' -e '/^Require /s/axioms_spec/axioms/' $*.v
+	@sed -i -e 's/Require Import \([^\.]*\)\./Require Import \1_spec./' -e '/^Require /s/abbrevs_spec/abbrevs/' -e '/^Require /s/abbrevs_part_\([^_]*\)_spec/abbrevs_part_\1/' -e '/^Require /s/coq_spec/coq/' -e '/^Require /s/theory_hol_spec/theory_hol/' -e '/^Require /s/types_spec/types/' -e '/^Require /s/terms_spec/terms/' -e '/^Require /s/axioms_spec/axioms/' $*.v
 	@echo modify $*.lpo.mk
-	@sed -i -e 's/\.lpo/####/g' -e 's/####/_spec.lpo/g' -e 's/_spec\.lpo:/.lpo:/' -e 's/_abbrevs_spec\.lpo/_abbrevs.lpo/g' -e 's/theory_hol_spec\.lpo/theory_hol.lpo/' -e 's/_types_spec\.lpo/_types.lpo/' -e 's/_terms_spec\.lpo/_terms.lpo/' -e 's/_axioms_spec\.lpo/_axioms.lpo/' $*.lpo.mk
+	@sed -i -e 's/\.lpo/####/g' -e 's/####/_spec.lpo/g' -e 's/_spec\.lpo:/.lpo:/' -e 's/_abbrevs_spec\.lpo/_abbrevs.lpo/g' -e 's/_abbrevs_part_\([^_]*\)_spec/_abbrevs_part_\1/g' -e 's/theory_hol_spec\.lpo/theory_hol.lpo/' -e 's/_types_spec\.lpo/_types.lpo/' -e 's/_terms_spec\.lpo/_terms.lpo/' -e 's/_axioms_spec\.lpo/_axioms.lpo/' $*.lpo.mk
 	@echo generate $@
 	@for f in coq theory_hol $(BASE_FILES) `ls $*_term_abbrevs*.lp | sed -e 's/\.lp//g'`; do printf "Require Import %s.\n" $$f; done > $@
 	@sed -e '/^Require /d' -e '/^Proof. /d' -e 's/^Lemma /Axiom /' -e 's/) :/),/' -e 's/} : /}, /' -e 's/^Axiom \([^ ]*\) /Axiom \1 : /' -e 's/: :/:/' -e 's/: \(.*\),/: forall \1,/' $*.v >> $@
@@ -313,6 +313,7 @@ do-unspec: $(THM_FILES:%.v=%.v.unspec)
 %.v.unspec:
 	@echo modify $*.v
 	@sed -i -e '/^Require /s/_spec//' $*.v
+	@echo modify $*.lpo.mk
 	@sed -i -e 's/_spec\.lpo/.lpo/g' $*.lpo.mk
 
 lpo.mk.unspec:
