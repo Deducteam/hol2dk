@@ -284,10 +284,6 @@ ifneq ($(SET_THM_FILES),1)
 	$(MAKE) dep
 endif
 
-.PHONY: spec_big_files
-spec_big_files:
-	for f in $(BIG_FILES); do cp -f $${f}.v $${f}_spec.v; sed -e 's/\.lpo:/_spec.lpo:/' $${f}.lpo.mk > $${f}_spec.lpo.mk; done
-
 ifeq ($(SET_THM_FILES),1)
 %_spec.v: %.v
 	@echo modify $*.v

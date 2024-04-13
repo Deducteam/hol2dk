@@ -1,6 +1,12 @@
 NOTES
 -----
 
+## 13/04/24
+
+With PR #126 (generation of spec files):
+
+hol: lp 36s v 25s spec 7s vo -j32 16m22s
+
 ## 09/04/24
 
 Huge improvements in file generation and coq checking:
