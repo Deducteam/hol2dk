@@ -1,7 +1,7 @@
 TODO
 ----
 
-- generate spec files in ocaml to optimize dependencies (spec files should not depend on abbreviations)
+- generate spec files in ocaml to optimize dependencies
 
 - write progress in an ocaml program, and estimate time wrt size of files
 

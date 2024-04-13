@@ -278,10 +278,9 @@ THM_FILES := $(shell find . -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_term
 endif
 
 .PHONY: spec
-spec: $(THM_FILES:%.v=%_spec.v) $(THM_FILES:%.v=%_spec.lpo.mk)
+spec: $(THM_FILES:%.v=%_spec.v) #$(THM_FILES:%.v=%_spec.lpo.mk)
 ifneq ($(SET_THM_FILES),1)
 	$(MAKE) SET_THM_FILES=1 spec
-	$(MAKE) spec_big_files
 	$(MAKE) dep
 endif
 
@@ -296,13 +295,14 @@ ifeq ($(SET_THM_FILES),1)
 	@echo modify $*.lpo.mk
 	@sed -i -e 's/\.lpo/####/g' -e 's/####/_spec.lpo/g' -e 's/_spec\.lpo:/.lpo:/' -e 's/_abbrevs_spec\.lpo/_abbrevs.lpo/g' -e 's/_abbrevs_part_\([^_]*\)_spec/_abbrevs_part_\1/g' -e 's/theory_hol_spec\.lpo/theory_hol.lpo/' -e 's/_types_spec\.lpo/_types.lpo/' -e 's/_terms_spec\.lpo/_terms.lpo/' -e 's/_axioms_spec\.lpo/_axioms.lpo/' $*.lpo.mk
 	@echo generate $@
-	@for f in coq theory_hol $(BASE_FILES) `find . -name "$*_term_abbrevs.lp" | sed -e 's/\.\///g' -e 's/\.lp//g'`; do printf "Require Import %s.\n" $$f; done > $@
-	@sed -e '/^Require /d' -e '/^Proof. /d' -e 's/^Lemma /Axiom /' -e 's/) :/),/' -e 's/} : /}, /' -e 's/^Axiom \([^ ]*\) /Axiom \1 : /' -e 's/: :/:/' -e 's/: \(.*\),/: forall \1,/' -e 's/forall forall/forall/' $*.v >> $@
+	@sed -e '/^Require Import [^ ]*_axioms\./d' -e '/^Proof. /d' -e 's/^Lemma /Axiom /' -e 's/) :/),/' -e 's/} : /}, /' -e 's/^Axiom \([^ ]*\) /Axiom \1 : /' -e 's/: :/:/' -e 's/: \(.*\),/: forall \1,/' -e 's/forall forall/forall/' $*.v >> $@
+	@echo generate $*_spec.lpo.mk
+	@sed -e 's/\.lpo:/_spec\.lpo:/' -e 's/ [^ ]*_axioms\.lpo//' -e 's/ [^ ]*_term_abbrevs[^ ]*\.lpo//' $*.lpo.mk > $*_spec.lpo.mk
 
 %_spec.lpo.mk:
 	@echo generate $@
 	@echo -n "$*_spec.lpo:" > $@
-	@for f in theory_hol $(BASE_FILES) `find . -name "$*_term_abbrevs*.lp" | sed -e 's/\.\///g' -e 's/\.lp//g'`; do printf " %s.lpo" $$f; done >> $@
+	@for f in theory_hol $(BASE)_types $(BASE)_type_abbrevs $(BASE)_terms; do printf " %s.lpo" $$f; done >> $@
 	@echo >> $@
 endif
 
