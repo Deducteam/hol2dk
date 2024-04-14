@@ -7,6 +7,8 @@ With PR #126 (generation of spec files):
 
 hol: lp 36s v 25s spec 7s vo -j32 16m22s
 
+Multivariate/make_upto_topology: vo -j32 423m + -j8 62m = 8h
+
 ## 09/04/24
 
 Huge improvements in file generation and coq checking:
