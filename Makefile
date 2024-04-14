@@ -33,7 +33,7 @@ rm-use:
 rm-thp:
 	rm -f $(BASE).thp
 
-BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
+BASE_FILES := $(BASE)_types $(BASE)_type_abbrevs $(BASE)_terms $(BASE)_axioms
 
 $(BASE_FILES:%=%.lp) &:
 	hol2dk sig $(BASE).lp
@@ -207,6 +207,13 @@ vo.mk: lpo.mk
 	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
 endif
 
+.PHONY: dep
+dep:
+	$(MAKE) INCLUDE_VO_MK=1 nothing
+
+.PHONY: nothing
+nothing:
+
 .PHONY: vo
 vo: $(LP_FILES:%.lp=%.vo)
 ifeq ($(PROGRESS),1)
@@ -267,34 +274,46 @@ all:
 	$(MAKE) vo
 
 ifeq ($(SET_THM_FILES),1)
-THM_FILES := $(shell find . -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_abbrevs.v' -a ! -name '*_types.v' -a ! -name '*_terms.v' -a ! -name '*_axioms.v' -a ! -name '*_subterms.v' -a ! -name 'theory_hol.v' -a ! -name 'coq.v')
+THM_FILES := $(shell find . -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_term_abbrevs*.v' -a ! -name '*_types.v' -a ! -name '*_terms.v' -a ! -name '*_axioms.v' -a ! -name '*_subterms.v' -a ! -name '*_type_abbrevs.v' -a ! -name 'theory_hol.v' -a ! -name 'coq.v')
 endif
 
 .PHONY: spec
-spec: $(THM_FILES:%.v=%_spec.v) $(THM_FILES:%.v=%_spec.lpo.mk)
-	$(MAKE) INCLUDE_VO_MK=1
+spec: $(THM_FILES:%.v=%_spec.v)
+ifneq ($(SET_THM_FILES),1)
+	$(MAKE) SET_THM_FILES=1 spec
+	$(MAKE) dep
+endif
 
+ifeq ($(SET_THM_FILES),1)
 %_spec.v: %.v
-	sed -i -e 's/Require Import \([^\.]*\)\./Require Import \1_spec./' -e '/^Require /s/abbrevs_spec/abbrevs/' -e '/^Require /s/coq_spec/coq/' -e '/^Require /s/theory_hol_spec/theory_hol/' -e '/^Require /s/types_spec/types/' -e '/^Require /s/terms_spec/terms/' -e '/^Require /s/axioms_spec/axioms/' $<
-	sed -i -e 's/\.lpo/_spec.lpo/g' -e 's/_spec\.lpo:/.lpo:/' -e 's/_abbrevs_spec\.lpo/_abbrevs.lpo/g' -e 's/theory_hol_spec\.lpo/theory_hol.lpo/' -e 's/_types_spec\.lpo/_types.lpo/' -e 's/_terms_spec\.lpo/_terms.lpo/' -e 's/_axioms_spec\.lpo/_axioms.lpo/' $*.lpo.mk
-	for f in coq theory_hol $(BASE_FILES) $*_type_abbrevs $*_term_abbrevs; do printf "Require Import %s.\n" $$f; done > $@
-	sed -e '/^Require /d' -e '/^Proof. /d' -e 's/^Lemma /Axiom /' -e 's/) :/),/' -e 's/} :/},/' -e 's/^Axiom \([^ ]*\) /Axiom \1 : /' -e 's/: :/:/' -e 's/: \(.*\),/: forall \1,/' $< >> $@
+	@echo modify $*.v
+	@sed -i -e 's/Require Import \([^\.]*\)\./Require Import \1_spec./' -e '/^Require /s/abbrevs_spec/abbrevs/' -e '/^Require /s/abbrevs_part_\([^_]*\)_spec/abbrevs_part_\1/' -e '/^Require /s/coq_spec/coq/' -e '/^Require /s/theory_hol_spec/theory_hol/' -e '/^Require /s/types_spec/types/' -e '/^Require /s/terms_spec/terms/' -e '/^Require /s/axioms_spec/axioms/' $*.v
+	@echo modify $*.lpo.mk
+	@sed -i -e 's/\.lpo/####/g' -e 's/####/_spec.lpo/g' -e 's/_spec\.lpo:/.lpo:/' -e 's/_abbrevs_spec\.lpo/_abbrevs.lpo/g' -e 's/_abbrevs_part_\([^_]*\)_spec/_abbrevs_part_\1/g' -e 's/theory_hol_spec\.lpo/theory_hol.lpo/' -e 's/_types_spec\.lpo/_types.lpo/' -e 's/_terms_spec\.lpo/_terms.lpo/' -e 's/_axioms_spec\.lpo/_axioms.lpo/' $*.lpo.mk
+	@echo generate $@
+	@sed -e '/^Require Import [^ ]*_axioms\./d' -e "s/^Require Import $*\([^\.]*\)_spec\./###\1_spec./" -e '/^Require Import [^ ]*_spec\./d' -e "s/###/Require Import $*/" -e '/^Proof. /d' -e 's/^Lemma /Axiom /' -e 's/) : /), /' -e 's/} : /}, /' -e 's/^Axiom \([^ ]*\) /Axiom \1 : /' -e 's/: :/:/' -e 's/: \(.*\),/: forall \1,/' -e 's/forall forall/forall/' $*.v >> $@
+	@echo generate $*_spec.lpo.mk
+	@sed -e 's/\.lpo:/_spec\.lpo:/' -e 's/ [^ ]*_axioms\.lpo//' $*.lpo.mk > $*_spec.lpo.mk
+endif
 
-%_spec.lpo.mk:
-	echo -n "$*_spec.lpo:" > $@
-	for f in theory_hol $(BASE_FILES) $*_type_abbrevs $*_term_abbrevs; do printf " %s.lpo" $$f; done >> $@
-	echo >> $@
+.PHONY: unspec
+unspec: clean-spec lpo.mk.unspec
+ifneq ($(SET_THM_FILES),1)
+	$(MAKE) SET_THM_FILES=1 do-unspec
+endif
 
-.PHONY: undo-spec
-undo-spec: clean-spec lpo.mk.undo-spec
-	$(MAKE) $(THM_FILES:%.v=%.v.undo-spec)
+.PHONY: do-unspec
+do-unspec: $(THM_FILES:%.v=%.v.unspec)
 
-%.v.undo-spec:
-	sed -i -e '/^Require /s/_spec//' $*.v
-	sed -i -e 's/_spec\.lpo/.lpo/g' $*.lpo.mk
+%.v.unspec:
+	@echo modify $*.v
+	@sed -i -e '/^Require /s/_spec//' $*.v
+	@echo modify $*.lpo.mk
+	@sed -i -e 's/_spec\.lpo/.lpo/g' $*.lpo.mk
 
-lpo.mk.undo-spec:
-	sed -i -e '/_spec\.lpo:/d' -e 's/_spec\.lpo/.lpo/g' lpo.mk
+lpo.mk.unspec:
+	@echo modify lpo.mk
+	@sed -i -e '/_spec\.lpo:/d' -e 's/_spec\.lpo/.lpo/g' lpo.mk
 
 .PHONY: clean-spec
 clean-spec: rm-spec rm-spec-lpo-mk

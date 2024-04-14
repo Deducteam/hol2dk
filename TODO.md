@@ -1,6 +1,8 @@
 TODO
 ----
 
+- generate lp spec files in ocaml to optimize dependencies (spec files should use no term abbreviations) ?
+
 - write progress in an ocaml program, and estimate time wrt size of files
 
 - use a single term_abbrev file for each theorem, and split it
