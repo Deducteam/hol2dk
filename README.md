@@ -67,7 +67,7 @@ Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- hol-light >= af186e9f3c685f5acab16097b05717c10ebb030d (28/01/23) <= c153f40da8deb3bcc7aaef39126ad15e4713e68c (20/03/24)
+- hol-light >= bfb2ea95cf4b20f40136d5f08102875400c8cba7 (04/04/24)
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml 4.14.1
@@ -419,7 +419,7 @@ On a machine with 32 processors i9-13950HX and 64G RAM:
 
 | HOL-Light file       | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
 |----------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml               | 2m36s     | 3 Go      | 8 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
+| hol.ml               | 3m57s     | 3 Go      | 8 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
 | Multivariate/make.ml | 1h55m     | 52 Go     | 89 M        | 18866       | 18m11s       | 18m43s      | 2.3 Go       | 8h (*)       |
 
 (*) make -j32 vo; make -j8 vo

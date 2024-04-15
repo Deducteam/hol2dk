@@ -8,7 +8,7 @@ open Xfiles
 open Xnames
 
 let usage() =
-  log
+  print_string
 "hol2dk uses
 ------------
 
@@ -160,13 +160,13 @@ hol2dk name upto file.(ml|hl)
 hol2dk name
   print on stdout the named theorems proved in all HOL-Light files
   in the working directory and all its subdirectories recursively
-%!"
+"
 
 let is_dk f =
   match Filename.extension f with
   | ".dk"  -> true
   | ".lp" -> false
-  | _ -> err "\"%s\" does not end with \".dk\" or \".lp\"\n%!" f; exit 1
+  | _ -> err "\"%s\" does not end with \".dk\" or \".lp\"\n" f; exit 1
 ;;
 
 let read_sig b =
@@ -186,7 +186,7 @@ let read_sig b =
 let integer s =
   try int_of_string s
   with Failure _ ->
-    Printf.eprintf "\"%s\" is not a valid integer\n%!" s; exit 1
+    Printf.eprintf "\"%s\" is not a valid integer\n" s; exit 1
 ;;
 
 (* [make nb_proofs dg b] generates a makefile for translating the
@@ -322,15 +322,15 @@ let range args =
   | [] -> All
   | [x] ->
      let x = integer x in
-     if x < 0 then (err "%d is negative\n%!" x; exit 1);
+     if x < 0 then (err "%d is negative\n" x; exit 1);
      Only x
   | [x;y] ->
      let x = integer x in
-     if x < 0 then (err "%d is negative\n%!" x; exit 1);
+     if x < 0 then (err "%d is negative\n" x; exit 1);
      let y = integer y in
-     if y < x then (err "%d is smaller than %d\n%!" y x; exit 1);
+     if y < x then (err "%d is smaller than %d\n" y x; exit 1);
      if x=0 then Upto y else Inter(x,y)
-  | _ -> (err "too many arguments\n%!"; exit 1)
+  | _ -> (err "too many arguments\n"; exit 1)
 ;;
 
 let dump after_hol f b =
@@ -366,7 +366,7 @@ dump_map_thid_name "%s.thm" %a;;
 let basename_ml f =
   match Filename.extension f with
   | ".ml" | ".hl" -> Filename.chop_extension f
-  | _ -> err "\"%s\" does not end with \".ml\" or \".hl\"\n%!" f; exit 1
+  | _ -> err "\"%s\" does not end with \".ml\" or \".hl\"\n" f; exit 1
 ;;
 
 let print_hstats() =
@@ -401,7 +401,8 @@ let wrong_nb_args() = err "wrong number of arguments\n"; 1;;
 let rec log_command l =
   print_string "\nhol2dk";
   List.iter (fun s -> print_char ' '; print_string s) l;
-  print_string " ...\n%!";
+  print_string " ...\n";
+  flush stdout;
   command l
 
 and dump_and_simp after_hol f =
