@@ -25,17 +25,16 @@ The HOL-Light base library `hol.ml` and the libraries `Arithmetic` and
 `Logic` formalizing the metatheory of first-order logic can be
 exported and translated to Dedukti, Lambdapi and Coq in a few
 minutes. The generated Dedukti files can be checked in a few minutes
-also, but it takes a much longer time for Coq and Lambdapi to check
-the generated files (28 minutes for Coq for `hol.ml`).
+as well, but it takes a much longer time for Coq and Lambdapi to check
+the generated files (16 minutes for Coq for `hol.ml`).
 
-On the other hand, `hol2dk` may take several hours to translate the
-proofs of a few particular theorems of the `Multivariate` library:
-`CHAIN_BOUNDARY_BOUNDARY`, `GRASSMANN_PLUCKER_4` and
-`HOMOTOPIC_IMP_HOMOLOGOUS_REL_CHAIN_MAPS`, because their proofs
-contain a lot of big terms. For such files, one needs to use the options
-`--max-abbrevs` and `--max-steps` to reduce the size of generated files.
+For bigger libraries like `Multivariate`, it takes more time,
+especially for Coq. For instance, the `Multivariate` library up to
+`topology.ml` can be translated to Lambdapi in 18 minutes, then to Coq
+in 18 more minutes, and the verification of the generated files by Coq
+takes 8 hours.
 
-Finally, while it is a priori possible to translate any HOL-Light
+While it is possible to translate any HOL-Light
 proof to Coq, the translated theorems may not be directly usable by
 Coq users because not all HOL-Light types and functions are aligned
 with those of the Coq standard library yet. Currently, we only aligned
@@ -196,7 +195,7 @@ The command `rewrite` implements the following simplification rules:
 
 **Purging dumped proofs.** Because HOL-Light tactics may fail, some theorems are generated but not used in the end, especially after simplification. Therefore, they do not need to be translated.
 
-The command `purge` compute in `file.use` all the theorems that do not need to be translated.
+The command `purge` compute in `file.use` all the theorems that do not need to be translated. For instance, in the HOL-Light base library `hol.ml`, 60% of proof steps are useless after simplication.
 
 The command `simp` is the sequential composition of `rewrite` and `purge`.
 
@@ -380,6 +379,17 @@ If the lp files have been generated using `mk`, simply do:
 make -f file.mk -j$jobs vo
 ```
 
+In case of big libraries like Multivariate, the memory consumption can be very high. To reduce it, we provide a command
+```
+make -j$jobs spec
+```
+which modifies Coq files as follows. For each file `theorem.v` containing the proof of a theorem, we generate a file `theorem_spec.v` containing the statement of the theorem as axiom. Then, in every file using that theorem, we replace `Require theorem` by `Require theorem_spec`.
+
+To undo the `spec` command, simply do:
+```
+make -j$jobs unspec
+```
+
 Alignments of HOL-Light types and definitions with those of Coq
 ---------------------------------------------------------------
 
@@ -402,36 +412,22 @@ The part of HOL-Light that is aligned with Coq is gathered in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam).
 
-Performance on 25/02/24
+Performance on 15/04/24
 -----------------------
 
-Performance on a machine with 32 processors i9-13950HX and 64G RAM:
+On a machine with 32 processors i9-13950HX and 64G RAM:
 
-Dumping, simplification and translation of `Logic/make.ml` with `split`:
-  * dump-simp 10m29s 10G 83% useless (including hol.ml)
-  * lp 57s 1.2G
-  * v 43s vo (-j20) 34m10s
+| HOL-Light file       | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|----------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml               | 2m36s     | 3 Go      | 8 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
+| Multivariate/make.ml | 1h55m     | 52 Go     | 89 M        | 18866       | 18m11s       | 18m43s      | 2.3 Go       | 8h (*)       |
 
-Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
-  * dump-simp 11m42s 10G 21.2M steps (83% unused including hol.ml) +1729 named theorems
-  * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11m
+(*) make -j32 vo; make -j8 vo
 
-Dumping, simplification and translation of `Arithmetic/make.ml` with `split`:
-  * dump-simp 6m2s 5.4G 82% useless (including hol.ml) 2.5M steps
-  * lp 21s 734M
-  * v 31s 682M vo (-j20) 32m
+Getting statistics on proofs
+----------------------------
 
-Dumping of `hol.ml`:
-  * checking time without proof dumping: 1m14s
-  * checking time with proof dumping: 1m44s (+40%)
-  * dumped file size: 3G
-  * number of named theorems: 2842
-  * number of proof steps: 8.5M (8% unused)
-  * simplification time: 1m22s
-  * number of simplifications: 1.2M (14%)
-  * unused proof steps after simplification: 29%
-  * purge time: 11s
-  * unused proof steps after purge: 60%
+It is possible to get statistics on proofs by using some commands. For instance, the command `stat` tells how many times each deduction rule is used:
 
 | rule       |  % |
 |:-----------|---:|
@@ -454,44 +450,6 @@ Dumping of `hol.ml`:
 | disj_cases |  1 |
 | conj       |  1 |
 
-Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
-  * make split: <1s
-  * make -j32 lp: 42s 1.1G (41s 1.2G with sharing)
-  * make -j16 lpo: 51m10s 9G
-  * make -j32 v: 45s 1.1G (47s 1.1G with sharing)
-  * make -j16 vo: 31m35s 3.1G (40m37s 3.5G with sharing)
-
-Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
-  * hol2dk mk 100: 16s
-  * make -j32 lp: 31s 1.1G type abbrevs 796K term abbrevs 583M (53%)
-  * make -j32 lpo: fails (too big for lambdapi)
-  * make -j32 v: 24s 1G
-  * make -j32 vo: 1h4m
-
-Multi-threaded translation of `hol.ml` to Dedukti with `mk 100`:
-  * make -j32 dk: 1m10s 1.4G type abbrevs 876K term abbrevs 640M (46%)
-  * dkcheck: 4m11s
-  * kocheck: 5m33s
-
-Single-threaded translation of `hol.ml` to Lambdapi:
-  * lp files generation: 5m4s 1.1G type abbrevs 308K term abbrevs 524M (48%)
-
-Single-threaded translation of `hol.ml` to Dedukti:
-  * dk files generation: 9m39s 1.3G type abbrevs 348K term abbrevs 570M (44%)
-
-Dumping and translation of `hol.ml` upto `arith.ml` with `mk 7`:
-  * proof dumping time: 11s 77M 448 named theorems
-  * number of proof steps: 302 K (9% unused)
-  * prf simplification: 2s
-  * unused proofs after simplification: 31%
-  * unused proofs after purge: 66%
-  * dk file generation: 1s 29M
-  * checking time with dk check: 4s
-  * lp file generation: 1s 21M
-  * checking time with lambdapi: 31s
-  * translation to Coq: 1s 20M
-  * checking time for Coq 8.18.0: 1m7s
-
 Exporting pure Q0 proofs
 ------------------------
 
@@ -504,35 +462,6 @@ possible to generate full Q0 proofs by doing after patching:
 cd $HOLLIGHT_DIR
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
-
-Dumping of `hol.ml`:
-  * ocaml cheking without proof dumping: 1m14s
-  * ocaml proof dumping: 2m9s (+74%)
-  * proof size file: 5.5G
-  * number of proof steps: 14.3M
-
-| rule       |  % |
-|:-----------|---:|
-| refl       | 26 |
-| eqmp       | 21 |
-| term_subst | 15 |
-| trans      | 11 |
-| comb       | 10 |
-| deduct     |  7 |
-| type_subst |  4 |
-| abs        |  2 |
-| beta       |  2 |
-| assume     |  2 |
-
-Dumping of `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
-  * ocaml proof dumping: 13.2s
-  * number of proof steps: 564351
-  * proof dumping: 1.4s 157M
-  * dk file generation: 45s 153M
-  * checking time with dk check: 26s
-  * checking time with kocheck -j7: 22s
-  * lp file generation: 29s 107M
-  * checking time with lambdapi: 2m49s
 
 Source files
 ------------
