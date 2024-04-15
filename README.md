@@ -419,7 +419,7 @@ On a machine with 32 processors i9-13950HX and 64G RAM:
 
 | HOL-Light file       | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
 |----------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml               | 2m36s     | 3 Go      | 8 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
+| hol.ml               | 3m57s     | 3 Go      | 8 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
 | Multivariate/make.ml | 1h55m     | 52 Go     | 89 M        | 18866       | 18m11s       | 18m43s      | 2.3 Go       | 8h (*)       |
 
 (*) make -j32 vo; make -j8 vo
