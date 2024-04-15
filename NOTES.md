@@ -1,7 +1,10 @@
 NOTES
 -----
 
-## 13/04/24
+## 15/04/24
+
+
+## 14/04/24
 
 With PR #126 (generation of spec files):
 
@@ -120,6 +123,126 @@ The generation of `URYSOHN_LEMMA.lp` takes 6m30s. `URYSOHN_LEMMA_term_abbrevs.lp
 | 50_000      | 5m48s          | 20m40s          |
 | 10_000      | 1m4s           | 21m33s          |
 | 5_000       | 35s            | 21m27s          |
+
+## 25/02/24
+
+Performances on a machine with 32 processors i9-13950HX and 64G RAM:
+
+Dumping, simplification and translation of `Logic/make.ml` with `split`:
+  * dump-simp 10m29s 10G 83% useless (including hol.ml)
+  * lp 57s 1.2G
+  * v 43s vo (-j20) 34m10s
+
+Dumping and translation of `Logic/make.ml` with `mk 32` (includes `Library/analysis`):
+  * dump-simp 11m42s 10G 21.2M steps (83% unused including hol.ml) +1729 named theorems
+  * dk 1m13s dko 4m15s lp 42s v 12s vo 1h11m
+
+Dumping, simplification and translation of `Arithmetic/make.ml` with `split`:
+  * dump-simp 6m2s 5.4G 82% useless (including hol.ml) 2.5M steps
+  * lp 21s 734M
+  * v 31s 682M vo (-j20) 32m
+
+Dumping of `hol.ml`:
+  * checking time without proof dumping: 1m14s
+  * checking time with proof dumping: 1m44s (+40%)
+  * dumped file size: 3G
+  * number of named theorems: 2842
+  * number of proof steps: 8.5M (8% unused)
+  * simplification time: 1m22s
+  * number of simplifications: 1.2M (14%)
+  * unused proof steps after simplification: 29%
+  * purge time: 11s
+  * unused proof steps after purge: 60%
+
+| rule       |  % |
+|:-----------|---:|
+| comb       | 20 |
+| term_subst | 17 |
+| refl       | 16 |
+| eqmp       | 12 |
+| trans      |  9 |
+| conjunct1  |  6 |
+| abs        |  3 |
+| beta       |  3 |
+| mp         |  3 |
+| sym        |  2 |
+| deduct     |  2 |
+| type_subst |  2 |
+| assume     |  1 |
+| conjunct2  |  1 |
+| disch      |  1 |
+| spec       |  1 |
+| disj_cases |  1 |
+| conj       |  1 |
+
+Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `split`:
+  * make split: <1s
+  * make -j32 lp: 42s 1.1G (41s 1.2G with sharing)
+  * make -j16 lpo: 51m10s 9G
+  * make -j32 v: 45s 1.1G (47s 1.1G with sharing)
+  * make -j16 vo: 31m35s 3.1G (40m37s 3.5G with sharing)
+
+Multi-threaded translation of `hol.ml` to Lambdapi and Coq with `mk 100`:
+  * hol2dk mk 100: 16s
+  * make -j32 lp: 31s 1.1G type abbrevs 796K term abbrevs 583M (53%)
+  * make -j32 lpo: fails (too big for lambdapi)
+  * make -j32 v: 24s 1G
+  * make -j32 vo: 1h4m
+
+Multi-threaded translation of `hol.ml` to Dedukti with `mk 100`:
+  * make -j32 dk: 1m10s 1.4G type abbrevs 876K term abbrevs 640M (46%)
+  * dkcheck: 4m11s
+  * kocheck: 5m33s
+
+Single-threaded translation of `hol.ml` to Lambdapi:
+  * lp files generation: 5m4s 1.1G type abbrevs 308K term abbrevs 524M (48%)
+
+Single-threaded translation of `hol.ml` to Dedukti:
+  * dk files generation: 9m39s 1.3G type abbrevs 348K term abbrevs 570M (44%)
+
+Dumping and translation of `hol.ml` upto `arith.ml` with `mk 7`:
+  * proof dumping time: 11s 77M 448 named theorems
+  * number of proof steps: 302 K (9% unused)
+  * prf simplification: 2s
+  * unused proofs after simplification: 31%
+  * unused proofs after purge: 66%
+  * dk file generation: 1s 29M
+  * checking time with dk check: 4s
+  * lp file generation: 1s 21M
+  * checking time with lambdapi: 31s
+  * translation to Coq: 1s 20M
+  * checking time for Coq 8.18.0: 1m7s
+
+**Generating full Q0 proofs:**
+
+Dumping of `hol.ml`:
+  * ocaml cheking without proof dumping: 1m14s
+  * ocaml proof dumping: 2m9s (+74%)
+  * proof size file: 5.5G
+  * number of proof steps: 14.3M
+
+| rule       |  % |
+|:-----------|---:|
+| refl       | 26 |
+| eqmp       | 21 |
+| term_subst | 15 |
+| trans      | 11 |
+| comb       | 10 |
+| deduct     |  7 |
+| type_subst |  4 |
+| abs        |  2 |
+| beta       |  2 |
+| assume     |  2 |
+
+Dumping of `hol.ml` upto `arith.ml` (by commenting from `loads "wf.ml"` to the end):
+  * ocaml proof dumping: 13.2s
+  * number of proof steps: 564351
+  * proof dumping: 1.4s 157M
+  * dk file generation: 45s 153M
+  * checking time with dk check: 26s
+  * checking time with kocheck -j7: 22s
+  * lp file generation: 29s 107M
+  * checking time with lambdapi: 2m49s
 
 ## 02/02/24
 
