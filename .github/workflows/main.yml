@@ -56,7 +56,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           cp xci.ml hol-light/
           cd hol-light
-          hol2dk dump-simp-use xci.ml
+          hol2dk dump-simp-before-hol xci.ml
       - name: Test single-threaded dk output
         run: |
           eval `opam env`
