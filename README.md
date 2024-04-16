@@ -248,7 +248,7 @@ make -f $base.mk -j$jobs dk
 ```
 where `$base` is the base name of the library, e.g. `make` for `$HOLLIGHT_DIR/Logic/make`, which is also written in the file named `BASE` that is created when you do `hol2dk link Logic/make`.
 
-It generates a single big Dedukti file `$base.dk`. To check it with `dk check` version >= 2.7, simply do:
+It generates a single big Dedukti file `$base.dk`. To check it with [dkcheck](https://github.com/Deducteam/Dedukti/) version >= 2.7, simply do:
 ```
 dk check $base.dk
 ```
@@ -259,6 +259,8 @@ change the generated file:
 sed -e 's/^injective /def /g' file.dk > file-for-kocheck.dk
 kocheck -j$jobs file-for-kocheck.dk
 ```
+
+Performances: hol.dk can be checked by dkcheck in 4m11s.
 
 Alignments of HOL-Light types and definitions with those of Coq standard library
 --------------------------------------------------------------------------------
