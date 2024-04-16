@@ -70,7 +70,7 @@ Installing HOL-Light sources
 - hol-light >= bfb2ea95cf4b20f40136d5f08102875400c8cba7 (04/04/24)
 - libipc-system-simple-perl
 - libstring-shellquote
-- ocaml 4.14.1
+- ocaml >= 4.14
 - camlp5 8.02.01
 - ocamlfind
 - zarith

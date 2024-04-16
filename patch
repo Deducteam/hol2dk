@@ -28,7 +28,7 @@ patch() {
         echo "cp $HOLLIGHT_DIR/$1.ml $HOLLIGHT_DIR/$1-bak.ml"
         cp $HOLLIGHT_DIR/$1.ml $HOLLIGHT_DIR/$1-bak.ml
         echo "patch $HOLLIGHT_DIR/$1.ml ..."
-        sed -e 's/.*REMOVE.*//' -e 's/Stdlib/Pervasives/g' -e 's/open Lib/needs "lib.ml";;/' $HOL2DK_DIR/$1.ml > $HOLLIGHT_DIR/$1.ml
+        sed -e 's/.*REMOVE.*//' -e 's/open Lib/needs "lib.ml";;/' $HOL2DK_DIR/$1.ml > $HOLLIGHT_DIR/$1.ml
     fi
 }
 
