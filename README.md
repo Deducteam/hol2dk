@@ -31,11 +31,11 @@ the generated files (16 minutes for Coq for `hol.ml`).
 For bigger libraries like `Multivariate`, it takes more time,
 especially for Coq. For instance, the `Multivariate` library up to
 `topology.ml` can be translated to Lambdapi in 18 minutes, then to Coq
-in 18 more minutes, and the verification of the generated files by Coq
+in 18 more minutes, but the verification of the generated files by Coq
 takes 8 hours.
 
 While it is possible to translate any HOL-Light
-proof to Coq, the translated theorems may not be directly usable by
+proof to Coq, the translated theorems may not be directly applicable by
 Coq users because not all HOL-Light types and functions are aligned
 with those of the Coq standard library yet. Currently, we only aligned
 the types of natural numbers and lists, and some functions on them in
@@ -73,7 +73,7 @@ Installing HOL-Light sources
 - ocaml 4.14.1
 - camlp5 8.02.01
 - ocamlfind
-- num
+- zarith
 
 Find other potential working ocaml-camlp5 pairs on
 https://github.com/jrh13/hol-light/pull/71 .
@@ -87,7 +87,7 @@ sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl opam
 opam init
 opam switch create ocaml.4.14.1
 eval `opam env`
-opam install ocamlfind num camlp5
+opam install ocamlfind zarith camlp5
 git clone --depth 1 -b master https://github.com/jrh13/hol-light
 make -C hol-light
 ```
@@ -160,26 +160,26 @@ Dumping HOL-Light proofs
 For dumping the proofs of a HOL-Light file depending on `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump-simp file.ml
+hol2dk dump-simp [$path/]file.ml
 ```
 
 This will generate the following files:
-- `file.sig`: constants
-- `file.prf`: theorems (proof steps)
-- `file.thm`: named theorems
-- `file.pos`: positions of proof steps in `file.prf`
-- `file.use`: data about the use of theorems
+- `[$path/]file.sig`: constants
+- `[$path/]file.prf`: theorems (proof steps)
+- `[$path/]file.thm`: named theorems
+- `[$path/]file.pos`: positions of proof steps in `file.prf`
+- `[$path/]file.use`: data about the use of theorems
 
-WARNING: it is important to run the command in the HOL-Light directory so as to compute the list of named theorems properly.
+WARNING: it is important to run the command in `$HOLLIGHT_DIR` so as to compute the list of named theorems properly.
 
 For dumping (a subset of) `hol.ml` do:
 ```
 cd $HOLLIGHT_DIR
-hol2dk dump-simp-use file.ml
+hol2dk dump-simp-before-hol file.ml
 ```
 where `file.ml` should at least contain the contents of `hol.ml` until the line `loads "fusion.ml";;`.
 
-The command `dump-simp` (and similarly for `dump-simp-use`) are actually the sequential composition of various lower level commands: `dump`, `pos`, `use`, `rewrite` and `purge`:
+The command `dump-simp` (and similarly for `dump-simp-before-hol`) are actually the sequential composition of various lower level commands: `dump`, `pos`, `use`, `rewrite` and `purge`:
 
 **Simplifying dumped proofs.** HOL-Light proofs have many detours that can be simplified following simple rewrite rules. For instance, s(u)=s(u) is sometimes proved by MK_COMB from s=s and u=u, while it can be directly proved by REFL.
 
@@ -199,202 +199,74 @@ The command `purge` compute in `file.use` all the theorems that do not need to b
 
 The command `simp` is the sequential composition of `rewrite` and `purge`.
 
-Generating dk/lp files from dumped files
---------------------------------------
+Translating HOL-Light proofs to Lambdapi and Coq in parallel
+------------------------------------------------------------
 
-The base Dedukti/Lambdapi theories in which HOL-Light proofs are translated is described in the files [theory_hol.lp](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.lp) and [theory_hol.dk](https://github.com/Deducteam/hol2dk/blob/main/theory_hol.dk) respectively.
+**Requirement:** lambdapi >= 2.5.0
 
-You can then generate `file.dk` with:
+For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
-hol2dk file.dk
-```
-
-And `file.lp` with:
-
-```
-hol2dk file.lp
-```
-
-It is possible to get the proof of a single theorem by giving its
-number as additional argument (useful for debugging):
-
-```
-hol2dk file.lp $theorem_number
-```
-
-Generating dk/lp files in parallel
-----------------------------------
-
-Dk/lp file generation is linear in the size of dumped files. For big
-dumped files, we provide two different commands to do file generation
-in parallel using `make`: `split` and `mk`. Currently, only `mk`
-allows to generate dk files, but `split` generate lp and coq files
-that are faster to check.
-
-Remark: for not cluttering HOL-Light sources with generated files, we suggest to proceed as follows. For instance, for generating the proofs for `hol.ml`:
-```
-cd $HOLLIGHT_DIR
-hol2dk dump-simp-use hol.ml
-mkdir -p ~/output-hol2dk/hol
-cd ~/output-hol2dk/hol
-hol2dk link hol
+cd $HOLLIGHT_DIR/Logic
+hol2dk dump-simp make.ml
+mkdir -p ~/output-hol2dk/Logic
+cd ~/output-hol2dk/Logic
+hol2dk link Logic/make
 ```
 This will add links to files needed to generate, translate and check proofs.
 
-**By generating a lp file for each named theorem: command `split`**
+You can then do in order:
+- `make split` to generate a file for each theorem
+- `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
+- `make -j$jobs lpo` to check Lambdapi files (optional)
+- `make -j$jobs v` to translate Lambdapi files to Coq files
+- `make -j$jobs spec` for Coq checking to require less memory (optional)
+- `make -j$jobs vo` to check Coq files
+
+To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
+- `make -j$jobs MAX_PROOF='--max-proof-size 500_000' MAX_ABBREV='--max-max-abbrev 2_000_000' lp`
+
+Performance on 15/04/24
+-----------------------
+
+On a machine with 32 processors i9-13950HX and 64G RAM:
+
+| HOL-Light file       | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|----------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml               | 3m57s     | 3 Go      | 8 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
+| Multivariate/make.ml | 1h55m     | 52 Go     | 89 M        | 18866       | 18m11s       | 18m43s      | 2.3 Go       | 8h (*)       |
+
+(*) with `make spec; make -j32 vo; make -j8 vo`
+
+Translating HOL-Light proofs to Dedukti
+---------------------------------------
+
+The Makefile commands above are not implemented for Dedukti yet. It is however possible to translate HOL-Light proofs to Dedukti in parallel by using the following older and less efficient commands:
 
 ```
-hol2dk split file
+hol2dk mk $nb_parts $base
+make -f $base.mk -j$jobs dk
 ```
-generates file.thp and files t.sti, t.nbp, t.pos and t.use for each named theorem t.
+where `$base` is the base name of the library, e.g. `make` for `$HOLLIGHT_DIR/Logic/make`, which is also written in the file named `BASE` that is created when you do `hol2dk link Logic/make`.
 
-After `hol2dk link`, you can use `make -j$jobs TARGET` to translate and check files in parallel, where `TARGET` is either:
-- `split` to do `hol2dk split`
-- `lp` to generate lp files
-- `v` to translate lp files to Coq
-- `lpo` to check lp files
-- `vo` to check Coq files
-
-The order targets are done important: `split` must be done first, then
-`lp`, etc.
-
-To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored).
-
-**By splitting proofs in several parts: command `mk`**
-
+It generates a single big Dedukti file `$base.dk`. To check it with [dkcheck](https://github.com/Deducteam/Dedukti/) version >= 2.7, simply do:
 ```
-hol2dk mk $nb_parts file
+dk check $base.dk
 ```
-generates `file.dg` and `file.mk`.
-
-Then generate and check `file.dk` with:
-
-```
-make -f file.mk -j$jobs dk
-```
-
-And `file.lp` with:
-
-```
-make -f file.mk -j$jobs lp
-```
-
-Checking the generated dk file
-------------------------------
-
-**Requirement:** dedukti >= 2.7, [kocheck](https://github.com/01mf02/kontroli-rs), or lambdapi >= 2.3.0
-
-If you didn't use `hol2dk link`, add a link to the dk file defining the logic of HOL-Light:
-```
-ln -s $HOL2DK_DIR/theory_hol.dk
-```
-
-To check the generated dk file with dkcheck, do:
-```
-dk check file.dk
-```
-
-To check the generated dk file with the current version of
-[kocheck](https://github.com/01mf02/kontroli-rs), you need to slightly
+To check it with [kocheck](https://github.com/01mf02/kontroli-rs), you need to slightly
 change the generated file:
 
 ```
 sed -e 's/^injective /def /g' file.dk > file-for-kocheck.dk
-kocheck -j7 file-for-kocheck.dk
+kocheck -j$jobs file-for-kocheck.dk
 ```
 
-Checking the generated lp files
--------------------------------
+Performances: hol.dk can be checked by dkcheck in 4m11s.
 
-**Requirement:** lambdapi >= 2.3.0 for single-threaded generated files, lambdapi master branch for multi-threaded generated files
+Alignments of HOL-Light types and definitions with those of Coq standard library
+--------------------------------------------------------------------------------
 
-If you didn't use `hol2dk link`, add links to the following files:
-```
-ln -s $HOL2DK_DIR/theory_hol.lp
-ln -s $HOL2DK_DIR/lambdapi.pkg
-```
-
-To check the generated lp files with
-[lambdapi](https://github.com/Deducteam/lambdapi), you can do:
-```
-lambdapi check file.lp
-```
-It is however more efficient to use `make` as explained above.
-
-**Remark:** In case hol-light and lambdapi do not use the same
-ocaml versions, it is convenient to use different switches in each
-directory:
-
-Xterm 1 (for HOL-Light):
-```
-cd hol-light
-opam switch link 4.02.3
-eval `opam env`
-```
-
-Xterm 2 (for checking dk/lp files):
-```
-opam switch link 4.14.1
-eval `opam env`
-```
-
-Translating lp files to Coq
----------------------------
-
-**Requirement:** lambdapi >= 2.4.1
-
-If you didn't use `hol2dk link`, add links to the following files:
-```
-ln -s $HOL2DK_DIR/coq.v
-ln -s $HOL2DK_DIR/_CoqProject
-```
-
-Once HOL-Light files have been translated to Lambdapi files, it is possible
-to translate the obtained Lambdapi files into [Coq](https://coq.inria.fr/) files
-using the Coq [export](https://lambdapi.readthedocs.io/en/latest/options.html#export) feature of Lambdapi.
-
-If the lp files have been generated using `split`, simply do:
-```
-make -j$jobs v
-```
-
-If the lp files have been generated using `mk`, simply do:
-```
-make -f file.mk -j$jobs v
-```
-
-Otherwise, you need to translate Lambdapi files one by one by hand or
-by using a script:
-```
-lambdapi export -o stt_coq --encoding $HOL2DK_DIR/encoding.lp --erasing $HOL2DK_DIR/erasing.lp --renaming $HOL2DK_DIR/renaming.lp --requiring coq.v file.lp | sed -e 's/hol-light\.//g' > file.v
-```
-
-You can then check the generated Coq files as follows.
-If the lp files have been generated with `split`, simply do:
-```
-make -j$jobs vo
-```
-If the lp files have been generated using `mk`, simply do:
-```
-make -f file.mk -j$jobs vo
-```
-
-In case of big libraries like Multivariate, the memory consumption can be very high. To reduce it, we provide a command
-```
-make -j$jobs spec
-```
-which modifies Coq files as follows. For each file `theorem.v` containing the proof of a theorem, we generate a file `theorem_spec.v` containing the statement of the theorem as axiom. Then, in every file using that theorem, we replace `Require theorem` by `Require theorem_spec`.
-
-To undo the `spec` command, simply do:
-```
-make -j$jobs unspec
-```
-
-Alignments of HOL-Light types and definitions with those of Coq
----------------------------------------------------------------
-
-While it is a priori possible to translate any HOL-Light proof to Coq, the
-obtained theorems may not be directly usable by Coq users because
+While it is possible to translate any HOL-Light library to Coq, the
+obtained theorems may not be directly applicable by Coq users because
 HOL-Light types and functions may not be aligned with those of the Coq
 standard library yet. Currently, only the following types and
 functions have been aligned with those of Coq:
@@ -412,22 +284,10 @@ The part of HOL-Light that is aligned with Coq is gathered in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam).
 
-Performance on 15/04/24
------------------------
-
-On a machine with 32 processors i9-13950HX and 64G RAM:
-
-| HOL-Light file       | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
-|----------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml               | 3m57s     | 3 Go      | 8 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
-| Multivariate/make.ml | 1h55m     | 52 Go     | 89 M        | 18866       | 18m11s       | 18m43s      | 2.3 Go       | 8h (*)       |
-
-(*) make -j32 vo; make -j8 vo
-
 Getting statistics on proofs
 ----------------------------
 
-It is possible to get statistics on proofs by using some commands. For instance, the command `stat` tells how many times each deduction rule is used:
+It is possible to get statistics on proofs by using the command `stat`. For instance, for `hol.ml`, after simplification, we get:
 
 | rule       |  % |
 |:-----------|---:|

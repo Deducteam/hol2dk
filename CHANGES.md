@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
-Big improvements in Lambdapi and Coq file generation time, and Coq compilation time.
+Big improvements in Lambdapi and Coq file generation time, and Coq checking time.
 
 ### Added
 
@@ -16,10 +16,12 @@ in parallel:
 - optimization of lp file dependencies in generated lp files.
 - generation of Makefile lpo dependencies at the same time as lp files.
 - Makefile: lpo and vo dependencies are recomputed automatically.
+- Makefile target [un]spec: to generate axiom versions of each theorem
 
 ### Changed
 
 - FILES_WITH_SHARING renamed into BIG_FILES and not added by add-links anymore
+- command dump[-simp]-use renamed into dump[-simp]-before-hol
 
 ## 1.0.0 (2024-02-25)
 
