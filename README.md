@@ -31,11 +31,11 @@ the generated files (16 minutes for Coq for `hol.ml`).
 For bigger libraries like `Multivariate`, it takes more time,
 especially for Coq. For instance, the `Multivariate` library up to
 `topology.ml` can be translated to Lambdapi in 18 minutes, then to Coq
-in 18 more minutes, and the verification of the generated files by Coq
+in 18 more minutes, but the verification of the generated files by Coq
 takes 8 hours.
 
 While it is possible to translate any HOL-Light
-proof to Coq, the translated theorems may not be directly usable by
+proof to Coq, the translated theorems may not be directly applicable by
 Coq users because not all HOL-Light types and functions are aligned
 with those of the Coq standard library yet. Currently, we only aligned
 the types of natural numbers and lists, and some functions on them in
@@ -219,7 +219,7 @@ You can then do in order:
 - `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
 - `make -j$jobs lpo` to check Lambdapi files (optional)
 - `make -j$jobs v` to translate Lambdapi files to Coq files
-- `make -j$jobs spec` to speed up Coq checking (optional)
+- `make -j$jobs spec` for Coq checking to require less memory (optional)
 - `make -j$jobs vo` to check Coq files
 
 To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
@@ -287,7 +287,7 @@ in the Coq Opam repository [released](https://github.com/coq/opam).
 Getting statistics on proofs
 ----------------------------
 
-It is possible to get statistics on proofs by using some commands. For instance, the command `stat` tells how many times each deduction rule is used:
+It is possible to get statistics on proofs by using the command `stat`. For instance, for `hol.ml`, after simplification, we get:
 
 | rule       |  % |
 |:-----------|---:|
