@@ -1,7 +1,7 @@
 TODO
 ----
 
-- in lambdapi export to coq: Prop never used! bool should not be in erasing.lp
+- why the mapping of ITLIST does not work anymore ?
 
 - in lp output, replace T by ⊤ ?
 
