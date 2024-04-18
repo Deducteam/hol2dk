@@ -1752,8 +1752,8 @@ Proof.
           (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0))))))), 
             NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))); intro p.
   apply fun_ext; intro f. apply fun_ext; intro l. apply fun_ext; intro a.
-  match goal with |- _ = ε ?x _ _ _ _=> set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _=> @fold_right_with_perm_args A B).
+  match goal with |- _ = ε ?x _ _ _ _ => set (Q := x) end.
+  assert (i: exists q, Q q). exists (fun _ => @fold_right_with_perm_args A B).
   unfold Q. intro. simpl. auto.
   generalize (ε_spec i). intro H. symmetry. induction l; simpl. apply H. 
   rewrite <- IHl. apply H.
