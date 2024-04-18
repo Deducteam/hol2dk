@@ -344,6 +344,8 @@ let create_file_with_deps (tmp:string) (n:string)
   close_out oc_lp
 ;;
 
+let spec f n = f (n^"_spec");;
+
 let export_iter n = create_file_with_deps n n;;
 ;;
 
@@ -652,7 +654,7 @@ let decl_theorem oc k p d =
   | Axiom ->
     let term = unabbrev_term rmap in
     string oc "symbol lem"; int oc k; typ_vars oc tvs;
-    list (decl_param rmap) oc xs; decl_hyps term ts;
+    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
   | Named_thm n ->
      let term = unabbrev_term rmap in
@@ -868,14 +870,16 @@ let export_proofs_in_interval n x y =
   Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev
 ;;
 
-(* [export_theorem_proof n] generates the files
+(* [export_theorem_proof b n] generates the files
    [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part],
-   [n^"_proofs.lp"] and [n^".typ"]. *)
-let export_theorem_proof n =
-  export_proofs_in_interval n !the_start_idx
-    (!the_start_idx + Array.length !prf_pos - 1);
+   [n^"_proofs.lp"], [n^".typ"] and [n^"_spec.lp"]. *)
+let export_theorem_proof b n =
+  let thid = (!the_start_idx + Array.length !prf_pos - 1) in
+  export_proofs_in_interval n !the_start_idx thid;
   Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp");
-  write_val (n^".typ") !map_typ_abbrev
+  write_val (n^".typ") !map_typ_abbrev;
+  export (n^"_spec") [b^"_types";b^"_terms"]
+    (fun oc -> theorem_as_axiom oc thid (proof_at thid))
 ;;
 
 (* [export_theorem_deps b n] generates for [1<=i<=!proof_part] the files
@@ -894,7 +898,7 @@ let export_theorem_deps b n =
                             else f (n^"_term_abbrevs"^part j))
         (Hashtbl.find htbl_abbrev_deps i);
       SetInt.iter (fun j -> f (n^part j)) (Hashtbl.find htbl_proof_deps i);
-      SetStr.iter f (Hashtbl.find htbl_thm_deps i);
+      SetStr.iter (spec f) (Hashtbl.find htbl_thm_deps i);
     in
     create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
     concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp")
@@ -932,15 +936,16 @@ let split_theorem_proof b n =
   let max_of =
     Array.init (Hashtbl.length ht_part_max) (Hashtbl.find ht_part_max) in
   write_val (n^".max") max_of;
-  (* generate [n^".lp"]. *)
+  (* generate [n^".lp"] and [n^"_spec.lp"]. *)
   let iter_deps f =
     f (b^"_types");
     f (b^"_terms");
-    f (n^part !proof_part);
+    spec f (n^part !proof_part);
   in
-  export_iter n iter_deps
-    (fun oc ->
-      decl_theorem oc max (proof_at max) (Named_thm ("lem"^string_of_int max)))
+  let p = proof_at max in
+  let t = Named_thm ("lem"^string_of_int max) in
+  export_iter n iter_deps (fun oc -> decl_theorem oc max p t);
+  export_iter (n^"_spec") iter_deps (fun oc -> decl_theorem oc max p t)
 ;;
 
 (* [split_theorem_abbrevs n] generates the files [n^".brv"],
@@ -999,7 +1004,7 @@ let split_theorem_abbrevs n =
 
 (* [export_theorem_proof_part b n k] generates the files
    [n^part(k)^".lp"], [n^part(k)^".brv"], [n^part(k)^".brp"],
-   [n^part(k)^"_term_abbrevs"^part(i)^".min"],
+   [n^part(k)^"_term_abbrevs"^part(i)^".min"], [n^part(k)^"_spec.lp"],
    [n^part(k)^"_subterms.lp"] (if !use_sharing), [n^part(k)^".lpo.mk"]. *)
 let export_theorem_proof_part b n k =
   (* generate [n^part(k)^"_proofs.lp"] *)
@@ -1038,15 +1043,18 @@ let export_theorem_proof_part b n k =
     f (b^"_types");
     f (b^"_terms");
     f (b^"_axioms");
-    SetStr.iter f !thdeps;
-    SetInt.iter (fun j -> f (n^part j)) !part_deps;
+    SetStr.iter (spec f) !thdeps;
+    SetInt.iter (fun j -> spec f (n^part j)) !part_deps;
     f (b^"_type_abbrevs");
     if !use_sharing then f (p^"_subterm_abbrevs");
     for j = 1 to nb_parts do f (p^"_term_abbrevs"^part j) done
   in
   create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
   (* generate [n^part(k)^".lp"] *)
-  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp")
+  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
+  (* generate [n^part(k)^"_spec.lp"] *)
+  export (p^"_spec") [b^"_types";b^"_terms"]
+    (fun oc -> theorem_as_axiom oc max (proof_at max))
 ;;
 
 (****************************************************************************)
@@ -1111,7 +1119,7 @@ let export_theorems b map_thid_name =
 ;;
 
 let export_theorems_as_axioms b map_thid_name =
-  export (b^"_opam") [b^"_types";b^"_terms";b^"_axioms"]
+  export (b^"_opam") [b^"_types";b^"_terms"]
     (out_map_thid_name_as_axioms map_thid_name)
 ;;
 

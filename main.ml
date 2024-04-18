@@ -1042,7 +1042,7 @@ and command = function
      if is_dk f then (err "dk output not available for this command\n"; 1)
      else
        begin
-         Xlp.export_theorem_proof n;
+         Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;

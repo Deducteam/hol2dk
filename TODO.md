@@ -1,11 +1,7 @@
 TODO
 ----
 
-- in lambdapi export to coq: Prop never used! bool should not be in erasing.lp
-
 - in lp output, replace T by ⊤ ?
-
-- generate lp spec files in ocaml to optimize dependencies (spec files should use no term abbreviations) ?
 
 - write progress in an ocaml program, and estimate time wrt size of files
 
