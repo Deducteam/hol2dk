@@ -1740,10 +1740,10 @@ Proof.
   rewrite <- IHn. apply H. 
 Qed.
 
-Definition fold_right_with_perm_args {A B : Type'} (f: B -> A -> A) (l: list B) (a: A) :=
-  @fold_right A B f a l.
+Definition fold_right_with_perm_args {A B : Type'} (f: A -> B -> B) (l: list A) (a: B) :=
+  @fold_right B A f a l.
 
-Lemma ITLIST_def {_25350 _25351 : Type'} : (@fold_right_with_perm_args _25350 _25351) = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (_25351 -> _25350 -> _25350) -> (list _25351) -> _25350 -> _25350) (fun ITLIST' : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (_25351 -> _25350 -> _25350) -> (list _25351) -> _25350 -> _25350 => forall _17988 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), (forall f : _25351 -> _25350 -> _25350, forall b : _25350, (ITLIST' _17988 f (@nil _25351) b) = b) /\ (forall h : _25351, forall f : _25351 -> _25350 -> _25350, forall t : list _25351, forall b : _25350, (ITLIST' _17988 f (@cons _25351 h t) b) = (f h (ITLIST' _17988 f t b)))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))))).
+Lemma ITLIST_def {A B : Type'} : (@fold_right_with_perm_args A B) = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (A -> B -> B) -> (list A) -> B -> B) (fun ITLIST' : (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) -> (A -> B -> B) -> (list A) -> B -> B => forall _18151 : prod nat (prod nat (prod nat (prod nat (prod nat nat)))), (forall f : A -> B -> B, forall b : B, (ITLIST' _18151 f (@nil A) b) = b) /\ (forall h : A, forall f : A -> B -> B, forall t : list A, forall b : B, (ITLIST' _18151 f (@cons A h t) b) = (f h (ITLIST' _18151 f t b)))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))))).
 Proof.
   generalize (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0))))))), 
     (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0))))))), 
@@ -1753,11 +1753,11 @@ Proof.
             NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))))))); intro p.
   apply fun_ext; intro f. apply fun_ext; intro l. apply fun_ext; intro a.
   match goal with |- _ = ε ?x _ _ _ _=> set (Q := x) end.
-  assert (i: exists q, Q q). exists (fun _=> @fold_right_with_perm_args _25350 _25351).
+  assert (i: exists q, Q q). exists (fun _=> @fold_right_with_perm_args A B).
   unfold Q. intro. simpl. auto.
   generalize (ε_spec i). intro H. symmetry. induction l; simpl. apply H. 
   rewrite <- IHl. apply H.
-Qed.  
+Qed.
 
 Definition HD {A : Type'} := @ε ((prod nat nat) -> (list A) -> A) (fun HD' : (prod nat nat) -> (list A) -> A => forall _17927 : prod nat nat, forall t : list A, forall h : A, (HD' _17927 (@cons A h t)) = h) (@pair nat nat (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0))))))))).
 
