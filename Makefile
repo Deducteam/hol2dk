@@ -113,7 +113,7 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 	hol2dk abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo clean-lpo clean-v
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz clean-lpo clean-v
 
 .PHONY: rm-lp
 rm-lp:
@@ -154,6 +154,10 @@ rm-typ:
 .PHONY: rm-sed
 rm-sed:
 	find . -maxdepth 1 -name '*.sed' -delete
+
+.PHONY: rm-siz
+rm-siz:
+	find . -maxdepth 1 -name '*.siz' -delete
 
 ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
