@@ -328,26 +328,28 @@ let require oc n =
    iterator [iter_deps], followed by [f]. It also creates the file
    [n^".lpo.mk"] to record the dependencies of [n^".lpo"]. *)
 let create_file_with_deps (tmp:string) (n:string)
-      (iter_deps:(string->unit)->unit) (f:out_channel->unit) =
-  let oc_lp = open_file (tmp^".lp")
-  and oc_lpo_mk = open_file (n^".lpo.mk") in
-  out oc_lpo_mk "%s.lpo:" n;
+      (iter_deps:(string->unit)->unit) (gen:out_channel->unit) =
+  let oc_lp = log_open_out (tmp^".lp")
+  and oc_mk = log_open_out (n^".lpo.mk") in
+  out oc_mk "%s.lpo:" n;
   let handle dep =
     require oc_lp dep;
-    out oc_lpo_mk " %s.lpo" dep;
+    out oc_mk " %s.lpo" dep;
   in
   handle "theory_hol";
   iter_deps handle;
-  out oc_lpo_mk "\n";
-  close_out oc_lpo_mk;
-  f oc_lp;
+  out oc_mk "\n";
+  close_out oc_mk;
+  gen oc_lp;
   close_out oc_lp
 ;;
+
+let spec f n = f (n^"_spec");;
 
 let export_iter n = create_file_with_deps n n;;
 ;;
 
-let export n deps = export_iter n (fun h -> List.iter h deps);;
+let export n deps = export_iter n (fun f -> List.iter f deps);;
 
 (****************************************************************************)
 (* Translation of term abbreviations. *)
@@ -652,7 +654,7 @@ let decl_theorem oc k p d =
   | Axiom ->
     let term = unabbrev_term rmap in
     string oc "symbol lem"; int oc k; typ_vars oc tvs;
-    list (decl_param rmap) oc xs; decl_hyps term ts;
+    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
   | Named_thm n ->
      let term = unabbrev_term rmap in
@@ -730,21 +732,16 @@ let dump_theorem_term_abbrevs n =
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
   let l = List.sort cmp l in
-  let dump_file = n^".brv" in
-  log "generate %s ...\n%!" dump_file;
-  let oc = open_out_bin dump_file in
-  List.iter (output_value oc) l;
-  close_out oc;
+  create_file_bin (n^".brv") (fun oc -> List.iter (output_value oc) l);
   (* generate the file [n^"_term_abbrevs.brp"]. *)
   let len = TrmHashtbl.length htbl_term_abbrev in
   let pos = Array.make len 0 in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
-  for k = 0 to len - 1 do
-    Array.set pos k (pos_in ic);
-    ignore (input_value ic)
-  done;
-  close_in ic;
+  read_file_bin (n^".brv")
+    (fun ic ->
+      for k = 0 to len - 1 do
+        Array.set pos k (pos_in ic);
+        ignore (input_value ic)
+      done);
   write_val (n^".brp") pos;
   (* generate the files [n^"_term_abbrevs"^part(k)^".min"]. *)
   let max_of_part k =
@@ -763,18 +760,16 @@ let export_theorem_term_abbrevs_part b n k =
   (* generate [p^"_tail.lp"] *)
   let pos : int array = read_val (n^".brp")
   and (min, max) : int * int = read_val (p^".min") in
-  let dump_file = n^".brv" in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
-  if max >= 0 then seek_in ic pos.(min);
-  let term_abbrevs oc =
-    for _ = min to max do
-      let t,x = input_value ic in
-      decl_term_abbrev oc t x
-    done
-  in
-  create_file (p^"_tail.lp") term_abbrevs;
-  close_in ic;
+  read_file_bin (n^".brv")
+    (fun ic ->
+      if max >= 0 then seek_in ic pos.(min);
+      let term_abbrevs oc =
+        for _ = min to max do
+          let t,x = input_value ic in
+          decl_term_abbrev oc t x
+        done
+      in
+      create_file (p^"_tail.lp") term_abbrevs);
   (* generate [p^".typ"] *)
   write_val (p^".typ") !map_typ_abbrev;
   (* generate [p^"_head.lp"] *)
@@ -868,14 +863,16 @@ let export_proofs_in_interval n x y =
   Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev
 ;;
 
-(* [export_theorem_proof n] generates the files
+(* [export_theorem_proof b n] generates the files
    [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part],
-   [n^"_proofs.lp"] and [n^".typ"]. *)
-let export_theorem_proof n =
-  export_proofs_in_interval n !the_start_idx
-    (!the_start_idx + Array.length !prf_pos - 1);
+   [n^"_proofs.lp"], [n^".typ"] and [n^"_spec.lp"]. *)
+let export_theorem_proof b n =
+  let thid = (!the_start_idx + Array.length !prf_pos - 1) in
+  export_proofs_in_interval n !the_start_idx thid;
   Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp");
-  write_val (n^".typ") !map_typ_abbrev
+  write_val (n^".typ") !map_typ_abbrev;
+  export (n^"_spec") [b^"_types";b^"_terms"]
+    (fun oc -> theorem_as_axiom oc thid (proof_at thid))
 ;;
 
 (* [export_theorem_deps b n] generates for [1<=i<=!proof_part] the files
@@ -894,7 +891,7 @@ let export_theorem_deps b n =
                             else f (n^"_term_abbrevs"^part j))
         (Hashtbl.find htbl_abbrev_deps i);
       SetInt.iter (fun j -> f (n^part j)) (Hashtbl.find htbl_proof_deps i);
-      SetStr.iter f (Hashtbl.find htbl_thm_deps i);
+      SetStr.iter (spec f) (Hashtbl.find htbl_thm_deps i);
     in
     create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
     concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp")
@@ -932,15 +929,16 @@ let split_theorem_proof b n =
   let max_of =
     Array.init (Hashtbl.length ht_part_max) (Hashtbl.find ht_part_max) in
   write_val (n^".max") max_of;
-  (* generate [n^".lp"]. *)
+  (* generate [n^".lp"] and [n^"_spec.lp"]. *)
   let iter_deps f =
     f (b^"_types");
     f (b^"_terms");
-    f (n^part !proof_part);
+    spec f (n^part !proof_part);
   in
-  export_iter n iter_deps
-    (fun oc ->
-      decl_theorem oc max (proof_at max) (Named_thm ("lem"^string_of_int max)))
+  let p = proof_at max in
+  let t = Named_thm ("lem"^string_of_int max) in
+  export_iter n iter_deps (fun oc -> decl_theorem oc max p t);
+  export_iter (n^"_spec") iter_deps (fun oc -> decl_theorem oc max p t)
 ;;
 
 (* [split_theorem_abbrevs n] generates the files [n^".brv"],
@@ -950,22 +948,17 @@ let split_theorem_abbrevs n =
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
   let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
   let l = List.sort cmp l in
-  let dump_file = n^".brv" in
-  log "generate %s ...\n%!" dump_file;
-  let oc = open_out_bin dump_file in
-  List.iter (output_value oc) l;
-  close_out oc;
+  create_file_bin (n^".brv") (fun oc -> List.iter (output_value oc) l);
   (* generate the file [n^".brp"]. *)
   let len = TrmHashtbl.length htbl_term_abbrev in
   let pos = Array.make len 0 in
-  log "read %s ...\n%!" dump_file;
-  let ic = open_in_bin dump_file in
   let size = Array.make len 0 in
-  for k = 0 to len - 1 do
-    Array.set pos k (pos_in ic);
-    Array.set size k (size_abbrev (input_value ic))
-  done;
-  close_in ic;
+  read_file_bin (n^".brv")
+    (fun ic ->
+      for k = 0 to len - 1 do
+        Array.set pos k (pos_in ic);
+        Array.set size k (size_abbrev (input_value ic))
+      done);
   write_val (n^".brp") pos;
   (* generate the files [n^"_term_abbrevs"^part(k)^".min"] *)
   let f = n^"_term_abbrevs"
@@ -999,8 +992,8 @@ let split_theorem_abbrevs n =
 
 (* [export_theorem_proof_part b n k] generates the files
    [n^part(k)^".lp"], [n^part(k)^".brv"], [n^part(k)^".brp"],
-   [n^part(k)^"_term_abbrevs"^part(i)^".min"],
-   [n^part(k)^"_subterms.lp"] (if !use_sharing), [n^part(k)^".lpo.mk"]. *)
+   [n^part(k)^"_term_abbrevs"^part(i)^".min"], [n^part(k)^"_spec.lp"],
+   [n^part(k)^"_subterms.lp"] (if !use_sharing). *)
 let export_theorem_proof_part b n k =
   (* generate [n^part(k)^"_proofs.lp"] *)
   proof_part := k;
@@ -1014,32 +1007,34 @@ let export_theorem_proof_part b n k =
     let p = part_of d in
     if p <> !proof_part then part_deps := SetInt.add p !part_deps
   in
-  let dump_file = p^"_proofs.lp" in
-  log "generate %s ...\n%!" dump_file;
-  let oc = open_out dump_file in
-  proof_part_max_idx := max - 1;
-  for k = min to max do
-    if get_use k >= 0 then
-      begin
-        let p = proof_at k in
-        List.iter add_dep (deps p);
-        theorem oc k p
-      end
-  done;
-  close_out oc;
+  export (p^"_proofs") []
+    (fun oc ->
+      export (p^"_spec") [b^"_types";b^"_terms"]
+        (fun oc_spec ->
+          proof_part_max_idx := max - 1;
+          for k = min to max do
+            let l = get_use k in
+            if l >= 0 then
+              begin
+                let p = proof_at k in
+                List.iter add_dep (deps p);
+                theorem oc k p;
+                if l = 0 || l >= max then theorem_as_axiom oc_spec k p
+              end
+          done));
   (* dump term abbreviations *)
   let nb_parts = split_theorem_abbrevs p in
   (* generate [n^part(k)^".typ"] *)
   write_val (p^".typ") !map_typ_abbrev;
   (* generate [n^part(k)^"_subterms.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;
-  (* generate [n^part(k)^"_deps.lp"] and [n^".lpo.mk"] *)
+  (* generate [n^part(k)^"_deps.lp"] *)
   let iter_deps f =
     f (b^"_types");
     f (b^"_terms");
     f (b^"_axioms");
-    SetStr.iter f !thdeps;
-    SetInt.iter (fun j -> f (n^part j)) !part_deps;
+    SetStr.iter (spec f) !thdeps;
+    SetInt.iter (fun j -> spec f (n^part j)) !part_deps;
     f (b^"_type_abbrevs");
     if !use_sharing then f (p^"_subterm_abbrevs");
     for j = 1 to nb_parts do f (p^"_term_abbrevs"^part j) done
@@ -1111,7 +1106,7 @@ let export_theorems b map_thid_name =
 ;;
 
 let export_theorems_as_axioms b map_thid_name =
-  export (b^"_opam") [b^"_types";b^"_terms";b^"_axioms"]
+  export (b^"_opam") [b^"_types";b^"_terms"]
     (out_map_thid_name_as_axioms map_thid_name)
 ;;
 

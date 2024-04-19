@@ -1042,7 +1042,7 @@ and command = function
      if is_dk f then (err "dk output not available for this command\n"; 1)
      else
        begin
-         Xlp.export_theorem_proof n;
+         Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs_in_one_file b n;
          if !use_sharing then Xlp.export_subterm_abbrevs b n;
@@ -1068,7 +1068,7 @@ and command = function
       if String.ends_with ~suffix:".typ" f then
         begin
           let m = read_val f in
-          let oc = open_file (Filename.chop_extension f^".sed") in
+          let oc = log_open_out (Filename.chop_extension f^".sed") in
           let add_cmd s (d,_n) =
             let idx =
               match MapStr.find_opt s map with

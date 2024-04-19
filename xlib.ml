@@ -51,9 +51,15 @@ let command s =
 (* Functions on files. *)
 (****************************************************************************)
 
-let open_file n = log_gen n; open_out n;;
+let log_open_out n = log_gen n; open_out n;;
+let log_open_out_bin n = log_gen n; open_out_bin n;;
 
-let create_file n f = let oc = open_file n in f oc; close_out oc;;
+let log_open_in_bin n = log_read n; open_in_bin n;;
+
+let create_file n f = let oc = log_open_out n in f oc; close_out oc;;
+let create_file_bin n f = let oc = log_open_out_bin n in f oc; close_out oc;;
+
+let read_file_bin n f = let ic = log_open_in_bin n in f ic; close_in ic;;
 
 let concat f1 f2 f3 =
   log "generate %s ...\n%!" f3;
