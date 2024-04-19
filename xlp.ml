@@ -328,7 +328,7 @@ let require oc n =
    iterator [iter_deps], followed by [f]. It also creates the file
    [n^".lpo.mk"] to record the dependencies of [n^".lpo"]. *)
 let create_file_with_deps (tmp:string) (n:string)
-      (iter_deps:(string->unit)->unit) (f:out_channel->unit) =
+      (iter_deps:(string->unit)->unit) (gen:out_channel->unit) =
   let oc_lp = log_open_out (tmp^".lp")
   and oc_mk = log_open_out (n^".lpo.mk") in
   out oc_mk "%s.lpo:" n;
@@ -340,7 +340,7 @@ let create_file_with_deps (tmp:string) (n:string)
   iter_deps handle;
   out oc_mk "\n";
   close_out oc_mk;
-  f oc_lp;
+  gen oc_lp;
   close_out oc_lp
 ;;
 
@@ -349,7 +349,7 @@ let spec f n = f (n^"_spec");;
 let export_iter n = create_file_with_deps n n;;
 ;;
 
-let export n deps = export_iter n (fun h -> List.iter h deps);;
+let export n deps = export_iter n (fun f -> List.iter f deps);;
 
 (****************************************************************************)
 (* Translation of term abbreviations. *)
@@ -993,7 +993,7 @@ let split_theorem_abbrevs n =
 (* [export_theorem_proof_part b n k] generates the files
    [n^part(k)^".lp"], [n^part(k)^".brv"], [n^part(k)^".brp"],
    [n^part(k)^"_term_abbrevs"^part(i)^".min"], [n^part(k)^"_spec.lp"],
-   [n^part(k)^"_subterms.lp"] (if !use_sharing), [n^part(k)^".lpo.mk"]. *)
+   [n^part(k)^"_subterms.lp"] (if !use_sharing). *)
 let export_theorem_proof_part b n k =
   (* generate [n^part(k)^"_proofs.lp"] *)
   proof_part := k;
@@ -1007,28 +1007,28 @@ let export_theorem_proof_part b n k =
     let p = part_of d in
     if p <> !proof_part then part_deps := SetInt.add p !part_deps
   in
-  let oc = log_open_out (p^"_proofs.lp")
-  and oc_spec = log_open_out (p^"_spec.lp") in
-  List.iter (require oc_spec) ["theory_hol";b^"_types";b^"_terms"];
-  proof_part_max_idx := max - 1;
-  for k = min to max do
-    let l = get_use k in
-    if l >= 0 then
-      begin
-        let p = proof_at k in
-        List.iter add_dep (deps p);
-        theorem oc k p;
-        if l = 0 || k > !proof_part_max_idx then theorem_as_axiom oc k p
-      end
-  done;
-  close_out oc;
+  export (p^"_proofs") []
+    (fun oc ->
+      export (p^"_spec") [b^"_types";b^"_terms"]
+        (fun oc_spec ->
+          proof_part_max_idx := max - 1;
+          for k = min to max do
+            let l = get_use k in
+            if l >= 0 then
+              begin
+                let p = proof_at k in
+                List.iter add_dep (deps p);
+                theorem oc k p;
+                if l = 0 || l >= max then theorem_as_axiom oc_spec k p
+              end
+          done));
   (* dump term abbreviations *)
   let nb_parts = split_theorem_abbrevs p in
   (* generate [n^part(k)^".typ"] *)
   write_val (p^".typ") !map_typ_abbrev;
   (* generate [n^part(k)^"_subterms.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;
-  (* generate [n^part(k)^"_deps.lp"] and [n^".lpo.mk"] *)
+  (* generate [n^part(k)^"_deps.lp"] *)
   let iter_deps f =
     f (b^"_types");
     f (b^"_terms");
@@ -1041,11 +1041,7 @@ let export_theorem_proof_part b n k =
   in
   create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
   (* generate [n^part(k)^".lp"] *)
-  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
-  (* generate in [n^part(k)^"_spec.lp"] all theorems that are used in
-     later parts *)
-  export (p^"_spec") [b^"_types";b^"_terms"]
-    (fun oc -> theorem_as_axiom oc max (proof_at max))
+  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp")
 ;;
 
 (****************************************************************************)

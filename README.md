@@ -233,7 +233,7 @@ On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5
 
 | HOL-Light file                     | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
 |------------------------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml                             | 3m57s     | 3 Go      | 5 M         | 5679        | 51s          | 48s         | 1.1 Go       | 16m22s       |
+| hol.ml                             | 3m57s     | 3 Go      | 5 M         | 5679        | 51s          | 55s         | 1.1 Go       | 18m4s        |
 | Multivariate/make_upto_topology.ml | 48m       | 52 Go     | 52 M        | 18866       | 18m11s       | 18m43s      | 2.3 Go       | 8h (*)       |
 
 (*) with `make -j32 vo; make -j8 vo`
