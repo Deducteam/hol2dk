@@ -219,23 +219,24 @@ You can then do in order:
 - `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
 - `make -j$jobs lpo` to check Lambdapi files (optional)
 - `make -j$jobs v` to translate Lambdapi files to Coq files
-- `make -j$jobs spec` for Coq checking to require less memory (optional)
 - `make -j$jobs vo` to check Coq files
 
 To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
 - `make -j$jobs MAX_PROOF='--max-proof-size 500_000' MAX_ABBREV='--max-max-abbrev 2_000_000' lp`
 
+Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
+
 Performance on 15/04/24
 -----------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM:
+On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1:
 
 | HOL-Light file                     | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
 |------------------------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml                             | 3m57s     | 3 Go      | 5 M         | 5679        | 36s          | 25s         | 0.4 Go       | 16m22s       |
+| hol.ml                             | 3m57s     | 3 Go      | 5 M         | 5679        | 51s          | 48s         | 1.1 Go       | 16m22s       |
 | Multivariate/make_upto_topology.ml | 48m       | 52 Go     | 52 M        | 18866       | 18m11s       | 18m43s      | 2.3 Go       | 8h (*)       |
 
-(*) with `make spec; make -j32 vo; make -j8 vo`
+(*) with `make -j32 vo; make -j8 vo`
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------

@@ -1068,7 +1068,7 @@ and command = function
       if String.ends_with ~suffix:".typ" f then
         begin
           let m = read_val f in
-          let oc = open_file (Filename.chop_extension f^".sed") in
+          let oc = log_open_out (Filename.chop_extension f^".sed") in
           let add_cmd s (d,_n) =
             let idx =
               match MapStr.find_opt s map with
