@@ -44,21 +44,22 @@ let valid_name = function
 
 let name oc n = string oc (valid_name n);;
 
-let typ_name oc n =
-  string oc
-    (match n with
-       (* type names used also as constant names are capitalized *)
-     | "sum" | "topology" | "metric" | "multiset" -> String.capitalize_ascii n
-     | n -> valid_name n)
+let string_of_typ_name n =
+  match n with
+  (* type names used also as constant names are capitalized *)
+  |"sum"|"topology"|"metric"|"multiset"|"group" -> String.capitalize_ascii n
+  | n -> valid_name n
+;;
+
+let typ_name oc n = string oc (string_of_typ_name n);;
   (*match !stage with
   | Types | No_abbrev -> name oc n
   | _ -> string oc !basename; string oc "_types."; name oc n*)
 
-let cst_name = name
+let cst_name = name;;
   (*match !stage with
   | Terms | No_abbrev -> name oc n
   | _ -> string oc !basename; string oc "_terms."; name oc n*)
-;;
 
 (****************************************************************************)
 (* Translation of types. *)
