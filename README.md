@@ -257,7 +257,7 @@ To check it with [kocheck](https://github.com/01mf02/kontroli-rs), you need to s
 change the generated file:
 
 ```
-sed -e 's/^injective /def /g' file.dk > file-for-kocheck.dk
+sed -e 's/^injective /def /' file.dk > file-for-kocheck.dk
 kocheck -j$jobs file-for-kocheck.dk
 ```
 
