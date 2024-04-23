@@ -16,12 +16,12 @@ in parallel:
 - optimization of lp file dependencies in generated lp files.
 - generation of Makefile lpo dependencies at the same time as lp files.
 - Makefile: lpo and vo dependencies are recomputed automatically.
-- Makefile target [un]spec: to generate axiom versions of each theorem
 
 ### Changed
 
 - FILES_WITH_SHARING renamed into BIG_FILES and not added by add-links anymore
 - command dump[-simp]-use renamed into dump[-simp]-before-hol
+- for each theorem, two files are generated: one with the proof, and one declaring the theorem as an axiom
 
 ## 1.0.0 (2024-02-25)
 
