@@ -52,81 +52,97 @@ let map_thid_name =
 ;;
 
 (* [thms_of_file f] computes the list of named theorems in [f]. *)
-let thms_of_file =
-  let search_1 =
+let thms_of_string content =
+  let search1 =
     let re =
       Str.regexp
-        ("^\\(let\\|and\\)[ \n\t]*"
-         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*"
-         ^"=[ \n\t]*"
-         ^"\\(prove\\|"
-         ^"prove_by_refinement\\|"
-         ^"new_definition\\|"
-         ^"new_basic_definition\\|"
-         ^"new_axiom\\|"
-         ^"new_infix_definition\\|"
-         ^"INT_OF_REAL_THM\\|"
-         ^"define_finite_type\\|"
-         ^"TAUT\\|"
-         ^"INT_ARITH\\|"
-         ^"new_recursive_definition\\)")
+        "^\\(let\\|and\\)[ \n\t]+\
+         \\([a-zA-Z0-9_]+\\)[ \n\t]*\
+         =[ \n\t]*\
+         \\(prove\\|\
+         prove_by_refinement\\|\
+         new_definition\\|\
+         new_basic_definition\\|\
+         new_axiom\\|\
+         new_infix_definition\\|\
+         INT_OF_REAL_THM\\|\
+         define_finite_type\\|\
+         TAUT\\|\
+         INT_ARITH\\|\
+         new_recursive_definition\\)"
     in
-    fun content ->
-    let rec search acc start =
+    let rec search start acc =
       try
         let _ = Str.search_forward re content start in
-        let matches = [Str.matched_group 2 content] in
-        search (matches @ acc) (Str.match_end())
+        search (Str.match_end()) (Str.matched_group 2 content :: acc)
       with _ -> acc
     in
-    search [] 0
+    search 0
   in
-  let search_2 =
+  let search2 =
     let re =
       Str.regexp
-        ("^\\(let\\|and\\)[ \n\t]*"
-         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*"
-         ^"=[ \n\t]*"
-         ^"\\(define_type\\|"
-         ^"(CONJ_PAIR o prove)\\)")
+        "^\\(let\\|and\\)[ \n\t]+\
+         \\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*\
+         \\([a-zA-Z0-9_]+\\)[ \n\t]*\
+         =[ \n\t]*\
+         \\(define_type\\|\
+         (CONJ_PAIR o prove)\\)"
     in
-    fun content ->
-    let rec search acc start =
+    let rec search start acc =
       try
         let _ = Str.search_forward re content start in
-        let matches =
-          [Str.matched_group 2 content
-          ;Str.matched_group 3 content] in
-        search (matches @ acc) (Str.match_end())
+        search (Str.match_end())
+          (Str.matched_group 2 content :: Str.matched_group 3 content :: acc)
       with _ -> acc
-    in search [] 0
+    in search 0
   in
-  let search_3 =
+  let search3 =
     let re =
       Str.regexp
-        ("^\\(let\\|and\\)[ \n\t]*"
-         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*"
-         ^"\\([a-zA-Z0-9_]+\\)[ \n\t]*"
-         ^"=[ \n\t]*"
-         ^"\\(new_inductive_definition\\)")
+        "^\\(let\\|and\\)[ \n\t]+\
+         \\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*\
+         \\([a-zA-Z0-9_]+\\)[ \n\t]*,[ \n\t]*\
+         \\([a-zA-Z0-9_]+\\)[ \n\t]*\
+         =[ \n\t]*\
+         \\(new_inductive_definition\\)"
     in
-    fun content ->
-    let rec search acc start =
+    let rec search start acc =
       try
         let _ = Str.search_forward re content start in
-        let matches =
-          [Str.matched_group 2 content
-          ;Str.matched_group 3 content
-          ;Str.matched_group 4 content]
-        in
-        search (matches @ acc) (Str.match_end())
+        search (Str.match_end())
+          (Str.matched_group 2 content :: Str.matched_group 3 content
+           :: Str.matched_group 4 content :: acc)
       with _ -> acc
-    in search [] 0
+    in search 0
   in
-  fun f -> let s = string_of_file f in search_1 s @ search_2 s @ search_3 s
+  let search4 =
+    let re_list = Str.regexp "^let[ \n\t]+\\[\\([A-Z0-9_]+\\)[ \n\t]*"
+    and re_elt = Str.regexp ";[ \n\t]*\\([A-Z0-9_]+\\)[ \n\t]*" in
+    let rec search_list start acc =
+      try
+        let _ = Str.search_forward re_list content start in
+        (*log "search_list %d %s\n" start (Str.matched_group 1 content);*)
+        search_elt (Str.match_end()) (Str.matched_group 1 content :: acc)
+      with _ -> acc
+    and search_elt start acc =
+      (*let n = min 40 (String.length content - start) in
+      log "search_elt <- %s...\n" (String.sub content start n);*)
+      match content.[start] with
+      | ';' ->
+         let _ = Str.search_forward re_elt content start in
+         (*log "search_elt -> %d %s\n" start (Str.matched_group 1 content);*)
+         search_elt (Str.match_end()) (Str.matched_group 1 content :: acc)
+      | ']' ->
+         search_list (Str.match_end()) acc
+      | _ -> assert false
+    in
+    search_list 0
+  in
+  search4 (search3 (search2 (search1 [])))
 ;;
+
+let thms_of_file f = thms_of_string (string_of_file f);;
 
 let dump_map_thid_name ofile ifiles =
   let oc = Stdlib.open_out_bin ofile in

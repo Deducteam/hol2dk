@@ -202,7 +202,7 @@ clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
+	find . -maxdepth 1 -name '*.v' -a ! -name 'coq*.v' -delete
 
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk

@@ -789,6 +789,27 @@ and command = function
 
   | "print"::"use"::_ -> wrong_nb_args()
 
+  | ["debug"] ->
+     ignore (thms_of_string
+"let [REAL_ADD_SYM; REAL_ADD_ASSOC; REAL_ADD_LID; REAL_ADD_LINV;
+     REAL_MUL_SYM; REAL_MUL_ASSOC; REAL_MUL_LID;
+     REAL_ADD_LDISTRIB;
+     REAL_LE_REFL; REAL_LE_ANTISYM; REAL_LE_TRANS; REAL_LE_TOTAL;
+     REAL_LE_LADD_IMP; REAL_LE_MUL;
+     REAL_INV_0; REAL_MUL_LINV;
+     REAL_OF_NUM_EQ; REAL_OF_NUM_LE; REAL_OF_NUM_ADD; REAL_OF_NUM_MUL] =
+ "); 0
+
+  | ["print";f] ->
+     begin
+       match Filename.extension f with
+       | ".thm"  ->
+          let b = Filename.chop_extension f in
+          MapInt.iter (log "%d %s\n") (read_val (b^".thm"));
+          0
+       | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
+     end
+
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
      if nb_parts < 2 then (err "the number of parts must be > 1\n"; exit 1);
