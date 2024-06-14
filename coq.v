@@ -1997,3 +1997,13 @@ Lemma axiom_19 : forall (a : nadd), (mk_nadd (dest_nadd a)) = a.
 Proof.
   intros [f h]. simpl. apply eq_nadd. simpl. rewrite <- axiom_20. exact h. 
 Qed.
+
+(*******************************************************************************)
+(* Mapping of reals. *)
+(*******************************************************************************)
+
+Require Export Rbase Rbasic_fun.
+
+Definition R' := {| type := R; el := 0%R |}.
+
+Canonical R'.
