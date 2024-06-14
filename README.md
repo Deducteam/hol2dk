@@ -253,11 +253,8 @@ It generates a single big Dedukti file `$base.dk`. To check it with [dkcheck](ht
 ```
 dk check $base.dk
 ```
-To check it with [kocheck](https://github.com/01mf02/kontroli-rs), you need to slightly
-change the generated file:
-
+To check it with [kocheck](https://github.com/01mf02/kontroli-rs), simply do:
 ```
-sed -e 's/^injective /def /' file.dk > file-for-kocheck.dk
 kocheck -j$jobs file-for-kocheck.dk
 ```
 
