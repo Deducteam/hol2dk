@@ -19,7 +19,7 @@ jobs:
       - name: Checkout hol2dk
         uses: actions/checkout@v4
       - name: Install opam
-        uses: avsm/setup-ocaml@v2
+        uses: avsm/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-version }}
       - name: Install dune
