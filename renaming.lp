@@ -90,3 +90,5 @@ builtin "_at" ≔ at;
 builtin "_at_def" ≔ at_def;
 builtin "S'" ≔ S;
 builtin "pair'" ≔ pair;
+builtin "R'" ≔ R;
+builtin "R''" ≔ R';
