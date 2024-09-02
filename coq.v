@@ -118,6 +118,27 @@ Proof.
   apply all_not_not_ex. exact h.
 Qed.
 
+Lemma ex2_eq A (P Q : A -> Prop) : (exists2 x, P x & Q x) = (exists x, P x /\ Q x).
+Proof.
+  apply prop_ext. intros [x h i]. exists x. auto. intros [x [h i]]. exists x; auto.
+Qed.
+
+Lemma not_conj_eq P Q : (~(P /\ Q)) = (~P \/ ~Q).
+Proof.
+  apply prop_ext; intro h.
+  case (classic P); intro i.
+  right. intro q. apply h. auto.
+  auto.
+  intros [p q]. destruct h as [h|h]; contradiction.
+Qed.
+
+Lemma not_or_eq P Q : (~P \/ Q) = (P -> Q).
+Proof.
+  apply prop_ext; intro h.
+  intro p. destruct h as [h|h]. contradiction. exact h.
+  case (classic P); intro i; auto.
+Qed.
+
 (****************************************************************************)
 (* Proof of HOL-Light axioms. *)
 (****************************************************************************)
@@ -677,6 +698,12 @@ Proof.
   rewrite h. exact I. reflexivity.
   generalize (ε_spec i). intros [h1 h2]. apply h2. reflexivity.
 Qed.
+
+Definition COND_dep (Q: Prop) (C: Type) (f1: Q -> C) (f2: ~Q -> C) : C :=
+  match excluded_middle_informative Q with
+  | left _ x => f1 x
+  | right _ x => f2 x 
+  end.
 
 Lemma MAX_def : max = (fun _2273 : nat => fun _2274 : nat => @COND nat (Peano.le _2273 _2274) _2274 _2273).
 Proof.
@@ -1947,63 +1974,3 @@ Qed.
 Lemma axiom_18 : forall (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))), ((fun a : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) => forall char' : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> Prop, (forall a' : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))), (exists a0 : Prop, exists a1 : Prop, exists a2 : Prop, exists a3 : Prop, exists a4 : Prop, exists a5 : Prop, exists a6 : Prop, exists a7 : Prop, a' = 
 ((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7)) -> char' a') -> char' a) r) = ((_dest_char (_mk_char r)) = r).
 Proof. intro r. apply axiom_18'. Qed.
-
-(*******************************************************************************)
-(* Mapping of nadd (the type of nearly-additive sequences of natural numbers). *)
-(*******************************************************************************)
-
-Definition dist := fun _22820 : prod nat nat => Nat.add (Nat.sub (@fst nat nat _22820) (@snd nat nat _22820)) (Nat.sub (@snd nat nat _22820) (@fst nat nat _22820)).
-
-Definition is_nadd := fun _23130 : nat -> nat => exists B : nat, forall m : nat, forall n : nat, Peano.le (dist (@pair nat nat (Nat.mul m (_23130 n)) (Nat.mul n (_23130 m)))) (Nat.mul B (Nat.add m n)).
-
-Definition nadd : Type := {f : nat -> nat | is_nadd f}.
-
-Lemma dist_refl : forall n : nat, dist (n,n) = 0.
-Proof.
-  intro n. unfold dist. simpl. rewrite sub_diag. simpl. reflexivity.
-Qed.
-
-Lemma is_nadd_0 : is_nadd (fun _ => 0).
-Proof. 
-  unfold is_nadd. exists 0. intros m n. simpl. repeat rewrite mul_0_r. rewrite dist_refl. auto.
-Qed.    
-
-Definition fun_0' : nadd := exist _ _ is_nadd_0.
-
-Definition nadd' : Type' := {| type := nadd ; el := fun_0'|}.
-
-Canonical nadd'.
-
-Definition dest_nadd : nadd -> (nat -> nat) := fun f => proj1_sig f.
-
-Definition mk_nadd_pred (f : nat -> nat) (g : nadd) := dest_nadd g = f.
-
-Definition mk_nadd : (nat -> nat) -> nadd :=
-  fun f => @ε (nadd') (mk_nadd_pred f).
-
-Lemma eq_nadd : forall (f g : nadd), dest_nadd f = dest_nadd g -> f = g.
-Proof.
-  intros [f hf] [g hg]. simpl. intro e. subst g. apply subset_eq_compat. reflexivity.
-Qed.
-
-Lemma axiom_20 : forall (r : nat -> nat), (is_nadd r) = ((dest_nadd (mk_nadd r)) = r).
-Proof.
-  intro f. apply prop_ext. 
-  intro h. apply (@ε_spec (nadd') (mk_nadd_pred f)). exists (exist _ _ h). reflexivity.
-  intro e. rewrite <- e. destruct (mk_nadd f) as [g h]. simpl. exact h.
-Qed.
-
-Lemma axiom_19 : forall (a : nadd), (mk_nadd (dest_nadd a)) = a.
-Proof.
-  intros [f h]. simpl. apply eq_nadd. simpl. rewrite <- axiom_20. exact h. 
-Qed.
-
-(*******************************************************************************)
-(* Mapping of reals. *)
-(*******************************************************************************)
-
-Require Export Rbase Rbasic_fun.
-
-Definition R' := {| type := R; el := 0%R |}.
-
-Canonical R'.

@@ -230,20 +230,20 @@ builtin "mk_nadd" ≔ mk_nadd;
 builtin "axiom_19" ≔ axiom_19;
 builtin "axiom_20" ≔ axiom_20;
 
-builtin "nadd_of_num" ≔ nadd_of_num;
+/*builtin "nadd_of_num" ≔ nadd_of_num;
 builtin "nadd_le" ≔ nadd_le;
 builtin "nadd_add" ≔ nadd_add;
 builtin "nadd_mul" ≔ nadd_mul;
 builtin "nadd_rinv" ≔ nadd_rinv;
 builtin "nadd_inv" ≔ nadd_inv;
-
+*/
 builtin "hreal" ≔ hreal;
 builtin "mk_hreal" ≔ mk_hreal;
 builtin "dest_hreal" ≔ dest_hreal;
 builtin "axiom_21" ≔ axiom_21;
 builtin "axiom_22" ≔ axiom_22;
 
-builtin "hreal_of_num" ≔ hreal_of_num;
+/*builtin "hreal_of_num" ≔ hreal_of_num;
 builtin "hreal_add" ≔ hreal_add;
 builtin "hreal_mul" ≔ hreal_mul;
 builtin "hreal_le" ≔ hreal_le;
@@ -332,3 +332,4 @@ builtin "Rmin" ≔ real_min;
 builtin "real_min_def" ≔ real_min_def;
 
 builtin "REAL_COMPLETE" ≔ REAL_COMPLETE;
+*/
