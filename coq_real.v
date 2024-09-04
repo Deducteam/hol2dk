@@ -650,7 +650,7 @@ Lemma inv_morph_R x : real_of_R (inv x) = inv (real_of_R x).
 Proof.
   case (classic (x = 0%R)); intro h.
   subst x. unfold inv. simpl. rewrite Rinv_0, zero_eq, !real_of_R_of_real.
-  Set Printing All. change (@Logic.eq (type real) (real_of_num O) (real_inv (real_of_num O))). rewrite <- REAL_INV_0.
+  Set Printing All. change (@Logic.eq (type real) (real_of_num O) (real_inv (real_of_num O))). symmetry. apply REAL_INV_0.
   rewrite REAL_INV_0.
   
   rewrite <- eq_real_model. 
