@@ -650,42 +650,68 @@ Lemma inv_morph_R x : real_of_R (inv x) = inv (real_of_R x).
 Proof.
   case (classic (x = 0%R)); intro h.
   subst x. unfold inv. simpl. rewrite Rinv_0, zero_eq, !real_of_R_of_real.
-  Set Printing All. change (@Logic.eq (type real) (real_of_num O) (real_inv (real_of_num O))). symmetry. apply REAL_INV_0.
-  rewrite REAL_INV_0.
-  
-  rewrite <- eq_real_model. 
-  subst x. rewrite Rinv_0.
-
-  apply (morph_inv real_of_R_morph).
+  Set Printing All.
+  change (@Logic.eq (type real) (real_of_num O) (real_inv (real_of_num O))).
+  symmetry. apply REAL_INV_0.
+  rewrite <- eq_real_model. apply (morph_inv real_of_R_morph).
   rewrite eq_R_model. exact h.
+  Unset Printing All.
 Qed.
-
-Lemma inv_morph_R x : x <> 0%R -> real_of_R (inv x) = inv (real_of_R x).
-Proof.
-  intro h. rewrite <- eq_real_model. apply (morph_inv real_of_R_morph).
-  rewrite eq_R_model. exact h.
-Qed.
-
-(*Lemma inv_eq x : x <> 0%R -> inv x = R_of_real (inv (real_of_R x)).
-Proof. intro h. rewrite <- inv_morph_R, R_of_real_of_R. reflexivity. exact h. Qed.*)
 
 Lemma inv_eq x : inv x = R_of_real (inv (real_of_R x)).
-Proof. rewrite <- inv_morph_R, R_of_real_of_R. reflexivity. exact h. Qed.
+Proof. rewrite <- inv_morph_R, R_of_real_of_R. reflexivity. Qed.
 
 Lemma real_inv_def : Rinv = (fun x : R => mk_real (fun u : prod hreal hreal => exists x' : prod hreal hreal, (treal_eq (treal_inv x') u) /\ (dest_real x x'))).
-Proof.
-  apply fun_ext; intro x.
-  unfold mk_real. apply f_equal.
+Proof. apply fun_ext; intro x. rewrite inv_eq. unfold mk_real. reflexivity. Qed.
 
-case (classic (x = 0%R)); intro h.
-  subst x. unfold mk_real.
-  reflexivity.
+Lemma neg_morph_R x : real_of_R (opp x) = opp (real_of_R x).
+Proof. rewrite <- eq_real_model. apply (morph_opp real_of_R_morph). Qed.
+
+Lemma neg_eq x : opp x = R_of_real (opp (real_of_R x)).
+Proof. rewrite <- neg_morph_R, R_of_real_of_R. reflexivity. Qed.
+
+Lemma real_neg_def : Ropp = (fun x1 : R => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, (treal_eq (treal_neg x1') u) /\ (dest_real x1 x1'))).
+Proof. apply fun_ext; intro x. rewrite neg_eq. unfold mk_real. reflexivity. Qed.
+
+Lemma one_morph_R : real_of_R 1%R = real_of_num 1.
+Proof. rewrite <- eq_real_model. apply (morph_one real_of_R_morph). Qed.
+
+Lemma one_eq : 1%R = R_of_real (real_of_num 1).
+Proof. rewrite <- one_morph_R, R_of_real_of_R. reflexivity. Qed.
+
+Require Import Lia.
+
+Lemma INR_eq n : INR (S n) = (INR n + 1)%R.
+Proof.
+  induction n; simpl.
+  rewrite Rplus_0_l. reflexivity.
+  destruct n as [|n]. reflexivity. reflexivity.
 Qed.
 
-(*
-Axiom real_inv_def : Rinv = (fun x : R => mk_real (fun u : prod hreal hreal => exists x' : prod hreal hreal, (treal_eq (treal_inv x') u) /\ (dest_real x x'))).
-
-Axiom real_of_num_def : INR = (fun m : nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
-
-Axiom real_neg_def : Ropp = (fun x1 : R => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, (treal_eq (treal_neg x1') u) /\ (dest_real x1 x1'))).
-*)
+Lemma real_of_num_def : INR = (fun m : nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
+Proof.
+  apply fun_ext. induction x.
+  simpl INR. rewrite zero_eq. reflexivity.
+  rewrite INR_eq, IHx, add_eq, one_morph_R.
+  unfold mk_real. f_equal.
+  rewrite real_of_R_of_real.
+  clear IHx.
+  unfold real_of_num.
+  
+  clear IHx. unfold treal_of_num, hreal_of_num, nadd_of_num.
+  simpl.
+  set (Nadd := {x0 : nat -> nat | is_nadd x0}).
+  set (Hreal := {x0 : Nadd -> Prop | is_eq_class nadd nadd_eq x0}).
+  unfold mk_nadd.
+  
+  cut (forall y, forall x, x < y -> INR x = mk_real (fun u : hreal * hreal => treal_eq (treal_of_num x) u)).
+  intros h x. apply (h (S x)). lia.
+  induction y; intros x hx.
+  lia.
+  destruct x as [|x]; simpl INR.
+  rewrite zero_eq. reflexivity.
+  destruct x as [|x].
+  rewrite one_eq. reflexivity.
+  rewrite <- IHy.
+  rewrite IHy. 2: lia.
+Qed.

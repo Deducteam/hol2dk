@@ -337,7 +337,7 @@ let range args =
 ;;
 
 let dump after_hol f b =
-  let ml_file = Printf.sprintf "/tmp/dump%d.ml" (Unix.getpid()) in
+  let ml_file = Printf.sprintf "dump%d.ml" (Unix.getpid()) in
   log_gen ml_file;
   let oc = open_out ml_file in
   let use oc after_hol =
