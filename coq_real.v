@@ -197,39 +197,6 @@ Proof.
   subst y. split; apply Rle_refl.
 Qed.
 
-Lemma Radd_commutative (x y : val R_struct) : eq (add x y) (add y x).
-Proof. rewrite eq_R_struct. apply Rplus_comm. Qed.
-
-Lemma Radd_associative (x y z : val R_struct) :
-  eq (add x (add y z)) (add (add x y) z).
-Proof. rewrite eq_R_struct. rewrite Rplus_assoc. reflexivity. Qed.
-
-Lemma Radd_zero_left x : eq (add (zero R_struct) x) x.
-Proof. rewrite eq_R_struct. apply Rplus_0_l. Qed.
-
-Lemma Radd_opposite_right x : eq (add x (opp x)) (zero R_struct).
-Proof. rewrite eq_R_struct. apply Rplus_opp_r. Qed.
-
-Lemma Rmul_commutative (x y : val R_struct) : eq (mul x y) (mul y x).
-Proof. rewrite eq_R_struct. apply Rmult_comm. Qed.
-
-Lemma Rmul_associative (x y z : val R_struct) :
-  eq (mul x (mul y z)) (mul (mul x y) z).
-Proof. rewrite eq_R_struct. rewrite Rmult_assoc. reflexivity. Qed.
-
-Lemma Rmul_distributive_right (x y z : val R_struct) :
-  eq (mul x (add y z)) (add (mul x y) (mul x z)).
-Proof. rewrite eq_R_struct. apply Rmult_plus_distr_l. Qed.
-
-Lemma Rmul_one_left x : eq (mul (one R_struct) x) x.
-Proof. rewrite eq_R_struct. apply Rmult_1_l. Qed.
-
-Lemma Rmul_inverse_right x : ~eq x (zero R_struct) -> eq (mul x (inv x)) (one R_struct).
-Proof. rewrite eq_R_struct. apply Rinv_r. Qed.
-
-Lemma Rone_nonzero : ~ eq (one R_struct) (zero R_struct).
-Proof. rewrite eq_R_struct. apply R1_neq_R0. Qed.
-
 Lemma R_axioms : axioms R_struct.
 Proof.
   apply Axioms.
@@ -238,17 +205,17 @@ Proof.
   apply Rsup_upper_bound.
   apply Rsup_total.  
   apply Rplus_le_compat_l.
-  apply Radd_commutative.
-  apply Radd_associative.
-  apply Radd_zero_left.
-  apply Radd_opposite_right.
+  intros x y. rewrite eq_R_struct. apply Rplus_comm.
+  intros x y z. rewrite eq_R_struct. rewrite Rplus_assoc. reflexivity.
+  intro x. rewrite eq_R_struct. apply Rplus_0_l.
+  intro x. rewrite eq_R_struct. apply Rplus_opp_r.
   apply Rmult_le_compat_l.
-  apply Rmul_commutative.
-  apply Rmul_associative.
-  apply Rmul_distributive_right.
-  apply Rmul_one_left.
-  apply Rmul_inverse_right.
-  apply Rone_nonzero.
+  intros x y. rewrite eq_R_struct. apply Rmult_comm.
+  intros x y z. rewrite eq_R_struct. rewrite Rmult_assoc. reflexivity.
+  intros x y z. rewrite eq_R_struct. apply Rmult_plus_distr_l.
+  intro x. rewrite eq_R_struct. apply Rmult_1_l.
+  intro x. rewrite eq_R_struct. apply Rinv_r.
+  rewrite eq_R_struct. apply R1_neq_R0.
 Qed.
 
 Definition R_model : model := {|
@@ -277,11 +244,15 @@ Section Subtype.
   Definition mk : A -> subtype :=
     fun x => COND_dep (P x) subtype (exist P x) (fun _ => exist P a h).
 
-  Lemma dest_mk x : P x = (dest (mk x) = x).
+  Lemma dest_mk_aux x : P x -> (dest (mk x) = x).
   Proof.
-    apply prop_ext.
     intro hx. unfold mk, COND_dep. destruct excluded_middle_informative.
     reflexivity. contradiction.
+  Qed.
+
+  Lemma dest_mk x : P x = (dest (mk x) = x).
+  Proof.
+    apply prop_ext. apply dest_mk_aux.
     destruct (mk x) as [b i]. simpl. intro e. subst x. exact i.
   Qed.
 
@@ -298,6 +269,7 @@ End Subtype.
 Arguments subtype [A P a].
 Arguments mk [A P a].
 Arguments dest [A P a].
+Arguments dest_mk_aux [A P a].
 Arguments dest_mk [A P a].
 Arguments mk_dest [A P a].
 
@@ -328,6 +300,9 @@ Section Quotient.
   Lemma mk_dest_quotient : forall x, mk_quotient (dest_quotient x) = x.
   Proof. exact (mk_dest (is_eq_class_of a)). Qed.
 
+  Lemma dest_mk_aux_quotient : forall x, is_eq_class x -> (dest_quotient (mk_quotient x) = x).
+  Proof. exact (dest_mk_aux (is_eq_class_of a)). Qed.
+
   Lemma dest_mk_quotient : forall x, is_eq_class x = (dest_quotient (mk_quotient x) = x).
   Proof. exact (dest_mk (is_eq_class_of a)). Qed.
 
@@ -337,6 +312,7 @@ Arguments quotient [A].
 Arguments mk_quotient [A].
 Arguments dest_quotient [A].
 Arguments mk_dest_quotient [A].
+Arguments dest_mk_aux_quotient [A].
 Arguments dest_mk_quotient [A].
 
 (*******************************************************************************)
@@ -350,12 +326,18 @@ Definition dist := fun _22820 : prod nat nat => Nat.add (Nat.sub (@fst nat nat _
 Definition is_nadd := fun _23130 : nat -> nat => exists B : nat, forall m : nat, forall n : nat, Peano.le (dist (@pair nat nat (Nat.mul m (_23130 n)) (Nat.mul n (_23130 m)))) (Nat.mul B (Nat.add m n)).
 
 Lemma DIST_REFL : forall n : nat, dist (n,n) = 0.
+Proof. intro n. unfold dist. simpl. rewrite Nat.sub_diag. reflexivity. Qed.
+
+Require Import Lia.
+
+Lemma is_nadd_times n : is_nadd (fun x => n * x).
 Proof.
-  intro n. unfold dist. simpl. rewrite Nat.sub_diag. reflexivity.
+  exists 0. intros x y. simpl. assert (e: x*(n*y)=y*(n*x)). lia.
+  rewrite e, DIST_REFL. reflexivity.
 Qed.
 
 Lemma is_nadd_0 : is_nadd (fun _ => 0).
-Proof. exists 0. intros m n. rewrite !Nat.mul_0_r, DIST_REFL. reflexivity. Qed.    
+Proof. exact (is_nadd_times 0). Qed.
 
 Definition nadd := subtype is_nadd_0.
 
@@ -364,6 +346,9 @@ Definition dest_nadd := dest is_nadd_0.
 
 Lemma axiom_19 : forall (a : nadd), (mk_nadd (dest_nadd a)) = a.
 Proof. exact (mk_dest is_nadd_0). Qed.
+
+Lemma axiom_20_aux : forall (r : nat -> nat), (is_nadd r) -> ((dest_nadd (mk_nadd r)) = r).
+Proof. exact (dest_mk_aux is_nadd_0). Qed.
 
 Lemma axiom_20 : forall (r : nat -> nat), (is_nadd r) = ((dest_nadd (mk_nadd r)) = r).
 Proof. exact (dest_mk is_nadd_0). Qed.
@@ -374,11 +359,35 @@ Definition nadd_le : nadd -> nadd -> Prop := fun _23295 : nadd => fun _23296 : n
 
 Definition nadd_add : nadd -> nadd -> nadd := fun _23311 : nadd => fun _23312 : nadd => mk_nadd (fun n : nat => Nat.add (dest_nadd _23311 n) (dest_nadd _23312 n)).
 
+Lemma nadd_of_num_add p q :
+  nadd_of_num (p + q) = nadd_add (nadd_of_num p) (nadd_of_num q).
+Proof.
+  unfold nadd_add, nadd_of_num. f_equal. apply fun_ext; intro x.
+  rewrite axiom_20_aux. 2: apply is_nadd_times.
+  rewrite axiom_20_aux. 2: apply is_nadd_times.
+  lia.
+Qed.
+
+Lemma nadd_of_num_S n :
+  nadd_of_num (S n) = nadd_add (nadd_of_num n) (nadd_of_num 1).
+Proof.
+  unfold nadd_add, nadd_of_num. f_equal. apply fun_ext; intro x.
+  rewrite axiom_20_aux. 2: apply is_nadd_times.
+  rewrite axiom_20_aux. 2: apply is_nadd_times.
+  lia.
+Qed.
+
 Definition nadd_mul : nadd -> nadd -> nadd := fun _23325 : nadd => fun _23326 : nadd => mk_nadd (fun n : nat => dest_nadd _23325 (dest_nadd _23326 n)).
 
 Definition nadd_rinv : nadd -> nat -> nat := fun _23462 : nadd => fun n : nat => Nat.div (Nat.mul n n) (dest_nadd _23462 n).
 
 Definition nadd_eq : nadd -> nadd -> Prop := fun _23276 : nadd => fun _23277 : nadd => exists B : nat, forall n : nat, Peano.le (dist (@pair nat nat (dest_nadd _23276 n) (dest_nadd _23277 n))) B.
+
+Lemma le_0 x : x = 0 -> x <= 0.
+Proof. lia. Qed.
+
+Lemma nadd_eq_refl f : nadd_eq f f.
+Proof. unfold nadd_eq. exists 0. intro n. unfold dist; simpl. lia. Qed.
 
 Definition nadd_inv : nadd -> nadd := fun _23476 : nadd => @COND nadd (nadd_eq _23476 (nadd_of_num (NUMERAL 0))) (nadd_of_num (NUMERAL 0)) (mk_nadd (nadd_rinv _23476)).
 
@@ -394,12 +403,35 @@ Definition dest_hreal := dest_quotient nadd_eq.
 Lemma axiom_21 : forall (a : hreal), (mk_hreal (dest_hreal a)) = a.
 Proof. exact (mk_dest_quotient nadd_eq). Qed.
 
+Lemma axiom_22_aux : forall r : nadd -> Prop, (exists x : nadd, r = nadd_eq x) -> dest_hreal (mk_hreal r) = r.
+Proof. exact (dest_mk_aux_quotient nadd_eq). Qed.
+
 Lemma axiom_22 : forall (r : nadd -> Prop), ((fun s : nadd -> Prop => exists x : nadd, s = (nadd_eq x)) r) = ((dest_hreal (mk_hreal r)) = r).
 Proof. exact (dest_mk_quotient nadd_eq). Qed.
 
-Definition hreal_of_num : nat -> hreal := fun m : nat => mk_hreal (fun u : nadd => nadd_eq (nadd_of_num m) u).
+Definition hreal_of_num : nat -> hreal := fun m : nat => mk_hreal (nadd_eq (nadd_of_num m)).
 
 Definition hreal_add : hreal -> hreal -> hreal := fun x : hreal => fun y : hreal => mk_hreal (fun u : nadd => exists x' : nadd, exists y' : nadd, (nadd_eq (nadd_add x' y') u) /\ ((dest_hreal x x') /\ (dest_hreal y y'))).
+
+Lemma hreal_add_of_num p q :
+  hreal_of_num (p + q) = hreal_add (hreal_of_num p) (hreal_of_num q).
+Proof.
+  unfold hreal_add, hreal_of_num. f_equal. apply fun_ext; intro x.
+  apply prop_ext; intro h.
+  exists (nadd_of_num p). exists (nadd_of_num q). split.
+  rewrite <- nadd_of_num_add. exact h. split.
+  rewrite axiom_22_aux. 2: exists (nadd_of_num p); reflexivity. apply nadd_eq_refl.
+  rewrite axiom_22_aux. 2: exists (nadd_of_num q); reflexivity. apply nadd_eq_refl.
+  destruct h as [f [g [h1 [h2 h3]]]].
+  rewrite axiom_22_aux in h2. 2: exists (nadd_of_num p); reflexivity.
+  rewrite axiom_22_aux in h3. 2: exists (nadd_of_num q); reflexivity.                
+  rewrite nadd_of_num_add.                            
+Qed.
+
+Lemma hreal_of_num_S n : hreal_of_num (S n) = hreal_add (hreal_of_num n) (hreal_of_num 1).
+Proof.
+  
+Qed.
 
 Definition hreal_mul : hreal -> hreal -> hreal := fun x : hreal => fun y : hreal => mk_hreal (fun u : nadd => exists x' : nadd, exists y' : nadd, (nadd_eq (nadd_mul x' y') u) /\ ((dest_hreal x x') /\ (dest_hreal y y'))).
 
@@ -697,7 +729,8 @@ Proof.
   rewrite real_of_R_of_real.
   clear IHx.
   unfold real_of_num.
-  
+
+  Set Printing All.
   clear IHx. unfold treal_of_num, hreal_of_num, nadd_of_num.
   simpl.
   set (Nadd := {x0 : nat -> nat | is_nadd x0}).
