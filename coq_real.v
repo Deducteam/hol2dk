@@ -323,12 +323,18 @@ Import Coq.Init.Datatypes.
 
 Definition dist := fun _22820 : prod nat nat => Nat.add (Nat.sub (@fst nat nat _22820) (@snd nat nat _22820)) (Nat.sub (@snd nat nat _22820) (@fst nat nat _22820)).
 
-Definition is_nadd := fun _23130 : nat -> nat => exists B : nat, forall m : nat, forall n : nat, Peano.le (dist (@pair nat nat (Nat.mul m (_23130 n)) (Nat.mul n (_23130 m)))) (Nat.mul B (Nat.add m n)).
+Require Import Lia.
 
 Lemma DIST_REFL : forall n : nat, dist (n,n) = 0.
 Proof. intro n. unfold dist. simpl. rewrite Nat.sub_diag. reflexivity. Qed.
 
-Require Import Lia.
+Lemma dist_sym x y : dist (x,y) = dist (y,x).
+Proof. unfold dist; simpl. lia. Qed.
+
+Lemma dist_trans x y z : dist (x,z) <= dist (x,y) + dist (y,z).
+Proof. unfold dist; simpl. lia. Qed.
+
+Definition is_nadd := fun _23130 : nat -> nat => exists B : nat, forall m : nat, forall n : nat, Peano.le (dist (@pair nat nat (Nat.mul m (_23130 n)) (Nat.mul n (_23130 m)))) (Nat.mul B (Nat.add m n)).
 
 Lemma is_nadd_times n : is_nadd (fun x => n * x).
 Proof.
@@ -359,6 +365,13 @@ Definition nadd_le : nadd -> nadd -> Prop := fun _23295 : nadd => fun _23296 : n
 
 Definition nadd_add : nadd -> nadd -> nadd := fun _23311 : nadd => fun _23312 : nadd => mk_nadd (fun n : nat => Nat.add (dest_nadd _23311 n) (dest_nadd _23312 n)).
 
+Lemma is_nadd_add f g : is_nadd (fun n => dest_nadd f n + dest_nadd g n).
+Proof.
+  destruct f as [f [b i]]. destruct g as [g [c j]]. simpl. exists (b+c). intros x y.
+  generalize (i x y); intro ixy. generalize (j x y); intro jxy.  
+  unfold dist in *; simpl in *. lia.
+Qed.
+
 Lemma nadd_of_num_add p q :
   nadd_of_num (p + q) = nadd_add (nadd_of_num p) (nadd_of_num q).
 Proof.
@@ -377,17 +390,54 @@ Proof.
   lia.
 Qed.
 
+Lemma nadd_add_com p q : nadd_add p q = nadd_add q p.
+Proof. unfold nadd_add. f_equal. apply fun_ext; intro x. lia. Qed.
+
+Lemma nadd_add_assoc p q r :
+  nadd_add (nadd_add p q) r = nadd_add p (nadd_add q r).
+Proof.
+  unfold nadd_add. f_equal. apply fun_ext; intro x. rewrite !axiom_20_aux. lia.
+  apply is_nadd_add. apply is_nadd_add.
+Qed.
+
 Definition nadd_mul : nadd -> nadd -> nadd := fun _23325 : nadd => fun _23326 : nadd => mk_nadd (fun n : nat => dest_nadd _23325 (dest_nadd _23326 n)).
 
 Definition nadd_rinv : nadd -> nat -> nat := fun _23462 : nadd => fun n : nat => Nat.div (Nat.mul n n) (dest_nadd _23462 n).
 
 Definition nadd_eq : nadd -> nadd -> Prop := fun _23276 : nadd => fun _23277 : nadd => exists B : nat, forall n : nat, Peano.le (dist (@pair nat nat (dest_nadd _23276 n) (dest_nadd _23277 n))) B.
 
-Lemma le_0 x : x = 0 -> x <= 0.
-Proof. lia. Qed.
-
 Lemma nadd_eq_refl f : nadd_eq f f.
 Proof. unfold nadd_eq. exists 0. intro n. unfold dist; simpl. lia. Qed.
+
+Lemma nadd_eq_sym f g : nadd_eq f g -> nadd_eq g f.
+Proof. intros [b fg]. exists b. intro n. rewrite dist_sym. apply fg. Qed.
+
+Lemma nadd_eq_trans f g h : nadd_eq f g -> nadd_eq g h -> nadd_eq f h.
+Proof.
+  intros [b fg] [c gh]. exists (b+c). intro n.
+  rewrite dist_trans with (y := dest_nadd g n).
+  generalize (fg n); intro fgn. generalize (gh n); intro ghn.
+  transitivity (b + dist (dest_nadd g n, dest_nadd h n)). lia.
+  transitivity (b+c); lia.
+Qed.
+
+Add Relation _ nadd_eq
+    reflexivity proved by nadd_eq_refl
+    symmetry proved by nadd_eq_sym
+    transitivity proved by nadd_eq_trans
+as nadd_eq_rel.
+
+Require Import Setoid.
+
+Add Morphism nadd_add
+    with signature nadd_eq ==> nadd_eq ==> nadd_eq
+      as nadd_add_morph.
+Proof.
+  intros f f' [b ff'] g g' [c gg']. exists (b+c). intro n.
+  generalize (ff' n); intro ff'n. generalize (gg' n); intro gg'n.
+  unfold nadd_add. rewrite !axiom_20_aux. unfold dist in *; simpl in *. lia.
+  apply is_nadd_add. apply is_nadd_add.
+Qed.
 
 Definition nadd_inv : nadd -> nadd := fun _23476 : nadd => @COND nadd (nadd_eq _23476 (nadd_of_num (NUMERAL 0))) (nadd_of_num (NUMERAL 0)) (mk_nadd (nadd_rinv _23476)).
 
@@ -425,12 +475,36 @@ Proof.
   destruct h as [f [g [h1 [h2 h3]]]].
   rewrite axiom_22_aux in h2. 2: exists (nadd_of_num p); reflexivity.
   rewrite axiom_22_aux in h3. 2: exists (nadd_of_num q); reflexivity.                
-  rewrite nadd_of_num_add.                            
+  rewrite nadd_of_num_add. rewrite h2, h3. exact h1.
 Qed.
 
 Lemma hreal_of_num_S n : hreal_of_num (S n) = hreal_add (hreal_of_num n) (hreal_of_num 1).
 Proof.
+  assert (e: S n = n + 1). lia. rewrite e, hreal_add_of_num. reflexivity.
+Qed.
+
+Lemma hreal_add_com p q : hreal_add p q = hreal_add q p.
+Proof.
+  unfold hreal_add. f_equal. apply fun_ext; intro x.
+  apply prop_ext; intros [y [z [h1 [h2 h3]]]].     
+  exists z. exists y. split. rewrite nadd_add_com. exact h1. auto.
+  exists z. exists y. split. rewrite nadd_add_com. exact h1. auto.
+Qed.
+
+Lemma hreal_add_assoc p q r :
+  hreal_add (hreal_add p q) r = hreal_add p (hreal_add q r).
+Proof.
+  unfold hreal_add. f_equal. apply fun_ext; intro x.
+  apply prop_ext; intros [f [g [h1 [h2 h3]]]].
+  rewrite axiom_22_aux in h2. destruct h2 as [p' [q' [h4 [h5 h6]]]].
+
   
+  exists f. exists g. split. exact h1. split.
+  
+
+
+  lia.
+  apply is_nadd_add. apply is_nadd_add.
 Qed.
 
 Definition hreal_mul : hreal -> hreal -> hreal := fun x : hreal => fun y : hreal => mk_hreal (fun u : nadd => exists x' : nadd, exists y' : nadd, (nadd_eq (nadd_mul x' y') u) /\ ((dest_hreal x x') /\ (dest_hreal y y'))).
@@ -449,6 +523,16 @@ Definition treal_neg : (prod hreal hreal) -> prod hreal hreal := fun _23726 : pr
 
 Definition treal_add : (prod hreal hreal) -> (prod hreal hreal) -> prod hreal hreal := fun _23735 : prod hreal hreal => fun _23736 : prod hreal hreal => @pair hreal hreal (hreal_add (@fst hreal hreal _23735) (@fst hreal hreal _23736)) (hreal_add (@snd hreal hreal _23735) (@snd hreal hreal _23736)).
 
+Lemma treal_add_of_num p q :
+  treal_of_num (p + q) = treal_add (treal_of_num p) (treal_of_num q).
+Proof.
+  unfold treal_of_num, treal_add; simpl.
+  f_equal; rewrite <- hreal_add_of_num; reflexivity.
+Qed.
+
+Lemma treal_add_com  p q : treal_add p q = treal_add q p.
+Proof. unfold treal_add. f_equal; apply hreal_add_com. Qed.
+
 Definition treal_mul : (prod hreal hreal) -> (prod hreal hreal) -> prod hreal hreal := fun _23757 : prod hreal hreal => fun _23758 : prod hreal hreal => @pair hreal hreal (hreal_add (hreal_mul (@fst hreal hreal _23757) (@fst hreal hreal _23758)) (hreal_mul (@snd hreal hreal _23757) (@snd hreal hreal _23758))) (hreal_add (hreal_mul (@fst hreal hreal _23757) (@snd hreal hreal _23758)) (hreal_mul (@snd hreal hreal _23757) (@fst hreal hreal _23758))).
 
 Definition treal_le : (prod hreal hreal) -> (prod hreal hreal) -> Prop := fun _23779 : prod hreal hreal => fun _23780 : prod hreal hreal => hreal_le (hreal_add (@fst hreal hreal _23779) (@snd hreal hreal _23780)) (hreal_add (@fst hreal hreal _23780) (@snd hreal hreal _23779)).
@@ -456,6 +540,38 @@ Definition treal_le : (prod hreal hreal) -> (prod hreal hreal) -> Prop := fun _2
 Definition treal_inv : (prod hreal hreal) -> prod hreal hreal := fun _23801 : prod hreal hreal => @COND (prod hreal hreal) ((@fst hreal hreal _23801) = (@snd hreal hreal _23801)) (@pair hreal hreal (hreal_of_num (NUMERAL 0)) (hreal_of_num (NUMERAL 0))) (@COND (prod hreal hreal) (hreal_le (@snd hreal hreal _23801) (@fst hreal hreal _23801)) (@pair hreal hreal (hreal_inv (@ε hreal (fun d : hreal => (@fst hreal hreal _23801) = (hreal_add (@snd hreal hreal _23801) d)))) (hreal_of_num (NUMERAL 0))) (@pair hreal hreal (hreal_of_num (NUMERAL 0)) (hreal_inv (@ε hreal (fun d : hreal => (@snd hreal hreal _23801) = (hreal_add (@fst hreal hreal _23801) d)))))).
 
 Definition treal_eq : (prod hreal hreal) -> (prod hreal hreal) -> Prop := fun _23810 : prod hreal hreal => fun _23811 : prod hreal hreal => (hreal_add (@fst hreal hreal _23810) (@snd hreal hreal _23811)) = (hreal_add (@fst hreal hreal _23811) (@snd hreal hreal _23810)).
+
+Lemma treal_eq_refl x : treal_eq x x.
+Proof. reflexivity. Qed.
+
+Lemma treal_eq_sym x y : treal_eq x y -> treal_eq y x.
+Proof.
+  unfold treal_eq. destruct x as [x1 x2]; destruct y as [y1 y2]; simpl.
+  intro e. symmetry. exact e.
+Qed.
+
+Lemma treal_eq_trans x y z : treal_eq x y -> treal_eq y z -> treal_eq x z.
+Proof.
+  unfold treal_eq.
+  destruct x as [x1 x2]; destruct y as [y1 y2]; destruct z as [z1 z2]; simpl.
+  intros xy yz.
+Admitted.
+
+Add Relation _ treal_eq
+    reflexivity proved by treal_eq_refl
+    symmetry proved by treal_eq_sym
+    transitivity proved by treal_eq_trans
+as treal_eq_rel.
+
+Add Morphism treal_add
+    with signature treal_eq ==> treal_eq ==> treal_eq
+      as treal_add_morph.
+Proof.
+  intros f f' ff' g g' gg'. unfold treal_eq, treal_add; simpl.
+  unfold treal_eq in ff', gg'.
+  destruct f as [x1 x2]; destruct f' as [x'1 x'2];
+    destruct g as [y1 y2]; destruct g' as [y'1 y'2]; simpl in *.
+Qed.
 
 (*******************************************************************************)
 (* HOL-Light real numbers *)
@@ -471,6 +587,9 @@ Definition dest_real := dest_quotient treal_eq.
 Lemma axiom_23 : forall (a : real), (mk_real (dest_real a)) = a.
 Proof. exact (mk_dest_quotient treal_eq). Qed.
 
+Lemma axiom_24_aux : forall r, (exists x, r = treal_eq x) -> dest_real (mk_real r) = r.
+Proof. exact (dest_mk_aux_quotient treal_eq). Qed.
+
 Lemma axiom_24 : forall (r : (prod hreal hreal) -> Prop), ((fun s : (prod hreal hreal) -> Prop => exists x : prod hreal hreal, s = (treal_eq x)) r) = ((dest_real (mk_real r)) = r).
 Proof. exact (dest_mk_quotient treal_eq). Qed.
 
@@ -481,6 +600,14 @@ Import real.
 Definition real_le : real -> real -> Prop := fun x1 : real => fun y1 : real => @ε Prop (fun u : Prop => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, ((treal_le x1' y1') = u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1'))).
 
 Definition real_add : real -> real -> real := fun x1 : real => fun y1 : real => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, (treal_eq (treal_add x1' y1') u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1'))).
+
+Lemma real_add_com  p q : real_add p q = real_add q p.
+Proof.
+  unfold real_add. f_equal. apply fun_ext; intro x.
+  apply prop_ext; intros [p' [q' [h1 [h2 h3]]]].
+  exists q'. exists p'. split. rewrite treal_add_com. exact h1. auto.
+  exists q'. exists p'. split. rewrite treal_add_com. exact h1. auto.
+Qed.
 
 Definition real_mul : real -> real -> real := fun x1 : real => fun y1 : real => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, (treal_eq (treal_mul x1' y1') u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1'))).
 
@@ -622,6 +749,13 @@ Definition dest_real : R -> (prod hreal hreal) -> Prop := fun x => dest_real (re
 Lemma axiom_23 : forall (a : R), (mk_real (dest_real a)) = a.
 Proof. intro a. unfold mk_real, dest_real. rewrite axiom_23. apply R_of_real_of_R. Qed.
 
+Lemma axiom_24_aux : forall r, (exists x, r = treal_eq x) -> dest_real (mk_real r) = r.
+Proof.
+  intros c [x h]. unfold dest_real, mk_real.
+  rewrite real_of_R_of_real, <- axiom_24.
+  exists x. exact h.
+Qed.
+
 Lemma axiom_24 : forall (r : (prod hreal hreal) -> Prop), ((fun s : (prod hreal hreal) -> Prop => exists x : prod hreal hreal, s = (treal_eq x)) r) = ((dest_real (mk_real r)) = r).
 Proof.
   intro c. unfold dest_real, mk_real. rewrite real_of_R_of_real, <- axiom_24.
@@ -711,7 +845,23 @@ Proof. rewrite <- eq_real_model. apply (morph_one real_of_R_morph). Qed.
 Lemma one_eq : 1%R = R_of_real (real_of_num 1).
 Proof. rewrite <- one_morph_R, R_of_real_of_R. reflexivity. Qed.
 
-Require Import Lia.
+Lemma real_add_of_num p q :
+  real_of_num (p + q) = real_add (real_of_num p) (real_of_num q).
+Proof.
+  unfold real_add, real_of_num. f_equal. apply fun_ext; intro x.
+  apply prop_ext; intro h.
+
+  exists (treal_of_num p). exists (treal_of_num q). split.
+  rewrite <- treal_add_of_num. exact h. split.
+  rewrite real.axiom_24_aux. reflexivity. exists (treal_of_num p). reflexivity.
+  rewrite real.axiom_24_aux. reflexivity. exists (treal_of_num q). reflexivity.
+
+  destruct h as [p' [q' [h1 [h2 h3]]]].
+  rewrite treal_add_of_num.
+  rewrite real.axiom_24_aux in h2.
+  rewrite real.axiom_24_aux in h3.
+  rewrite h2.
+Qed.
 
 Lemma INR_eq n : INR (S n) = (INR n + 1)%R.
 Proof.
