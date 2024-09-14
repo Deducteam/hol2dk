@@ -381,15 +381,6 @@ Proof.
   lia.
 Qed.
 
-Lemma nadd_of_num_S n :
-  nadd_of_num (S n) = nadd_add (nadd_of_num n) (nadd_of_num 1).
-Proof.
-  unfold nadd_add, nadd_of_num. f_equal. apply fun_ext; intro x.
-  rewrite axiom_20_aux. 2: apply is_nadd_times.
-  rewrite axiom_20_aux. 2: apply is_nadd_times.
-  lia.
-Qed.
-
 Lemma nadd_add_com p q : nadd_add p q = nadd_add q p.
 Proof. unfold nadd_add. f_equal. apply fun_ext; intro x. lia. Qed.
 
@@ -486,7 +477,7 @@ Qed.
 Lemma hreal_add_com p q : hreal_add p q = hreal_add q p.
 Proof.
   unfold hreal_add. f_equal. apply fun_ext; intro x.
-  apply prop_ext; intros [y [z [h1 [h2 h3]]]].     
+  apply prop_ext; intros [y [z [h1 [h2 h3]]]].
   exists z. exists y. split. rewrite nadd_add_com. exact h1. auto.
   exists z. exists y. split. rewrite nadd_add_com. exact h1. auto.
 Qed.
@@ -494,18 +485,11 @@ Qed.
 Lemma hreal_add_assoc p q r :
   hreal_add (hreal_add p q) r = hreal_add p (hreal_add q r).
 Proof.
-  unfold hreal_add. f_equal. apply fun_ext; intro x.
-  apply prop_ext; intros [f [g [h1 [h2 h3]]]].
-  rewrite axiom_22_aux in h2. destruct h2 as [p' [q' [h4 [h5 h6]]]].
+  unfold hreal_add at 1. unfold hreal_add at 2. f_equal.
+  apply fun_ext; intro f.
+  apply prop_ext; intros [g [r' [h1 [h2 h3]]]].
 
-  
-  exists f. exists g. split. exact h1. split.
-  
-
-
-  lia.
-  apply is_nadd_add. apply is_nadd_add.
-Qed.
+Admitted.
 
 Definition hreal_mul : hreal -> hreal -> hreal := fun x : hreal => fun y : hreal => mk_hreal (fun u : nadd => exists x' : nadd, exists y' : nadd, (nadd_eq (nadd_mul x' y') u) /\ ((dest_hreal x x') /\ (dest_hreal y y'))).
 
@@ -571,6 +555,13 @@ Proof.
   unfold treal_eq in ff', gg'.
   destruct f as [x1 x2]; destruct f' as [x'1 x'2];
     destruct g as [y1 y2]; destruct g' as [y'1 y'2]; simpl in *.
+  rewrite (hreal_add_com x1). rewrite hreal_add_assoc.
+  rewrite <- (hreal_add_assoc x1). rewrite ff'.
+  rewrite (hreal_add_com x2). rewrite (hreal_add_assoc x'1 y'1).
+  rewrite <- (hreal_add_assoc y'1). rewrite <- gg'.
+  rewrite (hreal_add_assoc y1). rewrite (hreal_add_com y'2).
+  rewrite <- (hreal_add_assoc x'1). rewrite (hreal_add_com x'1 y1).
+  rewrite !hreal_add_assoc. reflexivity.
 Qed.
 
 (*******************************************************************************)
@@ -615,6 +606,23 @@ Definition real_neg : real -> real := fun x1 : real => mk_real (fun u : prod hre
 
 Definition real_of_num : nat -> real := fun m : nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u).
 
+Lemma real_add_of_num p q :
+  real_of_num (p + q) = real_add (real_of_num p) (real_of_num q).
+Proof.
+  unfold real_of_num, real_add.
+  f_equal. rewrite treal_add_of_num. apply fun_ext; intro x.
+  apply prop_ext; intro h.
+
+  exists (treal_of_num p). exists (treal_of_num q). split. exact h. split.
+  rewrite axiom_24_aux. reflexivity. exists (treal_of_num p). reflexivity.
+  rewrite axiom_24_aux. reflexivity. exists (treal_of_num q). reflexivity.
+
+  destruct h as [p' [q' [h1 [h2 h3]]]].
+  rewrite axiom_24_aux in h2. 2: exists (treal_of_num p); reflexivity.
+  rewrite axiom_24_aux in h3. 2: exists (treal_of_num q); reflexivity.
+  rewrite h2, h3. exact h1.
+Qed.
+
 Definition real_inv : real -> real := fun x : real => mk_real (fun u : prod hreal hreal => exists x' : prod hreal hreal, (treal_eq (treal_inv x') u) /\ (dest_real x x')).
 
 (*******************************************************************************)
@@ -628,7 +636,8 @@ Proof.
   intro P. case (excluded_middle_informative (exists x, P x)); intro h.
   case (excluded_middle_informative (exists M, forall x, (P x) -> real_le x M)); intro i.
   set (Q := fun M => (forall x : real, P x -> real_le x M) /\
-                    (forall M' : real, (forall x : real, P x -> real_le x M') -> real_le M M')).
+                    (forall M' : real, (forall x : real, P x -> real_le x M')
+                                  -> real_le M M')).
   exact (ε Q). exact (real_of_num 0). exact (real_of_num 0).
 Defined.
 
@@ -762,9 +771,6 @@ Proof.
   reflexivity.  
 Qed.
 
-(*Lemma R_of_real_morph : morphism R_of_real.
-Proof. apply Rmorph_toP. Qed.*)
-
 Lemma real_of_R_morph : morphism real_of_R.
 Proof. apply Rmorph_toP. Qed.
 
@@ -845,24 +851,6 @@ Proof. rewrite <- eq_real_model. apply (morph_one real_of_R_morph). Qed.
 Lemma one_eq : 1%R = R_of_real (real_of_num 1).
 Proof. rewrite <- one_morph_R, R_of_real_of_R. reflexivity. Qed.
 
-Lemma real_add_of_num p q :
-  real_of_num (p + q) = real_add (real_of_num p) (real_of_num q).
-Proof.
-  unfold real_add, real_of_num. f_equal. apply fun_ext; intro x.
-  apply prop_ext; intro h.
-
-  exists (treal_of_num p). exists (treal_of_num q). split.
-  rewrite <- treal_add_of_num. exact h. split.
-  rewrite real.axiom_24_aux. reflexivity. exists (treal_of_num p). reflexivity.
-  rewrite real.axiom_24_aux. reflexivity. exists (treal_of_num q). reflexivity.
-
-  destruct h as [p' [q' [h1 [h2 h3]]]].
-  rewrite treal_add_of_num.
-  rewrite real.axiom_24_aux in h2.
-  rewrite real.axiom_24_aux in h3.
-  rewrite h2.
-Qed.
-
 Lemma INR_eq n : INR (S n) = (INR n + 1)%R.
 Proof.
   induction n; simpl.
@@ -872,29 +860,9 @@ Qed.
 
 Lemma real_of_num_def : INR = (fun m : nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
 Proof.
+  change (INR = fun m : nat => R_of_real (real_of_num m)).  
   apply fun_ext. induction x.
-  simpl INR. rewrite zero_eq. reflexivity.
-  rewrite INR_eq, IHx, add_eq, one_morph_R.
-  unfold mk_real. f_equal.
-  rewrite real_of_R_of_real.
-  clear IHx.
-  unfold real_of_num.
-
-  Set Printing All.
-  clear IHx. unfold treal_of_num, hreal_of_num, nadd_of_num.
-  simpl.
-  set (Nadd := {x0 : nat -> nat | is_nadd x0}).
-  set (Hreal := {x0 : Nadd -> Prop | is_eq_class nadd nadd_eq x0}).
-  unfold mk_nadd.
-  
-  cut (forall y, forall x, x < y -> INR x = mk_real (fun u : hreal * hreal => treal_eq (treal_of_num x) u)).
-  intros h x. apply (h (S x)). lia.
-  induction y; intros x hx.
-  lia.
-  destruct x as [|x]; simpl INR.
-  rewrite zero_eq. reflexivity.
-  destruct x as [|x].
-  rewrite one_eq. reflexivity.
-  rewrite <- IHy.
-  rewrite IHy. 2: lia.
+  apply zero_eq.
+  rewrite INR_eq, IHx. rewrite add_eq, real_of_R_of_real, one_morph_R.
+  rewrite <- real_add_of_num. f_equal. f_equal. lia.
 Qed.

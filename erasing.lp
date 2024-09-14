@@ -230,32 +230,34 @@ builtin "mk_nadd" ≔ mk_nadd;
 builtin "axiom_19" ≔ axiom_19;
 builtin "axiom_20" ≔ axiom_20;
 
-/*builtin "nadd_of_num" ≔ nadd_of_num;
+builtin "nadd_of_num" ≔ nadd_of_num;
 builtin "nadd_le" ≔ nadd_le;
+builtin "nadd_eq" ≔ nadd_le;
 builtin "nadd_add" ≔ nadd_add;
 builtin "nadd_mul" ≔ nadd_mul;
 builtin "nadd_rinv" ≔ nadd_rinv;
 builtin "nadd_inv" ≔ nadd_inv;
-*/
+
 builtin "hreal" ≔ hreal;
 builtin "mk_hreal" ≔ mk_hreal;
 builtin "dest_hreal" ≔ dest_hreal;
 builtin "axiom_21" ≔ axiom_21;
 builtin "axiom_22" ≔ axiom_22;
 
-/*builtin "hreal_of_num" ≔ hreal_of_num;
+builtin "hreal_of_num" ≔ hreal_of_num;
+builtin "hreal_le" ≔ hreal_le;
+builtin "hreal_eq" ≔ hreal_eq;
 builtin "hreal_add" ≔ hreal_add;
 builtin "hreal_mul" ≔ hreal_mul;
-builtin "hreal_le" ≔ hreal_le;
 builtin "hreal_inv" ≔ hreal_inv;
 
 builtin "treal_of_num" ≔ treal_of_num;
-builtin "treal_neg" ≔ treal_neg;
+builtin "treal_le" ≔ treal_le;
+builtin "treal_eq" ≔ treal_eq;
 builtin "treal_add" ≔ treal_add;
 builtin "treal_mul" ≔ treal_mul;
-builtin "treal_le" ≔ treal_le;
 builtin "treal_inv" ≔ treal_inv;
-builtin "treal_eq" ≔ treal_eq;
+builtin "treal_neg" ≔ treal_neg;
 
 builtin "R" ≔ real;
 builtin "mk_real" ≔ mk_real;
@@ -280,29 +282,6 @@ builtin "real_le_def" ≔ real_le_def;
 
 builtin "Rinv" ≔ real_inv;
 builtin "real_inv_def" ≔ real_inv_def;
-
-builtin "Rplus_comm" ≔ REAL_ADD_SYM;
-builtin "Rplus_assoc" ≔ REAL_ADD_ASSOC;
-builtin "Rplus_0_l" ≔ REAL_ADD_LID;
-builtin "Rplus_opp_l" ≔ REAL_ADD_LINV;
-builtin "Rmult_comm" ≔ REAL_MUL_SYM;
-builtin "Rmult_assoc" ≔ REAL_MUL_ASSOC;
-builtin "Rmult_1_l" ≔ REAL_MUL_LID;
-builtin "Rmult_plus_distr_l" ≔ REAL_ADD_LDISTRIB;
-builtin "Rle_refl" ≔ REAL_LE_REFL;
-
-builtin "REAL_LE_ANTISYM" ≔ REAL_LE_ANTISYM;
-builtin "REAL_LE_TRANS" ≔ REAL_LE_TRANS;
-builtin "REAL_LE_TOTAL" ≔ REAL_LE_TOTAL;
-builtin "Rplus_le_compat_l" ≔ REAL_LE_LADD_IMP;
-builtin "REAL_LE_MUL" ≔ REAL_LE_MUL;
-builtin "Rinv_0" ≔ REAL_INV_0;
-builtin "Rinv_l" ≔ REAL_MUL_LINV;
-
-builtin "INR_eq" ≔ REAL_OF_NUM_EQ;
-builtin "INR_le" ≔ REAL_OF_NUM_LE;
-builtin "REAL_OF_NUM_ADD" ≔ REAL_OF_NUM_ADD;
-builtin "REAL_OF_NUM_MUL" ≔ REAL_OF_NUM_MUL;
 
 builtin "Rminus" ≔ real_sub;
 builtin "real_sub_def" ≔ real_sub_def;
@@ -331,5 +310,28 @@ builtin "real_max_def" ≔ real_max_def;
 builtin "Rmin" ≔ real_min;
 builtin "real_min_def" ≔ real_min_def;
 
+/*
 builtin "REAL_COMPLETE" ≔ REAL_COMPLETE;
+builtin "Rplus_comm" ≔ REAL_ADD_SYM;
+builtin "Rplus_assoc" ≔ REAL_ADD_ASSOC;
+builtin "Rplus_0_l" ≔ REAL_ADD_LID;
+builtin "Rplus_opp_l" ≔ REAL_ADD_LINV;
+builtin "Rmult_comm" ≔ REAL_MUL_SYM;
+builtin "Rmult_assoc" ≔ REAL_MUL_ASSOC;
+builtin "Rmult_1_l" ≔ REAL_MUL_LID;
+builtin "Rmult_plus_distr_l" ≔ REAL_ADD_LDISTRIB;
+builtin "Rle_refl" ≔ REAL_LE_REFL;
+
+builtin "REAL_LE_ANTISYM" ≔ REAL_LE_ANTISYM;
+builtin "REAL_LE_TRANS" ≔ REAL_LE_TRANS;
+builtin "REAL_LE_TOTAL" ≔ REAL_LE_TOTAL;
+builtin "Rplus_le_compat_l" ≔ REAL_LE_LADD_IMP;
+builtin "REAL_LE_MUL" ≔ REAL_LE_MUL;
+builtin "Rinv_0" ≔ REAL_INV_0;
+builtin "Rinv_l" ≔ REAL_MUL_LINV;
+
+builtin "INR_eq" ≔ REAL_OF_NUM_EQ;
+builtin "INR_le" ≔ REAL_OF_NUM_LE;
+builtin "REAL_OF_NUM_ADD" ≔ REAL_OF_NUM_ADD;
+builtin "REAL_OF_NUM_MUL" ≔ REAL_OF_NUM_MUL;
 */
