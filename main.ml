@@ -1066,7 +1066,6 @@ and command = function
          Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs_in_one_file b n;
-         if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
          0
        end

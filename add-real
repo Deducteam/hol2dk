@@ -4,7 +4,10 @@ if test ! -f BASE; then echo "error: file \"BASE\" missing"; exit 1; fi
 
 base=`cat BASE`
 
-for f in `grep -l -e real -e nadd -e axiom_2[1-4] -e dist *.lp | grep -v ${base}_types`
+files=`grep -l -e real -e nadd -e axiom_2[1-4] -e dist *.lp | grep -v ${base}_types`
+
+# patch *.v and *.lpo.mk files
+for f in $files
 do
     v=${f%.lp}.v
     if ! grep -q '^Require Import coq coq_real\.' $v
@@ -14,10 +17,14 @@ do
         sed -i -e 's/: theory_hol.lpo/: coq_real.lpo theory_hol.lpo/' ${f}o.mk
     fi
 done
-make dep
+
+# generate vo.mk
 echo patch vo.mk ...
+make dep
 sed -i -e '1i coq_real.vo: coq.vo' vo.mk
-for f in `grep -l ' real ' *.lp | grep -v ${base}_types` lp
+
+# revert modifications in *.lpo.mk files
+for f in $files
 do
     sed -i -e 's/ coq_real.lpo//' ${f}o.mk
 done
