@@ -14,6 +14,7 @@ do
     then
         echo patch $v ...
         sed -i -e 's/^Require Import coq\./Require Import coq coq_real./' $v
+        echo sed -i -e 's/: theory_hol.lpo/: coq_real.lpo theory_hol.lpo/' ${f}o.mk
         sed -i -e 's/: theory_hol.lpo/: coq_real.lpo theory_hol.lpo/' ${f}o.mk
     fi
 done

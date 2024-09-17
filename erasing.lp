@@ -232,7 +232,7 @@ builtin "axiom_20" ≔ axiom_20;
 
 builtin "nadd_of_num" ≔ nadd_of_num;
 builtin "nadd_le" ≔ nadd_le;
-builtin "nadd_eq" ≔ nadd_le;
+builtin "nadd_eq" ≔ nadd_eq;
 builtin "nadd_add" ≔ nadd_add;
 builtin "nadd_mul" ≔ nadd_mul;
 builtin "nadd_rinv" ≔ nadd_rinv;
