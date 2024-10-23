@@ -67,7 +67,7 @@ Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- hol-light >= bfb2ea95cf4b20f40136d5f08102875400c8cba7 (04/04/24)
+- bfb2ea9 (04/04/24) <= hol-light <= ea45176 (23/08/24)
 - libipc-system-simple-perl
 - libstring-shellquote
 - ocaml >= 4.14
