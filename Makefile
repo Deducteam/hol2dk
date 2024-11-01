@@ -72,8 +72,8 @@ BIG_FILES = $(shell for f in `cat BIG_FILES 2> /dev/null | sed -e '/^#/d'`; do i
 echo-big-files:
 	@echo $(BIG_FILES)
 
-.PHONY: print-big-files
-print-big-files:
+.PHONY: find-big-files
+find-big-files:
 	@if test -f BIG_FILES; then cat BIG_FILES; fi > big-files
 	@find . -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> big-files
 	@sort -u big-files
@@ -208,7 +208,7 @@ clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a ! -name 'coq*.v' -delete
+	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
 
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk

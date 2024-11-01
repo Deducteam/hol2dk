@@ -1229,7 +1229,7 @@ Proof. (*thm_1060744*)
 Qed.
 
 (****************************************************************************)
-(* Mapping of Sum. *)
+(* Alignment of Sum. *)
 (****************************************************************************)
 
 Definition sum' (A B : Type') : Type' := {| type:= sum A B; el := inl (el A)|}.
@@ -1297,7 +1297,7 @@ Proof.
 Qed.
 
 (****************************************************************************)
-(* Alignement of the option type. *)
+(* Alignment of the option type constructor. *)
 (****************************************************************************)
 
 Definition option' (A : Type') := {| type := option A; el := None |}.
@@ -1390,7 +1390,7 @@ Proof.
 Qed.
 
 (****************************************************************************)
-(* Mapping of list. *)
+(* Alignment of the list type constructor. *)
 (****************************************************************************)
 
 Definition list' (A : Type') := {| type := list A; el := nil |}.
@@ -1864,7 +1864,7 @@ induction n; simpl; intro l.  rewrite nth_of_0. symmetry. apply H.
 rewrite nth_of_Suc. rewrite (IHn (tl l)). symmetry. apply H.  Qed.*)
 
 (****************************************************************************)
-(* Mapping of char. *)
+(* Alignment of the type char of ASCII characters. *)
 (****************************************************************************)
 
 (* Note the mismatch between Coq's ascii which takes booleans as arguments
@@ -1975,9 +1975,9 @@ Lemma axiom_18 : forall (r : recspace (prod Prop (prod Prop (prod Prop (prod Pro
 ((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) (NUMERAL 0) (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) a0' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) a1' (@pair Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) a2' (@pair Prop (prod Prop (prod Prop (prod Prop Prop))) a3' (@pair Prop (prod Prop (prod Prop Prop)) a4' (@pair Prop (prod Prop Prop) a5' (@pair Prop Prop a6' a7'))))))) (fun n : nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))))) a0 a1 a2 a3 a4 a5 a6 a7)) -> char' a') -> char' a) r) = ((_dest_char (_mk_char r)) = r).
 Proof. intro r. apply axiom_18'. Qed.
 
-(*******************************************************************************)
+(*****************************************************************************)
 (* Properties of Coq real numbers *)
-(*******************************************************************************)
+(*****************************************************************************)
 
 Require Export Rbase Rbasic_fun.
 
@@ -1987,9 +1987,9 @@ Definition R' := {| type := R; el := 0%R |}.
 
 Canonical R'.
 
-(*******************************************************************************)
+(*****************************************************************************)
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
-(*******************************************************************************)
+(*****************************************************************************)
 
 Definition Rsup : (R -> Prop) -> R.
 Proof.
@@ -2086,9 +2086,9 @@ Proof. exact eq_R_struct. Qed.
 
 Close Scope R_scope.
 
-(*******************************************************************************)
-(* Subtype *)
-(*******************************************************************************)
+(*****************************************************************************)
+(* Alignment of subtypes. *)
+(*****************************************************************************)
 
 Section Subtype.
 
@@ -2140,9 +2140,9 @@ Arguments mk_dest [A P a].
 
 Canonical subtype.
 
-(*******************************************************************************)
-(* Quotient *)
-(*******************************************************************************)
+(*****************************************************************************)
+(* Alignment of quotients. *)
+(*****************************************************************************)
 
 Section Quotient.
 
@@ -2241,9 +2241,9 @@ Arguments is_eq_class [A].
 Arguments elt_of [A R].
 Arguments dest_quotient_elt_of [A R].
 
-(*******************************************************************************)
+(*****************************************************************************)
 (* Nearly additive sequences of natural numbers *)
-(*******************************************************************************)
+(*****************************************************************************)
 
 Import Coq.Init.Datatypes.
 
@@ -2375,12 +2375,12 @@ Proof.
   apply is_nadd_add. apply is_nadd_add.
 Qed.
 
-Add Morphism nadd_le
+(*Add Morphism nadd_le
     with signature nadd_eq ==> nadd_eq ==> iff
       as nadd_le_morph.
 Proof.
   intros f f' [b ff'] g g' [c gg'].
-Admitted.
+Abort.*)
 
 Lemma nadd_add_lcancel x y z : nadd_add x y = nadd_add x z -> y = z.
 Proof.
@@ -2401,9 +2401,9 @@ Qed.
 
 Definition nadd_inv : nadd -> nadd := fun _23476 : nadd => @COND nadd (nadd_eq _23476 (nadd_of_num (NUMERAL 0))) (nadd_of_num (NUMERAL 0)) (mk_nadd (nadd_rinv _23476)).
 
-(*******************************************************************************)
+(*****************************************************************************)
 (* hreal *)
-(*******************************************************************************)
+(*****************************************************************************)
 
 Definition hreal := quotient nadd_eq.
 
@@ -2509,7 +2509,7 @@ Definition hreal_mul : hreal -> hreal -> hreal := fun x : hreal => fun y : hreal
 
 Definition hreal_le : hreal -> hreal -> Prop := fun x : hreal => fun y : hreal => @ε Prop (fun u : Prop => exists x' : nadd, exists y' : nadd, ((nadd_le x' y') = u) /\ ((dest_hreal x x') /\ (dest_hreal y y'))).
 
-Lemma hreal_le_refl x : hreal_le x x.
+(*Lemma hreal_le_refl x : hreal_le x x.
 Proof.
   unfold hreal_le.
   match goal with [|- ε ?x] => set (Q := x); set (q := ε Q) end.
@@ -2529,13 +2529,13 @@ Qed.
 Add Relation _ hreal_le
     reflexivity proved by hreal_le_refl
     (*transitivity proved by hreal_le_trans*)
-as hreal_le_rel.
+as hreal_le_rel.*)
 
 Definition hreal_inv : hreal -> hreal := fun x : hreal => mk_hreal (fun u : nadd => exists x' : nadd, (nadd_eq (nadd_inv x') u) /\ (dest_hreal x x')).
 
-(*******************************************************************************)
-(* Operations on treal (pairs of hreal's) *)
-(*******************************************************************************)
+(*****************************************************************************)
+(* Operations on treal (pairs of hreal's). *)
+(*****************************************************************************)
 
 Definition treal_of_num : nat -> prod hreal hreal := fun _23721 : nat => @pair hreal hreal (hreal_of_num _23721) (hreal_of_num (NUMERAL 0)).
 
@@ -2557,7 +2557,7 @@ Definition treal_mul : (prod hreal hreal) -> (prod hreal hreal) -> prod hreal hr
 
 Definition treal_le : (prod hreal hreal) -> (prod hreal hreal) -> Prop := fun _23779 : prod hreal hreal => fun _23780 : prod hreal hreal => hreal_le (hreal_add (@fst hreal hreal _23779) (@snd hreal hreal _23780)) (hreal_add (@fst hreal hreal _23780) (@snd hreal hreal _23779)).
 
-Lemma treal_le_refl x : treal_le x x.
+(*Lemma treal_le_refl x : treal_le x x.
 Proof.
   unfold treal_le. destruct x as [x1 x2]. simpl. apply hreal_le_refl.
 Qed.
@@ -2565,7 +2565,7 @@ Qed.
 Add Relation _ treal_le
     reflexivity proved by treal_le_refl
     (*transitivity proved by treal_le_trans*)
-as treal_le_rel.
+as treal_le_rel.*)
 
 Definition treal_inv : (prod hreal hreal) -> prod hreal hreal := fun _23801 : prod hreal hreal => @COND (prod hreal hreal) ((@fst hreal hreal _23801) = (@snd hreal hreal _23801)) (@pair hreal hreal (hreal_of_num (NUMERAL 0)) (hreal_of_num (NUMERAL 0))) (@COND (prod hreal hreal) (hreal_le (@snd hreal hreal _23801) (@fst hreal hreal _23801)) (@pair hreal hreal (hreal_inv (@ε hreal (fun d : hreal => (@fst hreal hreal _23801) = (hreal_add (@snd hreal hreal _23801) d)))) (hreal_of_num (NUMERAL 0))) (@pair hreal hreal (hreal_of_num (NUMERAL 0)) (hreal_inv (@ε hreal (fun d : hreal => (@snd hreal hreal _23801) = (hreal_add (@fst hreal hreal _23801) d)))))).
 
@@ -2620,15 +2620,15 @@ Proof.
   rewrite !hreal_add_assoc. reflexivity.
 Qed.
 
-Add Morphism treal_le
+(*Add Morphism treal_le
     with signature treal_eq ==> treal_eq ==> iff
       as treal_le_morph.
 Proof.
-Admitted.
+Abort.*)
 
-(*******************************************************************************)
-(* HOL-Light real numbers *)
-(*******************************************************************************)
+(*****************************************************************************)
+(* HOL-Light real numbers. *)
+(*****************************************************************************)
 
 Definition real := quotient treal_eq.
 
@@ -2652,7 +2652,7 @@ Import real.
 
 Definition real_le : real -> real -> Prop := fun x1 : real => fun y1 : real => @ε Prop (fun u : Prop => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, ((treal_le x1' y1') = u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1'))).
 
-Lemma real_le_refl: forall x : real, real_le x x.
+(*Lemma real_le_refl: forall x : real, real_le x x.
 Proof.
   intro x. unfold real_le.
   match goal with [|- ε ?x] => set (Q := x); set (q := ε Q) end.
@@ -2670,13 +2670,12 @@ Qed.
 
 Lemma real_le_trans x y z: real_le x y -> real_le y z -> real_le x z.
 Proof.
-   
-Admitted.
+Abort.
 
 Add Relation _ real_le
     reflexivity proved by real_le_refl
     (*transitivity proved by real_le_trans*)
-as real_le_rel.
+as real_le_rel.*)
 
 Definition real_add : real -> real -> real := fun x1 : real => fun y1 : real => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, (treal_eq (treal_add x1' y1') u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1'))).
 
@@ -2713,9 +2712,9 @@ Qed.
 
 Definition real_inv : real -> real := fun x : real => mk_real (fun u : prod hreal hreal => exists x' : prod hreal hreal, (treal_eq (treal_inv x') u) /\ (dest_real x x')).
 
-(*******************************************************************************)
+(*****************************************************************************)
 (* Proof that real is a fourcolor.model of real numbers. *)
-(*******************************************************************************)
+(*****************************************************************************)
 
 Definition real_sup : (real -> Prop) -> real.
 Proof.
@@ -2740,341 +2739,3 @@ Definition real_struct : structure := {|
 |}.
 
 Canonical real_struct.
-
-Axiom REAL_COMPLETE: forall P : real -> Prop, ((exists x : real, P x) /\ (exists M : real, forall x : real, (P x) -> real_le x M)) -> exists M : real, (forall x : real, (P x) -> real_le x M) /\ (forall M' : real, (forall x : real, (P x) -> real_le x M') -> real_le M M').
-
-Lemma real_sup_is_lub E :
-  has_sup E -> ub E (real_sup E) /\ (forall b, ub E b -> real_le (real_sup E) b).
-Proof.
-  intros [i j]. unfold real_sup.
-  destruct (excluded_middle_informative (exists x : real, E x)).
-  destruct (excluded_middle_informative (exists M : real, forall x : real, E x -> real_le x M)).
-  set (Q := fun M : real =>
-              (forall x : real, E x -> real_le x M) /\
-                (forall M' : real, (forall x : real, E x -> real_le x M') -> real_le M M')).
-  assert (k: exists M : real, Q M). apply (REAL_COMPLETE E (conj i j)).
-  generalize (ε_spec k); intros [l m]. auto. contradiction. contradiction.
-Qed.
-
-Lemma real_sup_upper_bound E : has_sup E -> ub E (real_sup E).
-Proof. intro h. apply (proj1 (real_sup_is_lub E h)). Qed.
-
-Axiom REAL_LT_IMP_LE : forall x : real, forall y : real, (lt x y) -> real_le x y.
-
-Lemma real_sup_total E x : has_sup E -> down E x \/ real_le (real_sup E) x.
-Proof.
-  intro h. case (classic (down E x)); intro k. auto. right.
-  generalize (real_sup_is_lub E h); intros [i j]. apply j.
-  intros y hy.
-  unfold down in k. rewrite ex2_eq, not_exists_eq in k.
-  generalize (k y); intro k'. rewrite not_conj_eq, not_or_eq in k'.
-  apply REAL_LT_IMP_LE. auto.
-Qed.
-
-Axiom REAL_LE_REFL: forall x : real, real_le x x.
-Axiom REAL_LE_TRANS: forall x : real, forall y : real, forall z : real, ((real_le x y) /\ (real_le y z)) -> real_le x z.
-Axiom REAL_LE_LADD: forall x : real, forall y : real, forall z : real, (real_le (real_add x y) (real_add x z)) = (real_le y z).
-Axiom REAL_ADD_SYM: forall x : real, forall y : real, (real_add x y) = (real_add y x).
-Axiom REAL_LE_ANTISYM: forall x : real, forall y : real, ((real_le x y) /\ (real_le y x)) = (x = y).
-Axiom REAL_ADD_ASSOC: forall x : real, forall y : real, forall z : real, (real_add x (real_add y z)) = (real_add (real_add x y) z).
-Axiom REAL_ADD_LID: forall x : real, (real_add (real_of_num (NUMERAL 0)) x) = x.
-Axiom REAL_ADD_LINV: forall x : real, (real_add (real_neg x) x) = (real_of_num (NUMERAL 0)).
-Axiom REAL_LE_LMUL: forall x : real, forall y : real, forall z : real, ((real_le (real_of_num (NUMERAL 0)) x) /\ (real_le y z)) -> real_le (real_mul x y) (real_mul x z).
-Axiom REAL_MUL_SYM: forall x : real, forall y : real, (real_mul x y) = (real_mul y x).
-Axiom REAL_MUL_ASSOC: forall x : real, forall y : real, forall z : real, (real_mul x (real_mul y z)) = (real_mul (real_mul x y) z).
-Axiom REAL_ADD_LDISTRIB: forall x : real, forall y : real, forall z : real, (real_mul x (real_add y z)) = (real_add (real_mul x y) (real_mul x z)).
-Axiom REAL_MUL_LID: forall x : real, (real_mul (real_of_num (NUMERAL (BIT1 0))) x) = x.
-Axiom REAL_MUL_LINV: forall x : real, (~ (x = (real_of_num (NUMERAL 0)))) -> (real_mul (real_inv x) x) = (real_of_num (NUMERAL (BIT1 0))).
-Axiom REAL_OF_NUM_EQ: forall m : nat, forall n : nat, ((real_of_num m) = (real_of_num n)) = (m = n).
-Axiom REAL_INV_0 : (real_inv (real_of_num (NUMERAL 0))) = (real_of_num (NUMERAL 0)).
-
-Lemma eq_real_struct: @eq real_struct = @Logic.eq real.
-Proof.
-  apply fun_ext; intro x. apply fun_ext; intro y.
-  unfold eq. rewrite REAL_LE_ANTISYM. reflexivity.
-Qed.
-
-Lemma real_axioms : axioms real_struct.
-Proof.
-  apply Axioms.
-  apply REAL_LE_REFL.
-  intros x y z xy yz; apply (REAL_LE_TRANS x y z (conj xy yz)).
-  apply real_sup_upper_bound.
-  apply real_sup_total.
-  intros x y z yz; rewrite REAL_LE_LADD; exact yz.
-  intros x y. rewrite eq_real_struct. apply REAL_ADD_SYM.
-  intros x y z. rewrite eq_real_struct. apply REAL_ADD_ASSOC.
-  intro x. rewrite eq_real_struct. apply REAL_ADD_LID.
-  intro x. rewrite eq_real_struct. rewrite REAL_ADD_SYM. apply REAL_ADD_LINV.
-  intros x y z hx yz. apply REAL_LE_LMUL. auto.
-  intros x y. rewrite eq_real_struct. apply REAL_MUL_SYM.
-  intros x y z. rewrite eq_real_struct. apply REAL_MUL_ASSOC.
-  intros x y z. rewrite eq_real_struct. apply REAL_ADD_LDISTRIB.
-  intro x. rewrite eq_real_struct. apply REAL_MUL_LID.
-  intro x. rewrite eq_real_struct. rewrite REAL_MUL_SYM. apply REAL_MUL_LINV.
-  unfold one, zero. simpl. rewrite eq_real_struct, REAL_OF_NUM_EQ. auto.
-Qed.
-
-Definition real_model : model := {|
-  model_structure := real_struct;
-  model_axioms := real_axioms;
-|}.
-
-Lemma eq_real_model:
-  @eq (model_structure real_model) = @Logic.eq (val (model_structure real_model)).
-Proof. exact eq_real_struct. Qed.
-
-Require Import fourcolor.realcategorical.
-
-Definition R_of_real := @Rmorph_to real_model R_model.
-Definition real_of_R := @Rmorph_to R_model real_model.
-
-Lemma R_of_real_of_R r : R_of_real (real_of_R r) = r.
-Proof. rewrite <- eq_R_model. apply (@Rmorph_to_inv R_model real_model). Qed.
-
-Lemma real_of_R_of_real r : real_of_R (R_of_real r) = r.
-Proof. rewrite <- eq_real_model. apply (@Rmorph_to_inv real_model R_model). Qed.
-
-(*******************************************************************************)
-(* Mapping of HOL-Light reals to Coq reals. *)
-(*******************************************************************************)
-
-Definition mk_real : ((prod hreal hreal) -> Prop) -> R := fun x => R_of_real (mk_real x).
-
-Definition dest_real : R -> (prod hreal hreal) -> Prop := fun x => dest_real (real_of_R x).
-
-Lemma axiom_23 : forall (a : R), (mk_real (dest_real a)) = a.
-Proof. intro a. unfold mk_real, dest_real. rewrite axiom_23. apply R_of_real_of_R. Qed.
-
-Lemma axiom_24_aux : forall r, (exists x, r = treal_eq x) -> dest_real (mk_real r) = r.
-Proof.
-  intros c [x h]. unfold dest_real, mk_real.
-  rewrite real_of_R_of_real, <- axiom_24.
-  exists x. exact h.
-Qed.
-
-Lemma axiom_24 : forall (r : (prod hreal hreal) -> Prop), ((fun s : (prod hreal hreal) -> Prop => exists x : prod hreal hreal, s = (treal_eq x)) r) = ((dest_real (mk_real r)) = r).
-Proof.
-  intro c. unfold dest_real, mk_real. rewrite real_of_R_of_real, <- axiom_24.
-  reflexivity.  
-Qed.
-
-Lemma real_of_R_morph : morphism real_of_R.
-Proof. apply Rmorph_toP. Qed.
-
-Lemma le_morph_R x y : le x y = le (real_of_R x) (real_of_R y).
-Proof.
-  generalize (morph_le real_of_R_morph x y); intros [h i]. apply prop_ext; auto.
-Qed.
-
-Lemma real_le_def : Rle = (fun x1 : R => fun y1 : R => @ε Prop (fun u : Prop => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, ((treal_le x1' y1') = u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1')))).
-Proof.
-  apply fun_ext; intro x. apply fun_ext; intro y.
-  unfold dest_real. rewrite le_morph_R.
-  generalize (real_of_R x); clear x; intro x.
-  generalize (real_of_R y); clear y; intro y.
-  reflexivity.
-Qed.
-
-Lemma add_morph_R x y : real_of_R (add x y) = (add (real_of_R x) (real_of_R y)).
-Proof. rewrite <- eq_real_model. apply (morph_add real_of_R_morph). Qed.
-
-Lemma add_eq x y : add x y = R_of_real (add (real_of_R x) (real_of_R y)).
-Proof. rewrite <- add_morph_R, R_of_real_of_R. reflexivity. Qed.
-
-Lemma real_add_def : Rplus = (fun x1 : R => fun y1 : R => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, (treal_eq (treal_add x1' y1') u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1')))).
-Proof.
-  apply fun_ext; intro x. apply fun_ext; intro y.
-  rewrite add_eq. unfold mk_real. apply f_equal. reflexivity.
-Qed.
-
-Lemma mul_morph_R x y : real_of_R (mul x y) = (mul (real_of_R x) (real_of_R y)).
-Proof. rewrite <- eq_real_model. apply (morph_mul real_of_R_morph). Qed.
-
-Lemma mul_eq x y : mul x y = R_of_real (mul (real_of_R x) (real_of_R y)).
-Proof. rewrite <- mul_morph_R, R_of_real_of_R. reflexivity. Qed.
-
-Lemma real_mul_def : Rmult = (fun x1 : R => fun y1 : R => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, (treal_eq (treal_mul x1' y1') u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1')))).
-Proof.
-  apply fun_ext; intro x. apply fun_ext; intro y.
-  rewrite mul_eq. unfold mk_real. apply f_equal. reflexivity.
-Qed.
-
-Lemma zero_morph_R : real_of_R 0%R = real_of_num 0.
-Proof. rewrite <- eq_real_model. apply (morph_zero real_of_R_morph). Qed.
-
-Lemma zero_eq : 0%R = R_of_real (real_of_num 0).
-Proof. rewrite <- zero_morph_R, R_of_real_of_R. reflexivity. Qed.
-
-Lemma inv_morph_R x : real_of_R (inv x) = inv (real_of_R x).
-Proof.
-  case (classic (x = 0%R)); intro h.
-  subst x. unfold inv. simpl. rewrite Rinv_0, zero_eq, !real_of_R_of_real.
-  Set Printing All.
-  change (@Logic.eq (type real) (real_of_num O) (real_inv (real_of_num O))).
-  symmetry. apply REAL_INV_0.
-  rewrite <- eq_real_model. apply (morph_inv real_of_R_morph).
-  rewrite eq_R_model. exact h.
-  Unset Printing All.
-Qed.
-
-Lemma inv_eq x : inv x = R_of_real (inv (real_of_R x)).
-Proof. rewrite <- inv_morph_R, R_of_real_of_R. reflexivity. Qed.
-
-Lemma real_inv_def : Rinv = (fun x : R => mk_real (fun u : prod hreal hreal => exists x' : prod hreal hreal, (treal_eq (treal_inv x') u) /\ (dest_real x x'))).
-Proof. apply fun_ext; intro x. rewrite inv_eq. unfold mk_real. reflexivity. Qed.
-
-Lemma neg_morph_R x : real_of_R (opp x) = opp (real_of_R x).
-Proof. rewrite <- eq_real_model. apply (morph_opp real_of_R_morph). Qed.
-
-Lemma neg_eq x : opp x = R_of_real (opp (real_of_R x)).
-Proof. rewrite <- neg_morph_R, R_of_real_of_R. reflexivity. Qed.
-
-Lemma real_neg_def : Ropp = (fun x1 : R => mk_real (fun u : prod hreal hreal => exists x1' : prod hreal hreal, (treal_eq (treal_neg x1') u) /\ (dest_real x1 x1'))).
-Proof. apply fun_ext; intro x. rewrite neg_eq. unfold mk_real. reflexivity. Qed.
-
-Lemma one_morph_R : real_of_R 1%R = real_of_num 1.
-Proof. rewrite <- eq_real_model. apply (morph_one real_of_R_morph). Qed.
-
-Lemma one_eq : 1%R = R_of_real (real_of_num 1).
-Proof. rewrite <- one_morph_R, R_of_real_of_R. reflexivity. Qed.
-
-Lemma INR_eq n : INR (S n) = (INR n + 1)%R.
-Proof.
-  induction n; simpl.
-  rewrite Rplus_0_l. reflexivity.
-  destruct n as [|n]. reflexivity. reflexivity.
-Qed.
-
-Lemma real_of_num_def : INR = (fun m : nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
-Proof.
-  change (INR = fun m : nat => R_of_real (real_of_num m)).  
-  apply fun_ext. induction x.
-  apply zero_eq.
-  rewrite INR_eq, IHx. rewrite add_eq, real_of_R_of_real, one_morph_R.
-  rewrite <- real_add_of_num. f_equal. f_equal. lia.
-Qed.
-
-Fixpoint Rpower_nat r n : R :=
-  match n with
-  | 0 => 1
-  | S n => r * Rpower_nat r n
-  end.
-
-Lemma real_pow_def : Rpower_nat = (@ε ((prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))))) -> R -> nat -> R) (fun real_pow' : (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))))) -> R -> nat -> R => forall _24085 : prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))), (forall x : R, (real_pow' _24085 x (NUMERAL 0)) = (INR (NUMERAL (BIT1 0)))) /\ (forall x : R, forall n : nat, (real_pow' _24085 x (S n)) = (Rmult x (real_pow' _24085 x n)))) (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 0)))))))))))))))).
-Proof.
-  generalize (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat)))))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat (prod nat nat)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat (prod nat nat))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 0)))))))) (@pair nat (prod nat (prod nat nat)) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 0)))))))) (@pair nat (prod nat nat) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 0)))))))) (@pair nat nat (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 0)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 0))))))))))))))); generalize (@prod nat (prod nat (prod nat (prod nat (prod nat (prod nat (prod nat nat))))))); intros A a.
-  match goal with [|- _ = ε ?x _] => set (Q := x) end.
-  assert (i : exists q, Q q). exists (fun _ => Rpower_nat). split; simpl; intro x; reflexivity.
-  generalize (ε_spec i a). intros [h0 hs].
-  apply fun_ext; intro x. apply fun_ext; intro y.
-  induction y; simpl. rewrite h0. reflexivity. rewrite hs, IHy. reflexivity.
-Qed.
-
-Open Scope R_scope.
-
-Lemma Rnot_le (x y: R) : (~ x <= y) = (x > y).
-Proof.
-  apply prop_ext; intro h.
-  apply Rnot_le_gt. exact h.
-  apply Rgt_not_le. exact h.
-Qed.
-
-Lemma real_abs_def :
-  Rabs = (fun y0 : R => @COND R (Rle (INR (NUMERAL 0)) y0) y0 (Ropp y0)).
-Proof.
-  apply fun_ext; intro r. unfold Rabs. destruct (Rcase_abs r).
-  assert (h: (Rle (INR (NUMERAL 0)) r) = False). rewrite is_False, Rnot_le. exact r0.
-  rewrite h, COND_False. reflexivity.
-  assert (h: (INR (NUMERAL 0) <= r) = True). rewrite is_True. apply Rge_le. exact r0.
-  rewrite h, COND_True. reflexivity.
-Qed.
-
-Lemma real_ge_def : Rge = (fun y0 : R => fun y1 : R => Rle y1 y0).
-Proof.
-  apply fun_ext; intro x; apply fun_ext; intro y. apply prop_ext; intro h.
-  apply Rge_le. exact h. apply Rle_ge. exact h.
-Qed.
-
-Lemma real_gt_def : Rgt = (fun y0 : R => fun y1 : R => Rlt y1 y0).
-Proof.
-  apply fun_ext; intro x; apply fun_ext; intro y. apply prop_ext; intro h.
-  apply Rgt_lt. exact h. apply Rlt_gt. exact h.
-Qed.
-
-Lemma real_lt_def : Rlt = (fun y0 : R => fun y1 : R => ~ (Rle y1 y0)).
-Proof.
-  apply fun_ext; intro x; apply fun_ext; intro y. apply prop_ext; intro h.
-  rewrite Rnot_le. exact h. rewrite Rnot_le in h. exact h.
-Qed.
-
-Lemma real_div_def : Rdiv = (fun y0 : R => fun y1 : R => Rmult y0 (Rinv y1)).
-Proof.
-  apply fun_ext; intro x; apply fun_ext; intro y. reflexivity.
-Qed.
-
-Lemma real_sub_def : Rminus = (fun y0 : R => fun y1 : R => Rplus y0 (Ropp y1)).
-Proof.
-  apply fun_ext; intro x; apply fun_ext; intro y. reflexivity.
-Qed.
-
-Lemma real_max_def : Rmax = (fun y0 : R => fun y1 : R => @COND R (Rle y0 y1) y1 y0).
-Proof.
-  apply fun_ext; intro x; apply fun_ext; intro y. unfold Rmax.
-  destruct (Rle_dec x y).
-  rewrite <- (is_True (x <= y)) in r. rewrite r, COND_True. reflexivity.
-  rewrite <- (is_False (x <= y)) in n. rewrite n, COND_False. reflexivity.
-Qed.
-
-Lemma real_min_def : Rmin = (fun y0 : R => fun y1 : R => @COND R (Rle y0 y1) y0 y1).
-Proof.
-  apply fun_ext; intro x; apply fun_ext; intro y. unfold Rmin.
-  destruct (Rle_dec x y).
-  rewrite <- (is_True (x <= y)) in r. rewrite r, COND_True. reflexivity.
-  rewrite <- (is_False (x <= y)) in n. rewrite n, COND_False. reflexivity.
-Qed.
-
-Close Scope R_scope.
-
-(*
-Lemma REAL_COMPLETE : forall P : R -> Prop,
-    ((exists x : R, P x) /\ (exists M : R, forall x : R, (P x) -> Rle x M))
-    -> exists M : R, (forall x : R, (P x) -> Rle x M)
-               /\ (forall M' : R, (forall x : R, (P x) -> Rle x M') -> Rle M M').
-Proof.
-  intros P [P_nonempty P_bounded].
-  destruct (completeness P P_bounded P_nonempty) as [M M_is_lub].
-  exists M. apply M_is_lub.
-Qed.
-
-Lemma REAL_LE_ANTISYM : forall x : R, forall y : R, ((Rle x y) /\ (Rle y x)) = (x = y).
-Proof.
-  intros x y. apply prop_ext.
-  intros [h1 h2]. apply Rle_antisym. exact h1. exact h2.
-  intro e. subst. split; apply Rle_refl.
-Qed.
-
-Lemma REAL_LE_TRANS : forall x : R, forall y : R, forall z : R, ((Rle x y) /\ (Rle y z)) -> Rle x z.
-Proof.
-  intros x y z [xy yz]. apply Rle_trans with y. exact xy. exact yz.
-Qed.
-
-Lemma REAL_LE_TOTAL : forall x : R, forall y : R, (Rle x y) \/ (Rle y x).
-Proof.
-  intros x y. destruct (Rtotal_order x y) as [lt|[eq|gt]].
-  left. apply Rlt_le. exact lt.
-  left. apply Req_le. exact eq.
-  right. apply Rlt_le. exact gt.
-Qed.
-
-Lemma REAL_OF_NUM_ADD: forall m : nat, forall n : nat, (Rplus (INR m) (INR n)) = (INR (Nat.add m n)).
-Proof. intros m n. symmetry. apply plus_INR. Qed.
-
-Lemma REAL_LE_MUL: forall x : R, forall y : R, ((Rle (INR (NUMERAL 0)) x) /\ (Rle (INR (NUMERAL 0)) y)) -> Rle (INR (NUMERAL 0)) (Rmult x y).
-Proof.
-  intros x y. simpl. intros [hx hy]. apply Rmult_le_pos. exact hx. exact hy.
-Qed.
-
-Lemma REAL_OF_NUM_MUL: forall m : nat, forall n : nat, (Rmult (INR m) (INR n)) = (INR (Nat.mul m n)).
-Proof. intros m n. symmetry. apply mult_INR. Qed.
-*)

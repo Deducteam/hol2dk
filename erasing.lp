@@ -258,7 +258,7 @@ builtin "treal_add" ≔ treal_add;
 builtin "treal_mul" ≔ treal_mul;
 builtin "treal_inv" ≔ treal_inv;
 builtin "treal_neg" ≔ treal_neg;
-
+/*
 builtin "R" ≔ real;
 builtin "mk_real" ≔ mk_real;
 builtin "dest_real" ≔ dest_real;
@@ -309,7 +309,7 @@ builtin "real_max_def" ≔ real_max_def;
 
 builtin "Rmin" ≔ real_min;
 builtin "real_min_def" ≔ real_min_def;
-
+*/
 /*
 builtin "REAL_COMPLETE" ≔ REAL_COMPLETE;
 builtin "Rplus_comm" ≔ REAL_ADD_SYM;
