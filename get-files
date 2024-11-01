@@ -4,7 +4,7 @@ set -e
 
 if test -z "$HOL2DK_DIR"; then echo '$HOL2DK_DIR is not set'; exit 1; fi
 if test ! -f $HOL2DK_DIR/missing_files.awk; then echo '$HOL2DK_DIR/missing_files.awk does not exist'; exit 1; fi
-if test $# -eq 0; then echo "usage: $0 SRC_DIR COQ_FILES"; echo 'copy from SRC_DIR to . COQ_FILES and all its depencies for COQ_FILES to compile'; exit 1; fi
+if test $# -eq 0; then echo "usage: `basename $0` SRC_DIR COQ_FILES"; echo 'copy from SRC_DIR to . COQ_FILES and all its depencies for COQ_FILES to compile'; exit 1; fi
 
 dir=$1
 shift

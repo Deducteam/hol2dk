@@ -201,20 +201,20 @@ endif
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring coq.v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring HOLLight.v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
+	find . -maxdepth 1 -name '*.v' -a ! -name HOLLight.v -delete
 
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
+	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: HOLLight.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: HOLLight.vo/' lpo.mk > vo.mk
 endif
 
 .PHONY: dep
@@ -272,7 +272,11 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-opam
+clean-all: clean-split clean-lp clean-opam rm-dump
+
+.PHONY: rm-dump
+rm-dump:
+	rm -f dump*.prf
 
 .PHONY: all
 all:

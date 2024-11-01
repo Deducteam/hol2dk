@@ -2632,7 +2632,7 @@ Abort.*)
 
 Definition real := quotient treal_eq.
 
-Module real.
+(*Module real.*)
 
 Definition mk_real := mk_quotient treal_eq.
 Definition dest_real := dest_quotient treal_eq.
@@ -2646,9 +2646,9 @@ Proof. exact (dest_mk_aux_quotient treal_eq). Qed.
 Lemma axiom_24 : forall (r : (prod hreal hreal) -> Prop), ((fun s : (prod hreal hreal) -> Prop => exists x : prod hreal hreal, s = (treal_eq x)) r) = ((dest_real (mk_real r)) = r).
 Proof. exact (dest_mk_quotient treal_eq). Qed.
 
-End real.
+(*End real.
 
-Import real.
+Import real.*)
 
 Definition real_le : real -> real -> Prop := fun x1 : real => fun y1 : real => @ε Prop (fun u : Prop => exists x1' : prod hreal hreal, exists y1' : prod hreal hreal, ((treal_le x1' y1') = u) /\ ((dest_real x1 x1') /\ (dest_real y1 y1'))).
 

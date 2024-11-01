@@ -40,7 +40,7 @@ Coq users because not all HOL-Light types and functions are aligned
 with those of the Coq standard library yet. Currently, we only aligned
 the types of natural numbers and lists, and some functions on them in
 the file
-[coq.v](https://github.com/Deducteam/hol2dk/blob/main/coq.v). We
+[HOLLight.v](https://github.com/Deducteam/hol2dk/blob/main/HOLLight.v). We
 gathered the resulting theorems in the Opam package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam). We
@@ -352,7 +352,7 @@ Additional files required for `hol2dk`:
 
 Note that all these files can be used in the OCaml toplevel as well by removing the `open` instructions and by adding `unset_jrh_lexer;;` and `set_jrh_lexer;;` at the beginning and at the end of the file.
 
-Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp`, `coq.v`.
+Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp`, `HOLLight.v`.
 
 Generated file types
 --------------------
