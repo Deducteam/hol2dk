@@ -11,4 +11,4 @@ base=`cat BASE`
 cp HOLLight.v theory_hol.v $dir
 cp ${base}_types.v $dir/types.v
 sed -e "s/${base}_//g" ${base}_terms.v > $dir/terms.v
-sed -e "s/${base}_//g" ${base}_opam.v -e '/^Require Import axioms.$/d' -e 's/^Axiom thm_/Axiom /' > $dir/theorems.v
+sed -e "s/${base}_//g" ${base}_opam.v -e '/^Require Import axioms.$/d' > $dir/theorems.v
