@@ -325,7 +325,7 @@ sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml e
 Thanks
 ------
 
-HOL-Light proof recording follows
+HOL-Light proof recording improves
 [ProofTrace](https://github.com/jrh13/hol-light/tree/master/ProofTrace)
 developed by Stanislas Polu in 2019.
 
@@ -354,8 +354,8 @@ Note that all these files can be used in the OCaml toplevel as well by removing 
 
 Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp`, `coq.v`.
 
-Generated files
----------------
+Generated file types
+--------------------
 
 f.prf: proof steps
 
@@ -397,8 +397,8 @@ n.brp: array of positions in the file n.brv
 
 `f_axioms.lp`: axioms
 
-hol2dk commands
----------------
+main hol2dk commands
+--------------------
 
 dump f.ml: generates an ml file and call ocaml on it to check f.ml and generates f.prf, f.nbp, f.sig and f.thm
 
@@ -428,8 +428,8 @@ abbrev f `n_term_abbrevs_part_i.lp`: reads f.sig, f.thp, n.brv, n.brp, `n_term_a
 
 `type_abbrevs` f: for each file n.typ in the current directory, reads n.typ and generates n.sed and `f_type_abbrevs.lp`
 
-Makefile targets
-----------------
+Makefile targets for generating Lambdapi files
+----------------------------------------------
 
 split: calls hol2dk command split
 
