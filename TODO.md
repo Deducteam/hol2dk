@@ -1,6 +1,10 @@
 TODO
 ----
 
+- is it really useful to compute a canonical type/term?
+
+- add a term abbreviation only if it is used more than once
+
 - why the mapping of ITLIST does not work anymore ?
 
 - in lp output, replace T by ⊤ ?

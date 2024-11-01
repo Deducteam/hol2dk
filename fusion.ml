@@ -225,7 +225,7 @@ module Hol : Hol_kernel = struct
 
   let thm_index = ref (-1)
 
-  let dump_filename = Printf.sprintf "/tmp/dump%d.prf" (Unix.getpid())
+  let dump_filename = Printf.sprintf "dump%d.prf" (Unix.getpid())
   let oc_dump = open_out_bin dump_filename
 
   let new_theorem hyps concl proof_content =

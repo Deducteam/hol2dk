@@ -139,6 +139,9 @@ hol2dk proof $base $x $y
 hol2dk print use $base $x
   print the contents of $base.use for theorem index $x
 
+hol2dk print $base.thm
+  print the contents of $base.thm
+
 hol2dk stat $base
   print statistics on proofs
 
@@ -292,7 +295,7 @@ let make nb_proofs dg b =
   check "lp" "$(LAMBDAPI) check -v0 -w -c" (fun _ _ -> ());
 
   (* v files generation *)
-  out oc "\n.PHONY: v\nv: coq.v theory_hol.v \
+  out oc "\n.PHONY: v\nv: HOLLight.v theory_hol.v \
           %s_types.v %s_terms.v %s_axioms.v %s_opam.v" b b b b;
   for i = 1 to nb_parts do
     out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
@@ -303,15 +306,15 @@ let make nb_proofs dg b =
           --encoding $(HOL2DK_DIR)/encoding.lp \
           --renaming $(HOL2DK_DIR)/renaming.lp \
           --erasing $(HOL2DK_DIR)/erasing.lp \
-          --use-notations --requiring coq.v";
+          --use-notations --requiring HOLLight.v";
   out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
   out oc " > $@\n";
   out oc ".PHONY: clean-v\nclean-v:\n\trm -f theory_hol.v %s*.v\n" b;
 
   (* coq files checking *)
-  let clean oc _b = out oc " coq.vo *.vo[sk] *.glob .*.aux .[nl]ia.cache" in
+  let clean oc _b = out oc " HOLLight.vo *.vo[sk] *.glob .*.aux .[nl]ia.cache" in
   check "v" "coqc -R . HOLLight" clean;
-  out oc "theory_hol.vo: coq.vo\n";
+  out oc "theory_hol.vo: HOLLight.vo\n";
 
   (* clean-all target *)
   out oc "\n.PHONY: clean-all\nclean-all: \
@@ -337,7 +340,7 @@ let range args =
 ;;
 
 let dump after_hol f b =
-  let ml_file = Printf.sprintf "/tmp/dump%d.ml" (Unix.getpid()) in
+  let ml_file = Printf.sprintf "dump%d.ml" (Unix.getpid()) in
   log_gen ml_file;
   let oc = open_out ml_file in
   let use oc after_hol =
@@ -789,6 +792,16 @@ and command = function
 
   | "print"::"use"::_ -> wrong_nb_args()
 
+  | ["print";f] ->
+     begin
+       match Filename.extension f with
+       | ".thm"  ->
+          let b = Filename.chop_extension f in
+          MapInt.iter (log "%d %s\n") (read_val (b^".thm"));
+          0
+       | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
+     end
+
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
      if nb_parts < 2 then (err "the number of parts must be > 1\n"; exit 1);
@@ -1045,7 +1058,6 @@ and command = function
          Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs_in_one_file b n;
-         if !use_sharing then Xlp.export_subterm_abbrevs b n;
          Xlp.export_theorem_deps b n;
          0
        end

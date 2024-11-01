@@ -1,0 +1,68 @@
+#!/bin/sh
+
+set -e # to exit as soon as there is an error
+
+hol2dk_commit=58db5d9
+hollight_commit=ea45176
+hollight_file=hol_upto_realax
+dump_simp_option=-before-hol
+lambdapi_version=2.5.1
+ocaml_version=4.14.1
+camlp5_version=8.02.01
+
+line() { echo '------------------------------------------------------------'; }
+
+line
+echo create opam switch reproduce ...
+opam switch create reproduce $ocaml_version || (echo 'you can remove the opam switch reproduce with:'; echo 'opam switch remove reproduce'; exit 1)
+
+line
+echo install dependencies ...
+opam install camlp5.$camlp5_version lambdapi.$lambdapi_version
+
+mkdir tmp
+cd tmp
+
+line
+echo install hol2dk ...
+git clone https://github.com/Deducteam/hol2dk.git
+cd hol2dk
+export HOL2DK_DIR=`pwd`
+git checkout $hol2dk_commit
+dune build && dune install
+cd ..
+
+line
+echo install and patch hol-light ...
+git clone https://github.com/jrh13/hol-light.git
+cd hol-light
+export HOLLIGHT_DIR=`pwd`
+git checkout $hollight_commit
+make
+hol2dk patch
+
+line
+echo extract hol-light proofs ...
+cp ../../$hollight_file.ml .
+hol2dk dump-simp$dump_simp_option $hollight_file.ml
+cd ..
+
+line
+echo translate HOL-Light proofs to lambdapi and coq ...
+mkdir output
+cd output
+hol2dk link $hollight_file
+make split
+make -j32 lp
+make -j32 v
+make -j32 vo
+make opam
+
+line
+echo create opam library ...
+mkdir ../opam
+../hol2dk/create-lib ../opam
+
+line
+echo remove opam switch reproduce ...
+opam switch remove reproduce

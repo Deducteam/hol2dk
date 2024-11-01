@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+if test $# -ne 1; then echo "usage: `basename $0` TARGET_DIR"; exit 1; fi
+dir=$1
+if test ! -d $dir; then echo "$dir is not a directory"; exit 1; fi
+if test ! -f BASE; then echo "there is no BASE file"; exit 1; fi
+base=`cat BASE`
+
+cp HOLLight.v theory_hol.v $dir
+cp ${base}_types.v $dir/types.v
+sed -e "s/${base}_//g" ${base}_terms.v > $dir/terms.v
+sed -e "s/${base}_//g" ${base}_opam.v -e '/^Require Import axioms.$/d' > $dir/theorems.v

@@ -40,7 +40,7 @@ Coq users because not all HOL-Light types and functions are aligned
 with those of the Coq standard library yet. Currently, we only aligned
 the types of natural numbers and lists, and some functions on them in
 the file
-[coq.v](https://github.com/Deducteam/hol2dk/blob/main/coq.v). We
+[HOLLight.v](https://github.com/Deducteam/hol2dk/blob/main/HOLLight.v). We
 gathered the resulting theorems in the Opam package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam). We
@@ -67,13 +67,13 @@ Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- hol-light >= bfb2ea95cf4b20f40136d5f08102875400c8cba7 (04/04/24)
-- libipc-system-simple-perl
-- libstring-shellquote
-- ocaml >= 4.14
-- camlp5 8.02.01
+- hol-light = ea45176 (23/08/24)
+- ocaml = 4.14.2
+- camlp5 = 8.02.01
 - ocamlfind
 - zarith
+- libipc-system-simple-perl
+- libstring-shellquote
 
 Find other potential working ocaml-camlp5 pairs on
 https://github.com/jrh13/hol-light/pull/71 .
@@ -235,6 +235,7 @@ On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5
 |------------------------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
 | hol.ml                             | 3m57s     | 3 Go      | 5 M         | 5679        | 51s          | 55s         | 1 Go         | 18m4s        |
 | Multivariate/make_upto_topology.ml | 48m       | 52 Go     | 52 M        | 18866       | 22m22s       | 20m16s      | 68 Go        | 8h (*)       |
+| Multivariate/make_complex.ml       | 2h48m     | 158 Go    | 220 M       | 20200       | 52m26s       |             |              |              |
 
 (*) with `make -j32 vo; make -j8 vo`
 
@@ -321,6 +322,13 @@ cd $HOLLIGHT_DIR
 sed -i -e 's/.*Q0.*//' -e 's/START_ND*)//' -e 's/(*END_ND//' fusion.ml bool.ml equal.ml
 ```
 
+Thanks
+------
+
+HOL-Light proof recording improves
+[ProofTrace](https://github.com/jrh13/hol-light/tree/master/ProofTrace)
+developed by Stanislas Polu in 2019.
+
 Source files
 ------------
 
@@ -344,11 +352,99 @@ Additional files required for `hol2dk`:
 
 Note that all these files can be used in the OCaml toplevel as well by removing the `open` instructions and by adding `unset_jrh_lexer;;` and `set_jrh_lexer;;` at the beginning and at the end of the file.
 
-Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp`, `coq.v`.
+Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp`, `HOLLight.v`.
 
-Thanks
-------
+Generated file types
+--------------------
 
-HOL-Light proof recording follows
-[ProofTrace](https://github.com/jrh13/hol-light/tree/master/ProofTrace)
-developed by Stanislas Polu in 2019.
+f.prf: proof steps
+
+f.nbp: number of proof steps
+
+f.sig: signature (types, constants, axioms, definitions)
+
+f.thm: map from proof step index to theorem name (if any)
+
+f.pos: array providing the position in f.prf of each proof step index
+
+f.use: array lastuse such that lastuse.(i) = 0 if i is a named theorem, the highest proof step index using i if there is one, and -1 otherwise.
+
+f.thp: map every useful theorem index to its name and position (similar to f.thm but with position)
+
+n.sti: starting index (in f.prf) of theorem n
+
+n.siz: estimation of the size of the proof of n
+
+`n_part_k.idx`: min and max index (in n.prf) of part k proof steps
+
+n.max: array of max proof step indexes of each part of n
+
+n.typ: map from type expression strings to digests and number of type variables
+
+n.sed: sed script to replace type expression digests by type abbreviations
+
+n.brv: ordered list of pairs (term, term abbreviation number)
+
+n.brp: array of positions in the file n.brv
+
+`n_term_abbrevs_part_i.min`: min and max term abbreviation number of part i
+
+`f_types.lp`: types
+
+`f_type_abbrevs.lp`: type abbreviations
+
+`f_terms.lp`: function symbols (i.e. signature)
+
+`f_axioms.lp`: axioms
+
+main hol2dk commands
+--------------------
+
+dump f.ml: generates an ml file and call ocaml on it to check f.ml and generates f.prf, f.nbp, f.sig and f.thm
+
+dump-simp f.ml: calls the commands dump f.ml, pos f, use f, and simp f
+
+pos f: reads f.nbp and f.prf, and generates f.pos
+
+use f: reads f.nbp, f.thm and f.prf, and generates f.use
+
+simp f: calls the commands rewrite f and purge f
+
+rewrite f: reads f.pos, f.use and f.prf, and generates a new version of f.prf where proofs have been simplified
+
+purge f: reads f.pos, f.prf, f.thm and f.use, and generates a new file f.use where useless proof steps are mapped to -1
+
+split f: reads f.pos, f.use and f.thm, generates f.thp and, for each useful theorem n (if it has no user-defined name, we use its index as name), n.nbp, n.sti, n.pos, n.use
+
+thmsize f n.lp: reads f.prf, n.use, n.pos, n.sti, and generates n.siz
+
+thmsplit f n.lp: reads f.sig, f.thp, f.prf, n.use, n.sti, n.siz, n.pos, and generates the files `n_part_k.idx`, n.max and n.lp
+
+thmpart f `n_part_k.lp`: reads f.sig, f.thp, f.prf, n.pos, n.use, n.sti, n.max, `n_part_k.idx`, and generates `n_part_k.lp`, `n_part_k.brv`, `n_part_k.brp`, `n_part_k_term_abbrevs_part_i.min`, `n_part_k_subterms.lp`
+
+theorem f n.lp: reads f.sig, f.thp, f.prf, n.pos, n.use, n.sti, and generates the files `n_part_k_proofs.lp`, `n_proofs.lp`, `n.typ`, `n_term_abbrevs.lp`, `n_subterm_abbrevs.lp`, `n_term_abbrevs.typ`, `n_part_k_deps.lp`, `n_part_k.lp`.
+
+abbrev f `n_term_abbrevs_part_i.lp`: reads f.sig, f.thp, n.brv, n.brp, `n_term_abbrevs_part_i.min`, and generates `n_term_abbrevs_part_i.typ` and `n_term_abbrevs_part_i.lp`
+
+`type_abbrevs` f: for each file n.typ in the current directory, reads n.typ and generates n.sed and `f_type_abbrevs.lp`
+
+Makefile targets for generating Lambdapi files
+----------------------------------------------
+
+split: calls hol2dk command split
+
+lp:
+- generates `f_types.lp`, `f_type_abbrevs.lp`, `f_terms.lp`, `f_axioms.lp`
+- for every big file n.lp, calls hol2dk thmsize f n.lp (generates the file n.siz) and hol2dk thmsplit f n.lp (generates the files `n_part_k.idx`, n.max and n.lp)
+- calls the Makefile target lp-proofs
+- calls the Makefile target lp-abbrevs
+- calls hol2dk type_abbrevs f
+- calls the Makefile target rename-abbrevs
+
+lp-proofs:
+- for each file `n_part_k.idx` (big file part), calls hol2dk thmpart f `n_part_k.lp`
+- for each file n.sti for which there is no file n.lp yet (small files), calls hol2dk theorem f n.lp
+
+lp-abbrevs: for each file n.min, calls hol2dk abbrev f n.lp
+
+rename-abbrevs: for each file n.sed, apply n.sed to n.lp

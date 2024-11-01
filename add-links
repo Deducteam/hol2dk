@@ -28,7 +28,7 @@ do
     ln -f -s $HOLLIGHT_DIR/$1.$ext
 done
 
-for f in theory_hol.dk theory_hol.lp lambdapi.pkg coq.v _CoqProject Makefile
+for f in theory_hol.dk theory_hol.lp lambdapi.pkg HOLLight.v _CoqProject Makefile BIG_FILES
 do
     echo ln -f -s $HOL2DK_DIR/$f
     ln -f -s $HOL2DK_DIR/$f

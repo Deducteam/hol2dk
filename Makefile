@@ -68,9 +68,15 @@ endif
 
 BIG_FILES = $(shell for f in `cat BIG_FILES 2> /dev/null | sed -e '/^#/d'`; do if test -f $$f.sti; then echo $$f; fi; done)
 
-.PHONY: print-big-files
-print-big-files:
+.PHONY: echo-big-files
+echo-big-files:
 	@echo $(BIG_FILES)
+
+.PHONY: find-big-files
+find-big-files:
+	@if test -f BIG_FILES; then cat BIG_FILES; fi > big-files
+	@find . -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> big-files
+	@sort -u big-files
 
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
@@ -195,20 +201,20 @@ endif
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring coq.v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring HOLLight.v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a ! -name coq.v -delete
+	find . -maxdepth 1 -name '*.v' -a ! -name HOLLight.v -delete
 
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: coq.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: coq.vo/' lpo.mk > vo.mk
+	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: HOLLight.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: HOLLight.vo/' lpo.mk > vo.mk
 endif
 
 .PHONY: dep
@@ -266,7 +272,11 @@ clean-opam:
 	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-opam
+clean-all: clean-split clean-lp clean-opam rm-dump
+
+.PHONY: rm-dump
+rm-dump:
+	rm -f dump*.prf
 
 .PHONY: all
 all:

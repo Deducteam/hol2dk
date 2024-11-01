@@ -711,7 +711,7 @@ let export_type_abbrevs b n =
 ;;
 
 let export_subterm_abbrevs b n =
-  export (n^"_subterm_abbrevs") [b^"_types";b^"_terms";b^"_type_abbrevs"]
+  export (n^"_subterm_abbrevs") [b^"_types";b^"_type_abbrevs";b^"_terms"]
     decl_subterm_abbrevs
 ;;
 
@@ -720,7 +720,7 @@ let export_term_abbrevs_in_one_file b n =
   export (n^"_term_abbrevs")
     (if !use_sharing then deps @ [n^"_subterm_abbrevs"] else deps)
     decl_term_abbrevs;
-  if !use_sharing then export (n^"_subterm_abbrevs") deps decl_subterm_abbrevs;
+  if !use_sharing then export_subterm_abbrevs b n;
   write_val (n^"_term_abbrevs.typ") !map_typ_abbrev
 ;;
 
@@ -990,10 +990,10 @@ let split_theorem_abbrevs n =
   !nb_parts
 ;;
 
-(* [export_theorem_proof_part b n k] generates the files
-   [n^part(k)^".lp"], [n^part(k)^".brv"], [n^part(k)^".brp"],
-   [n^part(k)^"_term_abbrevs"^part(i)^".min"], [n^part(k)^"_spec.lp"],
-   [n^part(k)^"_subterms.lp"] (if !use_sharing). *)
+(* [export_theorem_proof_part b n k] generates the filesv[n^part(k)^".lp"],
+   [n^part(k)^".typ"], [n^part(k)^".brv"],v[n^part(k)^".brp"],
+   [n^part(k)^"_term_abbrevs"^part(i)^".min"],v[n^part(k)^"_spec.lp"],
+   [n^part(k)^"_subterm_abbrevs.lp"] (if !use_sharing). *)
 let export_theorem_proof_part b n k =
   (* generate [n^part(k)^"_proofs.lp"] *)
   proof_part := k;
@@ -1026,7 +1026,7 @@ let export_theorem_proof_part b n k =
   let nb_parts = split_theorem_abbrevs p in
   (* generate [n^part(k)^".typ"] *)
   write_val (p^".typ") !map_typ_abbrev;
-  (* generate [n^part(k)^"_subterms.lp"] *)
+  (* generate [n^part(k)^"_subterm_abbrevs.lp"] *)
   if !use_sharing then export_subterm_abbrevs b p;
   (* generate [n^part(k)^"_deps.lp"] *)
   let iter_deps f =

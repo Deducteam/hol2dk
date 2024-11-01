@@ -85,7 +85,7 @@ builtin "snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
 
 // infinite type ind
-builtin "ind" ≔ ind;
+builtin "HOLLight.ind" ≔ ind;
 builtin "ONE_ONE" ≔ ONE_ONE;
 builtin "ONTO" ≔ ONTO;
 builtin "axiom_6" ≔ axiom_6;
@@ -222,8 +222,45 @@ builtin "axiom_17" ≔ axiom_17;
 builtin "axiom_18" ≔ axiom_18;
 
 // realax
+builtin "dist" ≔ dist;
+builtin "is_nadd" ≔ is_nadd;
 builtin "nadd" ≔ nadd;
 builtin "dest_nadd" ≔ dest_nadd;
 builtin "mk_nadd" ≔ mk_nadd;
 builtin "axiom_19" ≔ axiom_19;
 builtin "axiom_20" ≔ axiom_20;
+
+builtin "nadd_of_num" ≔ nadd_of_num;
+builtin "nadd_le" ≔ nadd_le;
+builtin "nadd_eq" ≔ nadd_eq;
+builtin "nadd_add" ≔ nadd_add;
+builtin "nadd_mul" ≔ nadd_mul;
+builtin "nadd_rinv" ≔ nadd_rinv;
+builtin "nadd_inv" ≔ nadd_inv;
+
+builtin "hreal" ≔ hreal;
+builtin "mk_hreal" ≔ mk_hreal;
+builtin "dest_hreal" ≔ dest_hreal;
+builtin "axiom_21" ≔ axiom_21;
+builtin "axiom_22" ≔ axiom_22;
+
+builtin "hreal_of_num" ≔ hreal_of_num;
+builtin "hreal_le" ≔ hreal_le;
+builtin "hreal_eq" ≔ hreal_eq;
+builtin "hreal_add" ≔ hreal_add;
+builtin "hreal_mul" ≔ hreal_mul;
+builtin "hreal_inv" ≔ hreal_inv;
+
+builtin "treal_of_num" ≔ treal_of_num;
+builtin "treal_le" ≔ treal_le;
+builtin "treal_eq" ≔ treal_eq;
+builtin "treal_add" ≔ treal_add;
+builtin "treal_mul" ≔ treal_mul;
+builtin "treal_inv" ≔ treal_inv;
+builtin "treal_neg" ≔ treal_neg;
+
+builtin "real" ≔ real;
+builtin "mk_real" ≔ mk_real;
+builtin "dest_real" ≔ dest_real;
+builtin "axiom_23" ≔ axiom_23;
+builtin "axiom_24" ≔ axiom_24;

@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e
+
+if test -z "$HOL2DK_DIR"; then echo '$HOL2DK_DIR is not set'; exit 1; fi
+if test ! -f $HOL2DK_DIR/missing_files.awk; then echo '$HOL2DK_DIR/missing_files.awk does not exist'; exit 1; fi
+if test $# -eq 0; then echo "usage: `basename $0` SRC_DIR COQ_FILES"; echo 'copy from SRC_DIR to . COQ_FILES and all its depencies for COQ_FILES to compile'; exit 1; fi
+
+dir=$1
+shift
+
+check_error1() { grep -q '^Error: Cannot find a physical path bound to logical path' log; }
+
+check_error2() { grep -q ' Aucune règle pour fabriquer la cible ' log; }
+
+check_error() { check_error1 || check_error2; }
+
+missing_files() { awk -f $HOL2DK_DIR/missing_files.awk log; }
+
+copy_files() { for f in $*; do case $f in *.v) f=`echo $f | sed -e 's/_spec\././'`; if test ! -f $f -a -f $dir/$f; then echo add $f; sed -e '/^Require /s/_spec\././' $dir/$f > $f; fi;; esac; done; }
+
+deps() { grep '^Require ' $dir/$1 | awk 'BEGIN{FS="[ .]"}{printf"%s.v ",$3}'; }
+
+gen_Makefile() { coq_makefile *.v -R . HOLLight -arg '-no-glob' -o Makefile; }
+
+add_missing_files() { for m in `missing_files`; do copy_files $m `deps $m`; done; gen_Makefile; }
+
+loop() { make -k -j32 2>log || (check_error && (add_missing_files; loop)); }
+
+for f in $*; do copy_files ${f%.v}.v; done
+gen_Makefile
+
+loop
+
+echo
+echo 'number of coq files: ' `ls *.v | wc -l`
+echo 'size: ' `du -hc *.v | grep total | sed -e 's/total//'`
