@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         hol-light-version: [ea45176]
-        ocaml-version: [5.1.1, 4.14.2]
+        ocaml-version: [4.14.2]
         camlp5-version: [8.02.01]
         dedukti-version: [2.7]
         lambdapi-version: [master, 2.5.1]

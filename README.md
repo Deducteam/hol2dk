@@ -67,13 +67,13 @@ Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- bfb2ea9 (04/04/24) <= hol-light <= ea45176 (23/08/24)
-- libipc-system-simple-perl
-- libstring-shellquote
-- ocaml >= 4.14
-- camlp5 8.02.01
+- hol-light = ea45176 (23/08/24)
+- ocaml = 4.14.2
+- camlp5 = 8.02.01
 - ocamlfind
 - zarith
+- libipc-system-simple-perl
+- libstring-shellquote
 
 Find other potential working ocaml-camlp5 pairs on
 https://github.com/jrh13/hol-light/pull/71 .
