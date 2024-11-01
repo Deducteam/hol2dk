@@ -139,6 +139,9 @@ hol2dk proof $base $x $y
 hol2dk print use $base $x
   print the contents of $base.use for theorem index $x
 
+hol2dk print $base.thm
+  print the contents of $base.thm
+
 hol2dk stat $base
   print statistics on proofs
 
