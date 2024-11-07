@@ -168,9 +168,9 @@ rm-siz:
 ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
 
-LPO_MK_FILES := $(wildcard *.lpo.mk)
+LPO_MK_FILES := theory_hol.lpo.mk $(wildcard *.lpo.mk)
 
-lpo.mk: theory_hol.lpo.mk $(LPO_MK_FILES)
+lpo.mk: $(LPO_MK_FILES)
 	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 
 theory_hol.lpo.mk: theory_hol.lp
@@ -214,7 +214,12 @@ ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	sed -e 's/\.lpo/.vo/g' -e 's/: theory_hol.vo/: HOLLight.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: HOLLight.vo/' lpo.mk > vo.mk
+	echo 'real.vo:' > vo.mk
+	echo 'realsyntax.vo: real.vo' >> vo.mk
+	echo 'realprop.vo: realsyntax.vo' >> vo.mk
+	echo 'realcategorical.v: realprop.vo' >> vo.mk
+	echo 'HOLLight.vo: realcategorical.vo' >> vo.mk
+	sed -e 's/\.lp/.v/g' -e 's/: theory_hol.vo/: HOLLight.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: HOLLight.vo/' lpo.mk >> vo.mk
 endif
 
 .PHONY: dep

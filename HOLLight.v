@@ -2006,7 +2006,7 @@ Proof.
   destruct (completeness E h' i') as [b j]. exact j. contradiction. contradiction.
 Qed.
 
-Require Import fourcolor.real.
+Require Import HOLLight.real.
 Import Real.
 
 Definition R_struct : structure := {|
