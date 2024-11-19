@@ -67,11 +67,11 @@ Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- hol-light = ea45176 (23/08/24)
+- hol-light = ea45176 (07/02/24)
 - ocaml = 4.14.2
 - camlp5 = 8.02.01
 - ocamlfind
-- zarith
+- zarith, which may require pkg-config and libgmp-dev
 - libipc-system-simple-perl
 - libstring-shellquote
 
@@ -83,12 +83,13 @@ install them by using the following commands:
 
 ```
 cd $HOME
-sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl opam
+sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl pkg-config libgmp-dev opam
 opam init
-opam switch create ocaml.4.14.1
+opam switch create ocaml.4.14.2
 eval `opam env`
-opam install ocamlfind zarith camlp5
-git clone --depth 1 -b master https://github.com/jrh13/hol-light
+opam install ocamlfind zarith camlp5.8.02.01
+git clone https://github.com/jrh13/hol-light
+git checkout ea45176
 make -C hol-light
 ```
 
