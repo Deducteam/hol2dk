@@ -85,7 +85,7 @@ builtin "snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
 
 // infinite type ind
-builtin "HOLLight.ind" ≔ ind;
+builtin "ind" ≔ ind;
 builtin "ONE_ONE" ≔ ONE_ONE;
 builtin "ONTO" ≔ ONTO;
 builtin "axiom_6" ≔ axiom_6;
