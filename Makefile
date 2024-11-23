@@ -5,6 +5,10 @@ BASE = $(shell if test -f BASE; then cat BASE; fi)
 .PHONY: default
 default:
 	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
+	@echo "variables:"
+	@echo "  REQUIRE: Coq module required in generated Coq files"
+	@echo "  MAX_PROOF: hol2dk max proof size option"
+	@echo "  MAX_ABBREV: hol2dk max abbrev size option"
 
 .PHONY: split
 split:
