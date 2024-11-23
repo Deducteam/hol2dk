@@ -5,6 +5,10 @@ BASE = $(shell if test -f BASE; then cat BASE; fi)
 .PHONY: default
 default:
 	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
+	@echo "variables:"
+	@echo "  REQUIRE: Coq module required in generated Coq files"
+	@echo "  MAX_PROOF: hol2dk max proof size option"
+	@echo "  MAX_ABBREV: hol2dk max abbrev size option"
 
 .PHONY: split
 split:
@@ -199,27 +203,24 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
+REQUIRE = HOLLight
+
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring HOLLight.v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring $(REQUIRE).v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a ! -name HOLLight.v -delete
+	find . -maxdepth 1 -name '*.v' -a ! -name $(REQUIRE).v -delete
 
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	echo 'real.vo:' > vo.mk
-	echo 'realsyntax.vo: real.vo' >> vo.mk
-	echo 'realprop.vo: realsyntax.vo' >> vo.mk
-	echo 'realcategorical.v: realprop.vo' >> vo.mk
-	echo 'HOLLight.vo: realcategorical.vo' >> vo.mk
-	sed -e 's/\.lp/.v/g' -e 's/: theory_hol.vo/: HOLLight.vo theory_hol.vo/' -e 's/theory_hol.vo:/theory_hol.vo: HOLLight.vo/' lpo.mk >> vo.mk
+	sed -e 's/\.lp/.v/g' -e "s/: theory_hol.vo/: $(REQUIRE).vo theory_hol.vo/" -e "s/theory_hol.vo:/theory_hol.vo: $(REQUIRE).vo/" lpo.mk > $@
 endif
 
 .PHONY: dep
@@ -243,7 +244,7 @@ endif
 COQC_OPTIONS = -no-glob # -w -coercions
 %.vo: %.v
 	@echo coqc $<
-	@coqc $(COQC_OPTIONS) -R . HOLLight $<
+	@coqc $(COQC_OPTIONS) -R . $(REQUIRE) $<
 
 .PHONY: clean-vo
 clean-vo: rm-vo rm-glob rm-aux rm-cache
