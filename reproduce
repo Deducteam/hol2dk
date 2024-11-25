@@ -5,22 +5,34 @@ set -e # to exit as soon as there is an error
 opam_version=2.2.1
 dune_version=3.7
 
-hol2dk_commit=f81cbca
+hol2dk_commit=46927fe
 hollight_commit=ea45176
 lambdapi_version=2.5.1
+lambdapi_commit=
 ocaml_version=4.14.2
 camlp5_version=8.02.01
 coq_version=8.20.0
-mathcomp_ssreflect_version=2.2.0
-mathcomp_algebra_version=2.2.0
 
-hollight_file=hol_upto_realax
+base=hol_upto_real
 dump_simp_option=-before-hol
+root_path=HOLLight_Real
+jobs='-j32'
 
 line() { echo '------------------------------------------------------------'; }
 
 mkdir -p tmp
 cd tmp
+
+#usage: checkout_commit url commit
+checkout_commit() {
+    line
+    d=`basename $1 .git`
+    echo install $d ...
+    git clone $1
+    cd $d
+    git checkout $2
+    cd ..
+}
 
 create_opam_switch() {
     line
@@ -40,42 +52,39 @@ install_lambdapi() {
     opam install -y lambdapi.$lambdapi_version
 }
 
-install_coq_and_package_deps() {
+install_coq() {
     line
     echo install coq and package dependencies ...
     opam repo add coq-released https://coq.inria.fr/opam/released
-    opam install -y coq.$coq_version coq-mathcomp-ssreflect.$mathcomp_ssreflect_version coq-mathcomp-algebra.$mathcomp_algebra_version
+    opam install -y coq.$coq_version
 }
 
 install_hol2dk() {
-    line
-    echo install hol2dk ...
-    git clone https://github.com/Deducteam/hol2dk.git
+    checkout_commit https://github.com/Deducteam/hol2dk.git $hol2dk_commit
     cd hol2dk
-    export HOL2DK_DIR=`pwd`
-    git checkout $hol2dk_commit
     dune build && dune install
     cd ..
 }
 
-install_and_patch_hol_light() {
-    line
-    echo install and patch hol-light ...
-    git clone https://github.com/jrh13/hol-light.git
+install_hol_light() {
+    checkout_commit https://github.com/jrh13/hol-light.git $hollight_commit
     cd hol-light
-    export HOLLIGHT_DIR=`pwd`
-    git checkout $hollight_commit
     make
-    hol2dk patch
     cd ..
+}
+
+patch_hol_light() {
+    line
+    echo patch hol-light ...
+    hol2dk patch
 }
 
 dump_proofs() {
     line
-    echo extract hol-light proofs ...
+    echo dump hol-light proofs ...
     cd hol-light
-    cp ../../$hollight_file.ml .
-    hol2dk dump-simp$dump_simp_option $hollight_file.ml
+    cp ../../$base.ml .
+    hol2dk dump-simp$dump_simp_option $base.ml
     cd ..
 }
 
@@ -84,13 +93,11 @@ translate_proofs() {
     echo translate HOL-Light proofs to lambdapi and coq ...
     mkdir -p output
     cd output
-    hol2dk link $hollight_file
+    hol2dk link $base ../../$root_path.v ../../erasing.lp
     make split
-    make -j32 lp
-    make -j32 v
-    cp ../../real*.v .
-    sed -i -e 's/HOLLight_Real/HOLLight/' real*.v
-    sed -e 's/HOLLight_Real/HOLLight/' ../../HOLLight_Real.v > HOLLight.v
+    make $jobs lp
+    sed -i -e "s/^Require Import $base\.$/Require Export $base./" ${base}_terms.v
+    make $jobs v
     cd ..
 }
 
@@ -98,11 +105,7 @@ check_proofs() {
     line
     echo check proofs ...
     cd output
-    coqc -R . HOLLight -no-glob real.v
-    coqc -R . HOLLight -no-glob realsyntax.v
-    coqc -R . HOLLight -no-glob realprop.v
-    coqc -R . HOLLight -no-glob realcategorical.v
-    make -j32 vo
+    make $jobs vo
     make opam
     cd ..
 }
@@ -112,21 +115,30 @@ create_and_check_opam_library() {
     echo create opam library ...
     mkdir -p opam
     cd output
-    ../hol2dk/create-lib ../opam
+    cp theory_hol.v ../opam
+    sed -e "s/${base}_//g" ${base}_types.v > ../opam/types.v
+    sed -e "s/${base}_//g" ${base}_terms.v > ../opam/terms.v
+    sed -e "s/${base}_//g" -e '/^Require Import axioms.$/d' ${base}_opam.v > ../opam/theorems.v
     cd ../opam
-    mv HOLLight.v HOLLight_Real.v
-    sed -i -e 's/HOLLight/HOLLight_Real/g' *.v
-    cp ../../Makefile ../../real*.v .
+    cp ../../$root_path.v ../../Makefile .
     make
     cd ..
 }
 
-create_opam_switch
-install_hol_light_deps
-install_lambdapi
-install_coq_and_package_deps
-install_hol2dk
-install_and_patch_hol_light
+export HOLLIGHT_DIR=`pwd`/hol-light
+export HOL2DK_DIR=`pwd`/hol2dk
+
+setup_env() {
+    create_opam_switch
+    install_hol_light_deps
+    install_lambdapi
+    install_coq
+    install_hol2dk
+    install_hol_light
+    patch_hol_light
+}
+
+setup_env
 dump_proofs
 translate_proofs
 check_proofs

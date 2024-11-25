@@ -1,14 +1,19 @@
 .SUFFIXES:
 
 BASE = $(shell if test -f BASE; then cat BASE; fi)
+ROOT_PATH = $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
+ERASING = $(shell if test -f ERASING; then cat ERASING; fi)
+
+MAX_PROOF = 500_000
+MAX_ABBREV = 2_000_000
 
 .PHONY: default
 default:
+	@echo "usage: make TARGET [VAR=VAL ...]"
 	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
 	@echo "variables:"
-	@echo "  REQUIRE: Coq module required in generated Coq files"
-	@echo "  MAX_PROOF: hol2dk max proof size option"
-	@echo "  MAX_ABBREV: hol2dk max abbrev size option"
+	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
+	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
 
 .PHONY: split
 split:
@@ -40,7 +45,7 @@ rm-thp:
 BASE_FILES := $(BASE)_types $(BASE)_type_abbrevs $(BASE)_terms $(BASE)_axioms
 
 $(BASE_FILES:%=%.lp) &:
-	hol2dk sig $(BASE).lp
+	hol2dk --root-path $(ROOT_PATH) sig $(BASE).lp
 
 ifeq ($(INCLUDE_VO_MK),1)
 INCLUDE_LPO_MK=1
@@ -86,7 +91,7 @@ find-big-files:
 lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
-	hol2dk type_abbrevs $(BASE)
+	hol2dk --root-path $(ROOT_PATH) type_abbrevs $(BASE)
 	$(MAKE) SET_SED_FILES=1 rename-abbrevs
 
 .PHONY: rename-abbrevs
@@ -98,29 +103,25 @@ rename-abbrevs: $(SED_FILES:%.sed=%.lp.rename-abbrevs)
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
 
-MAX_PROOF = --max-proof-size 500_000
-
 %.max: %.siz
-	hol2dk $(MAX_PROOF) thmsplit $(BASE) $*.lp
+	hol2dk --root-path $(ROOT_PATH) --max-proof-size $(MAX_PROOF) thmsplit $(BASE) $*.lp
 
 %.siz: %.sti
 	hol2dk thmsize $(BASE) $*
 
 .PRECIOUS: $(BIG_FILES:%=%.siz)
 
-MAX_ABBREV = --max-abbrev-size 2_000_000
-
 %.lp: %.idx
-	hol2dk $(MAX_ABBREV) thmpart $(BASE) $*.lp
+	hol2dk --root-path $(ROOT_PATH) --max-abbrev-size $(MAX_ABBREV) thmpart $(BASE) $*.lp
 
 %.lp: %.sti
-	hol2dk theorem $(BASE) $*.lp
+	hol2dk --root-path $(ROOT_PATH) theorem $(BASE) $*.lp
 
 .PHONY: lp-abbrevs
 lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 
 %.lp: %.min
-	hol2dk abbrev $(BASE) $*.lp
+	hol2dk --root-path $(ROOT_PATH) abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
 clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz clean-lpo clean-v
@@ -203,24 +204,26 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
-REQUIRE = HOLLight
+.PHONY: echo-require
+echo-require:
+	@echo $(ROOT_PATH)
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(HOL2DK_DIR)/erasing.lp --use-notations --requiring $(REQUIRE).v $< | sed -e 's/^Require Import hol-light\./Require Import /g' > $@
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(ERASING) --use-notations --requiring $(ROOT_PATH) $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a ! -name $(REQUIRE).v -delete
+	find . -maxdepth 1 -name '*.v' -a ! -name $(ROOT_PATH).v -delete
 
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	sed -e 's/\.lp/.v/g' -e "s/: theory_hol.vo/: $(REQUIRE).vo theory_hol.vo/" -e "s/theory_hol.vo:/theory_hol.vo: $(REQUIRE).vo/" lpo.mk > $@
+	sed -e 's/\.lp/.v/g' -e "s/: theory_hol.vo/: $(ROOT_PATH).vo theory_hol.vo/" -e "s/theory_hol.vo:/theory_hol.vo: $(ROOT_PATH).vo/" lpo.mk > $@
 endif
 
 .PHONY: dep
@@ -244,7 +247,7 @@ endif
 COQC_OPTIONS = -no-glob # -w -coercions
 %.vo: %.v
 	@echo coqc $<
-	@coqc $(COQC_OPTIONS) -R . $(REQUIRE) $<
+	@coqc $(COQC_OPTIONS) -R . $(ROOT_PATH) $<
 
 .PHONY: clean-vo
 clean-vo: rm-vo rm-glob rm-aux rm-cache
@@ -271,7 +274,7 @@ opam: $(BASE)_opam.vo
 .PRECIOUS: $(BASE)_opam.v
 
 $(BASE)_opam.lp:
-	hol2dk axm $(BASE).lp
+	hol2dk --root-path $(ROOT_PATH) axm $(BASE).lp
 
 .PHONY: clean-opam
 clean-opam:
