@@ -200,10 +200,12 @@ The command `purge` compute in `file.use` all the theorems that do not need to b
 
 The command `simp` is the sequential composition of `rewrite` and `purge`.
 
-Translating HOL-Light proofs to Lambdapi and Coq in parallel
-------------------------------------------------------------
+Translating HOL-Light proofs to Lambdapi and Coq
+------------------------------------------------
 
-**Requirements:** lambdapi commit >= 31aef37c (25/11/24) > 2.5.1
+**Requirements:**
+- lambdapi commit >= 31aef37c (25/11/24) > 2.5.1
+- [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
 
 For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
