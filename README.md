@@ -203,7 +203,7 @@ The command `simp` is the sequential composition of `rewrite` and `purge`.
 Translating HOL-Light proofs to Lambdapi and Coq in parallel
 ------------------------------------------------------------
 
-**Requirement:** lambdapi >= 2.5.0
+**Requirements:** lambdapi commit >= 31aef37c (25/11/24) > 2.5.1
 
 For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
