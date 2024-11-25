@@ -319,8 +319,9 @@ let term rmap oc t = abbrev_term oc (rename rmap t);;
 (* Handling file dependencies. *)
 (****************************************************************************)
 
-let require oc n =
-  string oc "require open hol-light."; string oc n; string oc ";\n";;
+let root_path = ref "HOLLight";;
+
+let require oc n = out oc "require open %s.%s;\n" !root_path n;;
 
 (* [create_file_with_deps tmp n iter_deps f] creates a file
    [tmp^".lp"], which will be renamed or included in [n^".lp"] in the

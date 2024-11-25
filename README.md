@@ -213,9 +213,10 @@ mkdir -p ~/output-hol2dk/Logic
 cd ~/output-hol2dk/Logic
 hol2dk link Logic/make
 ```
-This will add links to files needed to generate, translate and check proofs.
+This will create files and add links to files needed to generate, translate and check proofs.
 
 You can then do in order:
+- `make` to get the list of targets and variables
 - `make split` to generate a file for each theorem
 - `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
 - `make -j$jobs lpo` to check Lambdapi files (optional)
@@ -223,7 +224,7 @@ You can then do in order:
 - `make -j$jobs vo` to check Coq files
 
 To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
-- `make -j$jobs MAX_PROOF='--max-proof-size 500_000' MAX_ABBREV='--max-max-abbrev 2_000_000' lp`
+- `make -j$jobs MAX_PROOF=500_000 MAX_ABBREV=2_000_000 lp`
 
 Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
 
@@ -234,9 +235,9 @@ On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5
 
 | HOL-Light file                     | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
 |------------------------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml                             | 3m57s     | 3 Go      | 5 M         | 5679        | 51s          | 55s         | 1 Gb         | 18m4s        |
-| Multivariate/make_upto_topology.ml | 48m       | 52 Go     | 52 M        | 18866       | 22m22s       | 20m16s      | 68 Gb        | 8h (*)       |
-| Multivariate/make_complex.ml       | 2h48m     | 158 Go    | 220 M       | 20200       | 52m26s       | 31m39s      | 240 Gb       |              |
+| hol.ml                             | 3m57s     | 3 Gb      | 5 M         | 5679        | 51s          | 55s         | 1 Gb         | 18m4s        |
+| Multivariate/make_upto_topology.ml | 48m       | 52 Gb     | 52 M        | 18866       | 22m22s       | 20m16s      | 68 Gb        | 8h (*)       |
+| Multivariate/make_complex.ml       | 2h48m     | 158 Gb    | 220 M       | 20200       | 52m26s       | 31m39s      | 240 Gb       |              |
 
 (*) with `make -j32 vo; make -j8 vo`
 
@@ -279,6 +280,8 @@ functions have been aligned with those of Coq:
 - option type constructor
 - type of lists
 - functions on lists
+- type of reals
+- basic functions and predicates on reals
 
 The part of HOL-Light that is aligned with Coq is gathered in the package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
