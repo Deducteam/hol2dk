@@ -206,6 +206,8 @@ Translating HOL-Light proofs to Lambdapi and Coq
 **Requirements:**
 - lambdapi commit >= 31aef37c (25/11/24) > 2.5.1
 - [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
+- [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
+- coq >= 8.19
 
 For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
@@ -245,6 +247,8 @@ On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
+
+Requirement: dedukti 2.7
 
 The Makefile commands above are not implemented for Dedukti yet. It is however possible to translate HOL-Light proofs to Dedukti in parallel by using the following older and less efficient commands:
 
