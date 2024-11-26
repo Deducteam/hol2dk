@@ -5,8 +5,7 @@ Require Import Coq.Logic.ClassicalEpsilon.
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Export Rbase.
-Require Export Rbasic_fun.
+Require Export Rbase Rdefinitions Rbasic_fun.
 
 Open Scope R_scope.
 
