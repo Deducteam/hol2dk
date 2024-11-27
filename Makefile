@@ -204,8 +204,8 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
-.PHONY: echo-require
-echo-require:
+.PHONY: echo-root-path
+echo-root-path:
 	@echo $(ROOT_PATH)
 
 %.v: %.lp
