@@ -1,17 +1,16 @@
-Require Export HOLLight_Real.HOLLight_Real.
-Require Import Coq.Logic.ClassicalEpsilon.
-
 (*****************************************************************************)
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Export Rbase Rdefinitions Rbasic_fun.
+Require Import HOLLight_Real.HOLLight_Real Rbase Rdefinitions Rbasic_fun.
 
 Open Scope R_scope.
 
 Definition R' := {| type := R; el := 0%R |}.
 
 Canonical R'.
+
+Require Import Coq.Logic.ClassicalEpsilon.
 
 Definition Rsup : (R -> Prop) -> R.
 Proof.

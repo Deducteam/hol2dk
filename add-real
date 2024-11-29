@@ -2,7 +2,7 @@
 
 for f in `find . -name \*.v`
 do
-    if grep -q ': R[)}]' $f
+    if grep -m 1 -q ' R[ )},]' $f
     then
         echo $f
         sed -i -e 's/Require Import HOLLight_Real.HOLLight_Real HOLLight\.$/Require Import HOLLight_Real.HOLLight_Real HOLLight Rdefinitions./' $f
