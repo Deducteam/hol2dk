@@ -12,28 +12,93 @@ then
     exit 1
 fi
 
-if test $# -ne 1 -a $# -ne 3
-then
-    echo "usage: `basename $0` hollight_file.ml [coq_file.v erasing.lp]"
-    echo '  hollight_file.ml: path to an ml file relative to $HOLLIGHT_DIR'
-    echo '  coq_file.v: coq file imported in all generated coq files'
-    echo '  erasing.lp: mappings between lambdapi and coq'
-    echo 'in the current directory:'
-    echo '- create a file BASE'
-    echo '- create a file ROOT_PATH'
-    echo '- create a file lambdapi.pkg'
-    echo '- create a file _CoqProject'
-    echo '- create a file ERASING'
-    echo '- add links to coq_file.v and other files in $HOL2DK_DIR and $HOLLIGHT_DIR for translating and checking the proofs of hollight_file'
+usage() {
+    cat <<__EOF__
+usage: `basename $0` hollight_file.ml [coq_mod] ... [--root-path coq_file.v] [--erasing erasing.lp] [coq_mod] ...
+
+arguments:
+  hollight_file.ml: path to an ml file relative to $HOLLIGHT_DIR
+  coq_file.v: coq file imported in all generated coq files (mandatory if coq modules are given)
+  erasing.lp: mappings between lambdapi and coq
+  coq_mod: coq module that needs to be imported in generated files
+
+effect in the current directory:
+- create a file BASE containing the base name of hollight_file.ml
+- create a file ROOT_PATH containing the base name of coq_file.v
+- create a file REQUIRING containing the coq modules and root path in the order they are given 
+- create a file lambdapi.pkg
+- create a file _CoqProject
+- create a file ERASING containing the name of erasing.lp
+- add links to coq_file.v and other files in $HOL2DK_DIR and $HOLLIGHT_DIR for translating and checking the proofs of hollight_file
+__EOF__
+}
+
+error() {
+    echo error: $1
+    echo
+    usage
     exit 1
+}
+
+parse_args() {
+    if test $# -ne 0; then
+        case $1 in
+            --root-path)
+                if test -z "$root_path_arg"
+                then
+                    if test $# -eq 1
+                    then
+                        error 'missing --root-path argument'
+                    else
+                        root_path_arg=$2
+                        requiring="$requiring `basename $2 .v`"
+                        shift 2
+                        parse_args $*
+                    fi
+                else
+                    error 'too many --root-path options'
+                fi;;
+            --erasing)
+                if test -z "$erasing_arg"
+                then
+                    if test $# -eq 1
+                    then
+                        error 'missing --erasing argument'
+                    else
+                        erasing_arg=$2
+                        shift 2
+                        parse_args $*
+                    fi
+                else
+                    error 'too many --erasing options'
+                fi;;
+            *)
+                if test -z "$hollight_file"
+                then
+                    hollight_file=$1
+                    shift
+                    parse_args $*
+                else
+                    requiring="$requiring $1"
+                    shift
+                    parse_args $*
+                fi;;
+        esac
+    fi
+}
+
+parse_args $*
+if test -n "$requiring" -a -z "$root_path_arg"
+then
+    error "the --root-path option is mandatory when coq modules are given"
 fi
 
-base=`basename $1 .ml`
+base=`basename $hollight_file .ml`
 
 echo create BASE ...
 echo $base > BASE
 
-root_path=`basename ${2:-HOLLight} .v`
+root_path=`basename ${root_path_arg:-HOLLight} .v`
 if test $# -gt 1
 then
     echo create ROOT_PATH ...
@@ -48,9 +113,12 @@ echo create _CoqProject ...
 echo "-R . $root_path ." > _CoqProject
 
 echo create ERASING ...
-echo ${3:-$HOL2DK_DIR/erasing.lp} > ERASING
+echo ${erasing_arg:-$HOL2DK_DIR/erasing.lp} > ERASING
 
-coq_file=${2:-$HOL2DK_DIR/HOLLight.v}
+echo create REQUIRING ...
+echo $requiring > REQUIRING
+
+coq_file=${coq_file_arg:-$HOL2DK_DIR/HOLLight.v}
 echo ln -f -s $coq_file
 ln -f -s $coq_file
 
