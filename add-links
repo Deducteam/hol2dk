@@ -23,6 +23,7 @@ arguments:
   coq_mod: coq module that needs to be imported in generated files
 
 effect in the current directory:
+- create a file COMMAND containing the command used to create links
 - create a file BASE containing the base name of hollight_file.ml
 - create a file ROOT_PATH containing the base name of coq_file.v
 - create a file REQUIRING containing the coq modules and root path in the order they are given 
@@ -86,6 +87,11 @@ parse_args() {
         esac
     fi
 }
+
+echo create COMMAND ...
+echo '#!/bin/sh' > COMMAND
+echo $0 $* >> COMMAND
+chmod a+x COMMAND
 
 parse_args $*
 if test -n "$requiring" -a -z "$root_path_arg"
