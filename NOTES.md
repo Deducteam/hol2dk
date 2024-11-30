@@ -1,6 +1,33 @@
 NOTES
 -----
 
+## 30/11/24
+
+adding the alignment of real numbers double the coq checking time:
+
+
+Performance on 30/11/24
+-----------------------
+
+On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.2.1, Camlp5 8.02.01, Coq 8.20.0, or (1) OCaml 4.14.2, Camlp5 8.02.01:
+
+| HOL-Light file | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|----------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml         | 3m57s        | 3 Gb      | 5 M         | 5682        | 39s          | 1m29s       | 1 Gb         | 43m6s        |
+
+Performance on 15/04/24
+-----------------------
+
+On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1:
+
+| HOL-Light file                     | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|------------------------------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml                             | 3m57s        | 3 Gb      | 5 M         | 5679        | 51s          | 55s         | 1 Gb         | 18m4s        |
+| Multivariate/make_upto_topology.ml | 48m          | 52 Gb     | 52 M        | 18866       | 22m22s       | 20m16s      | 68 Gb        | 8h (*)       |
+| Multivariate/make_complex.ml       | 2h48m        | 158 Gb    | 220 M       | 20200       | 52m26s       | 31m39s      | 240 Gb       |              |
+
+(*) with `make -j32 vo; make -j8 vo`
+
 ## 01/11/24
 
 get_files REAL_COMPLETE REAL_LT_IMP_LE REAL_LE_REFL REAL_LE_TRANS REAL_LE_LADD REAL_ADD_SYM REAL_LE_ANTISYM REAL_ADD_ASSOC REAL_ADD_LID REAL_ADD_LINV REAL_LE_LMUL REAL_MUL_SYM REAL_MUL_ASSOC REAL_ADD_LDISTRIB REAL_MUL_LID REAL_MUL_LINV REAL_OF_NUM_EQ REAL_INV_0 generates 2027 files 22 Mb in 6m39s, make -j32: 1m14s
