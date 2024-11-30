@@ -205,10 +205,6 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
-.PHONY: echo-root-path
-echo-root-path:
-	@echo $(ROOT_PATH)
-
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(ERASING) --use-notations --requiring "$(REQUIRING)" $< > $@
