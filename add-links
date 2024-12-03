@@ -121,10 +121,13 @@ echo "-R . $root_path ." > _CoqProject
 echo create ERASING ...
 echo ${erasing_arg:-$HOL2DK_DIR/erasing.lp} > ERASING
 
-echo create REQUIRING ...
-echo $requiring > REQUIRING
+if test -n "$requiring"
+then
+    echo create REQUIRING ...
+    echo $requiring > REQUIRING
+fi
 
-coq_file=${coq_file_arg:-$HOL2DK_DIR/HOLLight.v}
+coq_file=${root_path_arg:-$HOL2DK_DIR/HOLLight.v}
 echo ln -f -s $coq_file
 ln -f -s $coq_file
 
