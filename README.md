@@ -1,7 +1,7 @@
 Export HOL-Light proofs to Dedukti, Lambdapi and Coq
 ====================================================
 
-This project provides a tool to translate [HOL-Light](https://github.com/jrh13/hol-light) proofs to [Dedukti](https://github.com/Deducteam/Dedukti/), [Lambdapi](https://github.com/Deducteam/lambdapi) and [Coq](https://coq.inria.fr/).
+This project provides a tool, hol2dk, to translate [HOL-Light](https://github.com/jrh13/hol-light) proofs to [Dedukti](https://github.com/Deducteam/Dedukti/), [Lambdapi](https://github.com/Deducteam/lambdapi) and [Coq](https://coq.inria.fr/).
 
 [HOL-Light](https://github.com/jrh13/hol-light) is a proof assistant
 based on higher-order logic, aka simple type theory.
@@ -21,30 +21,41 @@ Calculus of Inductive Constructions.
 Results
 -------
 
-The HOL-Light base library `hol.ml` and the libraries `Arithmetic` and
-`Logic` formalizing the metatheory of first-order logic can be
-exported and translated to Dedukti, Lambdapi and Coq in a few
-minutes. The generated Dedukti files can be checked in a few minutes
-as well, but it takes a much longer time for Coq and Lambdapi to check
-the generated files (16 minutes for Coq for `hol.ml`).
+The HOL-Light base library `hol.ml` and small libraries like
+`Arithmetic` and `Logic` can be exported and translated to Dedukti,
+Lambdapi and Coq in a few minutes. The generated Dedukti files can be
+checked in a few minutes as well, but it takes much longer for Coq to
+check the generated files (about 50 minutes with 32 processors for
+`hol.ml`).
 
-For bigger libraries like `Multivariate`, it takes more time,
-especially for Coq. For instance, the `Multivariate` library up to
-`topology.ml` can be translated to Lambdapi in 18 minutes, then to Coq
-in 18 more minutes, but the verification of the generated files by Coq
-takes 8 hours.
+For bigger libraries like `Multivariate`, it takes even more time for
+Coq. For instance, the `Multivariate` library up to `topology.ml` can
+be translated to Lambdapi in 18 minutes, then to Coq in 18 more
+minutes, but the verification of the generated files by Coq, without
+the mapping of real numbers, takes 8 hours with 32 processors.
 
-While it is possible to translate any HOL-Light
-proof to Coq, the translated theorems may not be directly applicable by
-Coq users because not all HOL-Light types and functions are aligned
-with those of the Coq standard library yet. Currently, we only aligned
-the types of natural numbers and lists, and some functions on them in
-the file
-[HOLLight.v](https://github.com/Deducteam/hol2dk/blob/main/HOLLight.v). We
-gathered the resulting theorems in the Opam package
+Usability of translated libraries
+---------------------------------
+
+For the obtained theorems to be readily usable in Coq, we need to
+align the type and functions of HOL-Light with those used in the Coq
+standard library. We already did this for various types including the
+types of natural numbers, lists, real numbers and integers, but more
+types and functions need to be aligned. The correctness of the
+mappings for types defined before real numbers (e.g. natural numbers
+and lists) is proved in
+[HOLLight_Real.v](https://github.com/Deducteam/coq-hol-light-real/blob/main/HOLLight_Real.v). The
+correctness of the mappings for the other types, including real
+numbers, is proved here in
+[HOLLight.v](https://github.com/Deducteam/hol2dk/blob/main/HOLLight.v).
+
+The resulting theorems are gathered in the Opam package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
-in the Coq Opam repository [released](https://github.com/coq/opam). We
-plan to add more mappings, especially on real numbers.
+in the Coq Opam repository
+[released](https://github.com/coq/opam). For the moment, it only
+contains about 700 theorems on logic, natural numbers and lists. Much
+more theorems will be added soon (the Multivariate library has more
+than 40,000 theorems on analysis).
 
 Coq axioms used to encode HOL-Light proofs
 ------------------------------------------
