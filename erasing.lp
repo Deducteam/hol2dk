@@ -311,3 +311,31 @@ builtin "finite_index" ≔ finite_index;
 builtin "dest_finite_image" ≔ dest_finite_image;
 builtin "axiom_27" ≔ axiom_27;
 builtin "axiom_28" ≔ axiom_28;
+
+// cart
+builtin "cart" ≔ cart;
+builtin "mk_cart" ≔ mk_cart;
+builtin "dest_cart" ≔ dest_cart;
+builtin "axiom_29" ≔ axiom_29;
+builtin "axiom_30" ≔ axiom_30;
+
+// finite_sum
+builtin "finite_sum" ≔ finite_sum;
+builtin "mk_finite_sum" ≔ mk_finite_sum;
+builtin "dest_finite_sum" ≔ dest_finite_sum;
+builtin "axiom_31" ≔ axiom_31;
+builtin "axiom_32" ≔ axiom_32;
+
+// finite_diff
+builtin "finite_diff" ≔ finite_diff;
+builtin "mk_finite_diff" ≔ mk_finite_diff;
+builtin "dest_finite_diff" ≔ dest_finite_diff;
+builtin "axiom_33" ≔ axiom_33;
+builtin "axiom_34" ≔ axiom_34;
+
+// finite_prod
+builtin "finite_prod" ≔ finite_prod;
+builtin "mk_finite_prod" ≔ mk_finite_prod;
+builtin "dest_finite_prod" ≔ dest_finite_prod;
+builtin "axiom_35" ≔ axiom_35;
+builtin "axiom_36" ≔ axiom_36;
