@@ -232,10 +232,19 @@ To speed up lp file generation for some theorems with very big proofs, you can w
 
 Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
 
-Performance on 15/04/24
------------------------
+Performance with the mapping of real numbers (master branch)
+------------------------------------------------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1, or (1) OCaml 4.14.2, Camlp5 8.02.01:
+On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.2.1, Camlp5 8.02.01, Coq 8.20.0, or (1) OCaml 4.14.2, Camlp5 8.02.01:
+
+| HOL-Light file | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|----------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml         | 3m57s        | 3 Gb      | 5 M         | 5682        | 39s          | 1m29s       | 1 Gb         | 50m13s       |
+
+Performance without the mapping of real numbers (hol2dk 2.0)
+------------------------------------------------------------
+
+On a machine with 32 processors i9-13950HX and 64G RAM, with Hol2dk 2.0, OCaml 5.1.1, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1, or (1) OCaml 4.14.2, Camlp5 8.02.01:
 
 | HOL-Light file                     | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
 |------------------------------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
