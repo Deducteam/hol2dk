@@ -433,4 +433,380 @@ Proof.
   rewrite <- (is_False (x <= y)) in n. rewrite n, COND_False. reflexivity.
 Qed.
 
+(*****************************************************************************)
+(* Mapping of integers. *)
+(*****************************************************************************)
+
+Definition Z' := {| type := Z; el := 0%Z |}.
+Canonical Z'.
+
+Definition int_of_real r := Z.pred (up r).
+
+Lemma axiom_25 : forall (a : Z), (int_of_real (IZR a)) = a.
+Proof.
+  intro k. unfold int_of_real. generalize (archimed (IZR k)).
+  generalize (up (IZR k)); intros l [h1 h2].
+  apply lt_IZR in h1. rewrite <- minus_IZR in h2. apply le_IZR in h2. lia.  
+Qed.
+
+Definition integer : R -> Prop := fun _28588 : R => exists n : nat, (Rabs _28588) = (INR n).
+
+Lemma integer_IZR r : integer r -> exists k, r = IZR k.
+Proof.
+  intros [n h]. rewrite INR_IZR_INZ in h.
+  unfold Rabs in h. destruct (Rcase_abs r) in h.
+  exists (- (Z.of_nat n))%Z. rewrite opp_IZR, <- h, Ropp_involutive. reflexivity.
+  exists (Z.of_nat n). exact h.
+Qed.
+
+Lemma IZR_integer r : (exists k, r = IZR k) -> integer r.
+Proof.
+  intros [k h]. rewrite h. exists (Z.abs_nat k). rewrite Rabs_Zabs, INR_IZR_INZ.
+  f_equal. rewrite Nat2Z.inj_abs_nat. reflexivity.
+Qed.
+
+Lemma axiom_26 : forall (r : R), ((fun x : R => integer x) r) = ((IZR (int_of_real r)) = r).
+Proof.
+  intro r. apply prop_ext; intro h.
+  apply integer_IZR in h. destruct h as [k h]. subst r. apply f_equal.
+  apply axiom_25.
+  apply IZR_integer. exists (int_of_real r). symmetry. exact h.
+Qed.
+
 Close Scope R_scope.
+
+(*****************************************************************************)
+(* Sets. *)
+(*****************************************************************************)
+
+Definition IN {A : Type'} : A -> (A -> Prop) -> Prop := fun _32683 : A => fun _32684 : A -> Prop => _32684 _32683.
+
+Definition EMPTY {A : Type'} : A -> Prop := fun x : A => False.
+
+Definition INSERT {A : Type'} : A -> (A -> Prop) -> A -> Prop := fun _32739 : A => fun _32740 : A -> Prop => fun y : A => (@IN A y _32740) \/ (y = _32739).
+
+Definition UNIV {A : Type'} : A -> Prop := fun x : A => True.
+
+Lemma UNIV_eq_INSERT A : @UNIV A = INSERT (el A) (fun x => x <> el A).
+Proof.
+  apply fun_ext; intro x. unfold INSERT. apply prop_ext; intro h.
+  2: exact Logic.I.
+  destruct (classic (x = el A)) as [i|i]. right. exact i. left. exact i.
+Qed.
+
+Lemma IN_el_not_el A: IN (el A) (fun x => x <> el A) = False.
+Proof. rewrite is_False. intro h. apply h. reflexivity. Qed.
+
+Definition Incl {A:Type'} (s s': A -> Prop) := forall x, IN x s -> IN x s'.
+
+Lemma IN_set_eq_INSERT {A:Type'} (a:A) s:
+  IN a s -> s = INSERT a (fun x => IN x s /\ x <> a).
+Proof.
+  intro h. apply fun_ext; intro x. apply prop_ext; unfold INSERT, IN; intro i.
+  destruct (classic (x = a)) as [j|j]; auto.
+  destruct i as [[i j]|i]. exact i. subst x. exact h.
+Qed.
+
+(* move to HOLlight_Real *)
+Lemma not_disj_eq P Q : (~(P \/ Q)) = (~P /\ ~Q).
+Proof.
+  apply prop_ext; intro h.
+  split. intro p. apply h. left. exact p. intro q. apply h. right. exact q.
+  destruct h as [np nq]. intros [i|i]; auto.
+Qed.
+
+(*****************************************************************************)
+(* Finite sets. *)
+(*****************************************************************************)
+
+Definition FINITE {A : Type'} : (A -> Prop) -> Prop := fun a : A -> Prop => forall FINITE' : (A -> Prop) -> Prop, (forall a' : A -> Prop, ((a' = (@EMPTY A)) \/ (exists x : A, exists s : A -> Prop, (a' = (@INSERT A x s)) /\ (FINITE' s))) -> FINITE' a') -> FINITE' a.
+
+Inductive finite {A : Type'} : (A -> Prop) -> Prop :=
+  finite_EMPTY: finite EMPTY
+| finite_INSERT a s : finite s -> finite (INSERT a s).
+
+Lemma FINITE_eq_finite (A:Type') (s:A -> Prop) : FINITE s = finite s.
+Proof.
+  apply prop_ext; intro h.
+
+  apply h. intros P [i|[x [s' [i j]]]]; rewrite i.
+  apply finite_EMPTY.
+  apply finite_INSERT. exact j.
+  
+  induction h; intros P H; apply H.
+  left. reflexivity.
+  right. exists a. exists s. split. reflexivity. apply IHh. exact H.  
+Qed.
+
+Require Import List.
+
+Lemma finite_list_NoDup {A:Type'} (s:A -> Prop):
+  finite s = (exists l, NoDup l /\ s = fun x => In x l).
+Proof.
+  apply prop_ext; intro H.
+
+  induction H.
+  exists nil. split.
+    apply NoDup_nil.
+    apply fun_ext; intro x. apply prop_ext; intro h; contradiction.
+  destruct IHfinite as [l [n e]]. subst s. destruct (classic (In a l)).
+    exists l. split. exact n. apply fun_ext; intro x. unfold INSERT.
+      apply prop_ext; intro h.
+      destruct h as [h|h]. exact h. subst x. exact H0. left. exact h.
+    exists (cons a l). split. apply NoDup_cons. exact H0. exact n.
+      apply fun_ext; intro x. unfold INSERT. apply prop_ext; simpl; intro h.
+      destruct h as [h|h]. right. exact h. left. symmetry; exact h.
+      destruct h as [h|h]. right. symmetry; exact h. left. exact h.
+
+  destruct H as [l e]. generalize e; clear e. generalize s; clear s.
+  induction l; intros s [n e].
+  subst s. apply finite_EMPTY.
+  set (s' := fun x => In x l). assert (j: s = INSERT a s').
+  apply fun_ext; intro x. rewrite e. unfold INSERT. simpl.
+  apply prop_ext; intro h; firstorder.
+  rewrite j. apply finite_INSERT. apply IHl. split.
+  inversion n. assumption. reflexivity.
+Qed.
+
+Definition elements {A:Type'} (s:A -> Prop) := ε (fun l => NoDup l /\ s = fun x => In x l).
+
+Lemma elements_spec {A:Type'} {s:A -> Prop} (h:finite s):
+  NoDup (elements s) /\ s = fun x => In x (elements s).
+Proof.
+  unfold elements.
+  match goal with [|- _ (ε ?x) /\ _] => set (Q := x) end.
+  assert (i: exists l, Q l). rewrite finite_list_NoDup in h.
+  destruct h as [l h]. exists l. exact h.
+  generalize (ε_spec i). firstorder.
+Qed.
+
+Lemma In_elements {A:Type'} {s: A -> Prop} : finite s -> forall x, In x (elements s) = IN x s.
+Proof.
+  intro h. generalize (elements_spec h); intros [n e] x. rewrite e at 2.
+  reflexivity.
+Qed.
+
+Lemma elements_EMPTY (A:Type') : elements (@EMPTY A) = nil.
+Proof.
+  generalize (elements_spec (@finite_EMPTY A)). intros [n e].
+  destruct (elements EMPTY). reflexivity.
+  apply False_rec. apply ext_fun with (x:=t) in e. unfold EMPTY in e.
+  rewrite e. simpl. left. reflexivity.
+Qed.
+
+Require Import Permutation.
+
+Lemma eq_mod_permut A (l: list A):
+  forall l', (forall x, In x l = In x l') -> NoDup l -> NoDup l' -> Permutation l l'.
+Proof.
+  induction l; destruct l'.
+
+  intros. apply perm_nil.
+
+  intro e. generalize (e a). simpl. intro h. symmetry in h.
+  apply False_rec. rewrite <- h. left. reflexivity.
+
+  intro e. generalize (e a). simpl. intro h.
+  apply False_rec. rewrite <- h. left. reflexivity.
+
+  intros e n n'. inversion n; inversion n'; subst.
+  destruct (classic (a = a0)).
+
+  (* case a = a0 *)
+  subst a0. apply perm_skip. apply IHl.
+
+  intro x. apply prop_ext; intro h.
+  assert (i: In x (a::l)). right. exact h.
+  rewrite e in i. destruct i. subst x. contradiction. exact H.
+  assert (i: In x (a::l')). right. exact h.
+  rewrite <- e in i. destruct i. subst x. contradiction. exact H.
+  assumption.
+  assumption.
+
+  (* case a <> a0 *)
+  assert (i: In a (a0 :: l')). rewrite <- (e a). left. reflexivity.
+  apply in_split in i. destruct i as [l1 [l2 i]]. rewrite i.
+  rewrite <- Permutation_middle. apply perm_skip. apply IHl.
+  2: assumption.
+  2: apply NoDup_remove_1 with a; rewrite <- i; apply NoDup_cons; assumption.
+
+  intro x. apply prop_ext; intro h.
+  
+  assert (j: In x (a::l)). right. exact h.
+  rewrite e, i in j. apply in_elt_inv in j. destruct j as [j|j].
+  subst x. contradiction. exact j.
+
+  assert (j: In x (l1 ++ a :: l2)). apply in_or_app. apply in_app_or in h.
+    destruct h as [h|h]. left. exact h. right. right. exact h.
+  rewrite <- i, <- e in j. destruct j as [j|j].
+  subst x. rewrite i in n'. apply NoDup_remove in n'. destruct n' as [h1 h2].
+  contradiction. exact j.
+Qed.
+
+Lemma elements_INSERT {A:Type'} (a:A) {s} :
+  finite s -> exists l', Permutation l' (a :: elements s) /\
+                     elements (INSERT a s) = COND (IN a s) (elements s) l'.
+Proof.
+  intro h. assert (h': finite (INSERT a s)). apply finite_INSERT. exact h.
+  destruct (prop_degen (IN a s)) as [e|e]; rewrite e.
+
+  exists (a :: elements s). split. reflexivity.
+  rewrite COND_True. f_equal. apply fun_ext; intro x.
+  apply prop_ext; firstorder. subst x. rewrite is_True in e. exact e.
+  exists (elements (INSERT a s)). split. 2: rewrite COND_False; reflexivity.
+
+  apply eq_mod_permut. intro x. rewrite (In_elements h').
+  unfold IN, INSERT, IN. simpl.
+  apply prop_ext; intros [i|i]. right. rewrite (In_elements h). exact i.
+  subst x. left. reflexivity. subst x. right. reflexivity.
+  rewrite (In_elements h) in i. left. exact i.
+  
+  generalize (elements_spec h'); intros [n i]. exact n.
+  apply NoDup_cons. rewrite (In_elements h), <- is_False. exact e.
+  generalize (elements_spec h); intros [n i]. exact n.
+Qed.
+
+Definition permut_inv {A B:Type} (f:A -> B -> A) :=
+  forall a y x, f (f a y) x = f (f a x) y.
+
+Lemma eq_fold_left_permut {A B} {f:A -> B -> A}: permut_inv f ->
+  forall l l', Permutation l l' -> forall a, fold_left f l a = fold_left f l' a.
+Proof.
+  intro H. induction 1; intro a; simpl.
+  reflexivity.  
+  apply IHPermutation. rewrite H. reflexivity.
+  transitivity (fold_left f l' a). apply IHPermutation1. apply IHPermutation2.
+Qed.
+
+Lemma fold_left_eq_permut {A B} {f:A -> B -> A}: permut_inv f ->
+  forall l a b, fold_left f l (f a b) = f (fold_left f l a) b.
+Proof.
+  intro H. induction l as [|x l]; intros a b; simpl.
+  reflexivity.
+  rewrite <- IHl. f_equal. apply H.
+Qed.
+
+Definition ITSET {A B : Type'} : (B -> A -> A) -> (B -> Prop) -> A -> A := fun f : B -> A -> A => fun s : B -> Prop => fun a : A => @ε ((B -> Prop) -> A) (fun g : (B -> Prop) -> A => ((g (@EMPTY B)) = a) /\ (forall x : B, forall s : B -> Prop, (@FINITE B s) -> (g (@INSERT B x s)) = (@COND A (@IN B x s) (g s) (f x (g s))))) s.
+
+Definition itset {A B:Type'} : (B -> A -> A) -> (B -> Prop) -> A -> A := fun f : B -> A -> A => let F := fun a b => f b a in fun s : B -> Prop => fun a : A => fold_left F (elements s) a.
+
+Lemma itset_EMPTY {A B:Type'} (f:B -> A -> A) a: itset f EMPTY a = a.
+Proof.
+  unfold itset. rewrite elements_EMPTY. simpl. reflexivity.  
+Qed.
+
+Definition permut_inv' {A B:Type} (f:B -> A -> A) :=
+  forall a y x, f x (f y a) = f y (f x a).
+
+Lemma itset_INSERT {A B:Type'} (f:B -> A -> A) a b s: permut_inv' f -> finite s ->
+  itset f (INSERT b s) a = COND (IN b s) (itset f s a) (f b (itset f s a)).
+Proof.
+  intros H h. unfold itset. set (F := fun a b => f b a).
+  assert (H': permut_inv F). exact H.
+  destruct (elements_INSERT b h) as [l [p e]]. rewrite e.
+  destruct (prop_degen (IN b s)) as [i|i]; rewrite i.
+  rewrite !COND_True. reflexivity.
+  rewrite !COND_False. transitivity (fold_left F (b :: elements s) a).
+  apply (eq_fold_left_permut H). exact p.
+  apply (fold_left_eq_permut H').
+Qed.
+
+Lemma exists_ITSET {A B:Type'} {f:B -> A -> A}: permut_inv' f ->
+  forall a, let g := fun s => itset f s a in
+      g EMPTY = a /\
+        (forall (x : B) (s : B -> Prop),
+            FINITE s -> g (INSERT x s) = COND (IN x s) (g s) (f x (g s))).
+Proof.
+  intros H a g. unfold g. split. apply itset_EMPTY. intros b s h.
+  apply itset_INSERT. exact H. rewrite <- FINITE_eq_finite. exact h.
+Qed.
+
+Lemma ITSET_eq_itset (A B:Type') (f:B -> A -> A):
+  permut_inv' f -> forall s, finite s -> forall a, ITSET f s a = itset f s a.
+Proof.
+  intros H s h a.
+  unfold ITSET. match goal with [|- ε ?x _ = _] => set (Q := x) end.
+  assert (i: exists g, Q g). exists (fun s => itset f s a). apply exists_ITSET. exact H.
+  generalize (ε_spec i). intros [j k]. generalize s h. induction 1. 
+  rewrite itset_EMPTY. exact j.
+  rewrite k. unfold reverse_coercion in IHh0. rewrite IHh0, itset_INSERT.
+  reflexivity. exact H. exact h0. rewrite FINITE_eq_finite. exact h0.
+Qed.
+
+Definition CARD {_99571 : Type'} : (_99571 -> Prop) -> nat := fun _44539 : _99571 -> Prop => @ITSET nat _99571 (fun x : _99571 => fun n : nat => S n) _44539 (NUMERAL 0).
+
+Definition dimindex {A : Type'} : (A -> Prop) -> nat := fun _97595 : A -> Prop => @COND nat (@FINITE A (@UNIV A)) (@CARD A (@UNIV A)) (NUMERAL (BIT1 0)).
+
+Lemma Incl_finite {A:Type'} (s: A -> Prop) : finite s -> forall s', Incl s' s -> finite s'.
+Proof.
+  induction 1.
+
+  intros s i. assert (e: s = EMPTY). apply fun_ext; intro x.
+    unfold EMPTY. rewrite is_False. intro h. apply (i x). exact h.
+  rewrite e. apply finite_EMPTY.
+
+  intros s' i. destruct (classic (Incl s' s)) as [h|h].
+  apply IHfinite. exact h.
+  
+  assert (j: IN a s'). unfold Incl in h. rewrite not_forall_eq in h.
+  destruct h as [x h]. rewrite <- not_or_eq, not_disj_eq in h.
+  destruct h as [h1 h2]. apply NNPP in h1. generalize (i x h1).
+  intros [j|j]. contradiction. subst x. exact h1.
+
+  apply IN_set_eq_INSERT in j. rewrite j. apply finite_INSERT.
+  apply IHfinite. intros x [h1 h2]. generalize (i x h1). intros [k|k].
+  exact k. contradiction.
+Qed.
+
+Lemma dimindex_UNIV_gt_0 A : 0 < dimindex (@UNIV A).
+Proof.
+  assert (p1: permut_inv' (fun (_ : A) (n : nat) => S n)).
+  unfold permut_inv'. reflexivity.
+  
+  unfold dimindex. case (prop_degen (FINITE (@UNIV A))); intro h; rewrite h.
+  
+  assert (p2: finite (@UNIV A)). rewrite <- FINITE_eq_finite, h. exact Logic.I.
+  assert (p3: finite (fun x : A => x <> el A)). apply (Incl_finite UNIV). exact p2.
+  intros x _. exact Logic.I.
+
+  rewrite COND_True. unfold CARD.
+  rewrite ITSET_eq_itset, UNIV_eq_INSERT, itset_INSERT, IN_el_not_el, COND_False; auto.
+  lia.
+
+  rewrite COND_False. unfold NUMERAL, BIT1. lia.
+Qed.
+
+(*****************************************************************************)
+(* Cart.finite_image: natural numbers between 1 and the cardinal of A,
+if A is finite, and 1 otherwise. *)
+(*****************************************************************************)
+
+Definition GSPEC {A : Type'} : (A -> Prop) -> A -> Prop := fun _32695 : A -> Prop => _32695.
+
+Definition SETSPEC {_83031 : Type'} : _83031 -> Prop -> _83031 -> Prop := fun _32700 : _83031 => fun _32701 : Prop => fun _32702 : _83031 => _32701 /\ (_32700 = _32702).
+
+Definition dotdot : nat -> nat -> nat -> Prop := fun _69692 : nat => fun _69693 : nat => @GSPEC nat (fun GEN_PVAR_229 : nat => exists x : nat, @SETSPEC nat GEN_PVAR_229 ((Peano.le _69692 x) /\ (Peano.le x _69693)) x).
+
+Definition finite_image_pred (A:Type') x :=
+  @IN nat x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (@UNIV A))).
+
+Lemma finite_image_pred1 (A:Type') : finite_image_pred A 1.
+Proof.
+  unfold finite_image_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  exists 1. generalize (dimindex_UNIV_gt_0 A). lia.
+Qed.
+
+Definition finite_image : Type' -> Type' :=
+  fun A => subtype (finite_image_pred1 A).
+
+Definition finite_index : forall {A : Type'}, nat -> finite_image A :=
+  fun A => mk (finite_image_pred1 A).
+
+Definition dest_finite_image : forall {A : Type'}, (finite_image A) -> nat :=
+  fun A => dest (finite_image_pred1 A).
+
+Lemma axiom_27 : forall {A : Type'} (a : finite_image A), (@finite_index A (@dest_finite_image A a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_28 : forall {A : Type'} (r : nat), ((fun x : nat => @IN nat x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (@UNIV A)))) r) = ((@dest_finite_image A (@finite_index A r)) = r).
+Proof. intros A r. apply dest_mk. Qed.

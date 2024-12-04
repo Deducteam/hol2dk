@@ -295,3 +295,19 @@ builtin "Rmax" ≔ real_max;
 builtin "real_max_def" ≔ real_max_def;
 builtin "Rmin" ≔ real_min;
 builtin "real_min_def" ≔ real_min_def;
+
+// integers
+builtin "Z" ≔ int;
+builtin "IZR" ≔ real_of_int;
+builtin "int_of_real" ≔ int_of_real;
+builtin "axiom_25" ≔ axiom_25;
+builtin "axiom_26" ≔ axiom_26;
+//TODO: builtin "div" ≔ div;
+//TODO: builtin "rem" ≔ rem;
+
+// finite_image
+builtin "finite_image" ≔ finite_image;
+builtin "finite_index" ≔ finite_index;
+builtin "dest_finite_image" ≔ dest_finite_image;
+builtin "axiom_27" ≔ axiom_27;
+builtin "axiom_28" ≔ axiom_28;
