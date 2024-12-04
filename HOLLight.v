@@ -1,18 +1,16 @@
-Require Export HOLLight_Real.HOLLight_Real.
-Require Import Coq.Logic.ClassicalEpsilon.
-
 (*****************************************************************************)
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Export Rbase.
-Require Export Rbasic_fun.
+Require Import HOLLight_Real.HOLLight_Real Rbase Rdefinitions Rbasic_fun.
 
 Open Scope R_scope.
 
 Definition R' := {| type := R; el := 0%R |}.
 
 Canonical R'.
+
+Require Import Coq.Logic.ClassicalEpsilon.
 
 Definition Rsup : (R -> Prop) -> R.
 Proof.
@@ -175,8 +173,6 @@ Qed.
 Lemma real_sup_upper_bound E : has_sup E -> ub E (real_sup E).
 Proof. intro h. apply (proj1 (real_sup_is_lub E h)). Qed.
 
-(*Axiom thm_REAL_LT_IMP_LE : forall x : real, forall y : real, (lt x y) -> real_le x y.*)
-
 Lemma real_sup_total E x : has_sup E -> down E x \/ real_le (real_sup E) x.
 Proof.
   intro h. case (classic (down E x)); intro k. auto. right.
@@ -187,17 +183,10 @@ Proof.
   apply thm_REAL_LT_IMP_LE. apply k'. apply hy.
 Qed.
 
-(*Axiom thm_REAL_LE_LADD: forall x : real, forall y : real, forall z : real, (real_le (real_add x y) (real_add x z)) = (real_le y z).
-Axiom thm_REAL_LE_LMUL: forall x : real, forall y : real, forall z : real, ((real_le (real_of_num (NUMERAL 0)) x) /\ (real_le y z)) -> real_le (real_mul x y) (real_mul x z).*)
-
 Lemma eq_real_struct: @eq real_struct = @Logic.eq real.
 Proof.
   apply fun_ext; intro x. apply fun_ext; intro y.
   unfold eq. rewrite thm_REAL_LE_ANTISYM. reflexivity.
-(* thm_REAL_LE_ANTISYM
-     : forall x y : type real,
-       @Logic.eq Prop (and (terms.real_le x y) (terms.real_le y x))
-         (@Logic.eq (type real) x y) *)
 Qed.
 
 Lemma real_axioms : axioms real_struct.

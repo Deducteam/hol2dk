@@ -204,8 +204,10 @@ Translating HOL-Light proofs to Lambdapi and Coq
 ------------------------------------------------
 
 **Requirements:**
-- lambdapi commit >= 31aef37c (25/11/24) > 2.5.1
+- lambdapi commit >= c24b28e2 (28/11/24) > 2.5.1
 - [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
+- [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
+- coq >= 8.19
 
 For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
@@ -213,7 +215,7 @@ cd $HOLLIGHT_DIR/Logic
 hol2dk dump-simp make.ml
 mkdir -p ~/output-hol2dk/Logic
 cd ~/output-hol2dk/Logic
-hol2dk link Logic/make
+hol2dk link Logic/make.ml HOLLight_Real.HOLLight_Real --root-path $HOL2DK/HOLLight.v Rdefinitions Rbasic_fun Raxioms
 ```
 This will create files and add links to files needed to generate, translate and check proofs.
 
@@ -233,18 +235,20 @@ Remark: for the checking of generated Coq files to not fail because of lack of R
 Performance on 15/04/24
 -----------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1:
+On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.1.1, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1, or (1) OCaml 4.14.2, Camlp5 8.02.01:
 
-| HOL-Light file                     | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
-|------------------------------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml                             | 3m57s     | 3 Gb      | 5 M         | 5679        | 51s          | 55s         | 1 Gb         | 18m4s        |
-| Multivariate/make_upto_topology.ml | 48m       | 52 Gb     | 52 M        | 18866       | 22m22s       | 20m16s      | 68 Gb        | 8h (*)       |
-| Multivariate/make_complex.ml       | 2h48m     | 158 Gb    | 220 M       | 20200       | 52m26s       | 31m39s      | 240 Gb       |              |
+| HOL-Light file                     | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|------------------------------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml                             | 3m57s        | 3 Gb      | 5 M         | 5679        | 51s          | 55s         | 1 Gb         | 18m4s        |
+| Multivariate/make_upto_topology.ml | 48m          | 52 Gb     | 52 M        | 18866       | 22m22s       | 20m16s      | 68 Gb        | 8h (*)       |
+| Multivariate/make_complex.ml       | 2h48m        | 158 Gb    | 220 M       | 20200       | 52m26s       | 31m39s      | 240 Gb       |              |
 
 (*) with `make -j32 vo; make -j8 vo`
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
+
+Requirement: dedukti 2.7
 
 The Makefile commands above are not implemented for Dedukti yet. It is however possible to translate HOL-Light proofs to Dedukti in parallel by using the following older and less efficient commands:
 

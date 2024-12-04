@@ -3,6 +3,7 @@
 BASE = $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH = $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
 ERASING = $(shell if test -f ERASING; then cat ERASING; fi)
+REQUIRING = $(shell if test -f REQUIRING; then cat REQUIRING; else echo $(ROOT_PATH); fi)
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
@@ -204,13 +205,9 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
-.PHONY: echo-require
-echo-require:
-	@echo $(ROOT_PATH)
-
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(ERASING) --use-notations --requiring $(ROOT_PATH) $< > $@
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(ERASING) --use-notations --requiring "$(REQUIRING)" $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo

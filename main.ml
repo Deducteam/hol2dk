@@ -427,7 +427,7 @@ and dump_and_simp after_hol f =
   | e -> e
 
 and command = function
-  | [] | ["-"|"--help"|"help"] -> usage(); 0
+  | [] | ["-h"|"--help"|"help"] -> usage(); 0
 
   | "--print-stats"::args -> at_exit print_hstats; command args
 
@@ -440,6 +440,8 @@ and command = function
      Xlp.max_proof_part_size := integer k; command args
 
   | "--root-path"::arg::args -> Xlp.root_path := arg; command args
+
+  | ["--root-path"] -> err "missing root path\n"; 1
 
   | s::_ when String.starts_with ~prefix:"--" s ->
      err "unknown option \"%s\"\n" s; 1
