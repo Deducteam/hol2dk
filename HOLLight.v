@@ -485,9 +485,9 @@ Definition EMPTY {A : Type'} : A -> Prop := fun x : A => False.
 
 Definition INSERT {A : Type'} : A -> (A -> Prop) -> A -> Prop := fun _32739 : A => fun _32740 : A -> Prop => fun y : A => (@IN A y _32740) \/ (y = _32739).
 
-Definition UNIV {A : Type'} : A -> Prop := fun x : A => True.
+Definition UNIV (A : Type') : A -> Prop := fun x : A => True.
 
-Lemma UNIV_eq_INSERT A : @UNIV A = INSERT (el A) (fun x => x <> el A).
+Lemma UNIV_eq_INSERT A : UNIV A = INSERT (el A) (fun x => x <> el A).
 Proof.
   apply fun_ext; intro x. unfold INSERT. apply prop_ext; intro h.
   2: exact Logic.I.
@@ -735,7 +735,7 @@ Qed.
 
 Definition CARD {_99571 : Type'} : (_99571 -> Prop) -> nat := fun _44539 : _99571 -> Prop => @ITSET nat _99571 (fun x : _99571 => fun n : nat => S n) _44539 (NUMERAL 0).
 
-Definition dimindex {A : Type'} : (A -> Prop) -> nat := fun _97595 : A -> Prop => @COND nat (@FINITE A (@UNIV A)) (@CARD A (@UNIV A)) (NUMERAL (BIT1 0)).
+Definition dimindex {A : Type'} : (A -> Prop) -> nat := fun _97595 : A -> Prop => @COND nat (@FINITE A (UNIV A)) (@CARD A (UNIV A)) (NUMERAL (BIT1 0)).
 
 Lemma Incl_finite {A:Type'} (s: A -> Prop) : finite s -> forall s', Incl s' s -> finite s'.
 Proof.
@@ -758,15 +758,15 @@ Proof.
   exact k. contradiction.
 Qed.
 
-Lemma dimindex_UNIV_gt_0 A : 0 < dimindex (@UNIV A).
+Lemma dimindex_UNIV_gt_0 A : 0 < dimindex (UNIV A).
 Proof.
   assert (p1: permut_inv' (fun (_ : A) (n : nat) => S n)).
   unfold permut_inv'. reflexivity.
   
-  unfold dimindex. case (prop_degen (FINITE (@UNIV A))); intro h; rewrite h.
+  unfold dimindex. case (prop_degen (FINITE (UNIV A))); intro h; rewrite h.
   
-  assert (p2: finite (@UNIV A)). rewrite <- FINITE_eq_finite, h. exact Logic.I.
-  assert (p3: finite (fun x : A => x <> el A)). apply (Incl_finite UNIV). exact p2.
+  assert (p2: finite (UNIV A)). rewrite <- FINITE_eq_finite, h. exact Logic.I.
+  assert (p3: finite (fun x : A => x <> el A)). apply (Incl_finite (UNIV A)). exact p2.
   intros x _. exact Logic.I.
 
   rewrite COND_True. unfold CARD.
@@ -788,7 +788,7 @@ Definition SETSPEC {_83031 : Type'} : _83031 -> Prop -> _83031 -> Prop := fun _3
 Definition dotdot : nat -> nat -> nat -> Prop := fun _69692 : nat => fun _69693 : nat => @GSPEC nat (fun GEN_PVAR_229 : nat => exists x : nat, @SETSPEC nat GEN_PVAR_229 ((Peano.le _69692 x) /\ (Peano.le x _69693)) x).
 
 Definition finite_image_pred (A:Type') x :=
-  @IN nat x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (@UNIV A))).
+  @IN nat x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (UNIV A))).
 
 Lemma finite_image_pred1 (A:Type') : finite_image_pred A 1.
 Proof.
@@ -808,5 +808,107 @@ Definition dest_finite_image : forall {A : Type'}, (finite_image A) -> nat :=
 Lemma axiom_27 : forall {A : Type'} (a : finite_image A), (@finite_index A (@dest_finite_image A a)) = a.
 Proof. intros A a. apply mk_dest. Qed.
 
-Lemma axiom_28 : forall {A : Type'} (r : nat), ((fun x : nat => @IN nat x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (@UNIV A)))) r) = ((@dest_finite_image A (@finite_index A r)) = r).
+Lemma axiom_28 : forall {A : Type'} (r : nat), ((fun x : nat => @IN nat x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (UNIV A)))) r) = ((@dest_finite_image A (@finite_index A r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Cart.cart A B is finite_image B -> A. *)
+(*****************************************************************************)
+
+Definition cart A B := finite_image B -> A.
+
+Definition mk_cart : forall {A B : Type'}, ((finite_image B) -> A) -> cart A B :=
+  fun A B f => f.
+
+Definition dest_cart : forall {A B : Type'}, (cart A B) -> (finite_image B) -> A :=
+  fun A B f => f.
+
+Lemma axiom_29 : forall {A B : Type'} (a : cart A B), (@mk_cart A B (@dest_cart A B a)) = a.
+Proof. reflexivity. Qed.
+
+Lemma axiom_30 : forall {A B : Type'} (r : (finite_image B) -> A), ((fun f : (finite_image B) -> A => True) r) = ((@dest_cart A B (@mk_cart A B r)) = r).
+Proof. intros A B r. apply prop_ext; intros _. reflexivity. exact Logic.I. Qed.
+
+(*****************************************************************************)
+(* Cart.finite_sum *)
+(*****************************************************************************)
+
+Definition finite_sum_pred (A B: Type') x := @IN nat x (dotdot (NUMERAL (BIT1 0)) (Nat.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B)))).
+
+Lemma finite_sum_pred1 (A B:Type') : finite_sum_pred A B 1.
+Proof.
+  unfold finite_sum_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  exists 1. generalize (dimindex_UNIV_gt_0 A) (dimindex_UNIV_gt_0 B). lia.
+Qed.
+
+Definition finite_sum : Type' -> Type' -> Type' :=
+  fun A B => subtype (finite_sum_pred1 A B).
+
+Definition mk_finite_sum : forall {A B : Type'}, nat -> finite_sum A B :=
+  fun A B => mk (finite_sum_pred1 A B).
+
+Definition dest_finite_sum : forall {A B : Type'}, (finite_sum A B) -> nat :=
+  fun A B => dest (finite_sum_pred1 A B).
+
+Lemma axiom_31 : forall {A B : Type'} (a : finite_sum A B), (@mk_finite_sum A B (@dest_finite_sum A B a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_32 : forall {A B : Type'} (r : nat), ((fun x : nat => @IN nat x (dotdot (NUMERAL (BIT1 0)) (Nat.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B))))) r) = ((@dest_finite_sum A B (@mk_finite_sum A B r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Cart.finite_diff *)
+(*****************************************************************************)
+
+Definition finite_diff_pred (A B: Type') x := @IN nat x (dotdot (NUMERAL (BIT1 0)) (@COND nat (Peano.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (Nat.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 0)))).
+
+Lemma finite_diff_pred1 (A B:Type') : finite_diff_pred A B 1.
+Proof.
+  unfold finite_diff_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  exists 1. generalize (dimindex_UNIV_gt_0 A) (dimindex_UNIV_gt_0 B); intros.
+  case (prop_degen (dimindex (UNIV B) < dimindex (UNIV A))); intro h; rewrite h.
+  rewrite COND_True. rewrite is_True in h. lia.
+  rewrite COND_False. rewrite is_False in h. lia.
+Qed.
+
+Definition finite_diff : Type' -> Type' -> Type' :=
+  fun A B => subtype (finite_diff_pred1 A B).
+
+Definition mk_finite_diff : forall {A B : Type'}, nat -> finite_diff A B :=
+  fun A B => mk (finite_diff_pred1 A B).
+
+Definition dest_finite_diff : forall {A B : Type'}, (finite_diff A B) -> nat :=
+  fun A B => dest (finite_diff_pred1 A B).
+
+Lemma axiom_33 : forall {A B : Type'} (a : finite_diff A B), (@mk_finite_diff A B (@dest_finite_diff A B a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_34 : forall {A B : Type'} (r : nat), ((fun x : nat => @IN nat x (dotdot (NUMERAL (BIT1 0)) (@COND nat (Peano.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (Nat.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 0))))) r) = ((@dest_finite_diff A B (@mk_finite_diff A B r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Cart.finite_prod *)
+(*****************************************************************************)
+
+Definition finite_prod_pred (A B: Type') x := @IN nat x (dotdot (NUMERAL (BIT1 0)) (Nat.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B)))).
+
+Lemma finite_prod_pred1 (A B:Type') : finite_prod_pred A B 1.
+Proof.
+  unfold finite_prod_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  exists 1. generalize (dimindex_UNIV_gt_0 A) (dimindex_UNIV_gt_0 B); intros. lia.
+Qed.
+
+Definition finite_prod : Type' -> Type' -> Type' :=
+  fun A B => subtype (finite_prod_pred1 A B).
+
+Definition mk_finite_prod : forall {A B : Type'}, nat -> finite_prod A B :=
+  fun A B => mk (finite_prod_pred1 A B).
+
+Definition dest_finite_prod : forall {A B : Type'}, (finite_prod A B) -> nat :=
+  fun A B => dest (finite_prod_pred1 A B).
+
+Lemma axiom_35 : forall {A B : Type'} (a : finite_prod A B), (@mk_finite_prod A B (@dest_finite_prod A B a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_36 : forall {A B : Type'} (r : nat), ((fun x : nat => @IN nat x (dotdot (NUMERAL (BIT1 0)) (Nat.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B))))) r) = ((@dest_finite_prod A B (@mk_finite_prod A B r)) = r).
 Proof. intros A r. apply dest_mk. Qed.
