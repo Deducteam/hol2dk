@@ -24,7 +24,7 @@ jobs:
         uses: avsm/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-version }}
-      - name: Install dependencies
+      - name: Install dune
         run: opam install -y dune.${{ matrix.dune-version }}
       - name: Compile hol2dk
         run: |
@@ -56,9 +56,9 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          cp xci.ml hol-light/
+          cp hol_upto_arith.ml hol_lib_upto_arith.ml hol-light/
           cd hol-light
-          hol2dk dump-simp-before-hol xci.ml
+          hol2dk dump-simp-before-hol hol_upto_arith.ml
       - name: Test single-threaded dk output
         run: |
           eval `opam env`
@@ -66,43 +66,43 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           cd hol-light
           ln -s ../theory_hol.dk
-          hol2dk xci.dk
-          dk check xci.dk
+          hol2dk hol_upto_arith.dk
+          dk check hol_upto_arith.dk
       - name: Test single-threaded lp output
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
           cd hol-light
-          hol2dk xci.lp
+          hol2dk hol_upto_arith.lp
           ln -s ../theory_hol.lp
           ln -s ../lambdapi.pkg
-          lambdapi check xci.lp
+          lambdapi check hol_upto_arith.lp
       - name: Test multi-threaded dk output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
           cd hol-light
-          hol2dk mk 3 xci
-          make -f xci.mk -j3 dk
-          dk check xci.dk
+          hol2dk mk 3 hol_upto_arith
+          make -f hol_upto_arith.mk -j3 dk
+          dk check hol_upto_arith.dk
       - name: Test multi-threaded lp output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
           cd hol-light
-          make -f xci.mk -j3 lp
-          make -f xci.mk -j3 lpo
+          make -f hol_upto_arith.mk -j3 lp
+          make -f hol_upto_arith.mk -j3 lpo
       - name: Test multi-threaded lp output with split
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          mkdir -p output/xci
-          cd output/xci
-          hol2dk link xci
+          mkdir -p output/hol_upto_arith
+          cd output/hol_upto_arith
+          hol2dk link hol_upto_arith
           make split
           make -j3 lp
           make -j3 v
