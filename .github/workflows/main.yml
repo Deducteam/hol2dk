@@ -8,12 +8,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        hol-light-version: [ea45176]
-        ocaml-version: [4.14.2]
-        camlp5-version: [8.02.01]
+        hol-light-version: [Release-3.0.0]
+        ocaml-version: [5.2.1]
+        camlp5-version: [8.03.01]
         dedukti-version: [2.7]
         lambdapi-version: [master] # >= 31aef37c > 2.5.1
-        dune-version: [3.16.1]
+        dune-version: [3.17.0]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -23,17 +23,17 @@ jobs:
         uses: avsm/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-version }}
-      - name: Install dune
+      - name: Install dependencies
         run: opam install -y dune.${{ matrix.dune-version }}
       - name: Compile hol2dk
         run: |
           eval `opam env`
           dune build
           dune install
-      - name: Install hol-light dependencies, dedukti
+      - name: Install dependencies
         run: |
-          sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
-          opam install -y camlp5.${{ matrix.camlp5-version }} zarith ocamlfind dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
+          #sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
+          opam install -y hol_light.${{ matrix.hol_light-version }} camlp5.${{ matrix.camlp5-version }} dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
