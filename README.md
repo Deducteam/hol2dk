@@ -78,7 +78,7 @@ Installing HOL-Light sources
 ----------------------------
 
 **Requirements:**
-- hol-light = ea45176 (07/02/24)
+- hol-light >= 3.0.0
 - ocaml = 4.14.2
 - camlp5 = 8.02.01
 - ocamlfind

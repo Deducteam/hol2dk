@@ -357,6 +357,7 @@ let dump after_hol f b =
 #use "topfind";;
 #require "str";;
 #require "zarith";;
+#require "unix";;
 #load "bignum.cmo";;
 let dump_filename = "%s.prf";; 
 %a
