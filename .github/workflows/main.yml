@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           #sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
-          opam install -y hol_light.${{ matrix.hol_light-version }} camlp5.${{ matrix.camlp5-version }} dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
+          opam install -y hol_light.${{ matrix.hol-light-version }} camlp5.${{ matrix.camlp5-version }} dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
