@@ -77,31 +77,8 @@ Bibliography
 Installing HOL-Light sources
 ----------------------------
 
-**Requirements:**
-- hol-light >= 3.0.0
-- ocaml = 4.14.2
-- camlp5 = 8.02.01
-- ocamlfind
-- zarith, which may require pkg-config and libgmp-dev
-- bignum
-- libipc-system-simple-perl
-- libstring-shellquote
-
-Find other potential working ocaml-camlp5 pairs on
-https://github.com/jrh13/hol-light/pull/71 .
-
-If you don't already have the HOL-Light sources somewhere, you can
-install them by using the following commands:
-
 ```
-cd $HOME
-sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl pkg-config libgmp-dev opam
-opam init
-opam switch create ocaml.4.14.2
-eval `opam env`
-opam install ocamlfind zarith camlp5.8.02.01
 git clone https://github.com/jrh13/hol-light
-git checkout ea45176
 make -C hol-light
 ```
 
@@ -111,6 +88,7 @@ Installing hol2dk
 **Requirements:**
 - ocaml >= 4.13
 - dune >= 3.7
+- hol_light >= 3.0.0
 
 hol2dk is available on [Opam](https://opam.ocaml.org/). To install it, simply do:
 ```
