@@ -139,6 +139,6 @@ done
 
 for ext in prf nbp sig thm pos use
 do
-    echo ln -f -s $HOLLIGHT_DIR/$base.$ext
-    ln -f -s $HOLLIGHT_DIR/$base.$ext
+    echo ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
+    ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
 done
