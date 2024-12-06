@@ -83,6 +83,7 @@ Installing HOL-Light sources
 - camlp5 = 8.02.01
 - ocamlfind
 - zarith, which may require pkg-config and libgmp-dev
+- bignum
 - libipc-system-simple-perl
 - libstring-shellquote
 

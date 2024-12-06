@@ -160,7 +160,6 @@ module type Hol_kernel =
       val new_basic_definition : term -> thm
       val new_basic_type_definition :
               string -> string * string -> thm -> thm * thm
-      val dump_filename : string
       val oc_dump : out_channel
       (*REMOVE*)val the_type_constants : (string * int) list ref
       (*REMOVE*)val the_term_constants : (string * hol_type) list ref
@@ -225,7 +224,7 @@ module Hol : Hol_kernel = struct
 
   let thm_index = ref (-1)
 
-  let dump_filename = Printf.sprintf "dump%d.prf" (Unix.getpid())
+  (*REMOVE*)let dump_filename = "/tmp/dump.prf"
   let oc_dump = open_out_bin dump_filename
 
   let new_theorem hyps concl proof_content =
@@ -850,6 +849,8 @@ REMOVE*)
              let dtm = safe_mk_eq c r in
              let dth = new_theorem [] dtm (Pdef(dtm,cname,ty)) in
              (the_definitions := dth::(!the_definitions); dth)
+    | Comb(Comb(Const("=",_),Const(cname,ty)),r) ->
+      failwith ("new_basic_definition: '" ^ cname ^ "' is already defined")
     | _ -> failwith "new_basic_definition"
 
 (* ------------------------------------------------------------------------- *)
