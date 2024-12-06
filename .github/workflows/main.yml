@@ -8,12 +8,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        hol-light-version: [3.0.0]
         ocaml-version: [5.2.1]
-        camlp5-version: [8.03.01]
-        dedukti-version: [2.7]
-        lambdapi-version: [master] # >= 31aef37c > 2.5.1
         dune-version: [3.17.0]
+        camlp5-version: [8.03.01]
+        hol-light-version: [3.0.0]
+        hol-light-commit: [Release-3.0.0]
+        lambdapi-version: [master] # >= 31aef37c > 2.5.1
+        dedukti-version: [2.7]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -47,7 +48,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           git clone https://github.com/jrh13/hol-light
           cd hol-light
-          git checkout ${{ matrix.hol-light-version }}
+          #git checkout ${{ matrix.hol-light-commit }}
           make
           hol2dk patch
       - name: Dump proofs
