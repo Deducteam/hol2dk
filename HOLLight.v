@@ -61,7 +61,7 @@ Proof.
   generalize (is_lub_Rsup E l i); intros [m n]. apply n.
   intros y hy.
   unfold down in k. rewrite ex2_eq, not_exists_eq in k.
-  generalize (k y); intro k'. rewrite not_conj_eq, not_or_eq in k'.
+  generalize (k y); intro k'. rewrite not_conj_eq, <- imp_eq_disj in k'.
   unfold Rle. left. apply Rnot_le_lt. apply k'. exact hy.
 Qed.
 
@@ -179,7 +179,7 @@ Proof.
   generalize (real_sup_is_lub E h); intros [i j]. apply j.
   intros y hy.
   unfold down in k. rewrite ex2_eq, not_exists_eq in k.
-  generalize (k y); intro k'. rewrite not_conj_eq, not_or_eq in k'.
+  generalize (k y); intro k'. rewrite not_conj_eq, <- imp_eq_disj in k'.
   apply thm_REAL_LT_IMP_LE. apply k'. apply hy.
 Qed.
 
@@ -507,14 +507,6 @@ Proof.
   destruct i as [[i j]|i]. exact i. subst x. exact h.
 Qed.
 
-(* move to HOLlight_Real *)
-Lemma not_disj_eq P Q : (~(P \/ Q)) = (~P /\ ~Q).
-Proof.
-  apply prop_ext; intro h.
-  split. intro p. apply h. left. exact p. intro q. apply h. right. exact q.
-  destruct h as [np nq]. intros [i|i]; auto.
-Qed.
-
 (*****************************************************************************)
 (* Finite sets. *)
 (*****************************************************************************)
@@ -749,7 +741,7 @@ Proof.
   apply IHfinite. exact h.
   
   assert (j: IN a s'). unfold Incl in h. rewrite not_forall_eq in h.
-  destruct h as [x h]. rewrite <- not_or_eq, not_disj_eq in h.
+  destruct h as [x h]. rewrite imp_eq_disj, not_disj_eq in h.
   destruct h as [h1 h2]. apply NNPP in h1. generalize (i x h1).
   intros [j|j]. contradiction. subst x. exact h1.
 
