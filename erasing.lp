@@ -35,8 +35,8 @@ builtin "T_def" ≔ T_def;
 builtin "False" ≔ F;
 builtin "F_def" ≔ F_def;
 
-builtin "ex1" ≔ ∃!;
-builtin "ex1_def" ≔ ∃!_def;
+builtin "ex1" ≔ ∃₁;
+builtin "ex1_def" ≔ ∃₁_def;
 
 // natural deduction rules
 builtin "Logic.I" ≔ Tᵢ;

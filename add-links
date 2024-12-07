@@ -100,16 +100,12 @@ then
 fi
 
 base=`basename $hollight_file .ml`
-
 echo create BASE ...
 echo $base > BASE
 
 root_path=`basename ${root_path_arg:-HOLLight} .v`
-if test $# -gt 1
-then
-    echo create ROOT_PATH ...
-    echo $root_path > ROOT_PATH
-fi
+echo create ROOT_PATH ...
+echo $root_path > ROOT_PATH
 
 echo create lambdapi.pkg ...
 echo "package_name = $root_path" > lambdapi.pkg
@@ -121,11 +117,12 @@ echo "-R . $root_path ." > _CoqProject
 echo create ERASING ...
 echo ${erasing_arg:-$HOL2DK_DIR/erasing.lp} > ERASING
 
-if test -n "$requiring"
+if test -z "$requiring"
 then
-    echo create REQUIRING ...
-    echo $requiring > REQUIRING
+    requiring=${root_path}.${root_path}
 fi
+echo create REQUIRING ...
+echo $requiring > REQUIRING
 
 coq_file=${root_path_arg:-$HOL2DK_DIR/HOLLight.v}
 echo ln -f -s $coq_file
