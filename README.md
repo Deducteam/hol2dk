@@ -77,6 +77,8 @@ Bibliography
 Installing HOL-Light sources
 ----------------------------
 
+**Requirement:** hol_light >= 3.0.0
+
 ```
 git clone https://github.com/jrh13/hol-light
 make -C hol-light
@@ -88,7 +90,6 @@ Installing hol2dk
 **Requirements:**
 - ocaml >= 4.13
 - dune >= 3.7
-- hol_light >= 3.0.0
 
 hol2dk is available on [Opam](https://opam.ocaml.org/). To install it, simply do:
 ```
@@ -195,9 +196,9 @@ Translating HOL-Light proofs to Lambdapi and Coq
 
 **Requirements:**
 - lambdapi commit >= c24b28e2 (28/11/24) > 2.5.1
+- coq >= 8.19
 - [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
 - [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
-- coq >= 8.19
 
 For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
