@@ -12,7 +12,7 @@ jobs:
         dune-version: [3.17.0]
         camlp5-version: [8.03.01]
         hol-light-version: [3.0.0]
-        hol-light-commit: [Release-3.0.0]
+        hol-light-commit: [master] # Release-3.0.0]
         lambdapi-version: [master] # >= 31aef37c > 2.5.1
         dedukti-version: [2.7]
     runs-on: ubuntu-latest
