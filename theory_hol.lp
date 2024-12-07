@@ -24,7 +24,7 @@ opaque symbol SYM [a] [x y : El a] (xy: Prf (= x y)) : Prf (= y x) ≔
 @EQ_MP (@= a x x) (@= a y x) (@MK_COMB a bool (@= a x) (@= a y) x x (@MK_COMB a (fun a bool) (@= a) (@= a) x y (@REFL (fun a (fun a bool)) (@= a)) xy) (@REFL a x)) (@REFL a x);
 
 /* HOL-Light derived connectives */
-constant symbol ∃! [A] : El (fun (fun A bool) bool);
+constant symbol ∃₁ [A] : El (fun (fun A bool) bool);
 constant symbol ¬ : El (fun bool bool);
 constant symbol F : El bool;
 constant symbol ∨ : El (fun bool (fun bool bool));
