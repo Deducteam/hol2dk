@@ -8,7 +8,7 @@
 
 (documentation "https://github.com/Deducteam/hol2dk/blob/master/README.md")
 
-(authors "Frédéric Blanqui" "Anthony Bordg")
+(authors "Frédéric Blanqui")
 
 (maintainers "Frédéric Blanqui")
 
@@ -21,6 +21,7 @@
  (depends
   (ocaml (>= 4.13))
   dune
+  (hol_light (>= 3.0.0))
  )
 )
 
