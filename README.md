@@ -226,11 +226,11 @@ Remark: for the checking of generated Coq files to not fail because of lack of R
 Performance with the mapping of real numbers (master branch)
 ------------------------------------------------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.2.1, Camlp5 8.02.01, Coq 8.20.0, or (1) OCaml 4.14.2, Camlp5 8.02.01:
+On a machine with 32 processors i9-13950HX and 64G RAM with OCaml 5.2.1, Camlp5 8.03.01, Coq 8.20.0:
 
-| HOL-Light file | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
-|----------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml         | 3m57s        | 3 Gb      | 5 M         | 5682        | 39s          | 1m29s       | 1 Gb         | 50m13s       |
+| HOL-Light file | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|----------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml         | 3m43s     | 3 Gb      | 5 M         | 5687        | 40s          | 1m29s       | 1 Gb         | 50m13s       |
 
 Performance without the mapping of real numbers (hol2dk 2.0)
 ------------------------------------------------------------
