@@ -128,7 +128,7 @@ let CONJ =
   (*REMOVE pth: p |- q = (p /\ q) *)
   fun th1 th2 ->
     let th = INST [concl th1,p; concl th2,q] pth in
-    EQ_MP (PROVE_HYP th1 th) th2;;
+    EQ_MP (EQ_MP (DEDUCT_ANTISYM_RULE th1 th) th1) th2;;
 
 (*REMOVE [th: Γ ⊢ c₁ ∧ c₂] ~~> [Γ ⊢ c₁] *)
 let CONJUNCT1 =
@@ -140,7 +140,7 @@ let CONJUNCT1 =
     EQT_ELIM(BETA_RULE (AP_THM th3 `\(p:bool) (q:bool). p`)) in
   fun th ->
     try let l,r = dest_conj(concl th) in
-        PROVE_HYP th (INST [l,P; r,Q] pth)
+        EQ_MP (DEDUCT_ANTISYM_RULE th (INST [l,P; r,Q] pth)) th
     with Failure _ -> failwith "CONJUNCT1";;
 
 (*REMOVE [th: Γ ⊢ c₁ ∧ c₂] ~~> [Γ ⊢ c₂] *)
@@ -153,7 +153,7 @@ let CONJUNCT2 =
     EQT_ELIM(BETA_RULE (AP_THM th3 `\(p:bool) (q:bool). q`)) in
   fun th ->
     try let l,r = dest_conj(concl th) in
-        PROVE_HYP th (INST [l,P; r,Q] pth)
+        EQ_MP (DEDUCT_ANTISYM_RULE th (INST [l,P; r,Q] pth)) th
     with Failure _ -> failwith "CONJUNCT2";;
 Q0*)
 
@@ -189,7 +189,7 @@ let MP =
   fun ith th ->
     let ant,con = dest_imp (concl ith) in
     if aconv ant (concl th) then
-      EQ_MP (PROVE_HYP th (INST [ant,p; con,q] rth)) ith
+      EQ_MP (EQ_MP (DEDUCT_ANTISYM_RULE th (INST [ant,p; con,q] rth)) th) ith
     else failwith "MP: theorems do not agree";;
 
 (*REMOVE [p : term], [th: Γ ⊢ q] ~~> [Γ - {p} ⊢ p ⇒ q] *)
@@ -402,7 +402,7 @@ let DISJ1 =
     EQ_MP (SYM th2) th4 in
   (*REMOVE pth: P |- P \/ Q *)
   fun th tm ->
-    try PROVE_HYP th (INST [concl th,P; tm,Q] pth)
+    try EQ_MP (DEDUCT_ANTISYM_RULE th (INST [concl th,P; tm,Q] pth)) th
     with Failure _ -> failwith "DISJ1";;
 
 let DISJ2 =
@@ -415,7 +415,7 @@ let DISJ2 =
     EQ_MP (SYM th2) th4 in
   (* pth: Q |- P \/ Q *)
   fun tm th ->
-    try PROVE_HYP th (INST [tm,P; concl th,Q] pth)
+    try EQ_MP (DEDUCT_ANTISYM_RULE th (INST [tm,P; concl th,Q] pth)) th
     with Failure _ -> failwith "DISJ2";;
 
 (*REMOVE [Γ₀ ⊢ l ∨ r], [Γ₁ ⊢ c], [Γ₂ ⊢ c] ~~> [Γ₀ U Γ₁ - {l} U Γ₂ - {r} ⊢ c] *)
@@ -432,7 +432,8 @@ let DISJ_CASES =
         if not (aconv c1 c2) then failwith "DISJ_CASES" else
         let l,r = dest_disj (concl th0) in
         let th = INST [l,P; r,Q; c1,R] pth in
-        PROVE_HYP (DISCH r th2) (PROVE_HYP (DISCH l th1) (PROVE_HYP th0 th))
+        PROVE_HYP (DISCH r th2) (PROVE_HYP (DISCH l th1)
+           (EQ_MP (DEDUCT_ANTISYM_RULE th0 th) th0))
     with Failure _ -> failwith "DISJ_CASES";;
 Q0*)
 let SIMPLE_DISJ_CASES th1 th2 =
@@ -497,7 +498,7 @@ let CONTR =
   (*REMOVE pth: F |- P *)
   fun tm th ->
     if concl th <> f_tm then failwith "CONTR"
-    else PROVE_HYP th (INST [tm,P] pth);;
+    else EQ_MP (DEDUCT_ANTISYM_RULE th (INST [tm,P] pth)) th;;
 
 (* ------------------------------------------------------------------------- *)
 (* Rules for unique existence.                                               *)
@@ -520,3 +521,23 @@ let EXISTENCE =
         let ty = snd(dest_var(bndvar abs)) in
         MP (PINST [ty,aty] [abs,P] pth) th
     with Failure _ -> failwith "EXISTENCE";;
+
+(* ------------------------------------------------------------------------- *)
+(* Optionally select more verbose syntax for quantifiers, as well            *)
+(* as the logical constants T (true) and F (false). Enabled by default.      *)
+(* ------------------------------------------------------------------------- *)
+
+let set_verbose_symbols() =
+ (do_list parse_as_binder ["forall"; "exists"; "existsunique"];
+  override_interface("true",`T`);
+  override_interface("false",`F`);
+  override_interface("forall",`(!):(A->bool)->bool`);
+  override_interface("exists",`(?):(A->bool)->bool`);
+  override_interface("existsunique",`(?!):(A->bool)->bool`));;
+
+let unset_verbose_symbols() =
+ (do_list unparse_as_binder ["forall"; "exists"; "existsunique"];
+  do_list remove_interface
+    ["true"; "false"; "forall"; "exists"; "existsunique"]);;
+
+set_verbose_symbols();;

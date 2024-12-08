@@ -77,30 +77,10 @@ Bibliography
 Installing HOL-Light sources
 ----------------------------
 
-**Requirements:**
-- hol-light = ea45176 (07/02/24)
-- ocaml = 4.14.2
-- camlp5 = 8.02.01
-- ocamlfind
-- zarith, which may require pkg-config and libgmp-dev
-- libipc-system-simple-perl
-- libstring-shellquote
-
-Find other potential working ocaml-camlp5 pairs on
-https://github.com/jrh13/hol-light/pull/71 .
-
-If you don't already have the HOL-Light sources somewhere, you can
-install them by using the following commands:
+**Requirement:** hol_light >= 3.0.0
 
 ```
-cd $HOME
-sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl pkg-config libgmp-dev opam
-opam init
-opam switch create ocaml.4.14.2
-eval `opam env`
-opam install ocamlfind zarith camlp5.8.02.01
 git clone https://github.com/jrh13/hol-light
-git checkout ea45176
 make -C hol-light
 ```
 
@@ -216,9 +196,9 @@ Translating HOL-Light proofs to Lambdapi and Coq
 
 **Requirements:**
 - lambdapi commit >= c24b28e2 (28/11/24) > 2.5.1
+- coq >= 8.19
 - [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
 - [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
-- coq >= 8.19
 
 For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
@@ -246,11 +226,11 @@ Remark: for the checking of generated Coq files to not fail because of lack of R
 Performance with the mapping of real numbers (master branch)
 ------------------------------------------------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM, with OCaml 5.2.1, Camlp5 8.02.01, Coq 8.20.0, or (1) OCaml 4.14.2, Camlp5 8.02.01:
+On a machine with 32 processors i9-13950HX and 64G RAM with OCaml 5.2.1, Camlp5 8.03.01, Coq 8.20.0:
 
-| HOL-Light file | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
-|----------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml         | 3m57s        | 3 Gb      | 5 M         | 5682        | 39s          | 1m29s       | 1 Gb         | 50m13s       |
+| HOL-Light file | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
+|----------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
+| hol.ml         | 3m43s     | 3 Gb      | 5 M         | 5687        | 40s          | 1m29s       | 1 Gb         | 50m13s       |
 
 Performance without the mapping of real numbers (hol2dk 2.0)
 ------------------------------------------------------------
