@@ -92,3 +92,7 @@ builtin "S'" ≔ S;
 builtin "pair'" ≔ pair;
 builtin "R'" ≔ R;
 builtin "R''" ≔ R';
+builtin "dollardollar" ≔ ﹩﹩;
+builtin "dollardollar_def" ≔ ﹩﹩_def;
+builtin "longarrow" ≔ ⭬;
+builtin "longarrow_def" ≔ ⭬_def;

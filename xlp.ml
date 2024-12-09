@@ -35,6 +35,7 @@ let name =
     | "?!" -> "∃₁"
     | "~" -> "¬"
     | "-->" -> "⟶" (* 27F6 *)
+    | "--->" -> "⭬" (* 279F *)
     | "<->" -> "↔" (* 2194 *)
     (* invalid Lambdapi identifiers *)
     | "$" -> "﹩" (* FE69 *)
@@ -67,7 +68,8 @@ let string_of_typ_name n =
   match n with
   | "" -> assert false
   (* type names used also as constant names are capitalized *)
-  |"sum"|"topology"|"metric"|"multiset"|"group" -> String.capitalize_ascii n
+  |"sum"|"topology"|"metric"|"multiset"|"group"|"multivector"|"real" ->
+    String.capitalize_ascii n
   | _ ->
     if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1) else n
 ;;
