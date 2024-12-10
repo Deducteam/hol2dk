@@ -48,6 +48,15 @@ BASE_FILES := $(BASE)_types $(BASE)_type_abbrevs $(BASE)_terms $(BASE)_axioms
 $(BASE_FILES:%=%.lp) &:
 	hol2dk --root-path $(ROOT_PATH) sig $(BASE).lp
 
+.PHONY: sig
+sig: $(BASE_FILES:%=%.lp)
+
+.PHONY: single
+single: sig $(BASE).lp
+
+$(BASE).lp:
+	hol2dk --root-path $(ROOT_PATH) $(BASE).lp
+
 ifeq ($(INCLUDE_VO_MK),1)
 INCLUDE_LPO_MK=1
 endif
