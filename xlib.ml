@@ -556,8 +556,6 @@ let extra_type_vars_in_proof_content proof_at pc =
   match pc with
   | Ptrans(i,_)
   | Peqmp(_,i)
-  | Pconjunct1 i
-  | Pconjunct2 i
   | Pmp(_,i)
   | Pchoose(_,_,i)
   | Pdisj_cases(i,_,_) ->
