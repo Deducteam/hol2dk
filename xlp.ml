@@ -405,7 +405,8 @@ let decl_subterm_abbrevs =
    ["h1";..;"hn"]. *)
 let hyp_var ts oc t = char oc 'h'; int oc (try 1 + index t ts with _ -> 0);;
 
-(* Printing on the output channel [oc] of the subproof [p2] given:
+(* Printing on the output channel [oc] of the subproof [p2] of index [i2]
+given:
 - tvs: list of type variables of the theorem
 - rmap: renaming map for term variables
 - ty_su: type substitution that needs to be applied
@@ -421,7 +422,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   let vs2 = vsubstl tm_su vs2 in
   (* ts2 is now the application of tm_su on ts2 *)
   let ts2 = vsubstl tm_su ts2 in
-  (* tvs2 are the lst of type variables of th2 *)
+  (* tvs2 are the list of type variables of th2 *)
   let tvs2 = type_vars_in_thm th2 in
   (* bs2 is the application of ty_su on tvs2 *)
   let bs2 = List.map (type_subst ty_su) tvs2 in
@@ -641,7 +642,7 @@ let decl_theorem oc k p d =
   (*log "theorem %d ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let tvs = type_vars_in_thm thm in
+  let tvs = type_vars_in_proof proof_at p in
   let rmap = renaming_map tvs xs in
   let decl_hyp term i t =
     string oc " (h"; int oc (i+1); string oc " : Prf "; term oc t; char oc ')'

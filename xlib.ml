@@ -538,21 +538,53 @@ let index t =
 (* [vsubstl s ts] applies the substitution [s] to each term of [ts]. *)
 let vsubstl s ts = if s = [] then ts else List.map (vsubst s) ts;;
 
-(* [type_vars_in_terms ts] returns the ordered list with no duplicate
-   of type variables occurring in the list of terms [ts]. *)
+(* [type_vars_in_terms ts] returns an un ordered list possibly with
+   duplicate of type variables occurring in the list of terms [ts]. *)
 let type_vars_in_terms ts =
+  List.fold_left (fun l t -> type_vars_in_term t @ l) [] ts
+;;
+
+(* [type_vars_in_terms th] returns an unordered list possibly with
+   duplicate of type variables occurring in the theorem [th]. *)
+let type_vars_in_thm thm =
+  let ts,t = dest_thm thm in type_vars_in_terms (t::ts);;
+;;
+
+(* [extra_type_vars_in_proof_content p] returns possible extra type
+   variables occurring in the proof content [pc]. *)
+let extra_type_vars_in_proof_content proof_at pc =
+  match pc with
+  | Ptrans(i,_)
+  | Peqmp(_,i)
+  | Pconjunct1 i
+  | Pconjunct2 i
+  | Pmp(_,i)
+  | Pchoose(_,_,i)
+  | Pdisj_cases(i,_,_) ->
+     let Proof(thm,_) = proof_at i in type_vars_in_thm thm
+  | Pexists(_,t,_) -> type_vars_in_term t
+  | _ -> []
+;;
+
+(* [type_vars_in_proof proof_at p] returns the ordered list with no
+   duplicate of type variables occurring in the proof [p]. *)
+let type_vars_in_proof proof_at p =
+  let Proof(thm,pc) = p in
   List.sort_uniq compare
-    (List.fold_left (fun l t -> type_vars_in_term t @ l) [] ts)
+    (extra_type_vars_in_proof_content proof_at pc @ type_vars_in_thm thm)
 ;;
 
 (* Redefinition of [type_vars_in_term] so that the output is sorted
-   and has no duplicat. *)
-let type_vars_in_term t = List.sort_uniq compare (type_vars_in_term t)
+   and has no duplicate. *)
+let type_vars_in_term t = List.sort_uniq compare (type_vars_in_term t);;
 
-(* [type_vars_in_terms th] returns the ordered list with no duplicate
-   of type variables occurring in the theorem [th]. *)
-let type_vars_in_thm thm =
-  let ts,t = dest_thm thm in type_vars_in_terms (t::ts);;
+(* Redefinition of [type_vars_in_terms] so that the output is sorted
+   and has no duplicate. *)
+let type_vars_in_terms ts = List.sort_uniq compare (type_vars_in_terms ts);;
+
+(* Redefinition of [type_vars_in_thm] so that the output is sorted
+   and has no duplicat. *)
+let type_vars_in_thm thm = List.sort_uniq compare (type_vars_in_thm thm);;
 
 (* [vars_terms ts] returns the ordered list with no duplicate of all
    the term variables (including bound variables) occurring in the
