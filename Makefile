@@ -1,12 +1,14 @@
 .SUFFIXES:
 
-BASE = $(shell if test -f BASE; then cat BASE; fi)
-ROOT_PATH = $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
-ERASING = $(shell if test -f ERASING; then cat ERASING; fi)
-REQUIRING = $(shell if test -f REQUIRING; then cat REQUIRING; else echo $(ROOT_PATH); fi)
+BASE := $(shell if test -f BASE; then cat BASE; fi)
+ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
+ERASING := $(shell if test -f ERASING; then cat ERASING; fi)
+REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; else echo $(ROOT_PATH); fi)
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
+
+HOL2DK := hol2dk --root-path $(ROOT_PATH)
 
 .PHONY: default
 default:
@@ -46,7 +48,16 @@ rm-thp:
 BASE_FILES := $(BASE)_types $(BASE)_type_abbrevs $(BASE)_terms $(BASE)_axioms
 
 $(BASE_FILES:%=%.lp) &:
-	hol2dk --root-path $(ROOT_PATH) sig $(BASE).lp
+	$(HOL2DK) sig $(BASE).lp
+
+.PHONY: sig
+sig: $(BASE_FILES:%=%.lp)
+
+.PHONY: single
+single: $(BASE).lp
+
+$(BASE).lp:
+	$(HOL2DK) $(BASE).lp
 
 ifeq ($(INCLUDE_VO_MK),1)
 INCLUDE_LPO_MK=1
@@ -92,7 +103,7 @@ find-big-files:
 lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
-	hol2dk --root-path $(ROOT_PATH) type_abbrevs $(BASE)
+	$(HOL2DK) type_abbrevs $(BASE)
 	$(MAKE) SET_SED_FILES=1 rename-abbrevs
 
 .PHONY: rename-abbrevs
@@ -105,7 +116,7 @@ rename-abbrevs: $(SED_FILES:%.sed=%.lp.rename-abbrevs)
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
 
 %.max: %.siz
-	hol2dk --root-path $(ROOT_PATH) --max-proof-size $(MAX_PROOF) thmsplit $(BASE) $*.lp
+	$(HOL2DK) --max-proof-size $(MAX_PROOF) thmsplit $(BASE) $*.lp
 
 %.siz: %.sti
 	hol2dk thmsize $(BASE) $*
@@ -113,16 +124,16 @@ lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
 .PRECIOUS: $(BIG_FILES:%=%.siz)
 
 %.lp: %.idx
-	hol2dk --root-path $(ROOT_PATH) --max-abbrev-size $(MAX_ABBREV) thmpart $(BASE) $*.lp
+	$(HOL2DK) --max-abbrev-size $(MAX_ABBREV) thmpart $(BASE) $*.lp
 
 %.lp: %.sti
-	hol2dk --root-path $(ROOT_PATH) theorem $(BASE) $*.lp
+	$(HOL2DK) theorem $(BASE) $*.lp
 
 .PHONY: lp-abbrevs
 lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 
 %.lp: %.min
-	hol2dk --root-path $(ROOT_PATH) abbrev $(BASE) $*.lp
+	$(HOL2DK) abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
 clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz clean-lpo clean-v
@@ -271,7 +282,7 @@ opam: $(BASE)_opam.vo
 .PRECIOUS: $(BASE)_opam.v
 
 $(BASE)_opam.lp:
-	hol2dk --root-path $(ROOT_PATH) axm $(BASE).lp
+	$(HOL2DK) axm $(BASE).lp
 
 .PHONY: clean-opam
 clean-opam:
