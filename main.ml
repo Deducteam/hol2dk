@@ -568,7 +568,14 @@ and command = function
 
   | "stat"::_ -> wrong_nb_args()
 
-  | ["nbp";b] -> log "%#d proof steps\n" (read_val (b^".nbp")); 0
+  | ["nbp";b] ->
+     read_use b;
+     let n =
+       Array.fold_left (fun n k -> if k >= 0 then n+1 else n) 0 !last_use in
+     let nb_proofs = Array.length !last_use in
+     log "%#d / %#d = %2d%% useful proof steps\n"
+       n nb_proofs (percent n nb_proofs);
+     0
 
   | "nbp"::_ -> wrong_nb_args()
 

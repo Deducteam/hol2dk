@@ -1,6 +1,10 @@
 TODO
 ----
 
+- remove base argument from commands (can be read from BASE file)
+
+- hol2dk print: allow one index only
+
 - is it really useful to compute a canonical type/term?
 
 - add a term abbreviation only if it is used more than once

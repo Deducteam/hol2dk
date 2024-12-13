@@ -405,6 +405,12 @@ let decl_subterm_abbrevs =
    ["h1";..;"hn"]. *)
 let hyp_var ts oc t = char oc 'h'; int oc (try 1 + index t ts with _ -> 0);;
 
+(* [extend_to_bool ty_su tvs] extends the type substitution [ty_su] by
+   mapping every type variable of [tvs] to [bool]. *)
+let extend_to_bool ty_su tvs =
+  List.fold_left (fun su tv -> (bool_ty,tv)::su) ty_su tvs
+;;
+
 (* Printing on the output channel [oc] of the subproof [p2] of index [i2]
 given:
 - tvs: list of type variables of the theorem
@@ -423,7 +429,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   (* ts2 is now the application of tm_su on ts2 *)
   let ts2 = vsubstl tm_su ts2 in
   (* tvs2 are the list of type variables of th2 *)
-  let tvs2 = type_vars_in_thm th2 in
+  let tvs2 = type_vars_in_proof proof_at p2 in
   (* bs2 is the application of ty_su on tvs2 *)
   let bs2 = List.map (type_subst ty_su) tvs2 in
   (* tvbs2 is the type variables of bs2 *)
@@ -435,11 +441,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
       [] tvbs2
   in
   (* we extend ty_su by mapping every type variable of tvbs2 to bool *)
-  let ty_su =
-    List.fold_left
-      (fun su tv -> (bool_ty,tv)::su)
-      ty_su tvbs2
-  in
+  let ty_su = extend_to_bool ty_su tvbs2 in
   match ty_su with
   | [] ->
      string oc "(@lem"; int oc i2; list_prefix " " typ oc tvs2;
