@@ -409,6 +409,11 @@ let hyp_var ts oc t = char oc 'h'; int oc (try 1 + index t ts with _ -> 0);;
    mapping every type variable of [tvs] to [bool]. *)
 let extend_to_bool = List.fold_left (fun su tv -> (bool_ty,tv)::su);;
 
+(* [remove_elts l l'] returns the elements of [l'] not in [l]. *)
+let remove_elts l l' =
+  List.fold_left (fun l' x -> if List.mem x l then l' else x::l') [] l'
+;;
+
 (* Printing on the output channel [oc] of the subproof [p2] of index [i2]
 given:
 - tvs: list of type variables of the theorem
@@ -433,11 +438,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   (* tvbs2 is the type variables of bs2 *)
   let tvbs2 = tyvarsl bs2 in
   (* we remove from tvbs2 the variables of tvs *)
-  let tvbs2 =
-    List.fold_left
-      (fun tvbs2 tv -> if List.mem tv tvs then tvbs2 else tv::tvbs2)
-      [] tvbs2
-  in
+  let tvbs2 = remove_elts tvs tvbs2 in
   (* we extend ty_su by mapping every type variable of tvbs2 to bool *)
   let ty_su = extend_to_bool ty_su tvbs2 in
   match ty_su with
@@ -451,8 +452,8 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
      (* ts2 is now the application of ty_su on ts2 *)
      let ts2 = List.map (inst ty_su) ts2 in
      (* bs is the list of types obtained by applying ty_su on tvs2 *)
-     let bs = List.map (type_subst ty_su) tvs2 in
-     string oc "(@lem"; int oc i2; list_prefix " " typ oc bs;
+     let bs2 = List.map (type_subst ty_su) tvs2 in
+     string oc "(@lem"; int oc i2; list_prefix " " typ oc bs2;
      list_prefix " " term oc vs2; list_prefix " " (hyp_var ts1) oc ts2;
      char oc ')'
 ;;
@@ -464,6 +465,9 @@ let proof tvs rmap =
   let proof oc p =
     let Proof(thm,content) = p in
     let ts = hyp thm in
+    let tvs' = extra_type_vars_in_proof_content proof_at content in
+    let tvs' = remove_elts tvs tvs' in
+    List.iter (fun tv -> out oc "let %a ≔ bool in " typ tv) tvs';
     let sub = subproof tvs rmap [] [] ts in
     let sub_at oc k = sub k oc (proof_at k) in
     match content with
@@ -642,7 +646,7 @@ let decl_theorem oc k p d =
   (*log "theorem %d ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let tvs = type_vars_in_proof proof_at p in
+  let tvs = type_vars_in_thm thm in
   let rmap = renaming_map tvs xs in
   let decl_hyp term i t =
     string oc " (h"; int oc (i+1); string oc " : Prf "; term oc t; char oc ')'
