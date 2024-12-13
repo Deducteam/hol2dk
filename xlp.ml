@@ -427,7 +427,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   (* ts2 is now the application of tm_su on ts2 *)
   let ts2 = vsubstl tm_su ts2 in
   (* tvs2 are the list of type variables of th2 *)
-  let tvs2 = type_vars_in_proof proof_at p2 in
+  let tvs2 = type_vars_in_thm th2 in
   (* bs2 is the application of ty_su on tvs2 *)
   let bs2 = List.map (type_subst ty_su) tvs2 in
   (* tvbs2 is the type variables of bs2 *)
