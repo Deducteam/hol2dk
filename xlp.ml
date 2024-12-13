@@ -409,11 +409,6 @@ let hyp_var ts oc t = char oc 'h'; int oc (try 1 + index t ts with _ -> 0);;
    mapping every type variable of [tvs] to [bool]. *)
 let extend_to_bool = List.fold_left (fun su tv -> (bool_ty,tv)::su);;
 
-(* [remove_elts l l'] returns the elements of [l'] not in [l]. *)
-let remove_elts l l' =
-  List.fold_left (fun l' x -> if List.mem x l then l' else x::l') [] l'
-;;
-
 (* Printing on the output channel [oc] of the subproof [p2] of index [i2]
 given:
 - tvs: list of type variables of the theorem

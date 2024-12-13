@@ -182,6 +182,11 @@ let pos_first f =
   in aux 0
 ;;
 
+(* [remove_elts l l'] returns the elements of [l'] not in [l]. *)
+let remove_elts l l' =
+  List.fold_left (fun l' x -> if List.mem x l then l' else x::l') [] l'
+;;
+
 (****************************************************************************)
 (* Functions on hash tables. *)
 (****************************************************************************)
