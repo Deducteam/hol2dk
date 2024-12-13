@@ -407,9 +407,7 @@ let hyp_var ts oc t = char oc 'h'; int oc (try 1 + index t ts with _ -> 0);;
 
 (* [extend_to_bool ty_su tvs] extends the type substitution [ty_su] by
    mapping every type variable of [tvs] to [bool]. *)
-let extend_to_bool ty_su tvs =
-  List.fold_left (fun su tv -> (bool_ty,tv)::su) ty_su tvs
-;;
+let extend_to_bool = List.fold_left (fun su tv -> (bool_ty,tv)::su);;
 
 (* Printing on the output channel [oc] of the subproof [p2] of index [i2]
 given:
