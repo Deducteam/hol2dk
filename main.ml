@@ -145,8 +145,8 @@ hol2dk print use $base $x
 hol2dk print $base.thm
   print the contents of $base.thm
 
-hol2dk stat $base
-  print statistics on proofs
+hol2dk stat $base [$thm]
+  print statistics on proof steps
 
 hol2dk size $base [$lower_bound]
   print statistics on the size of terms
@@ -446,21 +446,26 @@ and command = function
   | s::_ when String.starts_with ~prefix:"--" s ->
      err "unknown option \"%s\"\n" s; 1
 
+  (* Print dependencies of the ml file f. *)
   | ["dep";f] ->
      let dg = dep_graph (files()) in
      log "%a\n" (list_sep " " string) (trans_file_deps dg f);
      0
 
+  (* Print dependencies of all ml files in the current directory and
+     its subdirectories recursively. *)
   | ["dep"] ->
      out_dep_graph stdout (dep_graph (files()));
      0
 
   | "dep"::_ -> wrong_nb_args()
 
+  (* Print the names of theorems proved in f. *)
   | ["name";f] ->
      log "%a\n" (list_sep "\n" string) (thms_of_file f);
      0
 
+  (* Print the names of theorems proved in f and all its dependencies. *)
   | ["name";"upto";f] ->
      let dg = dep_graph (files()) in
      List.iter
@@ -468,6 +473,8 @@ and command = function
        (trans_file_deps dg f);
      0
 
+  (* Print the names of theorems proved in all files in the current
+     directort and its subdirectories recursively. *)
   | ["name"] ->
      List.iter
        (fun f -> List.iter (log "%s %s\n" f) (thms_of_file f))
@@ -499,6 +506,7 @@ and command = function
   | ["dump-simp-before-hol";f] -> dump_and_simp false f
   | "dump-simp-before-hol"::_ -> wrong_nb_args()
 
+  (* Create file the file b.pos. *)
   | ["pos";b] ->
      let nb_proofs = read_val (b^".nbp") in
      let pos = Array.make nb_proofs 0 in
@@ -525,6 +533,7 @@ and command = function
 
   | "pos"::_ -> wrong_nb_args()
 
+  (* Print statistics on all proof steps. *)
   | ["stat";b] ->
      let nb_proofs = read_val (b^".nbp") in
      let thm_uses = Array.make nb_proofs 0 in
@@ -542,6 +551,7 @@ and command = function
      print_rule_uses rule_uses (nb_proofs - !unused);
      0
 
+  (* Print statistics on the proof steps for theorem s. *)
   | ["stat";b;s] ->
      let nb_proofs = read_val (s^".nbp") in
      let thm_uses = Array.make nb_proofs 0 in
@@ -579,7 +589,9 @@ and command = function
 
   | "nbp"::_ -> wrong_nb_args()
 
+  (* Print statistics on the size of terms. *)
   | ["size";b] -> command ["size";b;"0"]
+
   | ["size";b;l] ->
      let l = integer l in
      read_use b;
@@ -610,6 +622,7 @@ and command = function
 
   | "size"::_ -> wrong_nb_args()
 
+  (* Print proof steps between x and y. *)
   | ["proof";b;x;y] ->
      let x = integer x and y = integer y in
      let nb_proofs = read_val (b^".nbp") in
@@ -635,6 +648,7 @@ and command = function
 
   | "proof"::_ -> wrong_nb_args()
 
+  (* Simplify some proof steps in b.prf. *)
   | ["rewrite";b] ->
      read_pos b;
      init_proof_reading b;
@@ -723,6 +737,7 @@ and command = function
 
   | "rewrite"::_ -> wrong_nb_args()
 
+  (* Update b.use which indicates which proof steps are useful. *)
   | ["purge";b] ->
      (* compute useful theorems *)
      read_pos b;
@@ -766,6 +781,7 @@ and command = function
 
   | "simp"::_ -> wrong_nb_args()
 
+  (* Create b.use. *)
   | ["use";b] ->
      (* The .use file records an array [last_use] such that
         [last_use.(i) = 0] if [i] is a named theorem, the highest
@@ -794,6 +810,7 @@ and command = function
 
   | "use"::_ -> wrong_nb_args()
 
+  (* Print the value of b.use.(k). *)
   | ["print";"use";b;k] ->
      let k = integer k in
      let nb_proofs = read_val (b^".nbp") in
@@ -815,6 +832,7 @@ and command = function
        | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
      end
 
+  (* Create b.dg and b.mk. *)
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
      if nb_parts < 2 then (err "the number of parts must be > 1\n"; exit 1);
@@ -860,6 +878,7 @@ and command = function
 
   | "mk"::_ -> wrong_nb_args()
 
+  (* Create the files b_types, b_terms, b_axioms. *)
   | ["sig";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
@@ -880,6 +899,10 @@ and command = function
 
   | "sig"::_ -> wrong_nb_args()
 
+  (* Called in b.mk to create b_theorems.dk or b.lp with, for each
+     named theorem, a definition "name := lemXXX" in b.lp, and "name :
+     type := lemXXX" in b_theorems.dk, where XXX is the index of
+     name. *)
   | ["thm";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
@@ -897,6 +920,8 @@ and command = function
 
   | "thm"::_ -> wrong_nb_args()
 
+  (* Called in Makefile to generate b_opam.lp with, for each named
+     theorem name, a declaration "symbol thm_name : type". *)
   | ["axm";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
@@ -913,6 +938,8 @@ and command = function
 
   | "axm"::_ -> wrong_nb_args()
 
+  (* Called in b.mk to create b_part_k and the associated type and
+     term abbreviation files. *)
   | ["part";k;x;y;f] ->
      let b = Filename.chop_extension f in
 
@@ -947,16 +974,10 @@ and command = function
 
   | "part"::_ -> wrong_nb_args()
 
-  | ["prfsize";b] ->
-     read_use b;
-     let size = Array.make (Array.length !Xproof.last_use) 0 in
-     read_prf b (fun k p ->
-         if get_use k >= 0 then Array.set size k (size_proof p));
-     write_val (b^".siz") size;
-     0
-
-  | "prfsize"::_ -> wrong_nb_args()
-
+  (* Called in Makefile when n is in BIG_FILES to create the file
+     n.siz which contains an array mapping every proof step index used
+     in the proof of n to an estimation of the size of its Dedukti
+     tree representation. *)
   | ["thmsize";b;n] ->
      init_proof_reading b;
      read_use n;
@@ -979,6 +1000,9 @@ and command = function
 
   | "thmsize"::_ -> wrong_nb_args()
 
+  (* Create b.thp, which contains a map from the index of each theorem
+     to its name and position in b.prf and, for each theorem n, create
+     the files n.nbp, n.sti, n.pos and n.use. *)
   | ["split";b] ->
      read_pos b;
      read_use b;
@@ -1022,6 +1046,10 @@ and command = function
 
   | "split"::_ -> wrong_nb_args()
 
+  (* Called in Makefile when f is in BIG_FILES to create the files
+     n.lp, n_spec.lp, n_part_k.idx, which contains the first and last
+     proof step index of part_k, and n.max, which contains an array
+     with the last proof index of each part. *)
   | ["thmsplit";b;f] ->
      let n = Filename.chop_extension f in
      read_use n;
@@ -1037,6 +1065,9 @@ and command = function
 
   | "thmsplit"::_ -> wrong_nb_args()
 
+  (* Called in Makefile with f=n_part_k when n is in BIG_FILES to
+     create the files f.lp, f_spec.lp, f.typ, f.brv, f.brp and
+     f_term_abbrevs_part_i.min. *)
   | ["thmpart";b;f] ->
      begin
        let dk = is_dk f in
@@ -1057,6 +1088,7 @@ and command = function
 
   | "thmpart"::_ -> wrong_nb_args()
 
+  (* Called in Makefile to create n.lp when n is not in BIG_FILES. *)
   | ["theorem";b;f] ->
      read_sig b;
      map_thid_pos := read_val (b^".thp");
@@ -1077,6 +1109,9 @@ and command = function
 
   | "theorem"::_ -> wrong_nb_args()
 
+  (* Merge all maps in typ files into a single map, give a unique
+     index to every entry in the obtained map, generate
+     b^"_type_abbrevs.lp" and a sed file for every typ file. *)
   | ["type_abbrevs";b] ->
     let files = Sys.readdir "." and map = ref MapStr.empty in
     (* merge all type abbrev maps into [!map] *)
@@ -1087,7 +1122,7 @@ and command = function
     Array.iter read_typ_file files;
     (* give a unique id to each entry *)
     let map =
-      let idx = ref (-1) in MapStr.map (fun x -> (incr idx; (!idx,x))) !map in
+      let idx = ref (-1) in MapStr.map (fun x -> incr idx; (!idx,x)) !map in
     (* generate sed files *)
     let gen_sed_file f =
       if String.ends_with ~suffix:".typ" f then
@@ -1142,6 +1177,7 @@ and command = function
 
   | "abbrev"::_ -> wrong_nb_args()
 
+  (* Single file generation (used neither in b.mk nor in Makefile). *)
   | f::args ->
      let r = range args in
      let dk = is_dk f in

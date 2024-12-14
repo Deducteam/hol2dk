@@ -326,10 +326,10 @@ let root_path = ref "HOLLight";;
 
 let require oc n = out oc "require open %s.%s;\n" !root_path n;;
 
-(* [create_file_with_deps tmp n iter_deps f] creates a file
+(* [create_file_with_deps tmp n iter_deps gen] creates a file
    [tmp^".lp"], which will be renamed or included in [n^".lp"] in the
    end, and writes in it require commands following the dependency
-   iterator [iter_deps], followed by [f]. It also creates the file
+   iterator [iter_deps], followed by [gen]. It also creates the file
    [n^".lpo.mk"] to record the dependencies of [n^".lpo"]. *)
 let create_file_with_deps (tmp:string) (n:string)
       (iter_deps:(string->unit)->unit) (gen:out_channel->unit) =
@@ -351,7 +351,6 @@ let create_file_with_deps (tmp:string) (n:string)
 let spec f n = f (n^"_spec");;
 
 let export_iter n = create_file_with_deps n n;;
-;;
 
 let export n deps = export_iter n (fun f -> List.iter f deps);;
 
@@ -625,10 +624,10 @@ let decl_axioms oc ths =
 (****************************************************************************)
 
 type decl =
-  | Unnamed_thm
-  | Axiom
-  | Named_thm of string
-  | Named_axm of string
+  | Unnamed_thm (* lemXXX : abbrev_type := proof *)
+  | Axiom (* lemXXX : unabbrev_type *)
+  | Named_thm of string (* name : unabbrev_type := lemXXX *)
+  | Named_axm of string (* name : unabbrev_type *)
 ;;
 
 (* [!proof_part_max_idx] indicates the maximal index of the current part. *)
@@ -689,7 +688,8 @@ let proofs_in_interval oc x y =
   done
 ;;
 
-(* [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
+(* Used in single file generation.
+   [proofs_in_range oc r] outputs on [oc] the proofs in range [r]. *)
 let proofs_in_range oc = function
   | Only x ->
      let p = proof_at x in
@@ -710,15 +710,21 @@ print lem%d;\n" x*)
 (* Generate type and term abbreviation files. *)
 (****************************************************************************)
 
+(* In single file generation or in b.mk.
+   [export_type_abbrevs b n] generates [n^"_type_abbrevs.lp"]. *)
 let export_type_abbrevs b n =
   export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 ;;
 
+(* [export_subterm_abbrevs b n] generates [n^"_subterm_abbrevs.lp"]. *)
 let export_subterm_abbrevs b n =
   export (n^"_subterm_abbrevs") [b^"_types";b^"_type_abbrevs";b^"_terms"]
     decl_subterm_abbrevs
 ;;
 
+(* 2nd step in command "theorem" when n is not in BIG_FILES.
+   [export_term_abbrevs_in_one_file b n] generates
+   [n^"_term_abbrevs.lp"] and [n^"_term_abbrevs.typ"]. *)
 let export_term_abbrevs_in_one_file b n =
   let deps = [b^"_types";b^"_type_abbrevs";b^"_terms"] in
   export (n^"_term_abbrevs")
@@ -728,37 +734,10 @@ let export_term_abbrevs_in_one_file b n =
   write_val (n^"_term_abbrevs.typ") !map_typ_abbrev
 ;;
 
-(* [dump_theorem_term_abbrevs n] generates the files
-   [n^"_term_abbrevs.brv"], [n^"_term_abbrevs.brp"] and
-   [n^"_term_abbrevs.min"]. *)
-let dump_theorem_term_abbrevs n =
-  (* generate the file [n^"_term_abbrevs.brv"]. *)
-  let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
-  let cmp (_,(k1,_,_)) (_,(k2,_,_)) = Stdlib.compare k1 k2 in
-  let l = List.sort cmp l in
-  create_file_bin (n^".brv") (fun oc -> List.iter (output_value oc) l);
-  (* generate the file [n^"_term_abbrevs.brp"]. *)
-  let len = TrmHashtbl.length htbl_term_abbrev in
-  let pos = Array.make len 0 in
-  read_file_bin (n^".brv")
-    (fun ic ->
-      for k = 0 to len - 1 do
-        Array.set pos k (pos_in ic);
-        ignore (input_value ic)
-      done);
-  write_val (n^".brp") pos;
-  (* generate the files [n^"_term_abbrevs"^part(k)^".min"]. *)
-  let max_of_part k =
-    try Hashtbl.find htbl_abbrev_part_max k with Not_found -> assert false
-  in
-  Hashtbl.iter
-    (fun k min ->
-      write_val (n^"_term_abbrevs"^part k^".min") (min,max_of_part k))
-    htbl_abbrev_part_min
-;;
-
-(* [export_theorem_term_abbrevs b n k] generates the files
-   [n^"_term_abbrevs"^part(k)^".lp"]. *)
+(* Called in command "abbrev" used in Makefile.
+   [export_theorem_term_abbrevs b n k] generates the files
+   [n^"_term_abbrevs"^part(k)^".lp"], assuming that the files
+   [n^".brp"] and [n^"_term_abbrevs"^part(k)^".min"] already exist. *)
 let export_theorem_term_abbrevs_part b n k =
   let p = n^"_term_abbrevs"^part k in
   (* generate [p^"_tail.lp"] *)
@@ -814,7 +793,9 @@ let proof_part_of = Hashtbl.find htbl_thm_part;;
 (* Dependencies on previous proof parts of the current proof part. *)
 let proof_deps = ref SetInt.empty;;
 
-(* [export_proofs_in_interval n x y] generates the proof steps of
+(* Used in [export_theorem_proof],
+   1st step in command "theorem" when n is not in BIG_FILES.
+   [export_proofs_in_interval n x y] generates the proof steps of
    index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
 let export_proofs_in_interval n x y =
   let proof_part_size = ref 0 in
@@ -867,9 +848,10 @@ let export_proofs_in_interval n x y =
   Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev
 ;;
 
-(* [export_theorem_proof b n] generates the files
-   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part],
-   [n^"_proofs.lp"], [n^".typ"] and [n^"_spec.lp"]. *)
+(* 1st step in command "theorem" when n is not in BIG_FILES.
+  [export_theorem_proof b n] generates the files
+  [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part], [n^"_proofs.lp"],
+  [n^".typ"] and [n^"_spec.lp"]. *)
 let export_theorem_proof b n =
   let thid = !the_start_idx + Array.length !prf_pos - 1 in
   export_proofs_in_interval n !the_start_idx thid;
@@ -879,9 +861,10 @@ let export_theorem_proof b n =
     (fun oc -> theorem_as_axiom oc thid (proof_at thid))
 ;;
 
-(* [export_theorem_deps b n] generates for [1<=i<=!proof_part] the files
-   [n^part(i)^"_deps.lp"] and [n^part(i)^".lp"] assuming that the files
-   [n^part(i)^"_proofs.lp"] are already generated. *)
+(* 3rd step in command "theorem" when n is not in BIG_FILES.
+   [export_theorem_deps b n] generates for [1<=i<=!proof_part] the
+   files [n^part(i)^"_deps.lp"] and [n^part(i)^".lp"] assuming that
+   the files [n^part(i)^"_proofs.lp"] are already generated. *)
 let export_theorem_deps b n =
   for i = 1 to !proof_part do
     let p = if i < !proof_part then n^part i else n in
@@ -902,8 +885,9 @@ let export_theorem_deps b n =
   done
 ;;
 
-(* [split_theorem_proof b n] generates the files [n^part(k)^".idx"],
-   [n^".max"] and [n^".lp"]. *)
+(* Called by command "thmsplit" in Makefile when f is in BIG_FILES.
+   [split_theorem_proof b n] generates the files [n^part(k)^".idx"],
+   [n^".max"], [n^".lp"] and [n^"_spec.lp"]. *)
 let split_theorem_proof b n =
   let x = !the_start_idx
   and y = !the_start_idx + Array.length !last_use - 1
@@ -945,7 +929,8 @@ let split_theorem_proof b n =
   export_iter (n^"_spec") iter_deps (fun oc -> decl_theorem oc max p t)
 ;;
 
-(* [split_theorem_abbrevs n] generates the files [n^".brv"],
+(* Called in [export_theorem_proof_part].
+   [split_theorem_abbrevs n] generates the files [n^".brv"],
    [n^".brp"] and [n^"_term_abbrevs"^part(k)^".min"]. *)
 let split_theorem_abbrevs n =
   (* generate the file [n^".brv"]. *)
@@ -994,7 +979,8 @@ let split_theorem_abbrevs n =
   !nb_parts
 ;;
 
-(* [export_theorem_proof_part b n k] generates the files [n^part(k)^".lp"],
+(* Called by command "thmpart" in Makefile when n is in BIG_FILES.
+   [export_theorem_proof_part b n k] generates the files [n^part(k)^".lp"],
    [n^part(k)^".typ"], [n^part(k)^".brv"], [n^part(k)^".brp"],
    [n^part(k)^"_term_abbrevs"^part(i)^".min"], [n^part(k)^"_spec.lp"],
    [n^part(k)^"_subterm_abbrevs.lp"] (if !use_sharing). *)
@@ -1052,6 +1038,9 @@ let export_theorem_proof_part b n k =
 (* Lambdapi file generation with type and term abbreviations. *)
 (****************************************************************************)
 
+(* Functions called in single file generation and by the command "sig"
+   in b.mk and Makefile. *)
+
 let types() =
   let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
   List.filter f (types())
@@ -1075,6 +1064,7 @@ let export_axioms b =
     (fun oc -> decl_axioms oc (axioms()))
 ;;
 
+(* Used in single file generation. Generate b_proofs.lp. *)
 let export_proofs b r =
   let iter_proofs_deps f =
     f (b^"_types");
@@ -1088,16 +1078,22 @@ let export_proofs b r =
   export_iter (b^"_proofs") iter_proofs_deps (fun oc -> proofs_in_range oc r)
 ;;
 
+(* Generate a declaration of the form "thm_name : type" for each named
+   theorem. *)
 let out_map_thid_name_as_axioms map_thid_name oc =
   MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (Named_axm n))
     map_thid_name
 ;;
 
+(* Generate a declaration of the form "name : type := lemXXX" for each
+   named theorem. *)
 let out_map_thid_name map_thid_name oc =
   MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (Named_thm n))
     map_thid_name
 ;;
 
+(* Called in single file generation. Generate b.lp with a declaration
+   of the form "name : type := lemXXX" for each named theorem. *)
 let export_theorems b map_thid_name =
   let iter_theorems_deps f =
     f (b^"_types");
@@ -1109,34 +1105,38 @@ let export_theorems b map_thid_name =
   export_iter b iter_theorems_deps (out_map_thid_name map_thid_name)
 ;;
 
+(* Called in Makefile by the command "axm" to generate b_opam.lp with,
+   for each named theorem name, a declaration "symbol thm_name : type". *)
 let export_theorems_as_axioms b map_thid_name =
   export (b^"_opam") [b^"_types";b^"_terms"]
     (out_map_thid_name_as_axioms map_thid_name)
 ;;
 
-let iter_proofs_part_deps b k dg f =
-  f (b^"_types");
-  f (b^part k^"_type_abbrevs");
-  f (b^"_terms");
-  f (b^part k^"_term_abbrevs");
-  f (b^"_axioms");
-  for i = 1 to k-1 do if dg.(k-1).(i-1) > 0 then f (b^part i) done
-;;
-
+(* Called in b.mk by the command "part" to create b_part_k and the
+   associated type and term abbreviation files. *)
 let export_proofs_part b dg k x y =
+  let iter_proofs_part_deps f =
+    f (b^"_types");
+    f (b^part k^"_type_abbrevs");
+    f (b^"_terms");
+    f (b^part k^"_term_abbrevs");
+    f (b^"_axioms");
+    for i = 1 to k-1 do if dg.(k-1).(i-1) > 0 then f (b^part i) done
+  in
   proof_part_max_idx := y;
-  export_iter (b^part k) (iter_proofs_part_deps b k dg)
+  export_iter (b^part k) iter_proofs_part_deps
     (fun oc -> proofs_in_interval oc x y)
 ;;
 
-let iter_theorems_part_deps b k f =
-  f (b^"_types");
-  f (b^"_terms");
-  f (b^"_axioms");
-  for i = 1 to k do f (b^part i) done
-;;
-
+(* Called in b.mk by the command "thm" to create b.lp with, for each
+   named theorem, a definition of the form "name := lemXXX", where XXX
+   is the index of name. *)
 let export_theorems_part k b map_thid_name =
-  export_iter b (iter_theorems_part_deps b k)
-    (out_map_thid_name map_thid_name)
+  let iter_theorems_part_deps f =
+    f (b^"_types");
+    f (b^"_terms");
+    f (b^"_axioms");
+    for i = 1 to k do f (b^part i) done
+  in
+  export_iter b iter_theorems_part_deps (out_map_thid_name map_thid_name)
 ;;
