@@ -387,19 +387,19 @@ Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp
 Generated file types
 --------------------
 
-f.prf: proof steps
+b.prf: proof steps
+
+b.sig: signature (types, constants, axioms, definitions)
+
+b.thm: map from proof step index to theorem name
+
+b.thp: map every useful theorem index to its name and position (similar to f.thm but with position)
 
 f.nbp: number of proof steps
 
-f.sig: signature (types, constants, axioms, definitions)
+f.pos: array providing the positions in b.prf of each proof step index
 
-f.thm: map from proof step index to theorem name (if any)
-
-f.pos: array providing the position in f.prf of each proof step index
-
-f.use: array lastuse such that lastuse.(i) = 0 if i is a named theorem, the highest proof step index using i if there is one, and -1 otherwise.
-
-f.thp: map every useful theorem index to its name and position (similar to f.thm but with position)
+f.use: array lastuse such that lastuse.(i) = 0 if i is a named theorem, the highest proof step index using i if there is one, and -1 otherwise
 
 n.sti: starting index (in f.prf) of theorem n
 
