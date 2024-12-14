@@ -408,6 +408,9 @@ let proof tvs rmap =
   let rec proof oc p =
     let Proof(thm,content) = p in
     let ts = hyp thm in
+    let tvs' = extra_type_vars_in_proof_content proof_at content in
+    let tvs' = remove_elts tvs tvs' in
+    List.iter (fun tv -> out oc "(%a : Set := bool) => " typ tv) tvs';
     let sub = subproof tvs rmap [] [] ts in
     let sub_at oc k = sub k oc (proof_at k) in
     match content with
