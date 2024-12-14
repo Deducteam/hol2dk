@@ -47,7 +47,8 @@ let name oc n = string oc (valid_name n);;
 let string_of_typ_name n =
   match n with
   (* type names used also as constant names are capitalized *)
-  |"sum"|"topology"|"metric"|"multiset"|"group" -> String.capitalize_ascii n
+  |"sum"|"topology"|"metric"|"multiset"|"group"|"multivector"|"real" ->
+    String.capitalize_ascii n
   | n -> valid_name n
 ;;
 
