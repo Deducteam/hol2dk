@@ -1,6 +1,8 @@
 TODO
 ----
 
+- use abbrevs in spec files too
+
 - remove base argument from commands (can be read from BASE file)
 
 - hol2dk print: allow one index only

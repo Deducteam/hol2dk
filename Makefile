@@ -303,3 +303,21 @@ all:
 	$(MAKE) lpo
 	$(MAKE) v
 	$(MAKE) vo
+
+.PHONY: vtodo
+vtodo:
+	find . -name '*.v' | sort > /tmp/vfiles
+	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
+	diff /tmp/vofiles /tmp/vfiles | sed -e '/^1a/d' -e 's/^> .\///' > vtodo
+
+.PHONY: lptodo
+lptodo: vtodo
+	sed -e 's/\.v$$/.lp/' vtodo > lptodo
+
+.PHONY: clean-lptodo
+clean-lptodo: lptodo
+	xargs -a lptodo rm -f
+
+.PHONY: clean-vtodo
+clean-vtodo: vtodo
+	xargs -a vtodo rm -f

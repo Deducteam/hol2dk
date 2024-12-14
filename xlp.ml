@@ -994,9 +994,9 @@ let split_theorem_abbrevs n =
   !nb_parts
 ;;
 
-(* [export_theorem_proof_part b n k] generates the filesv[n^part(k)^".lp"],
-   [n^part(k)^".typ"], [n^part(k)^".brv"],v[n^part(k)^".brp"],
-   [n^part(k)^"_term_abbrevs"^part(i)^".min"],v[n^part(k)^"_spec.lp"],
+(* [export_theorem_proof_part b n k] generates the files [n^part(k)^".lp"],
+   [n^part(k)^".typ"], [n^part(k)^".brv"], [n^part(k)^".brp"],
+   [n^part(k)^"_term_abbrevs"^part(i)^".min"], [n^part(k)^"_spec.lp"],
    [n^part(k)^"_subterm_abbrevs.lp"] (if !use_sharing). *)
 let export_theorem_proof_part b n k =
   (* generate [n^part(k)^"_proofs.lp"] *)
