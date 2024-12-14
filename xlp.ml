@@ -871,7 +871,7 @@ let export_proofs_in_interval n x y =
    [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part],
    [n^"_proofs.lp"], [n^".typ"] and [n^"_spec.lp"]. *)
 let export_theorem_proof b n =
-  let thid = (!the_start_idx + Array.length !prf_pos - 1) in
+  let thid = !the_start_idx + Array.length !prf_pos - 1 in
   export_proofs_in_interval n !the_start_idx thid;
   Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp");
   write_val (n^".typ") !map_typ_abbrev;
