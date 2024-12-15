@@ -62,11 +62,14 @@ let create_file_bin n f = let oc = log_open_out_bin n in f oc; close_out oc;;
 let read_file_bin n f = let ic = log_open_in_bin n in f ic; close_in ic;;
 
 let concat f1 f2 f3 =
-  log "generate %s ...\n%!" f3;
-  command (Printf.sprintf "cat %s %s > %s && rm -f %s %s" f1 f2 f3 f1 f2)
+  log "generate %s ...\n%!" f3; command ("cat "^f1^" "^f2^" > "^f3)
 ;;
 
-let rename f1 f2 = log "rename %s into %s ...\n%!" f1 f2; Sys.rename f1 f2;;
+let remove f = command ("rm -f "^f);;
+
+let copy f1 f2 = log "generate %s ...\n%!" f2; command ("cp -f "^f1^" "^f2);;
+
+let rename f1 f2 = log "generate %s ...\n%!" f2; command ("mv -f "^f1^" "^f2);;
 
 (* [string_of_file f] puts the contents of file [f] in a string. *)
 let string_of_file f =
