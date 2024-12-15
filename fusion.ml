@@ -14,7 +14,7 @@ open Lib
 
 module type Hol_kernel =
   sig
-    type hol_type =
+      type hol_type =
       (*REMOVE
       private
       REMOVE*)
@@ -66,6 +66,10 @@ module type Hol_kernel =
 
       type proof = Proof of (thm * proof_content)
 
+      val index_of : thm -> int
+      val content_of : proof -> proof_content
+      val change_content : proof -> proof_content -> proof
+
       val types: unit -> (string * int)list
       val get_type_arity : string -> int
       (*REMOVE
@@ -116,9 +120,6 @@ module type Hol_kernel =
       val dest_thm : thm -> term list * term
       val hyp : thm -> term list
       val concl : thm -> term
-      val index_of : thm -> int
-      val content_of : proof -> proof_content
-      val change_content : proof -> proof_content -> proof
       (*REMOVE
       val REFL : term -> thm
       val TRANS : thm -> thm -> thm
@@ -130,6 +131,12 @@ module type Hol_kernel =
       val DEDUCT_ANTISYM_RULE : thm -> thm -> thm
       val INST_TYPE : (hol_type * hol_type) list -> thm -> thm
       val INST : (term * term) list -> thm -> thm
+      val axioms : unit -> thm list
+      val new_axiom : term -> thm
+      val definitions : unit -> thm list
+      val new_basic_definition : term -> thm
+      val new_basic_type_definition :
+              string -> string * string -> thm -> thm * thm
 
       (*START_ND*)
       val TRUTH : thm
@@ -153,14 +160,8 @@ module type Hol_kernel =
       val new_theorem : term list -> term -> proof_content -> thm
       val dump_nb_proofs : string -> unit
       val dump_signature : string -> unit
-      REMOVE*)
-      val axioms : unit -> thm list
-      val new_axiom : term -> thm
-      val definitions : unit -> thm list
-      val new_basic_definition : term -> thm
-      val new_basic_type_definition :
-              string -> string * string -> thm -> thm * thm
       val oc_dump : out_channel
+      REMOVE*)
       (*REMOVE*)val the_type_constants : (string * int) list ref
       (*REMOVE*)val the_term_constants : (string * hol_type) list ref
       (*REMOVE*)val the_axioms : thm list ref
@@ -183,6 +184,7 @@ module Hol : Hol_kernel = struct
 
 
   type thm = Sequent of (term list * term * int)
+  (*REMOVE*)let dummy_thm = Sequent([],Var("x",Tyvar("a")),0)
 
 (*---------------------------------------------------------------------------*)
 (* Proof dumping.                                                            *)
@@ -223,8 +225,7 @@ module Hol : Hol_kernel = struct
   let change_content p c = let Proof(th,_) = p in Proof(th,c)
 
   let thm_index = ref (-1)
-
-  (*REMOVE*)let dump_filename = "/tmp/dump.prf"
+  (*REMOVE
   let oc_dump = open_out_bin dump_filename
 
   let new_theorem hyps concl proof_content =
@@ -234,7 +235,7 @@ module Hol : Hol_kernel = struct
     output_value oc_dump (Proof(thm,proof_content));
     thm
   ;;
-
+  REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* List of current type constants with their arities.                        *)
 (*                                                                           *)
@@ -625,10 +626,11 @@ module Hol : Hol_kernel = struct
 
   let index_of (Sequent(_,_,k)) = k
 
+(*REMOVE
 (* ------------------------------------------------------------------------- *)
 (* Basic equality properties; TRANS is derivable but included for efficiency *)
 (* ------------------------------------------------------------------------- *)
-(*REMOVE
+
   let REFL tm = new_theorem [] (safe_mk_eq tm tm) (Prefl tm)
 
   let TRANS (Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
@@ -820,7 +822,7 @@ REMOVE*)
 (* ------------------------------------------------------------------------- *)
 
   let the_axioms = ref ([]:thm list)
-
+(*REMOVE
   let axioms() = !the_axioms
 
   let new_axiom tm =
@@ -828,13 +830,13 @@ REMOVE*)
       let th = new_theorem [] tm (Paxiom tm) in
       (the_axioms := th::(!the_axioms); th)
     else failwith "new_axiom: Not a proposition"
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of (term) definitions.                                           *)
 (* ------------------------------------------------------------------------- *)
 
   let the_definitions = ref ([]:thm list)
-
+(*REMOVE
   let definitions() = !the_definitions
 
   let new_basic_definition tm =
@@ -852,7 +854,7 @@ REMOVE*)
     | Comb(Comb(Const("=",_),Const(cname,ty)),r) ->
       failwith ("new_basic_definition: '" ^ cname ^ "' is already defined")
     | _ -> failwith "new_basic_definition"
-
+REMOVE*)
 (* ------------------------------------------------------------------------- *)
 (* Handling of type definitions.                                             *)
 (*                                                                           *)
@@ -865,7 +867,7 @@ REMOVE*)
 (*                                                                           *)
 (* Where "abs" and "rep" are new constants with the nominated names.         *)
 (* ------------------------------------------------------------------------- *)
-
+(*REMOVE
   let new_basic_type_definition tyname (absname,repname) (Sequent(asl,c,p)) =
     if exists (can get_const_type) [absname; repname] then
       failwith "new_basic_type_definition: Constant(s) already in use" else
@@ -917,7 +919,7 @@ REMOVE*)
     output_value oc (definitions());
     close_out oc
   ;;
-
+REMOVE*)
 end;;
 
 include Hol;;

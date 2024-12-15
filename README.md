@@ -226,22 +226,22 @@ Remark: for the checking of generated Coq files to not fail because of lack of R
 Performance with the mapping of real numbers (master branch)
 ------------------------------------------------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM with OCaml 5.2.1, Camlp5 8.03.01, Coq 8.20.0:
+On a machine with 32 processors i9-13950HX and 64G RAM with HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
-| HOL-Light file | dump-simp | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
-|----------------|-----------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml         | 3m43s     | 3 Gb      | 5 M         | 5687        | 40s          | 1m29s       | 1 Gb         | 50m13s       |
+| HOL-Light file | dump  | size | steps | thms | lp  | v     | size | vo     |
+|----------------|-------|------|-------|------|-----|-------|------|--------|
+| hol.ml         | 3m43s | 3 Gb | 3 M   | 5687 | 40s | 1m29s | 1 Gb | 50m13s |
 
 Performance without the mapping of real numbers (hol2dk 2.0)
 ------------------------------------------------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM, with Hol2dk 2.0, OCaml 5.1.1, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1, or (1) OCaml 4.14.2, Camlp5 8.02.01:
+On a machine with 32 processors i9-13950HX and 64G RAM, with HOL-Light ea45176, Hol2dk 2.0, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1:
 
-| HOL-Light file                     | dump-simp(1) | dump size | proof steps | nb theorems | make -j32 lp | make -j32 v | v files size | make -j32 vo |
-|------------------------------------|--------------|-----------|-------------|-------------|--------------|-------------|--------------|--------------|
-| hol.ml                             | 3m57s        | 3 Gb      | 5 M         | 5679        | 51s          | 55s         | 1 Gb         | 18m4s        |
-| Multivariate/make_upto_topology.ml | 48m          | 52 Gb     | 52 M        | 18866       | 22m22s       | 20m16s      | 68 Gb        | 8h (*)       |
-| Multivariate/make_complex.ml       | 2h48m        | 158 Gb    | 220 M       | 41883       | 52m26s       | 31m39s      | 240 Gb       |              |
+| HOL-Light file                     | simp  | size   | steps | thms  | lp     | v      | size   | vo     |
+|------------------------------------|-------|--------|-------|-------|--------|--------|--------|--------|
+| hol.ml                             | 3m57s | 3 Gb   | 3 M   | 5687  | 51s    | 55s    | 1 Gb   | 18m4s  |
+| Multivariate/make_upto_topology.ml | 48m   | 52 Gb  | 52 M  | 18866 | 22m22s | 20m16s | 68 Gb  | 8h (*) |
+| Multivariate/make_complex.ml       | 2h48m | 158 Gb | 220 M | 41883 | 52m26s | 31m39s | 240 Gb |        |
 
 (*) with `make -j32 vo; make -j8 vo`
 

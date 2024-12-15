@@ -475,7 +475,7 @@ let proof tvs rmap =
        end
     | Paxiom(t) ->
        let k =
-         try pos_first (fun th -> concl th = t) (axioms())
+         try pos_first (fun th -> concl th = t) !the_axioms
          with Not_found -> assert false
        in
        string oc "axiom_"; int oc k;
@@ -483,7 +483,7 @@ let proof tvs rmap =
        list_prefix " " term oc (frees t)
     | Pdeft(_,t,_,_) ->
        let k =
-         try pos_first (fun th -> concl th = t) (axioms())
+         try pos_first (fun th -> concl th = t) !the_axioms
          with Not_found -> assert false
        in
        string oc "axiom_"; int oc k;
@@ -787,9 +787,9 @@ let export_axioms b =
   export (b^"_axioms")
     (fun oc ->
       string oc "\n(; axioms ;)\n";
-      decl_axioms oc (axioms());
+      decl_axioms oc !the_axioms;
       string oc "\n(; definitional axioms ;)\n";
-      list decl_def oc (definitions()))
+      list decl_def oc !the_definitions)
 ;;
 
 let export_proofs b r =
@@ -848,9 +848,9 @@ eq : a : Set -> El a -> El a -> El bool.\n";
   string oc "\n(; constants ;)\n";
   list decl_sym oc constants;
   string oc "\n(; axioms ;)\n";
-  decl_axioms oc (axioms());
+  decl_axioms oc !the_axioms;
   string oc "\n(; definitions ;)\n";
-  list decl_def oc (definitions());
+  list decl_def oc !the_definitions;
   string oc "\n"
 ;;
 
