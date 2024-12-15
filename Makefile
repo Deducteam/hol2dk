@@ -95,9 +95,9 @@ echo-big-files:
 
 .PHONY: find-big-files
 find-big-files:
-	@if test -f BIG_FILES; then cat BIG_FILES; fi > big-files
-	@find . -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> big-files
-	@sort -u big-files
+	@if test -f BIG_FILES; then cat BIG_FILES; fi > /tmp/big-files
+	@find . -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> /tmp/big-files
+	@sort -u /tmp/big-files
 
 .PHONY: lp
 lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
@@ -303,3 +303,21 @@ all:
 	$(MAKE) lpo
 	$(MAKE) v
 	$(MAKE) vo
+
+.PHONY: vtodo
+vtodo:
+	find . -name '*.v' | sort > /tmp/vfiles
+	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
+	diff /tmp/vofiles /tmp/vfiles | sed -e '/^1a/d' -e 's/^> .\///' > vtodo
+
+.PHONY: lptodo
+lptodo: vtodo
+	sed -e 's/\.v$$/.lp/' vtodo > lptodo
+
+.PHONY: clean-lptodo
+clean-lptodo: lptodo
+	xargs -a lptodo rm -f
+
+.PHONY: clean-vtodo
+clean-vtodo: vtodo
+	xargs -a vtodo rm -f
