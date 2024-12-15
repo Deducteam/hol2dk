@@ -763,7 +763,7 @@ let export_theorem_term_abbrevs_part b n k =
   create_file_with_deps (p^"_head") p iter_deps (fun _ -> ());
   (* generate [p^".lp"] *)
   concat (p^"_head.lp") (p^"_tail.lp") (p^".lp");
-  remove (p^"_head.lp"); remove (p^"_tail.lp")
+  remove (p^"_head.lp "^p^"_tail.lp")
 ;;
 
 (****************************************************************************)
@@ -881,7 +881,7 @@ let export_theorem_deps b n =
     in
     create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
     concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
-    remove (p^"_deps.lp"); remove (p^"_proofs.lp")
+    remove (p^"_deps.lp "^p^"_proofs.lp")
   done
 ;;
 
@@ -999,9 +999,9 @@ let export_theorem_proof_part b n k =
     let p = part_of d in
     if p <> !proof_part then part_deps := SetInt.add p !part_deps
   in
-  export (p^"_proofs") []
+  create_file (p^"_proofs.lp")
     (fun oc ->
-      export (p^"_spec_body") []
+      create_file (p^"_spec_body.lp")
         (fun oc_spec ->
           proof_part_max_idx := max - 1;
           for k = min to max do
@@ -1036,7 +1036,7 @@ let export_theorem_proof_part b n k =
   (* generate [n^part(k)^".lp"] and [n^part(k)^"_spec.lp"] *)
   concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
   concat (p^"_deps.lp") (p^"_spec_body.lp") (p^"_spec.lp");
-  remove (p^"_deps.lp"); remove (p^"_proofs.lp"); remove (p^"_spec_body.lp")
+  remove (p^"_deps.lp "^p^"_proofs.lp "^p^"_spec_body.lp")
 ;;
 
 (****************************************************************************)
