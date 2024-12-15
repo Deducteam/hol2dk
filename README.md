@@ -250,7 +250,7 @@ On a machine with 32 processors i9-13950HX and 64G RAM with HOL-Light ea45176, H
 
 | HOL-Light file | dump  | size | steps | thms | lp  | v   | size | vo     |
 |----------------|-------|------|-------|------|-----|-----|------|--------|
-| hol.ml         | 3m57s | 3 Gb | 3 M   | 5687 | 39s | 37s | 1 Gb | 56m23s |
+| hol.ml         | 3m57s | 3 Gb | 3 M   | 5687 | 39s | 34s | 1 Gb | 56m23s |
 
 Performance without the mapping of real numbers (hol2dk 2.0)
 ------------------------------------------------------------
