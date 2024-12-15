@@ -358,15 +358,15 @@ let dump after_hol f b =
 #require "camlp5";;
 #load "camlp5o.cma";;
 #require "unix";;
+let dump_filename = "%s.prf";;  
 %a
 close_out oc_dump;;
-Sys.command ("mv -f dump.prf %s.prf");;
 dump_nb_proofs "%s.nbp";;
 dump_signature "%s.sig";;
 #load "str.cma";;
 #use "xnames.ml";;
 dump_map_thid_name "%s.thm" %a;;
-|} cmd after_hol f use after_hol b b b b
+|} cmd after_hol f b use after_hol b b b
 (olist ostring) (trans_file_deps (dep_graph (files())) f);
   close_out oc;
   Sys.command ("ocaml -w -A -I . "^ml_file)
@@ -767,7 +767,7 @@ and command = function
      log_gen dump_file;
      let oc = open_out_bin dump_file in
      output_value oc !Xproof.last_use;
-     log "%d useless theorems (%d%%)\n"
+     log "%d useless proof steps (%d%%)\n"
        !nb_useless (percent !nb_useless nb_proofs);
      0
 
@@ -797,7 +797,7 @@ and command = function
      output_value oc last_use;
      let unused = ref 0 in
      Array.iter (fun n -> if n < 0 then incr unused) last_use;
-     log "%d unused theorems (including named theorems) (%d%%)\n"
+     log "%d unused proof steps (including named theorems) (%d%%)\n"
        !unused (percent !unused nb_proofs);
      close_out oc;
      let first = ref (-1) in

@@ -226,7 +226,7 @@ module Hol : Hol_kernel = struct
 
   let thm_index = ref (-1)
   (*REMOVE
-  let oc_dump = open_out_bin "dump.prf"
+  let oc_dump = open_out_bin dump_filename
 
   let new_theorem hyps concl proof_content =
     let k = !thm_index + 1 in
