@@ -445,7 +445,7 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
      let vs2 = List.map (inst ty_su) vs2 in
      (* ts2 is now the application of ty_su on ts2 *)
      let ts2 = List.map (inst ty_su) ts2 in
-     (* bs is the list of types obtained by applying ty_su on tvs2 *)
+     (* bs2 is the list of types obtained by applying ty_su on tvs2 *)
      let bs2 = List.map (type_subst ty_su) tvs2 in
      string oc "(@lem"; int oc i2; list_prefix " " typ oc bs2;
      list_prefix " " term oc vs2; list_prefix " " (hyp_var ts1) oc ts2;
