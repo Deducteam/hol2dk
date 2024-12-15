@@ -37,7 +37,7 @@ let idx = Stdlib.ref (-1);;
    index. *)
 let map_thid_name =
   (* OCaml code for setting [idx] to the index of theorem [name]. *)
-  let cmd_set_idx = Printf.sprintf "idx := index_of %s;;" in
+  let cmd_set_idx s = "idx := index_of "^s^";;" in
   List.fold_left
     (fun map tname ->
       (*if tname = "_" then map

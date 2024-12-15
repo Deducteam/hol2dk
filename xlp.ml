@@ -622,10 +622,10 @@ let decl_axioms oc ths =
 (****************************************************************************)
 
 type decl =
-  | Unnamed_thm (* lemXXX : abbrev_type := proof *)
-  | Axiom (* lemXXX : unabbrev_type *)
-  | Named_thm of string (* name : unabbrev_type := lemXXX *)
-  | Named_axm of string (* name : unabbrev_type *)
+  | DefThmIdProof (* lemXXX : abbrev_type := proof *)
+  | DeclThmId of (*abbrev:*)bool (* lemXXX : [un]abbrev_type *)
+  | DefThmNameAsThmId of string (* name : unabbrev_type := lemXXX *)
+  | DeclThmName of string (* name : unabbrev_type *)
 ;;
 
 (* [!proof_part_max_idx] indicates the maximal index of the current part. *)
@@ -645,26 +645,26 @@ let decl_theorem oc k p d =
   in
   let decl_hyps term = List.iteri (decl_hyp term) in
   match d with
-  | Unnamed_thm ->
+  | DefThmIdProof ->
     let term = term rmap in
     let prv = let l = get_use k in l > 0 && l <= !proof_part_max_idx in
     string oc (if prv then "private" else "opaque");
     string oc " symbol lem"; int oc k; typ_vars oc tvs;
     list (decl_param rmap) oc xs; decl_hyps term ts; string oc " : Prf ";
     term oc t; string oc " ≔ "; proof tvs rmap oc p; string oc ";\n";
-  | Axiom ->
-    let term = unabbrev_term rmap in
+  | DeclThmId abbrev ->
+    let term = if abbrev then term rmap else unabbrev_term rmap in
     string oc "symbol lem"; int oc k; typ_vars oc tvs;
     list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
-  | Named_thm n ->
+  | DefThmNameAsThmId n ->
      let term = unabbrev_term rmap in
      string oc "opaque symbol "; string oc n; typ_vars oc tvs;
      list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
      string oc " ≔ @lem"; int oc k; list_prefix " " raw_typ oc tvs;
      list_prefix " " (var rmap) oc xs;
      List.iteri (fun i _ -> string oc " h"; int oc (i+1)) ts; string oc ";\n"
-  | Named_axm n ->
+  | DeclThmName n ->
      let term = unabbrev_term rmap in
      string oc "symbol thm_"; string oc n; typ_vars oc tvs;
      list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
@@ -672,11 +672,11 @@ let decl_theorem oc k p d =
 ;;
 
 (* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
-let theorem oc k p = decl_theorem oc k p Unnamed_thm;;
+let theorem oc k p = decl_theorem oc k p DefThmIdProof;;
 
-(* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
-   [k] as an axiom. *)
-let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
+(* [theorem_as_axiom abbrev oc k p] outputs on [oc] the proof [p] of index
+   [k] as an axiom, with abbreviated terms if [abbrev]. *)
+let theorem_as_axiom abbrev oc k p = decl_theorem oc k p (DeclThmId abbrev);;
 
 (* [proofs_in_interval oc x y] outputs on [oc] the proofs in interval
    [x] .. [y]. *)
@@ -691,7 +691,7 @@ let proofs_in_interval oc x y =
 let proofs_in_range oc = function
   | Only x ->
      let p = proof_at x in
-     List.iter (fun k -> theorem_as_axiom oc k (proof_at k)) (deps p);
+     List.iter (fun k -> theorem_as_axiom false oc k (proof_at k)) (deps p);
      theorem oc x p(*;
      out oc
 "flag \"print_implicits\" on;
@@ -762,7 +762,8 @@ let export_theorem_term_abbrevs_part b n k =
   in
   create_file_with_deps (p^"_head") p iter_deps (fun _ -> ());
   (* generate [p^".lp"] *)
-  concat (p^"_head.lp") (p^"_tail.lp") (p^".lp")
+  concat (p^"_head.lp") (p^"_tail.lp") (p^".lp");
+  remove (p^"_head.lp "^p^"_tail.lp")
 ;;
 
 (****************************************************************************)
@@ -856,7 +857,7 @@ let export_theorem_proof b n =
   Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp");
   write_val (n^".typ") !map_typ_abbrev;
   export (n^"_spec") [b^"_types";b^"_terms"]
-    (fun oc -> theorem_as_axiom oc thid (proof_at thid))
+    (fun oc -> theorem_as_axiom false oc thid (proof_at thid))
 ;;
 
 (* 3rd step in command "theorem" when n is not in BIG_FILES.
@@ -879,7 +880,8 @@ let export_theorem_deps b n =
       SetStr.iter (spec f) (Hashtbl.find htbl_thm_deps i);
     in
     create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
-    concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp")
+    concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
+    remove (p^"_deps.lp "^p^"_proofs.lp")
   done
 ;;
 
@@ -915,19 +917,21 @@ let split_theorem_proof b n =
   let max_of =
     Array.init (Hashtbl.length ht_part_max) (Hashtbl.find ht_part_max) in
   write_val (n^".max") max_of;
-  (* generate [n^".lp"] and [n^"_spec.lp"]. *)
+  (* generate [n^".lp"] and [n^"_spec.lp"].
+     Remark: these two files are identical. *)
   let iter_deps f =
     f (b^"_types");
     f (b^"_terms");
     spec f (n^part !proof_part);
   in
   let p = proof_at max in
-  let t = Named_thm ("lem"^string_of_int max) in
+  let t = DefThmNameAsThmId ("lem"^string_of_int max) in
   export_iter n iter_deps (fun oc -> decl_theorem oc max p t);
   export_iter (n^"_spec") iter_deps (fun oc -> decl_theorem oc max p t)
 ;;
 
-(* Called in [export_theorem_proof_part].
+(* Called in [export_theorem_proof_part] which is
+   called by command "thmpart" in Makefile when n is in BIG_FILES.
    [split_theorem_abbrevs n] generates the files [n^".brv"],
    [n^".brp"] and [n^"_term_abbrevs"^part(k)^".min"]. *)
 let split_theorem_abbrevs n =
@@ -995,9 +999,9 @@ let export_theorem_proof_part b n k =
     let p = part_of d in
     if p <> !proof_part then part_deps := SetInt.add p !part_deps
   in
-  export (p^"_proofs") []
+  create_file (p^"_proofs.lp")
     (fun oc ->
-      export (p^"_spec") [b^"_types";b^"_terms"]
+      create_file (p^"_spec_body.lp")
         (fun oc_spec ->
           proof_part_max_idx := max - 1;
           for k = min to max do
@@ -1007,7 +1011,7 @@ let export_theorem_proof_part b n k =
                 let p = proof_at k in
                 List.iter add_dep (deps p);
                 theorem oc k p;
-                if l = 0 || l >= max then theorem_as_axiom oc_spec k p
+                if l = 0 || l >= max then theorem_as_axiom true oc_spec k p
               end
           done));
   (* dump term abbreviations *)
@@ -1028,8 +1032,11 @@ let export_theorem_proof_part b n k =
     for j = 1 to nb_parts do f (p^"_term_abbrevs"^part j) done
   in
   create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
-  (* generate [n^part(k)^".lp"] *)
-  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp")
+  create_file_with_deps (p^"_deps") (p^"_spec") iter_deps (fun _ -> ());
+  (* generate [n^part(k)^".lp"] and [n^part(k)^"_spec.lp"] *)
+  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
+  concat (p^"_deps.lp") (p^"_spec_body.lp") (p^"_spec.lp");
+  remove (p^"_deps.lp "^p^"_proofs.lp "^p^"_spec_body.lp")
 ;;
 
 (****************************************************************************)
@@ -1079,14 +1086,14 @@ let export_proofs b r =
 (* Generate a declaration of the form "thm_name : type" for each named
    theorem. *)
 let out_map_thid_name_as_axioms map_thid_name oc =
-  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (Named_axm n))
+  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (DeclThmName n))
     map_thid_name
 ;;
 
 (* Generate a declaration of the form "name : type := lemXXX" for each
    named theorem. *)
 let out_map_thid_name map_thid_name oc =
-  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (Named_thm n))
+  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (DefThmNameAsThmId n))
     map_thid_name
 ;;
 

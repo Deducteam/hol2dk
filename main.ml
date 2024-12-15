@@ -719,7 +719,7 @@ and command = function
      (* replace file.prf by file-simp.prf, and recompute file.pos and
         file.use *)
      log "replace %s.prf by %s-simp.prf ...\n" b b;
-     begin match Sys.command (Printf.sprintf "mv %s-simp.prf %s.prf" b b) with
+     begin match Sys.command ("mv "^b^"-simp.prf "^b^".prf") with
      | 0 ->
         begin match log_command ["pos";b] with
         | 0 -> log_command ["use";b]
