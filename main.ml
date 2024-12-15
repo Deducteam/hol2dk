@@ -134,7 +134,7 @@ hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
 
 hol2dk nbp $base
-  print the number of proof steps in $base.prf
+  print the number of useful proof steps in $base.prf
 
 hol2dk proof $base $x $y
   print proof steps between theorem indexes $x and $y
