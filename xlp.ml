@@ -491,7 +491,7 @@ let proof tvs rmap =
     | Pinstt(k,s) -> subproof tvs rmap s [] ts k oc (proof_at k)
     | Paxiom(t) ->
       string oc "@axiom_";
-      int oc (pos_first (fun th -> concl th = t) (axioms()));
+      int oc (pos_first (fun th -> concl th = t) !the_axioms);
       list_prefix " " typ oc (type_vars_in_term t);
       list_prefix " " term oc (frees t)
     | Pdef(t,n,_) ->
@@ -499,7 +499,7 @@ let proof tvs rmap =
        list_prefix " " typ oc (type_vars_in_term t)
     | Pdeft(_,t,_,_) ->
       string oc "@axiom_";
-      int oc (pos_first (fun th -> concl th = t) (axioms()));
+      int oc (pos_first (fun th -> concl th = t) !the_axioms);
       list_prefix " " typ oc (type_vars_in_term t);
       list_prefix " " term oc (frees t)
     | Ptruth -> string oc "Tᵢ"
@@ -569,7 +569,7 @@ let definition_of n =
     | Comb(Comb(Const("=",_),Const(n',_)),r) ->
        if n'=n then Some(t,r) else None
     | _ -> assert false
-  in List.find_map f (definitions())
+  in List.find_map f !the_definitions
 ;;
 
 let decl_sym oc (n,b) =
@@ -1066,7 +1066,7 @@ let export_terms b =
 
 let export_axioms b =
   export (b^"_axioms") [b^"_types"; b^"_terms"]
-    (fun oc -> decl_axioms oc (axioms()))
+    (fun oc -> decl_axioms oc !the_axioms)
 ;;
 
 (* Used in single file generation. Generate b_proofs.lp. *)

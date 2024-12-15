@@ -343,7 +343,7 @@ let range args =
 ;;
 
 let dump after_hol f b =
-  let ml_file = Printf.sprintf "dump%d.ml" (Unix.getpid()) in
+  let ml_file = "dump.ml" in
   log_gen ml_file;
   let oc = open_out ml_file in
   let use oc after_hol =
@@ -360,7 +360,7 @@ let dump after_hol f b =
 #require "unix";;
 %a
 close_out oc_dump;;
-Sys.command ("mv "^dump_filename^" %s.prf");;
+Sys.command ("mv -f dump.prf %s.prf");;
 dump_nb_proofs "%s.nbp";;
 dump_signature "%s.sig";;
 #load "str.cma";;
