@@ -352,23 +352,6 @@ let export_iter n = create_file_with_deps n n;;
 
 let export n deps = export_iter n (fun f -> List.iter f deps);;
 
-(*
-let export_no_dep (n:string) (gen:out_channel->unit) =
-  let oc_lp = log_open_out (tmp^".lp")
-  and oc_mk = log_open_out (n^".lpo.mk") in
-  out oc_mk "%s.lpo:" n;
-  let handle dep =
-    require oc_lp dep;
-    out oc_mk " %s.lpo" dep;
-  in
-  handle "theory_hol";
-  iter_deps handle;
-  out oc_mk "\n";
-  close_out oc_mk;
-  gen oc_lp;
-  close_out oc_lp
-;;
- *)
 (****************************************************************************)
 (* Translation of term abbreviations. *)
 (****************************************************************************)
