@@ -259,7 +259,7 @@ builtin "treal_mul" ≔ treal_mul;
 builtin "treal_inv" ≔ treal_inv;
 builtin "treal_neg" ≔ treal_neg;
 
-builtin "R" ≔ real;
+builtin "R" ≔ Real;
 builtin "mk_real" ≔ mk_real;
 builtin "dest_real" ≔ dest_real;
 builtin "axiom_23" ≔ axiom_23;

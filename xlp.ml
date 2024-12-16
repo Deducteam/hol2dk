@@ -35,6 +35,7 @@ let name =
     | "?!" -> "∃₁"
     | "~" -> "¬"
     | "-->" -> "⟶" (* 27F6 *)
+    | "--->" -> "⭬" (* 279F *)
     | "<->" -> "↔" (* 2194 *)
     (* invalid Lambdapi identifiers *)
     | "$" -> "﹩" (* FE69 *)
@@ -67,7 +68,8 @@ let string_of_typ_name n =
   match n with
   | "" -> assert false
   (* type names used also as constant names are capitalized *)
-  |"sum"|"topology"|"metric"|"multiset"|"group" -> String.capitalize_ascii n
+  |"sum"|"topology"|"metric"|"multiset"|"group"|"multivector"|"real" ->
+    String.capitalize_ascii n
   | _ ->
     if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1) else n
 ;;
@@ -402,7 +404,12 @@ let decl_subterm_abbrevs =
    ["h1";..;"hn"]. *)
 let hyp_var ts oc t = char oc 'h'; int oc (try 1 + index t ts with _ -> 0);;
 
-(* Printing on the output channel [oc] of the subproof [p2] given:
+(* [extend_to_bool ty_su tvs] extends the type substitution [ty_su] by
+   mapping every type variable of [tvs] to [bool]. *)
+let extend_to_bool = List.fold_left (fun su tv -> (bool_ty,tv)::su);;
+
+(* Printing on the output channel [oc] of the subproof [p2] of index [i2]
+given:
 - tvs: list of type variables of the theorem
 - rmap: renaming map for term variables
 - ty_su: type substitution that needs to be applied
@@ -418,24 +425,16 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
   let vs2 = vsubstl tm_su vs2 in
   (* ts2 is now the application of tm_su on ts2 *)
   let ts2 = vsubstl tm_su ts2 in
-  (* tvs2 are the lst of type variables of th2 *)
+  (* tvs2 are the list of type variables of th2 *)
   let tvs2 = type_vars_in_thm th2 in
   (* bs2 is the application of ty_su on tvs2 *)
   let bs2 = List.map (type_subst ty_su) tvs2 in
   (* tvbs2 is the type variables of bs2 *)
   let tvbs2 = tyvarsl bs2 in
   (* we remove from tvbs2 the variables of tvs *)
-  let tvbs2 =
-    List.fold_left
-      (fun tvbs2 tv -> if List.mem tv tvs then tvbs2 else tv::tvbs2)
-      [] tvbs2
-  in
+  let tvbs2 = remove_elts tvs tvbs2 in
   (* we extend ty_su by mapping every type variable of tvbs2 to bool *)
-  let ty_su =
-    List.fold_left
-      (fun su tv -> (bool_ty,tv)::su)
-      ty_su tvbs2
-  in
+  let ty_su = extend_to_bool ty_su tvbs2 in
   match ty_su with
   | [] ->
      string oc "(@lem"; int oc i2; list_prefix " " typ oc tvs2;
@@ -446,9 +445,9 @@ let subproof tvs rmap ty_su tm_su ts1 i2 oc p2 =
      let vs2 = List.map (inst ty_su) vs2 in
      (* ts2 is now the application of ty_su on ts2 *)
      let ts2 = List.map (inst ty_su) ts2 in
-     (* bs is the list of types obtained by applying ty_su on tvs2 *)
-     let bs = List.map (type_subst ty_su) tvs2 in
-     string oc "(@lem"; int oc i2; list_prefix " " typ oc bs;
+     (* bs2 is the list of types obtained by applying ty_su on tvs2 *)
+     let bs2 = List.map (type_subst ty_su) tvs2 in
+     string oc "(@lem"; int oc i2; list_prefix " " typ oc bs2;
      list_prefix " " term oc vs2; list_prefix " " (hyp_var ts1) oc ts2;
      char oc ')'
 ;;
@@ -460,6 +459,9 @@ let proof tvs rmap =
   let proof oc p =
     let Proof(thm,content) = p in
     let ts = hyp thm in
+    let tvs' = extra_type_vars_in_proof_content proof_at content in
+    let tvs' = remove_elts tvs tvs' in
+    List.iter (fun tv -> out oc "let %a ≔ bool in " typ tv) tvs';
     let sub = subproof tvs rmap [] [] ts in
     let sub_at oc k = sub k oc (proof_at k) in
     match content with
