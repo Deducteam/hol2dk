@@ -1001,7 +1001,7 @@ let export_theorem_proof_part b n k =
     let p = part_of d in
     if p <> !proof_part then part_deps := SetInt.add p !part_deps
   in
-  create_file (p^"_proofs.lp")
+  create_file (p^"_body.lp")
     (fun oc ->
       create_file (p^"_spec_body.lp")
         (fun oc_spec ->
@@ -1034,11 +1034,19 @@ let export_theorem_proof_part b n k =
     for j = 1 to nb_parts do f (p^"_term_abbrevs"^part j) done
   in
   create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
-  create_file_with_deps (p^"_deps") (p^"_spec") iter_deps (fun _ -> ());
+  (* generate [n^part(k)^"_spec_deps.lp"] *)
+  let iter_deps f =
+    f (b^"_types");
+    f (b^"_terms");
+    f (b^"_type_abbrevs");
+    if !use_sharing then f (p^"_subterm_abbrevs");
+    for j = 1 to nb_parts do f (p^"_term_abbrevs"^part j) done
+  in
+  create_file_with_deps (p^"_spec_deps") (p^"_spec") iter_deps (fun _ -> ());
   (* generate [n^part(k)^".lp"] and [n^part(k)^"_spec.lp"] *)
-  concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
-  concat (p^"_deps.lp") (p^"_spec_body.lp") (p^"_spec.lp");
-  remove (p^"_deps.lp "^p^"_proofs.lp "^p^"_spec_body.lp")
+  concat (p^"_deps.lp") (p^"_body.lp") (p^".lp");
+  concat (p^"_spec_deps.lp") (p^"_spec_body.lp") (p^"_spec.lp");
+  remove (p^"_deps.lp "^p^"_body.lp "^p^"_spec_deps.lp "^p^"_spec_body.lp")
 ;;
 
 (****************************************************************************)
