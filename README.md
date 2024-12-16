@@ -223,8 +223,8 @@ To speed up lp file generation for some theorems with very big proofs, you can w
 
 Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
 
-Performance
------------
+Performances
+------------
 
 On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
