@@ -226,27 +226,27 @@ Remark: for the checking of generated Coq files to not fail because of lack of R
 Performance with the mapping of real numbers (master branch)
 ------------------------------------------------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM with HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi c24b28e2 and Coq 8.20.0:
+On a machine with 32 processors i9-13950HX and 64 Gb RAM with HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
 | HOL-Light file | dump  | size | steps | thms | lp  | v     | size | vo     |
 |----------------|-------|------|-------|------|-----|-------|------|--------|
 | hol.ml         | 3m43s | 3 Gb | 3 M   | 5687 | 40s | 1m29s | 1 Gb | 50m13s |
 
-On a machine with 32 processors i9-13950HX and 128G RAM with HOL-Light ea45176, Hol2dk master, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi c24b28e2 and Coq 8.20.0:
+On a machine with 32 processors i9-13950HX and 128 Gb RAM with HOL-Light ea45176, Hol2dk master, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
 | HOL-Light file               | dump  | size   | steps | thms  | lp     | v      | size  | vo     |
 |------------------------------|-------|--------|-------|-------|--------|--------|-------|--------|
-| hol.ml                       | 3m57s | 3 Gb   | 3 M   | 5687  | 39s    | 34s    | 1 Gb  | 56m23s |
+| hol.ml                       | 3m57s | 3 Gb   | 3 M   | 5682  | 39s    | 34s    | 1 Gb  | 56m23s |
 | Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 52m26s | 31m39s | 94 Gb | >63h   |
 
 Performance without the mapping of real numbers (hol2dk 2.0)
 ------------------------------------------------------------
 
-On a machine with 32 processors i9-13950HX and 64G RAM, with HOL-Light ea45176, Hol2dk 2.0, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1:
+On a machine with 32 processors i9-13950HX and 64 Gb RAM, with HOL-Light ea45176, Hol2dk 2.0, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1:
 
 | HOL-Light file                     | simp  | size   | steps | thms  | lp     | v      | size  | vo     |
 |------------------------------------|-------|--------|-------|-------|--------|--------|-------|--------|
-| hol.ml                             | 3m57s | 3 Gb   | 3 M   | 5687  | 51s    | 55s    | 1 Gb  | 18m4s  |
+| hol.ml                             | 3m57s | 3 Gb   | 3 M   | 5682  | 51s    | 55s    | 1 Gb  | 18m4s  |
 | Multivariate/make_upto_topology.ml | 48m   | 52 Gb  | 52 M  | 18866 | 22m22s | 20m16s | 68 Gb | 8h (*) |
 | Multivariate/make_complex.ml       | 2h48m | 158 Gb | 90 M  | 41883 | 52m26s | 31m39s |       |        |
 
