@@ -243,15 +243,15 @@ To speed up lp file generation for some theorems with very big proofs, you can w
 
 Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
 
-Performance
------------
+Performances
+------------
 
 On a machine with 32 processors i9-13950HX, 128 Gb RAM, HOL-Light ea45176, Hol2dk master, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
 | HOL-Light file               | dump  | size   | steps | thms  | lp     | v      | size  | vo     |
 |------------------------------|-------|--------|-------|-------|--------|--------|-------|--------|
-| hol.ml                       | 3m57s | 3 Gb   | 3 M   | 5687  | 39s    | 34s    | 1 Gb  | 56m23s |
-| Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 52m26s | 31m39s | 94 Gb | >63h   |
+| hol.ml                       | 3m57s | 3 Gb   | 3 M   | 5687  | 40s    | 34s    | 1 Gb  | 48m36s |
+| Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 54m58s | 25m17s | 84 Gb | >63h   |
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
