@@ -308,7 +308,7 @@ all:
 vtodo:
 	find . -name '*.v' | sort > /tmp/vfiles
 	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
-	diff /tmp/vofiles /tmp/vfiles | sed -e '/^1a/d' -e 's/^> .\///' > vtodo
+	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[0-9]*a[0-9]*$$/d' -e 's/^> .\///' > vtodo
 
 .PHONY: lptodo
 lptodo: vtodo
