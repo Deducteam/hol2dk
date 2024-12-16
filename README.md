@@ -228,9 +228,9 @@ Performances
 
 On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
-| HOL-Light file | dump  | size | steps | thms | lp  | v     | size | vo     |
-|----------------|-------|------|-------|------|-----|-------|------|--------|
-| hol.ml         | 3m43s | 3 Gb | 3 M   | 5687 | 40s | 1m29s | 1 Gb | 50m13s |
+| HOL-Light file | dump  | size | steps | thms | lp  | v   | size | vo     |
+|----------------|-------|------|-------|------|-----|-----|------|--------|
+| hol.ml         | 3m58s | 3 Gb | 3 M   | 5687 | 40s | 37s | 1 Gb | 52m21s |
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
