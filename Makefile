@@ -321,3 +321,7 @@ clean-lptodo: lptodo
 .PHONY: clean-vtodo
 clean-vtodo: vtodo
 	xargs -a vtodo rm -f
+
+.PHONY: lpsize
+lpsize:
+	find . -maxdepth 1 -name '*.lp' -print0 | du --files0-from=- --total -s -h | tail -1
