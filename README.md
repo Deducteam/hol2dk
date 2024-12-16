@@ -251,7 +251,7 @@ On a machine with 32 processors i9-13950HX, 128 Gb RAM, HOL-Light ea45176, Hol2d
 | HOL-Light file               | dump  | size   | steps | thms  | lp     | v      | size  | vo     |
 |------------------------------|-------|--------|-------|-------|--------|--------|-------|--------|
 | hol.ml                       | 3m57s | 3 Gb   | 3 M   | 5687  | 40s    | 34s    | 1 Gb  | 48m36s |
-| Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 54m58s | 25m17s | 94 Gb | >63h   |
+| Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 54m58s | 25m17s | 84 Gb | >63h   |
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
