@@ -243,28 +243,15 @@ To speed up lp file generation for some theorems with very big proofs, you can w
 
 Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
 
-Performance with the mapping of real numbers (master branch)
-------------------------------------------------------------
+Performance
+-----------
 
-On a machine with 32 processors i9-13950HX and 128G RAM with HOL-Light ea45176, Hol2dk master, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi c24b28e2 and Coq 8.20.0:
+On a machine with 32 processors i9-13950HX, 128 Gb RAM, HOL-Light ea45176, Hol2dk master, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
 | HOL-Light file               | dump  | size   | steps | thms  | lp     | v      | size  | vo     |
 |------------------------------|-------|--------|-------|-------|--------|--------|-------|--------|
 | hol.ml                       | 3m57s | 3 Gb   | 3 M   | 5687  | 39s    | 34s    | 1 Gb  | 56m23s |
-| Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 52m26s | 31m39s | 94 Gb | ~60h   |
-
-Performance without the mapping of real numbers (hol2dk 2.0)
-------------------------------------------------------------
-
-On a machine with 32 processors i9-13950HX and 64G RAM, with HOL-Light ea45176, Hol2dk 2.0, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi 2.5.0 and Coq 8.19.1:
-
-| HOL-Light file                     | simp  | size   | steps | thms  | lp     | v      | size  | vo     |
-|------------------------------------|-------|--------|-------|-------|--------|--------|-------|--------|
-| hol.ml                             | 3m57s | 3 Gb   | 3 M   | 5687  | 51s    | 55s    | 1 Gb  | 18m4s  |
-| Multivariate/make_upto_topology.ml | 48m   | 52 Gb  | 52 M  | 18866 | 22m22s | 20m16s | 68 Gb | 8h (*) |
-| Multivariate/make_complex.ml       | 2h48m | 158 Gb | 90 M  | 41883 | 52m26s | 31m39s |       |        |
-
-(*) with `make -j32 vo; make -j8 vo`
+| Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 52m26s | 31m39s | 94 Gb | >63h   |
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
