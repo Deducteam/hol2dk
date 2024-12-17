@@ -339,3 +339,17 @@ builtin "mk_finite_prod" ≔ mk_finite_prod;
 builtin "dest_finite_prod" ≔ dest_finite_prod;
 builtin "axiom_35" ≔ axiom_35;
 builtin "axiom_36" ≔ axiom_36;
+
+// tybit0
+builtin "tybit0" ≔ tybit0;
+builtin "_mk_tybit0" ≔ _mk_tybit0;
+builtin "_dest_tybit0" ≔ _dest_tybit0;
+builtin "axiom_37" ≔ axiom_37;
+builtin "axiom_38" ≔ axiom_38;
+
+// tybit1
+builtin "tybit1" ≔ tybit1;
+builtin "_mk_tybit1" ≔ _mk_tybit1;
+builtin "_dest_tybit1" ≔ _dest_tybit1;
+builtin "axiom_39" ≔ axiom_39;
+builtin "axiom_40" ≔ axiom_40;
