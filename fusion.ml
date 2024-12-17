@@ -851,6 +851,8 @@ REMOVE*)
              let dtm = safe_mk_eq c r in
              let dth = new_theorem [] dtm (Pdef(dtm,cname,ty)) in
              (the_definitions := dth::(!the_definitions); dth)
+    | Comb(Comb(Const("=",_),Const(cname,ty)),r) ->
+      failwith ("new_basic_definition: '" ^ cname ^ "' is already defined")
     | _ -> failwith "new_basic_definition"
 REMOVE*)
 (* ------------------------------------------------------------------------- *)

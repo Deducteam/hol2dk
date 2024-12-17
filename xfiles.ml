@@ -36,7 +36,7 @@ let files() : string list =
 (* [dep_graph files] computes the dependency graph of [files]. *)
 let dep_graph =
   let re =
-    Str.regexp "^\\(load[st]\\|needs\\|#use\\)[ \t]+\"\\([^.]+.[mh]l\\)\"" in
+    Str.regexp "\\(load[st]\\|needs\\|#use\\)[ \t]+\"\\([^.]+.[mh]l\\)\"" in
   let search content =
     let rec search acc start =
       try

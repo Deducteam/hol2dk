@@ -77,30 +77,10 @@ Bibliography
 Installing HOL-Light sources
 ----------------------------
 
-**Requirements:**
-- hol-light = ea45176 (07/02/24)
-- ocaml = 4.14.2
-- camlp5 = 8.02.01
-- ocamlfind
-- zarith, which may require pkg-config and libgmp-dev
-- libipc-system-simple-perl
-- libstring-shellquote
-
-Find other potential working ocaml-camlp5 pairs on
-https://github.com/jrh13/hol-light/pull/71 .
-
-If you don't already have the HOL-Light sources somewhere, you can
-install them by using the following commands:
+**Requirement:** hol_light >= 3.0.0
 
 ```
-cd $HOME
-sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl pkg-config libgmp-dev opam
-opam init
-opam switch create ocaml.4.14.2
-eval `opam env`
-opam install ocamlfind zarith camlp5.8.02.01
 git clone https://github.com/jrh13/hol-light
-git checkout ea45176
 make -C hol-light
 ```
 
@@ -216,9 +196,9 @@ Translating HOL-Light proofs to Lambdapi and Coq
 
 **Requirements:**
 - lambdapi commit >= c24b28e2 (28/11/24) > 2.5.1
+- coq >= 8.19
 - [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
 - [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
-- coq >= 8.19
 
 For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
 ```
@@ -246,12 +226,11 @@ Remark: for the checking of generated Coq files to not fail because of lack of R
 Performances
 ------------
 
-On a machine with 32 processors i9-13950HX, 128 Gb RAM, HOL-Light ea45176, Hol2dk master, OCaml 4.14.2, Camlp5 8.02.01, Lambdapi c24b28e2 and Coq 8.20.0:
+On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi c24b28e2 and Coq 8.20.0:
 
-| HOL-Light file               | dump  | size   | steps | thms  | lp     | v      | size  | vo     |
-|------------------------------|-------|--------|-------|-------|--------|--------|-------|--------|
-| hol.ml                       | 3m57s | 3 Gb   | 3 M   | 5687  | 40s    | 34s    | 1 Gb  | 48m36s |
-| Multivariate/make_complex.ml | 2h48m | 158 Gb | 90 M  | 41883 | 54m58s | 25m17s | 84 Gb | >63h   |
+| HOL-Light file | dump  | size | steps | thms | lp  | v   | size | vo     |
+|----------------|-------|------|-------|------|-----|-----|------|--------|
+| hol.ml         | 3m58s | 3 Gb | 3 M   | 5687 | 40s | 37s | 1 Gb | 52m21s |
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------

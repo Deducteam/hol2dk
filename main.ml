@@ -355,15 +355,15 @@ let dump after_hol f b =
   out oc
 {|(* file generated with: hol2dk%a %s *)
 #use "topfind";;
-#require "camlp5";;
-#load "camlp5o.cma";;
+#require "str";;
+#require "zarith";;
 #require "unix";;
-let dump_filename = "%s.prf";;  
+#load "bignum.cmo";;
+let dump_filename = "%s.prf";; 
 %a
 close_out oc_dump;;
 dump_nb_proofs "%s.nbp";;
 dump_signature "%s.sig";;
-#load "str.cma";;
 #use "xnames.ml";;
 dump_map_thid_name "%s.thm" %a;;
 |} cmd after_hol f b use after_hol b b b
