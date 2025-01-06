@@ -136,7 +136,7 @@ hol2dk env
 hol2dk nbp $base
   print the number of useful proof steps in $base.prf
 
-hol2dk proof $base $x $y
+hol2dk proof $base $x [$y]
   print proof steps between theorem indexes $x and $y
 
 hol2dk print use $base $x

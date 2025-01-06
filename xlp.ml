@@ -68,7 +68,7 @@ let string_of_typ_name n =
   match n with
   | "" -> assert false
   (* type names used also as constant names are capitalized *)
-  |"sum"|"topology"|"metric"|"multiset"|"group"|"multivector"|"real" ->
+  |"sum"|"topology"|"metric"|"multiset"|"group"|"multivector"|"real"|"matroid" ->
     String.capitalize_ascii n
   | _ ->
     if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1) else n
