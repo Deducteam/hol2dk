@@ -206,7 +206,7 @@ cd $HOLLIGHT_DIR/Logic
 hol2dk dump-simp make.ml
 mkdir -p ~/output-hol2dk/Logic
 cd ~/output-hol2dk/Logic
-hol2dk link Logic/make.ml HOLLight_Real.HOLLight_Real --root-path $HOL2DK/HOLLight.v Rdefinitions Rbasic_fun Raxioms
+hol2dk link Logic/make.ml HOLLight_Real.HOLLight_Real --root-path $HOL2DK_DIR/HOLLight.v Rdefinitions Rbasic_fun Raxioms
 ```
 This will create files and add links to files needed to generate, translate and check proofs.
 
