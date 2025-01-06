@@ -96,3 +96,5 @@ builtin "dollardollar" ≔ ﹩﹩;
 builtin "dollardollar_def" ≔ ﹩﹩_def;
 builtin "longarrow" ≔ ⭬;
 builtin "longarrow_def" ≔ ⭬_def;
+builtin "Z'" ≔ Z;
+builtin "Z''" ≔ Z';
