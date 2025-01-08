@@ -309,6 +309,7 @@ vtodo:
 	find . -name '*.v' | sort > /tmp/vfiles
 	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
 	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > vtodo
+	@export v=`wc -l vtodo | sed -e 's/ vtodo//'`; export n=`find . -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
 
 .PHONY: lptodo
 lptodo: vtodo
