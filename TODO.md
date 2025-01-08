@@ -1,6 +1,8 @@
 TODO
 ----
 
+- automatically rename type names that are used as symbol names too
+
 - is it really useful to compute a canonical type/term?
 
 - add a term abbreviation only if it is used more than once
