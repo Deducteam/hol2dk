@@ -8,7 +8,7 @@ REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; else echo $(ROOT_
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
 
-HOL2DK := hol2dk --root-path $(ROOT_PATH) --use-sharing
+HOL2DK := hol2dk --root-path $(ROOT_PATH)
 
 .PHONY: default
 default:

@@ -369,7 +369,6 @@ let decl_term_abbrev oc t (k,n,bs) =
     string oc " (x"; int oc i; string oc ": El "; abbrev_typ oc b; char oc ')'
   in
   List.iteri decl_var bs;
-  (* We can use [raw_term] here since [t] is canonical. *)
   if !use_sharing then
     begin
       let t', l = shared t in
