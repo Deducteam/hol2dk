@@ -29,11 +29,11 @@ builtin "ex_def" ≔ ∃_def;
 builtin "not" ≔ ¬;
 builtin "not_def" ≔ ¬_def;
 
-builtin "True" ≔ T;
-builtin "T_def" ≔ T_def;
+builtin "True" ≔ ⊤;
+builtin "T_def" ≔ ⊤_def;
 
-builtin "False" ≔ F;
-builtin "F_def" ≔ F_def;
+builtin "False" ≔ ⊥;
+builtin "F_def" ≔ ⊥_def;
 
 builtin "ex1" ≔ ∃₁;
 builtin "ex1_def" ≔ ∃₁_def;

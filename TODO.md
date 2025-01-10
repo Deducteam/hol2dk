@@ -7,8 +7,6 @@ TODO
 
 - why the mapping of ITLIST does not work anymore ?
 
-- in lp output, replace T by ⊤ ?
-
 - write progress in an ocaml program, and estimate time wrt size of files
 
 - use a single term_abbrev file for each theorem, and split it
