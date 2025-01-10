@@ -32,6 +32,8 @@ let name =
     | "==>" -> "⇒"
     | "!" -> "∀"
     | "?" -> "∃"
+    | "F" -> "⊥"
+    | "T" -> "⊤"
     | "?!" -> "∃₁"
     | "~" -> "¬"
     | "-->" -> "⟶" (* 27F6 *)
@@ -506,7 +508,7 @@ let proof tvs rmap =
       int oc (pos_first (fun th -> concl th = t) !the_axioms);
       list_prefix " " typ oc (type_vars_in_term t);
       list_prefix " " term oc (frees t)
-    | Ptruth -> string oc "Tᵢ"
+    | Ptruth -> string oc "⊤ᵢ"
     | Pconj(k1,k2) -> string oc "∧ᵢ "; sub_at oc k1; char oc ' '; sub_at oc k2
     | Pconjunct1 k -> string oc "∧ₑ₁ "; sub_at oc k
     | Pconjunct2 k -> string oc "∧ₑ₂ "; sub_at oc k

@@ -26,18 +26,18 @@ opaque symbol SYM [a] [x y : El a] (xy: Prf (= x y)) : Prf (= y x) ≔
 /* HOL-Light derived connectives */
 constant symbol ∃₁ [A] : El (fun (fun A bool) bool);
 constant symbol ¬ : El (fun bool bool);
-constant symbol F : El bool;
+constant symbol ⊥ : El bool;
 constant symbol ∨ : El (fun bool (fun bool bool));
 constant symbol ∃ [A] : El (fun (fun A bool) bool);
 constant symbol ∀ [A] : El (fun (fun A bool) bool);
 constant symbol ⇒ : El (fun bool (fun bool bool));
 constant symbol ∧ : El (fun bool (fun bool bool));
-constant symbol T : El bool;
+constant symbol ⊤ : El bool;
 
 /* Natural deduction rules */
 rule Prf (⇒ $p $q) ↪ Prf $p → Prf $q;
 rule Prf (∀ $p) ↪ Π x, Prf ($p x);
-symbol Tᵢ : Prf T;
+symbol ⊤ᵢ : Prf ⊤;
 symbol ∧ᵢ [p : El bool] : Prf p → Π [q : El bool], Prf q → Prf (∧ p q);
 symbol ∧ₑ₁ [p q : El bool] : Prf (∧ p q) → Prf p;
 symbol ∧ₑ₂ [p q : El bool] : Prf (∧ p q) → Prf q;
