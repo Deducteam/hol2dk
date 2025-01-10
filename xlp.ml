@@ -369,12 +369,15 @@ let decl_term_abbrev oc t (k,n,bs) =
     string oc " (x"; int oc i; string oc ": El "; abbrev_typ oc b; char oc ')'
   in
   List.iteri decl_var bs;
-  (* We can use [raw_term] here since [t] is canonical. *)
   if !use_sharing then
-    let t', l = shared t in
-    string oc " ≔"; list print_let oc l; char oc ' '; raw_term oc t';
-    string oc ";\n"
-  else string oc " ≔ "; raw_term oc t; string oc ";\n"
+    begin
+      let t', l = shared t in
+      string oc " ≔"; list print_let oc l; char oc ' '; raw_term oc t'; string oc ";\n"
+    end
+  else
+    begin
+      string oc " ≔ "; raw_term oc t; string oc ";\n"
+    end
 ;;
 
 (* [decl_term_abbrevs oc] outputs on [oc] the term abbreviations. *)
@@ -388,7 +391,6 @@ let decl_subterm_abbrevs =
   let add _ x l = match x with t,t',false,_ when t != t' -> x::l | _ -> l
   and cmp (_,_,_,k1) (_,_,_,k2) = k1 - k2 in
   fun oc ->
-  (* print closed subterm abbreviations *)
   let abbrev (t,t',_,_) =
     string oc "symbol "; raw_term oc t'; string oc " ≔ "; raw_term oc t;
     string oc ";\n"
@@ -636,18 +638,19 @@ let proof_part_max_idx = ref (-1);;
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k]
    and proof [p] as declaration type [d]. *)
 let decl_theorem oc k p d =
-  let Proof(thm,_) = p in
+  let Proof(thm,pc) = p in
   (*log "theorem %d ...\n%!" k;*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let tvs = type_vars_in_thm thm in
-  let rmap = renaming_map tvs xs in
   let decl_hyp term i t =
     string oc " (h"; int oc (i+1); string oc " : Prf "; term oc t; char oc ')'
   in
   let decl_hyps term = List.iteri (decl_hyp term) in
   match d with
   | DefThmIdProof ->
+    let tvs = type_vars_in_thm thm in
+    let extras = extra_type_vars_in_proof_content proof_at pc in
+    let rmap = renaming_map (extras @ tvs) xs in
     let term = term rmap in
     let prv = let l = get_use k in l > 0 && l <= !proof_part_max_idx in
     string oc (if prv then "private" else "opaque");
@@ -655,22 +658,28 @@ let decl_theorem oc k p d =
     list (decl_param rmap) oc xs; decl_hyps term ts; string oc " : Prf ";
     term oc t; string oc " ≔ "; proof tvs rmap oc p; string oc ";\n";
   | DeclThmId abbrev ->
+    let tvs = type_vars_in_thm thm in
+    let rmap = renaming_map tvs xs in
     let term = if abbrev then term rmap else unabbrev_term rmap in
     string oc "symbol lem"; int oc k; typ_vars oc tvs;
     list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
   | DefThmNameAsThmId n ->
-     let term = unabbrev_term rmap in
-     string oc "opaque symbol "; string oc n; typ_vars oc tvs;
-     list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
-     string oc " ≔ @lem"; int oc k; list_prefix " " raw_typ oc tvs;
-     list_prefix " " (var rmap) oc xs;
-     List.iteri (fun i _ -> string oc " h"; int oc (i+1)) ts; string oc ";\n"
+    let tvs = type_vars_in_thm thm in
+    let rmap = renaming_map tvs xs in
+    let term = unabbrev_term rmap in
+    string oc "opaque symbol "; string oc n; typ_vars oc tvs;
+    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
+    string oc " ≔ @lem"; int oc k; list_prefix " " raw_typ oc tvs;
+    list_prefix " " (var rmap) oc xs;
+    List.iteri (fun i _ -> string oc " h"; int oc (i+1)) ts; string oc ";\n"
   | DeclThmName n ->
-     let term = unabbrev_term rmap in
-     string oc "symbol thm_"; string oc n; typ_vars oc tvs;
-     list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
-     string oc " : Prf "; term oc t; string oc ";\n"
+    let tvs = type_vars_in_thm thm in
+    let rmap = renaming_map tvs xs in
+    let term = unabbrev_term rmap in
+    string oc "symbol thm_"; string oc n; typ_vars oc tvs;
+    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
+    string oc " : Prf "; term oc t; string oc ";\n"
 ;;
 
 (* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)

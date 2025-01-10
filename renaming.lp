@@ -78,6 +78,8 @@ builtin "ltle" ≔ <<=;
 builtin "ltle_def" ≔ <<=_def;
 
 // Multivariate
+builtin "pair'" ≔ pair;
+
 builtin "add_c" ≔ +_c;
 builtin "add_c_def" ≔ +_c_def;
 builtin "percent" ≔ %;
@@ -88,13 +90,19 @@ builtin "pow_c" ≔ ^_c;
 builtin "pow_c_def" ≔ ^_c_def;
 builtin "_at" ≔ at;
 builtin "_at_def" ≔ at_def;
-builtin "S'" ≔ S;
-builtin "pair'" ≔ pair;
-builtin "R'" ≔ R;
-builtin "R''" ≔ R';
 builtin "dollardollar" ≔ ﹩﹩;
 builtin "dollardollar_def" ≔ ﹩﹩_def;
 builtin "longarrow" ≔ ⭬;
 builtin "longarrow_def" ≔ ⭬_def;
+
+builtin "R'" ≔ R;
+builtin "R''" ≔ R';
+
+builtin "S'" ≔ S;
+builtin "S''" ≔ S';
+builtin "S'''" ≔ S'';
+builtin "S''''" ≔ S''';
+
 builtin "Z'" ≔ Z;
 builtin "Z''" ≔ Z';
+builtin "Z'''" ≔ Z'';

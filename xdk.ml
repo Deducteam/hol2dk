@@ -604,21 +604,14 @@ let decl_axioms oc ths =
 
 (*let counter = ref 0;;*)
 
-type decl =
-  | Unnamed_thm
-  | Axiom
-  | Named_thm of string
-
 (* [decl_theorem oc k p d] outputs on [oc] the theorem of index [k],
    proof [p] and name [n] as declaration type [d]. *)
 let decl_theorem oc k p d =
-  let Proof(thm,_) = p in
+  let Proof(thm,pc) = p in
   (*incr counter;
   if !counter = 1000 then (log "theorem %d ...\n%!" k; counter := 0);*)
   let ts,t = dest_thm thm in
   let xs = freesl (t::ts) in
-  let tvs = type_vars_in_thm thm in
-  let rmap = renaming_map tvs xs in
   let hyp term i t =
     char oc 'h'; int oc (i+1); string oc " : Prf "; term oc t; string oc " => "
   in
@@ -626,7 +619,10 @@ let decl_theorem oc k p d =
     char oc 'h'; int oc (i+1); string oc " : Prf "; term oc t; string oc " ->"
   in
   match d with
-  | Unnamed_thm ->
+  | Xlp.DefThmIdProof ->
+     let tvs = type_vars_in_thm thm in
+     let extras = extra_type_vars_in_proof_content proof_at pc in
+     let rmap = renaming_map (extras @ tvs) xs in
      let term = term tvs rmap in
      string oc "thm lem"; int oc k; string oc " : ";
      list (decl_typ_param tvs) oc tvs; list (decl_param tvs rmap) oc xs;
@@ -634,27 +630,40 @@ let decl_theorem oc k p d =
      string oc " := "; list (typ_param tvs) oc tvs;
      list (param tvs rmap) oc xs; List.iteri (hyp term) ts;
      proof tvs rmap oc p; string oc ".\n"
-  | Axiom ->
-     let term = unabbrev_term tvs rmap in
+  | DeclThmId abbrev ->
+     let tvs = type_vars_in_thm thm in
+     let rmap = renaming_map tvs xs in
+     let term = if abbrev then term tvs rmap else unabbrev_term tvs rmap in
      string oc "lem"; int oc k; string oc " : ";
      list (decl_typ_param tvs) oc tvs;
      list (decl_param tvs rmap) oc xs; List.iteri (hyp_typ term) ts;
      string oc "Prf "; term oc t; string oc ".\n"
-  | Named_thm n ->
+  | DefThmNameAsThmId n ->
+     let tvs = type_vars_in_thm thm in
+     let rmap = renaming_map tvs xs in
      let term = unabbrev_term tvs rmap in
      string oc "thm lem"; string oc n; string oc " : ";
      list (decl_typ_param tvs) oc tvs;
      list (unabbrev_decl_param tvs rmap) oc xs;
      List.iteri (hyp_typ term) ts; string oc "Prf "; term oc t;
      string oc " := lem"; int oc k; string oc ".\n"
+  | DeclThmName n ->
+     let tvs = type_vars_in_thm thm in
+     let rmap = renaming_map tvs xs in
+     let term = unabbrev_term tvs rmap in
+     string oc "def thm_"; string oc n; string oc " : ";
+     list (decl_typ_param tvs) oc tvs;
+     list (unabbrev_decl_param tvs rmap) oc xs;
+     List.iteri (hyp_typ term) ts; string oc "Prf "; term oc t;
+     string oc ".\n"
 ;;
 
 (* [theorem oc k p] outputs on [oc] the proof [p] of index [k]. *)
-let theorem oc k p = decl_theorem oc k p Unnamed_thm;;
+let theorem oc k p = decl_theorem oc k p Xlp.DefThmIdProof;;
 
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
-   [k] as an axiom. *)
-let theorem_as_axiom oc k p = decl_theorem oc k p Axiom;;
+   [k] as an axiom, with abbreviated terms if [abbrev]. *)
+let theorem_as_axiom abbrev oc k p = decl_theorem oc k p (Xlp.DeclThmId abbrev);;
 
 (* [proofs_in_interval oc x y] outputs on [oc] the proofs in interval
    [x] .. [y]. *)
@@ -667,7 +676,7 @@ let proofs_in_interval oc x y =
 let proofs_in_range oc = function
   | Only x ->
      let p = proof_at x in
-     List.iter (fun k -> theorem_as_axiom oc k (proof_at k)) (deps p);
+     List.iter (fun k -> theorem_as_axiom false oc k (proof_at k)) (deps p);
      theorem oc x p
   | All -> proofs_in_interval oc 0 (Array.length !prf_pos - 1)
   | Upto y -> proofs_in_interval oc 0 y
@@ -797,7 +806,7 @@ let export_theorems b map_thid_name =
     (fun oc ->
       string oc "\n(; named theorems ;)\n";
       MapInt.iter
-        (fun k n -> decl_theorem oc k (proof_at k) (Named_thm n))
+        (fun k n -> decl_theorem oc k (proof_at k) (Xlp.DefThmNameAsThmId n))
         map_thid_name)
 ;;
 
@@ -806,7 +815,7 @@ let export_theorems_as_axioms b map_thid_name =
     (fun oc ->
       string oc "\n(; named theorems ;)\n";
       MapInt.iter
-        (fun k _ -> decl_theorem oc k (proof_at k) Axiom)
+        (fun k _ -> decl_theorem oc k (proof_at k) (Xlp.DeclThmId false))
         map_thid_name)
 ;;
 
