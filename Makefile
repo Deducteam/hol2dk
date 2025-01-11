@@ -3,7 +3,8 @@
 BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
 ERASING := $(shell if test -f ERASING; then cat ERASING; fi)
-REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; else echo $(ROOT_PATH); fi)
+REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
+VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
@@ -137,6 +138,7 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 
 .PHONY: clean-lp
 clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz clean-lpo clean-v
+	rm -f lpo.mk
 
 .PHONY: rm-lp
 rm-lp:
@@ -222,6 +224,7 @@ endif
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
+	rm -f vo.mk
 
 .PHONY: rm-v
 rm-v:
@@ -231,7 +234,8 @@ ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	sed -e 's/\.lp/.v/g' -e "s/: theory_hol.vo/: $(ROOT_PATH).vo theory_hol.vo/" -e "s/theory_hol.vo:/theory_hol.vo: $(ROOT_PATH).vo/" lpo.mk > $@
+	cp deps.mk $@
+	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk >> $@
 endif
 
 .PHONY: dep
