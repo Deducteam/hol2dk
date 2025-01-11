@@ -207,12 +207,12 @@ Translating HOL-Light proofs to Lambdapi and Coq
 mkdir output
 ```
 
-- setup the directory with all the required data:
+- setup the directory with all the required files:
 ```
 cd output
 hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk]
 ```
-Do `hol2dk config` for more details.
+Do `hol2dk config` to get more details.
 
 - you can then do in order:
   * `make` to get the list of targets and variables
@@ -225,7 +225,7 @@ Do `hol2dk config` for more details.
 To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
 - `make -j$jobs MAX_PROOF=500_000 MAX_ABBREV=2_000_000 lp`
 
-Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
+**Remark:** for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`.
 
 Performances
 ------------
