@@ -14,14 +14,14 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` [--erasing $erasing.lp] $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk]
+usage: `basename $0` $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk] [$erasing.lp]
 
 arguments:
-  $erasing.lp: mappings between lambdapi and coq
   $hollight_file.ml: path to an ml file relative to $HOLLIGHT_DIR
   $root_path: name of the generated library
   coq_file_or_module: coq modules that needs to be imported in generated files
   $file.mk: dependencies of vo files given in arguments
+  $erasing.lp: mappings between lambdapi and coq
 
 effect in the current directory:
 - create a file CONFIG containing the command used to create links
@@ -46,19 +46,14 @@ error() {
 parse_args() {
     if test $# -ne 0; then
         case $1 in
-            --erasing)
+            *.lp)
                 if test -z "$erasing"
                 then
-                    if test $# -eq 1
-                    then
-                        error 'missing --erasing argument'
-                    else
-                        erasing=$2
-                        shift 2
-                        parse_args $*
-                    fi
+                    erasing=$1
+                    shift
+                    parse_args $*
                 else
-                    error 'too many --erasing options'
+                    error 'too many lp files'
                 fi;;
             *.ml)
                 if test -z "$hollight_file"
