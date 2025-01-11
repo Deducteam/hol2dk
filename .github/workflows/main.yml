@@ -4,12 +4,12 @@ on:
   push:
   workflow_dispatch:
 jobs:
-  hol-light-to-dedukti:
+  ci:
     strategy:
       fail-fast: false
       matrix:
         ocaml-version: [5.2.1]
-        dune-version: [3.17.0]
+        dune-version: [3.17.1]
         camlp5-version: [8.03.01]
         hol-light-version: [3.0.0]
         hol-light-commit: [master] # Release-3.0.0]
@@ -34,7 +34,8 @@ jobs:
       - name: Install dependencies
         run: |
           #sudo apt-get install -y libipc-system-simple-perl libstring-shellquote-perl
-          opam install -y hol_light.${{ matrix.hol-light-version }} camlp5.${{ matrix.camlp5-version }} dedukti.${{ matrix.dedukti-version }} #lambdapi.${{ matrix.lambdapi-version }}
+          opam install -y --deps-only hol_light.${{ matrix.hol-light-version }}
+          opam install -y dedukti.${{ matrix.dedukti-version }}
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
