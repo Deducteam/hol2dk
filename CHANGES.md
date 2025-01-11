@@ -3,11 +3,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unrelease
+## Unreleased
 
 ### Added
 
 - alignment of the type of reals and basic functions on reals
+- command nbp
+- renamings to handle Multivariate
+
+### Changed
+
+- command link renamed into config and improved
+- update to work with HOL-Light 3.0
+- minimize dependencies in spec files
+- theory_hol.lp: rename T into ⊤ and F into ⊥
+
+### Fixed
+
+- handling of type variables occurring in a proof but not in a statement
 
 ## 2.0.0 (2024-04-23)
 

@@ -95,6 +95,10 @@ builtin "dollardollar_def" ≔ ﹩﹩_def;
 builtin "longarrow" ≔ ⭬;
 builtin "longarrow_def" ≔ ⭬_def;
 
+builtin "N'" ≔ N;
+builtin "N''" ≔ N';
+builtin "N'''" ≔ N'';
+
 builtin "R'" ≔ R;
 builtin "R''" ≔ R';
 

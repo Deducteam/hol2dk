@@ -200,28 +200,32 @@ Translating HOL-Light proofs to Lambdapi and Coq
 - [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
 - [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
 
-For not cluttering HOL-Light sources with the many generated files, we suggest to proceed as follows. For instance, for generating the proofs of the `Logic` library, do:
-```
-cd $HOLLIGHT_DIR/Logic
-hol2dk dump-simp make.ml
-mkdir -p ~/output-hol2dk/Logic
-cd ~/output-hol2dk/Logic
-hol2dk link Logic/make.ml HOLLight_Real.HOLLight_Real --root-path $HOL2DK_DIR/HOLLight.v Rdefinitions Rbasic_fun Raxioms
-```
-This will create files and add links to files needed to generate, translate and check proofs.
+**Procedure after dumping:**
 
-You can then do in order:
-- `make` to get the list of targets and variables
-- `make split` to generate a file for each theorem
-- `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
-- `make -j$jobs lpo` to check Lambdapi files (optional)
-- `make -j$jobs v` to translate Lambdapi files to Coq files
-- `make -j$jobs vo` to check Coq files
+- create a directory where all files will be generated:
+```
+mkdir output
+```
 
-To speed up lp file generation for some theorems with very big proofs, you can write in a file called `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
+- setup the directory with all the required files:
+```
+cd output
+hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk]
+```
+Do `hol2dk config` to get more details.
+
+- you can then do in order:
+  * `make` to get the list of targets and variables
+  * `make split` to generate a file for each theorem
+  * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
+  * `make -j$jobs lpo` to check Lambdapi files (optional)
+  * `make -j$jobs v` to translate Lambdapi files to Coq files
+  * `make -j$jobs vo` to check Coq files
+
+To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
 - `make -j$jobs MAX_PROOF=500_000 MAX_ABBREV=2_000_000 lp`
 
-Remark: for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`. 
+**Remark:** for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`.
 
 Performances
 ------------
@@ -236,7 +240,7 @@ On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
 
-Requirement: dedukti 2.7
+**Requirement:** dedukti 2.7
 
 The Makefile commands above are not implemented for Dedukti yet. It is however possible to translate HOL-Light proofs to Dedukti in parallel by using the following older and less efficient commands:
 

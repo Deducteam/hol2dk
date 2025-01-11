@@ -492,7 +492,7 @@ and command = function
   | ["unpatch" as s] -> call_script s []
   | "unpatch"::_ -> wrong_nb_args()
 
-  | "link"::args -> call_script "add-links" args
+  | "config"::args -> call_script "config" args
 
   | ["dump";f] -> dump true f (basename_ml f)
   | "dump"::_ -> wrong_nb_args()
