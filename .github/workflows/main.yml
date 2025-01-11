@@ -102,7 +102,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output/hol_upto_arith
           cd output/hol_upto_arith
-          hol2dk link hol_upto_arith
+          hol2dk config hol_upto_arith.ml HOLLight
           make split
           make -j3 lp
           make -j3 v

@@ -14,14 +14,14 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` [--erasing $erasing.lp] $hollight_file.ml $file.mk $root_path [coq_file_or_module] ...
+usage: `basename $0` [--erasing $erasing.lp] $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk]
 
 arguments:
   $erasing.lp: mappings between lambdapi and coq
   $hollight_file.ml: path to an ml file relative to $HOLLIGHT_DIR
-  $file.mk: dependencies of vo files given in arguments ($file must be different from "lpo" or "vo")
   $root_path: name of the generated library
   coq_file_or_module: coq modules that needs to be imported in generated files
+  $file.mk: dependencies of vo files given in arguments
 
 effect in the current directory:
 - create a file CONFIG containing the command used to create links
@@ -69,8 +69,6 @@ parse_args() {
                 else
                     error 'too many ml files'
                 fi;;
-            lpo.mk|vo.mk)
-                error 'lpo.mk and vo.mk are reserved filenames';;
             *.mk)
                 if test -z "$mk_file"
                 then
@@ -137,8 +135,13 @@ echo $requiring > REQUIRING
 echo create VOFILES ...
 echo $vo_files > VOFILES
 
-echo ln -f -s $mk_file deps.mk
-ln -f -s $mk_file deps.mk
+if test -z "$mk_file"
+then
+    touch deps.mk
+else
+    echo ln -f -s $mk_file deps.mk
+    ln -f -s $mk_file deps.mk
+fi
 
 for f in $coq_files
 do

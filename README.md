@@ -210,7 +210,7 @@ mkdir output
 - setup the directory with all the required data:
 ```
 cd output
-hol2dk config $hollight_file.ml $file.mk $root_path [coq_file_or_module] ...
+hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk]
 ```
 Do `hol2dk config` for more details.
 
