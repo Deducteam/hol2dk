@@ -1,10 +1,36 @@
 NOTES
 -----
 
+## 13/01/25
+
+Files raising a stack overflow:
+
+CONTINUOUS_AT_WINDING_NUMBER.v
+COVERING_SPACE_CEXP_PUNCTURED_PLANE.v
+E_APPROX_32.v
+HAS_INTEGRAL_TWIZZLE_INTERVAL.v
+HOMEOMORPHIC_MONOTONE_IMAGE_INTERVAL_part_56.v
+INESSENTIAL_NEIGHBOURHOOD_EXTENSION_LOGARITHM_part_3.v
+INESSENTIAL_NEIGHBOURHOOD_EXTENSION_LOGARITHM_part_4.v
+LOG2_APPROX_32_part_1.v
+LOG2_APPROX_32_part_2.v
+PI2_BOUNDS.v
+PI_APPROX_32_part_10.v
+PI_APPROX_32_part_11.v
+PI_APPROX_32_part_1.v
+PI_APPROX_32_part_2.v
+PI_APPROX_32_part_3.v
+PI_APPROX_32_part_4.v
+PI_APPROX_32_part_5.v
+PI_APPROX_32_part_6.v
+PI_APPROX_32_part_7.v
+PI_APPROX_32_part_8.v
+PI_APPROX_32_part_9.v
+SCHOTTKY_part_1.v
+
 ## 30/11/24
 
 adding the alignment of real numbers double the coq checking time:
-
 
 Performance on 30/11/24
 -----------------------
