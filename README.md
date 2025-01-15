@@ -350,11 +350,10 @@ Additional files required for `hol2dk`:
 - `xdk.ml`: translation to Dedukti of types, terms and proofs.
 - `xfiles.ml`: functions to compute dependencies and theorems of HOL-Light files.
 - `xnames.ml`: functions for dumping the index of named theorems.
-- `xci.ml`: slightly truncated version of the HOL-Light file `hol.ml` used for testing.
 
 Note that all these files can be used in the OCaml toplevel as well by removing the `open` instructions and by adding `unset_jrh_lexer;;` and `set_jrh_lexer;;` at the beginning and at the end of the file.
 
-Files necessary for the export to Coq: `encoding.lp`, `erasing.lp`, `renaming.lp`, `HOLLight.v`.
+Files necessary for the export to Coq: all the lp and v files.
 
 Generated file types
 --------------------
