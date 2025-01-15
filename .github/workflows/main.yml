@@ -15,6 +15,7 @@ jobs:
         hol-light-commit: [master] # Release-3.0.0]
         lambdapi-version: [master] # >= 31aef37c > 2.5.1
         dedukti-version: [2.7]
+        mapping: [With_nat, With_N]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -103,7 +104,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output/hol_upto_arith
           cd output/hol_upto_arith
-          hol2dk config hol_upto_arith.ml HOLLight
+          hol2dk config hol_upto_arith.ml HOLLight ../../${{ mapping }}.v ../../${{ mapping }}.lp ../../${{ mapping }}.mk
           make split
           make -j3 lp
           make -j3 v

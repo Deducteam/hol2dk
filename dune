@@ -5,7 +5,7 @@
 )
 
 (install
- (files HOLLight.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp erasing.lp fusion.ml bool.ml equal.ml xnames.ml patch unpatch config Makefile dep-lpo dep-vo progress README.md)
+ (files With_nat.v With_N.v _CoqProject lambdapi.pkg theory_hol.dk theory_hol.lp encoding.lp renaming.lp With_nat.lp With_N.lp With_nat.dk With_N.dk fusion.ml bool.ml equal.ml xnames.ml patch unpatch config Makefile dep-lpo dep-vo progress README.md)
  (section share)
  (package hol2dk)
 )
