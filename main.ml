@@ -298,8 +298,8 @@ let make nb_proofs dg b =
   check "lp" "$(LAMBDAPI) check -v0 -w -c" (fun _ _ -> ());
 
   (* v files generation *)
-  out oc "\n.PHONY: v\nv: HOLLight.v theory_hol.v \
-          %s_types.v %s_terms.v %s_axioms.v %s_opam.v" b b b b;
+  out oc "\n.PHONY: v\nv: %s.v theory_hol.v \
+          %s_types.v %s_terms.v %s_axioms.v %s_opam.v" !Xlp.root_path b b b b;
   for i = 1 to nb_parts do
     out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
             %s_part_%d.v" b i b i b i
@@ -309,15 +309,17 @@ let make nb_proofs dg b =
           --encoding $(HOL2DK_DIR)/encoding.lp \
           --renaming $(HOL2DK_DIR)/renaming.lp \
           --erasing $(HOL2DK_DIR)/erasing.lp \
-          --use-notations --requiring HOLLight.v";
+          --use-notations --requiring %s.v" !Xlp.root_path;
   out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
   out oc " > $@\n";
   out oc ".PHONY: clean-v\nclean-v:\n\trm -f theory_hol.v %s*.v\n" b;
 
   (* coq files checking *)
-  let clean oc _b = out oc " HOLLight.vo *.vo[sk] *.glob .*.aux .[nl]ia.cache" in
-  check "v" "coqc -R . HOLLight" clean;
-  out oc "theory_hol.vo: HOLLight.vo\n";
+  let clean oc _b =
+    out oc " %s.vo *.vo[sk] *.glob .*.aux .[nl]ia.cache" !Xlp.root_path in
+  let c = Printf.sprintf "coqc -R . %s" !Xlp.root_path in
+  check "v" c clean;
+  out oc "theory_hol.vo: %s.vo\n" !Xlp.root_path;
 
   (* clean-all target *)
   out oc "\n.PHONY: clean-all\nclean-all: \
