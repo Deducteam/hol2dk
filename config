@@ -99,7 +99,7 @@ parse_args() {
 
 echo create CONFIG ...
 echo '#!/bin/sh' > CONFIG
-echo $0 $* >> CONFIG
+echo hol2dk config $* >> CONFIG
 chmod a+x CONFIG
 
 parse_args $*
