@@ -17,19 +17,19 @@ TODO
 
 - pre-compute once and for all the type and term variables of axioms and definitions
 
+- pre-compute the type and term variables of every theorem ?
+
 - compute proof tree sizes in parallel ?
 
 - really remove useless proof steps to save memory (=> use files are not necessary afterwards)
+
+- get rid of use file? in pos files, set pos to -1 for unused theorems?
 
 - record times to generate proofs and term_abbrevs files of each theorem ?
 
 - optimize number of let's (use a let only if an abbreviation is used more than once)
 
-- remove base argument in all commands by using BASE file
-
 - rename file _term by _sig
-
-- use subterm_abbrevs even without using --sharing ? keep subterm_abbrevs at all ?
 
 - Makefile: add targets for dk output
 
@@ -41,15 +41,11 @@ TODO
 
 - beta-normalize hol-light terms ?
 
-- remove the need for sed after lambdapi export -o stt_coq
-
 - remove/comment code for mk? (i.e. use split as default)
 
 - improve efficiency of code outputing dk/lp (avoid multiple term traversals)
 
 - extend split command to dedukti output
-
-- get rid of use file? in pos files, set pos to -1 for unused theorems?
 
 - simplify/purge proofs in parallel?
 
@@ -57,8 +53,6 @@ TODO
 
 - replace terms of the form (@f _ x) by x if f is a function equal to
   the identity like I, NUMERAL
-
-- replace type variables like _1718 by better names like A
 
 - add v file checking in ci
 
