@@ -2,7 +2,7 @@
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Import HOLLight_Real.HOLLight_Real Rbase Rdefinitions Rbasic_fun.
+Require Import HOLLight_Real_With_nat.mappings Rbase Rdefinitions Rbasic_fun.
 
 Open Scope R_scope.
 
@@ -971,3 +971,210 @@ Proof. intro A. apply nr_mk_dest. Qed.
 
 Lemma axiom_40 : forall {A : Type'} (r : recspace (finite_sum (finite_sum A A) unit)), ((fun a : recspace (finite_sum (finite_sum A A) unit) => forall tybit1' : (recspace (finite_sum (finite_sum A A) unit)) -> Prop, (forall a' : recspace (finite_sum (finite_sum A A) unit), (exists a'' : finite_sum (finite_sum A A) unit, a' = ((fun a''' : finite_sum (finite_sum A A) unit => @CONSTR (finite_sum (finite_sum A A) unit) (NUMERAL 0) a''' (fun n : nat => @BOTTOM (finite_sum (finite_sum A A) unit))) a'')) -> tybit1' a') -> tybit1' a) r) = ((@_dest_tybit1 A (@_mk_tybit1 A r)) = r).
 Proof. intro A. apply nr_dest_mk. Qed.
+
+(*****************************************************************************)
+(* Library.Frag.frag (free Abelian group) *)
+(*****************************************************************************)
+
+Definition is_frag {A:Type'} (f:A -> Z) := @FINITE A (@GSPEC A (fun GEN_PVAR_709 : A => exists x : A, @SETSPEC A GEN_PVAR_709 (~ ((f x) = (int_of_num (NUMERAL 0%N)))) x)).
+
+Lemma is_frag0 (A:Type') : is_frag (fun _:A => 0%Z).
+Proof.
+  unfold is_frag, GSPEC, SETSPEC. rewrite FINITE_eq_finite, finite_list_NoDup.
+  exists nil. split. apply NoDup_nil.
+  apply fun_ext; intro a. apply prop_ext.
+  intros [a' [h1 h2]]. apply False_rec. apply h1. reflexivity.
+  intro h. apply False_rec. apply h.
+Qed.
+
+Definition frag A:Type' := subtype (is_frag0 A).
+
+Definition mk_frag : forall {A : Type'}, (A -> Z) -> frag A := fun A => mk (is_frag0 A).
+Definition dest_frag : forall {A : Type'}, (frag A) -> A -> Z := fun A => dest (is_frag0 A).
+
+Lemma axiom_41 : forall {A : Type'} (a : frag A), (@mk_frag A (@dest_frag A a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_42 : forall {A : Type'} (r : A -> Z), ((fun f : A -> Z => @FINITE A (@GSPEC A (fun GEN_PVAR_709 : A => exists x : A, @SETSPEC A GEN_PVAR_709 (~ ((f x) = (int_of_num (NUMERAL 0%N)))) x))) r) = ((@dest_frag A (@mk_frag A r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Library.grouptheory.group *)
+(*****************************************************************************)
+
+Definition Grp (A:Type') := prod (A -> Prop) (prod A (prod (A -> A) (A -> A -> A))).
+Definition Gcar {A:Type'} (G: Grp A) := fst G.
+Definition G0 {A:Type'} (G:Grp A) := fst (snd G).
+Definition Gop {A:Type'} (G:Grp A) := snd (snd (snd G)).
+Definition Ginv {A:Type'} (G:Grp A) := fst (snd (snd G)).
+
+Definition is_group {A:Type'} (r:Grp A) := IN (G0 r) (Gcar r)
+/\ ((forall x, IN x (Gcar r) -> IN (Ginv r x) (Gcar r))
+/\ ((forall x y, (IN x (Gcar r) /\ (IN y (Gcar r))) -> IN (Gop r x y) (Gcar r))
+/\ ((forall x y z, (IN x (Gcar r) /\ (IN y (Gcar r) /\ IN z (Gcar r))) ->
+Gop r x (Gop r y z) = Gop r (Gop r x y) z)
+/\ ((forall x, IN x (Gcar r) -> (Gop r (G0 r) x = x) /\ (Gop r x (G0 r) = x))
+/\ (forall x, IN x (Gcar r) -> (Gop r (Ginv r x) x = G0 r) /\ (Gop r x (Ginv r x) = G0 r)))))).
+
+Definition g0 (A:Type') : Grp A := pair (fun x => x = el A) (pair (el A) (pair (fun _ => el A) (fun _ _ => el A))).
+
+Lemma is_group0 (A:Type') : is_group (g0 A).
+Proof. firstorder. Qed.
+
+Definition Group (A:Type') := subtype (is_group0 A).
+
+Definition group : forall {A : Type'}, Grp A -> Group A := fun A => mk (is_group0 A).
+Definition group_operations : forall {A : Type'}, (Group A) -> Grp A := fun A => dest (is_group0 A).
+
+Lemma axiom_43 : forall {A : Type'} (a : Group A), (@group A (@group_operations A a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_44 : forall {A : Type'} (r : Grp A), is_group r = (group_operations (group r) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Library.Matroids.matroid *)
+(*****************************************************************************)
+
+Definition SUBSET {A : Type'} : (A -> Prop) -> (A -> Prop) -> Prop := fun s : A -> Prop => fun t : A -> Prop => forall x : A, (@IN A x s) -> @IN A x t.
+
+Definition is_matroid {A:Type'} m := (forall s : A -> Prop, (@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) -> @SUBSET A (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s) (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ ((forall s : A -> Prop, (@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) -> @SUBSET A s (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)) /\ ((forall s : A -> Prop, forall t : A -> Prop, ((@SUBSET A s t) /\ (@SUBSET A t (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m))) -> @SUBSET A (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s) (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m t)) /\ ((forall s : A -> Prop, (@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) -> (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)) = (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)) /\ ((forall s : A -> Prop, forall x : A, ((@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ (@IN A x (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s))) -> exists s' : A -> Prop, (@FINITE A s') /\ ((@SUBSET A s' s) /\ (@IN A x (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s')))) /\ (forall s : A -> Prop, forall x : A, forall y : A, ((@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ ((@IN A x (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ ((@IN A y (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m (@INSERT A x s))) /\ (~ (@IN A y (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)))))) -> @IN A x (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m (@INSERT A y s))))))).
+
+Lemma is_matroid_def {A:Type'} m : is_matroid m = ((forall s : A -> Prop, (@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) -> @SUBSET A (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s) (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ ((forall s : A -> Prop, (@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) -> @SUBSET A s (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)) /\ ((forall s : A -> Prop, forall t : A -> Prop, ((@SUBSET A s t) /\ (@SUBSET A t (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m))) -> @SUBSET A (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s) (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m t)) /\ ((forall s : A -> Prop, (@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) -> (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)) = (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)) /\ ((forall s : A -> Prop, forall x : A, ((@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ (@IN A x (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s))) -> exists s' : A -> Prop, (@FINITE A s') /\ ((@SUBSET A s' s) /\ (@IN A x (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s')))) /\ (forall s : A -> Prop, forall x : A, forall y : A, ((@SUBSET A s (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ ((@IN A x (@fst (A -> Prop) ((A -> Prop) -> A -> Prop) m)) /\ ((@IN A y (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m (@INSERT A x s))) /\ (~ (@IN A y (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m s)))))) -> @IN A x (@snd (A -> Prop) ((A -> Prop) -> A -> Prop) m (@INSERT A y s)))))))).
+Proof. reflexivity. Qed.
+
+Lemma is_matroid0 (A:Type') : is_matroid (pair (fun _:A => False) (fun x => x)).
+Proof. firstorder. Qed.
+
+Definition Matroid (A:Type') := subtype (is_matroid0 A).
+
+Definition matroid : forall {A : Type'}, (prod (A -> Prop) ((A -> Prop) -> A -> Prop)) -> Matroid A := fun A => mk (is_matroid0 A).
+
+Definition dest_matroid : forall {A : Type'}, (Matroid A) -> prod (A -> Prop) ((A -> Prop) -> A -> Prop) := fun A => dest (is_matroid0 A).
+
+Lemma axiom_45 : forall {A : Type'} (a : Matroid A), (@matroid A (@dest_matroid A a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_46 : forall {A : Type'} (r : prod (A -> Prop) ((A -> Prop) -> A -> Prop)), (is_matroid r) = ((@dest_matroid A (@matroid A r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Library.Analysis.topology *)
+(*****************************************************************************)
+
+Definition INTER {A : Type'} : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun s : A -> Prop => fun t : A -> Prop => @GSPEC A (fun GEN_PVAR_2 : A => exists x : A, @SETSPEC A GEN_PVAR_2 ((@IN A x s) /\ (@IN A x t)) x).
+
+Definition UNIONS {A : Type'} : ((A -> Prop) -> Prop) -> A -> Prop := fun U : (A -> Prop) -> Prop => @GSPEC A (fun GEN_PVAR_1 : A => exists x : A, @SETSPEC A GEN_PVAR_1 (exists u : A -> Prop, (@IN (A -> Prop) u U) /\ (@IN A x u)) x).
+
+Definition istopology {A : Type'} : ((A -> Prop) -> Prop) -> Prop :=
+  fun U => (IN EMPTY U)
+        /\ ((forall s t, ((IN s U) /\ (IN t U)) -> IN (INTER s t) U)
+           /\ (forall k, SUBSET k U -> IN (UNIONS k) U)).
+
+Lemma istopology_def {A : Type'} : (@istopology A) = (fun U : (A -> Prop) -> Prop => (@IN (A -> Prop) (@EMPTY A) U) /\ ((forall s : A -> Prop, forall t : A -> Prop, ((@IN (A -> Prop) s U) /\ (@IN (A -> Prop) t U)) -> @IN (A -> Prop) (@INTER A s t) U) /\ (forall k : (A -> Prop) -> Prop, (@SUBSET (A -> Prop) k U) -> @IN (A -> Prop) (@UNIONS A k) U))).
+Proof. exact (eq_refl (@istopology A)). Qed.
+
+Lemma istopology0 (A:Type') : @istopology A (fun _ => True).
+Proof. firstorder. Qed.
+
+Definition Topology (A:Type') := subtype (istopology0 A).
+
+Definition topology : forall {A : Type'}, ((A -> Prop) -> Prop) -> Topology A := fun A => mk (istopology0 A).
+Definition open_in : forall {A : Type'}, (Topology A) -> (A -> Prop) -> Prop := fun A => dest (istopology0 A).
+
+Lemma axiom_47 : forall {A : Type'} (a : Topology A), (@topology A (@open_in A a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_48 : forall {A : Type'} (r : (A -> Prop) -> Prop), ((fun t : (A -> Prop) -> Prop => @istopology A t) r) = ((@open_in A (@topology A r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Multivariate.Metric.net *)
+(*****************************************************************************)
+
+Definition is_net {A:Type'} (g: prod ((A -> Prop) -> Prop) (A -> Prop)) :=
+  forall s t, ((IN s (fst g)) /\ (IN t (fst g))) -> IN (INTER s t) (fst g).
+
+Lemma is_net_def {A:Type'} g : is_net g = forall s : A -> Prop, forall t : A -> Prop, ((@IN (A -> Prop) s (@fst ((A -> Prop) -> Prop) (A -> Prop) g)) /\ (@IN (A -> Prop) t (@fst ((A -> Prop) -> Prop) (A -> Prop) g))) -> @IN (A -> Prop) (@INTER A s t) (@fst ((A -> Prop) -> Prop) (A -> Prop) g).
+Proof. reflexivity. Qed.
+
+Lemma is_net0 (A:Type') : @is_net A (pair (fun _ => True) (el _)).
+Proof. firstorder. Qed.
+
+Definition net (A:Type') := subtype (is_net0 A).
+
+Definition mk_net : forall {A : Type'}, (prod ((A -> Prop) -> Prop) (A -> Prop)) -> net A := fun A => mk (is_net0 A).
+Definition dest_net : forall {A : Type'}, (net A) -> prod ((A -> Prop) -> Prop) (A -> Prop) := fun A => dest (is_net0 A).
+
+Lemma axiom_49 : forall {A : Type'} (a : net A), (@mk_net A (@dest_net A a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_50 : forall {A : Type'} (r : prod ((A -> Prop) -> Prop) (A -> Prop)), is_net r = ((@dest_net A (@mk_net A r)) = r).
+Proof. intros A a. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Multivariate.Metric.metric *)
+(*****************************************************************************)
+
+Definition MS (A:Type') := prod (A -> Prop) ((prod A A) -> R).
+
+Definition Mcar {A:Type'} : MS A -> A -> Prop := fst.
+Definition Mdist {A:Type'} : MS A -> prod A A -> R := snd.
+
+Definition is_metric_space {A : Type'} : MS A -> Prop :=
+  fun M => (forall x y, ((IN x (Mcar M)) /\ (IN y (Mcar M))) ->
+                Rle (R_of_N (NUMERAL 0%N)) (Mdist M (@pair A A x y)))
+        /\ ((forall x y, ((IN x (Mcar M)) /\ (IN y (Mcar M))) ->
+                   ((Mdist M (pair x y)) = (R_of_N (NUMERAL 0%N))) = (x = y))
+           /\ ((forall x y, ((IN x (Mcar M)) /\ (IN y (Mcar M))) ->
+                      (Mdist M (pair x y)) = (Mdist M (pair y x)))
+              /\ (forall x y z, ((IN x (Mcar M)) /\ ((IN y (Mcar M)) /\ (IN z (Mcar M)))) ->
+                          Rle (Mdist M (pair x z)) (Rplus (Mdist M (pair x y)) (Mdist M (pair y z)))))).
+
+Lemma is_metric_space_def {A : Type'} : (@is_metric_space A) = (fun M : prod (A -> Prop) ((prod A A) -> R) => (forall x : A, forall y : A, ((@IN A x (@fst (A -> Prop) ((prod A A) -> R) M)) /\ (@IN A y (@fst (A -> Prop) ((prod A A) -> R) M))) -> Rle (R_of_N (NUMERAL 0%N)) (@snd (A -> Prop) ((prod A A) -> R) M (@pair A A x y))) /\ ((forall x : A, forall y : A, ((@IN A x (@fst (A -> Prop) ((prod A A) -> R) M)) /\ (@IN A y (@fst (A -> Prop) ((prod A A) -> R) M))) -> ((@snd (A -> Prop) ((prod A A) -> R) M (@pair A A x y)) = (R_of_N (NUMERAL 0%N))) = (x = y)) /\ ((forall x : A, forall y : A, ((@IN A x (@fst (A -> Prop) ((prod A A) -> R) M)) /\ (@IN A y (@fst (A -> Prop) ((prod A A) -> R) M))) -> (@snd (A -> Prop) ((prod A A) -> R) M (@pair A A x y)) = (@snd (A -> Prop) ((prod A A) -> R) M (@pair A A y x))) /\ (forall x : A, forall y : A, forall z : A, ((@IN A x (@fst (A -> Prop) ((prod A A) -> R) M)) /\ ((@IN A y (@fst (A -> Prop) ((prod A A) -> R) M)) /\ (@IN A z (@fst (A -> Prop) ((prod A A) -> R) M)))) -> Rle (@snd (A -> Prop) ((prod A A) -> R) M (@pair A A x z)) (Rplus (@snd (A -> Prop) ((prod A A) -> R) M (@pair A A x y)) (@snd (A -> Prop) ((prod A A) -> R) M (@pair A A y z))))))).
+Proof. exact (eq_refl (@is_metric_space A)). Qed.
+
+Lemma is_metric_space0 (A:Type') : @is_metric_space A (pair (fun _ => False) (fun _ => 0%R)).
+Proof.
+  split; unfold Mcar, Mdist, fst, snd, IN, NUMERAL; rewrite R_of_N0. reflexivity.
+  split. tauto. split. reflexivity. tauto.
+Qed.
+
+Definition Metric (A:Type') := subtype (is_metric_space0 A).
+
+Definition metric : forall {A : Type'}, (prod (A -> Prop) ((prod A A) -> R)) -> Metric A := fun A => mk (is_metric_space0 A).
+Definition dest_metric : forall {A : Type'}, (Metric A) -> prod (A -> Prop) ((prod A A) -> R) := fun A => dest (is_metric_space0 A).
+
+Lemma axiom_51 : forall {A : Type'} (a : Metric A), (@metric A (@dest_metric A a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_52 : forall {A : Type'} (r : prod (A -> Prop) ((prod A A) -> R)), ((fun m : prod (A -> Prop) ((prod A A) -> R) => @is_metric_space A m) r) = ((@dest_metric A (@metric A r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
+
+(*****************************************************************************)
+(* Multivariate.Clifford.multivector *)
+(*****************************************************************************)
+
+Definition is_multivector (A:Type') (s:N -> Prop) := SUBSET s (dotdot 1 (dimindex (@UNIV A))).
+
+
+Lemma is_multivector0 (A:Type') : is_multivector A (fun n => n = 1).
+Proof.
+  unfold is_multivector, SUBSET, dotdot, dimindex, IN, GSPEC, SETSPEC.
+  intros x e. subst x. exists 1%N. split. 2: reflexivity. split. reflexivity.
+  destruct (prop_degen (FINITE (@UNIV A))); rewrite H.
+  rewrite COND_True. apply CARD_ge_1. rewrite H. exact Logic.I.
+  rewrite COND_False. unfold NUMERAL, BIT1. lia.
+Qed.
+
+Definition Multivector (A:Type') := subtype (is_multivector0 A).
+
+Definition mk_multivector : forall {N' : Type'}, (N -> Prop) -> Multivector N' := fun A => mk (is_multivector0 A).
+
+Definition dest_multivector : forall {N' : Type'}, (Multivector N') -> N -> Prop := fun A => dest (is_multivector0 A).
+
+Lemma axiom_53 : forall {N' : Type'} (a : Multivector N'), (@mk_multivector N' (@dest_multivector N' a)) = a.
+Proof. intros A a. apply mk_dest. Qed.
+
+Lemma axiom_54 : forall {N' : Type'} (r : N -> Prop), ((fun s : N -> Prop => @SUBSET N s (dotdot (NUMERAL (BIT1 0%N)) (@dimindex N' (@UNIV N')))) r) = ((@dest_multivector N' (@mk_multivector N' r)) = r).
+Proof. intros A r. apply dest_mk. Qed.
