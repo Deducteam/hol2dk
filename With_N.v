@@ -1268,7 +1268,6 @@ Proof. intros A r. apply dest_mk. Qed.
 
 Definition is_multivector (A:Type') (s:N -> Prop) := SUBSET s (dotdot 1 (dimindex (@UNIV A))).
 
-
 Lemma is_multivector0 (A:Type') : is_multivector A (fun n => n = 1).
 Proof.
   unfold is_multivector, SUBSET, dotdot, dimindex, IN, GSPEC, SETSPEC.
