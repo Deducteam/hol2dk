@@ -352,6 +352,8 @@ let dump after_hol f b =
     if after_hol then out oc "#use \"hol.ml\";;\nneeds \"%s\";;" f
     else out oc "#use \"%s\";;" f
   in
+  let dg = dep_graph (files()) in
+  let deps = trans_file_deps dg (if after_hol then ["hol.ml";f] else [f]) in
   let cmd oc after_hol =
     if after_hol then out oc " dump" else out oc " dump-before-hol" in
   out oc
@@ -361,15 +363,14 @@ let dump after_hol f b =
 #require "zarith";;
 #require "unix";;
 #load "bignum.cmo";;
-let dump_filename = "%s.prf";; 
+let dump_filename = "%s.prf";;
 %a
 close_out oc_dump;;
 dump_nb_proofs "%s.nbp";;
 dump_signature "%s.sig";;
 #use "xnames.ml";;
 dump_map_thid_name "%s.thm" %a;;
-|} cmd after_hol f b use after_hol b b b
-(olist ostring) (trans_file_deps (dep_graph (files())) f);
+|} cmd after_hol f b use after_hol b b b (olist ostring) deps;
   close_out oc;
   Sys.command ("ocaml -w -A -I . "^ml_file)
 ;;
@@ -451,7 +452,7 @@ and command = function
   (* Print dependencies of the ml file f. *)
   | ["dep";f] ->
      let dg = dep_graph (files()) in
-     log "%a\n" (list_sep " " string) (trans_file_deps dg f);
+     log "%a\n" (list_sep " " string) (trans_file_deps dg [f]);
      0
 
   (* Print dependencies of all ml files in the current directory and
@@ -472,7 +473,7 @@ and command = function
      let dg = dep_graph (files()) in
      List.iter
        (fun d -> List.iter (log "%s %s\n" d) (thms_of_file d))
-       (trans_file_deps dg f);
+       (trans_file_deps dg [f]);
      0
 
   (* Print the names of theorems proved in all files in the current

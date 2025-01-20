@@ -2,7 +2,7 @@
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Import HOLLight_Real_With_nat.mappings Rbase Rdefinitions Rbasic_fun.
+Require Import HOLLight_Real_With_nat.mappings Coq.Reals.Rbase Coq.Reals.Rdefinitions Coq.Reals.Rbasic_fun.
 
 Open Scope R_scope.
 
@@ -334,7 +334,7 @@ Proof. rewrite <- eq_real_model. apply (morph_one real_of_R_morph). Qed.
 Lemma one_eq : 1%R = R_of_real (real_of_num 1).
 Proof. rewrite <- one_morph_R, R_of_real_of_R. reflexivity. Qed.
 
-Require Import Lia.
+Require Import Coq.micromega.Lia.
 
 Lemma real_of_num_def : INR = (fun m : nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
 Proof.
@@ -361,7 +361,7 @@ Proof.
   induction y; simpl. rewrite h0. reflexivity. rewrite hs, IHy. reflexivity.
 Qed.
 
-Require Import RIneq.
+Require Import Coq.Reals.RIneq.
 
 Open Scope R_scope.
 
@@ -466,7 +466,7 @@ Proof.
   apply IZR_integer. exists (int_of_real r). symmetry. exact h.
 Qed.
 
-Require Import Lra R_Ifp.
+Require Import Coq.micromega.Lra Coq.Reals.R_Ifp.
 
 Lemma up_IZR z : up (IZR z) = (z + 1)%Z.
 Proof. symmetry; apply tech_up; rewrite plus_IZR; lra.
@@ -545,7 +545,7 @@ Proof.
   right. exists a. exists s. split. reflexivity. apply IHh. exact H.  
 Qed.
 
-Require Import List.
+Require Import Coq.Lists.List.
 
 Lemma finite_list_NoDup {A:Type'} (s:A -> Prop):
   finite s = (exists l, NoDup l /\ s = fun x => In x l).
@@ -601,7 +601,7 @@ Proof.
   rewrite e. simpl. left. reflexivity.
 Qed.
 
-Require Import Permutation.
+Require Import Coq.Sorting.Permutation.
 
 Lemma eq_mod_permut A (l: list A):
   forall l', (forall x, In x l = In x l') -> NoDup l -> NoDup l' -> Permutation l l'.

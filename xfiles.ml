@@ -63,9 +63,9 @@ let out_dep_graph oc dg =
 (* [file_deps dg f] returns the immediate dependencies of [f] in [dg]. *)
 let file_deps dg filename = try MapStr.find filename dg with Not_found -> [];;
 
-(* [trans_deps dg f] returns all the dependencies of [f] in [dg],
-   recursively. *)
-let trans_file_deps dg filename =
+(* [trans_deps dg filenames] returns all the dependencies of
+   [filenames] in [dg], recursively. *)
+let trans_file_deps dg filenames =
   let rec trans visited to_visit =
     match to_visit with
     | [] -> List.rev visited
@@ -76,7 +76,7 @@ let trans_file_deps dg filename =
          if List.for_all (fun f -> List.mem f visited) fs then
            trans (f :: visited) to_visit
          else trans visited (fs @ f :: to_visit)
-  in trans [] [filename]
+  in trans [] filenames
 ;;
 
 (* unit test *)
@@ -85,4 +85,4 @@ let _ =
     List.fold_left (fun dg (f,deps) -> MapStr.add f deps dg) MapStr.empty
       ["a",["b";"c"]; "b",["d";"e"]; "c",["f";"g"]]
   in
-  assert (trans_file_deps dg "a" = ["d";"e";"b";"f";"g";"c";"a"])
+  assert (trans_file_deps dg ["a"] = ["d";"e";"b";"f";"g";"c";"a"])

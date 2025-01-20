@@ -52,7 +52,7 @@ $(BASE_FILES:%=%.lp) &:
 	$(HOL2DK) sig $(BASE).lp
 
 .PHONY: sig
-sig: $(BASE_FILES:%=%.lp)
+sig: $(BASE_FILES:%=%.vo)
 
 .PHONY: single
 single: $(BASE).lp
@@ -308,24 +308,24 @@ all:
 	$(MAKE) v
 	$(MAKE) vo
 
-.PHONY: vtodo
-vtodo:
+.PHONY: votodo
+votodo:
 	find . -name '*.v' | sort > /tmp/vfiles
 	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
-	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > vtodo
-	@export v=`wc -l vtodo | sed -e 's/ vtodo//'`; export n=`find . -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
+	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > votodo
+	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
 
 .PHONY: lptodo
-lptodo: vtodo
-	sed -e 's/\.v$$/.lp/' vtodo > lptodo
+lptodo: votodo
+	sed -e 's/\.v$$/.lp/' votodo > lptodo
 
 .PHONY: clean-lptodo
 clean-lptodo: lptodo
 	xargs -a lptodo rm -f
 
-.PHONY: clean-vtodo
-clean-vtodo: vtodo
-	xargs -a vtodo rm -f
+.PHONY: clean-votodo
+clean-votodo: votodo
+	xargs -a votodo rm -f
 
 .PHONY: lpsize
 lpsize:
