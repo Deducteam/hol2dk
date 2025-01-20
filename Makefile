@@ -49,21 +49,15 @@ rm-thp:
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 
 .PHONY: lpsig
-lpsig: $(BASE_FILES:%=%.lp) $(BASE)_type_abbrevs.lp
+lpsig: $(BASE_FILES:%=%.lp)
 
 $(BASE_FILES:%=%.lp) &:
 	$(HOL2DK) sig $(BASE).lp
 
-.PHONY: type_abbrevs
-type_abbrevs: $(BASE)_type_abbrevs.lp
-
-$(BASE)_type_abbrevs.lp:
-	$(HOL2DK) type_abbrevs $(BASE)
-
 .PHONY: sig
 sig: $(BASE_FILES:%=%.vo)
 
-.PRECIOUS: $(BASE_FILES:%=%.v) $(BASE)_type_abbrevs.v
+.PRECIOUS: $(BASE_FILES:%=%.v)
 
 include deps.mk
 theory_hol.vo: $(VOFILES)
@@ -119,7 +113,7 @@ find-big-files:
 	@sort -u /tmp/big-files
 
 .PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(BASE)_type_abbrevs.lp $(BIG_FILES:%=%.max)
+lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 	$(HOL2DK) type_abbrevs $(BASE)
