@@ -54,16 +54,12 @@ lpsig: $(BASE_FILES:%=%.lp)
 $(BASE_FILES:%=%.lp) &:
 	$(HOL2DK) sig $(BASE).lp
 
+.PHONY: vsig
+vsig: $(BASE_FILES:%=%.v)
+
 .PHONY: sig
-sig: $(BASE_FILES:%=%.vo)
-
-.PRECIOUS: $(BASE_FILES:%=%.v)
-
-include deps.mk
-theory_hol.vo: $(VOFILES)
-$(BASE)_types.vo: theory_hol.vo
-$(BASE)_terms: $(BASE)_type_abbrevs.vo
-$(BASE)_axioms: $(BASE)_terms.vo
+sig: vsig
+	$(MAKE) INCLUDE_VO_MK=1 $(BASE_FILES:%=%.vo)
 
 .PHONY: single
 single: $(BASE).lp
@@ -245,7 +241,8 @@ ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > $@
+	cp deps.mk $@
+	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk >> $@
 endif
 
 .PHONY: dep
