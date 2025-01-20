@@ -46,13 +46,31 @@ rm-use:
 rm-thp:
 	rm -f $(BASE).thp
 
-BASE_FILES := $(BASE)_types $(BASE)_type_abbrevs $(BASE)_terms $(BASE)_axioms
+BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
+
+.PHONY: lpsig
+lpsig: $(BASE_FILES:%=%.lp) $(BASE)_type_abbrevs.lp
 
 $(BASE_FILES:%=%.lp) &:
 	$(HOL2DK) sig $(BASE).lp
 
+.PHONY: type_abbrevs
+type_abbrevs: $(BASE)_type_abbrevs.lp
+
+$(BASE)_type_abbrevs.lp:
+	$(HOL2DK) type_abbrevs $(BASE)
+
 .PHONY: sig
 sig: $(BASE_FILES:%=%.vo)
+
+.PRECIOUS: $(BASE_FILES:%=%.v) $(BASE)_type_abbrevs.v
+
+include deps.mk
+theory_hol.vo: $(VOFILES)
+$(BASE)_types.vo: theory_hol.vo
+$(BASE)_type_abbrevs: $(BASE)_types.vo
+$(BASE)_terms: $(BASE)_type_abbrevs.vo
+$(BASE)_axioms: $(BASE)_terms.vo
 
 .PHONY: single
 single: $(BASE).lp
@@ -101,7 +119,7 @@ find-big-files:
 	@sort -u /tmp/big-files
 
 .PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
+lp: $(BASE_FILES:%=%.lp) $(BASE)_type_abbrevs.lp $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 	$(HOL2DK) type_abbrevs $(BASE)
@@ -234,8 +252,7 @@ ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 
 vo.mk: lpo.mk
-	cp deps.mk $@
-	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk >> $@
+	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > $@
 endif
 
 .PHONY: dep
