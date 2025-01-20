@@ -259,6 +259,9 @@ Qed.
 Lemma real_of_R_morph : morphism real_of_R.
 Proof. apply Rmorph_toP. Qed.
 
+Lemma R_of_real_morph : morphism R_of_real.
+Proof. apply Rmorph_toP. Qed.
+
 Lemma le_morph_R x y : le x y = le (real_of_R x) (real_of_R y).
 Proof.
   generalize (morph_le real_of_R_morph x y); intros [h i]. apply prop_ext; auto.
@@ -336,56 +339,68 @@ Proof. rewrite <- eq_real_model. apply (morph_one real_of_R_morph). Qed.
 Lemma one_eq : 1%R = R_of_real (real_of_num 1).
 Proof. rewrite <- one_morph_R, R_of_real_of_R. reflexivity. Qed.
 
-(*Lemma INR_eq n : INR (S n) = (INR n + 1)%R.
-Proof.
-  induction n; simpl.
-  rewrite Rplus_0_l. reflexivity.
-  destruct n as [|n]. reflexivity. reflexivity.
-Qed.
-
-Require Import Lia.
-
-Lemma real_of_num_def : INR = (fun m : nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
-Proof.
-  change (INR = fun m : nat => R_of_real (real_of_num m)).  
-  apply fun_ext. induction x.
-  apply zero_eq.
-  rewrite INR_eq, IHx. rewrite add_eq, real_of_R_of_real, one_morph_R.
-  rewrite <- real_add_of_num. f_equal. f_equal. lia.
-Qed.*)
-
-(*Definition R_of_N n :=
+Definition R_of_N n :=
   match n with
   | N0 => 0%R
   | N.pos p => IPR p
   end.
 
-Lemma real_of_num_def : R_of_N = (fun m : N => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
-Proof.
-  apply fun_ext; intro n. destruct n.
-  apply zero_eq.
-  induction p.
-Qed.*)
-
-Definition R_of_N n := R_of_real (real_of_num n). (*FIXME*)
-
-Lemma real_of_num_def : R_of_N = (fun m : N => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
-Proof. reflexivity. Qed.
-
-Lemma R_of_N0 : R_of_N 0 = 0%R.
-Proof. symmetry. apply zero_eq. Qed.
-
-Lemma R_of_N1 : R_of_N 1 = 1%R.
-Proof. symmetry. apply one_eq. Qed.
-
-Lemma R_of_N_add p q : R_of_N (p + q) = (R_of_N p + R_of_N q)%R.
-Proof.
-  unfold R_of_N. rewrite add_eq. rewrite !real_of_R_of_real. f_equal.
-  apply real_add_of_num.
-Qed.
+Require Import Lra.
 
 Lemma R_of_N_succ n : R_of_N (N.succ n) = (R_of_N n + 1)%R.
-Proof. rewrite succ_eq_add_1, <- R_of_N1. apply R_of_N_add. Qed.
+Proof.
+  destruct n; simpl. unfold IPR. lra. rewrite Rplus_comm. apply succ_IPR.
+Qed.
+
+Lemma R_of_N_add p q : R_of_N (p + q)%N = (R_of_N p + R_of_N q)%R.
+Proof.
+  destruct p; destruct q; simpl. lra. unfold IPR. lra. unfold IPR. lra.
+  apply plus_IPR.
+Qed.
+
+Lemma Npos_succ p : N.pos (Pos.succ p) = N.pos p + 1.
+Proof. lia. Qed.
+
+Lemma treal_eq_of_num_add m n :
+  treal_eq (treal_of_num (m + n))
+  = treal_eq (treal_add (treal_of_num m) (treal_of_num n)).
+Proof.
+  apply eq_class_intro. apply treal_eq_sym. apply treal_eq_trans.
+  symmetry. apply thm_TREAL_OF_NUM_ADD.
+Qed.
+
+Lemma mk_real_treal_eq_add p q :
+  mk_real (treal_eq (treal_add (treal_of_num p) (treal_of_num q)))
+  = (mk_real (treal_eq (treal_of_num p)) + mk_real (treal_eq (treal_of_num q)))%R.
+Proof.
+  rewrite add_eq. unfold mk_real. f_equal. rewrite !real_of_R_of_real.
+  rewrite <- treal_eq_of_num_add.
+  change (real_of_num (p + q) = add (real_of_num p) (real_of_num q)).
+  rewrite real_add_of_num. reflexivity.
+Qed.
+
+Lemma IPR_eq_mk_real p : IPR p = mk_real (treal_eq (treal_of_num (N.pos p))).
+Proof.
+  pattern p; revert p; apply Pos.peano_ind.
+  apply one_eq.
+  intros p hp. rewrite succ_IPR, Rplus_comm.
+  assert (e: IPR 1 = mk_real (treal_eq (treal_of_num 1))). apply one_eq.
+  rewrite hp, e, Npos_succ, <- mk_real_treal_eq_add, <- treal_eq_of_num_add.
+  reflexivity.
+Qed.
+
+Lemma real_of_num_def : R_of_N = (fun m : N => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)).
+Proof.
+  apply fun_ext; intro n.
+  change (R_of_N n = mk_real (treal_eq (treal_of_num n))).
+  destruct n; simpl. apply zero_eq. apply IPR_eq_mk_real.
+Qed.
+
+Lemma R_of_N0 : R_of_N 0 = 0%R.
+Proof. reflexivity. Qed.
+
+Lemma R_of_N1 : R_of_N 1 = 1%R.
+Proof. reflexivity. Qed.
 
 (*Fixpoint Rpower_nat r n : R :=
   match n with
