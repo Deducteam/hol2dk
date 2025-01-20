@@ -62,7 +62,6 @@ sig: $(BASE_FILES:%=%.vo)
 include deps.mk
 theory_hol.vo: $(VOFILES)
 $(BASE)_types.vo: theory_hol.vo
-$(BASE)_type_abbrevs: $(BASE)_types.vo
 $(BASE)_terms: $(BASE)_type_abbrevs.vo
 $(BASE)_axioms: $(BASE)_terms.vo
 
