@@ -556,13 +556,13 @@ Proof.
   apply IZR_integer. exists (int_of_real r). symmetry. exact h.
 Qed.
 
-Definition int_of_num (n:N): Z :=
+Definition Z_of_N (n:N): Z :=
   match n with
   | N0 => Z0
   | N.pos p => Z.pos p
   end.
 
-Lemma int_of_num_succ n : int_of_num (N.succ n) = (int_of_num n + 1)%Z.
+Lemma Z_of_N_succ n : Z_of_N (N.succ n) = (Z_of_N n + 1)%Z.
 Proof.
   destruct n. reflexivity.
   pattern p; revert p; apply Pos.peano_ind.
@@ -585,11 +585,11 @@ Proof. apply up_IZR. Qed.
 Lemma up_succ r : up (r + 1) = (up r + 1)%Z.
 Proof. apply up_shiftz. Qed.
 
-Lemma int_of_num_def : int_of_num = (fun _28789 : N => int_of_real (R_of_N _28789)).
+Lemma int_of_num_def : Z_of_N = (fun _28789 : N => int_of_real (R_of_N _28789)).
 Proof.
   apply fun_ext; intro n; pattern n; revert n; apply N.peano_ind; unfold int_of_real.
   rewrite R_of_N0, up0. reflexivity.
-  intro n. unfold int_of_real. rewrite int_of_num_succ, R_of_N_succ, up_succ. lia.
+  intro n. unfold int_of_real. rewrite Z_of_N_succ, R_of_N_succ, up_succ. lia.
 Qed.
 
 Close Scope R_scope.
@@ -1102,7 +1102,7 @@ Proof. intro A. apply nr_dest_mk. Qed.
 (* Library.Frag.frag (free Abelian group) *)
 (*****************************************************************************)
 
-Definition is_frag {A:Type'} (f:A -> Z) := @FINITE A (@GSPEC A (fun GEN_PVAR_709 : A => exists x : A, @SETSPEC A GEN_PVAR_709 (~ ((f x) = (int_of_num (NUMERAL 0%N)))) x)).
+Definition is_frag {A:Type'} (f:A -> Z) := @FINITE A (@GSPEC A (fun GEN_PVAR_709 : A => exists x : A, @SETSPEC A GEN_PVAR_709 (~ ((f x) = (Z_of_N (NUMERAL 0%N)))) x)).
 
 Lemma is_frag0 (A:Type') : is_frag (fun _:A => 0%Z).
 Proof.
@@ -1121,7 +1121,7 @@ Definition dest_frag : forall {A : Type'}, (frag A) -> A -> Z := fun A => dest (
 Lemma axiom_41 : forall {A : Type'} (a : frag A), (@mk_frag A (@dest_frag A a)) = a.
 Proof. intros A a. apply mk_dest. Qed.
 
-Lemma axiom_42 : forall {A : Type'} (r : A -> Z), ((fun f : A -> Z => @FINITE A (@GSPEC A (fun GEN_PVAR_709 : A => exists x : A, @SETSPEC A GEN_PVAR_709 (~ ((f x) = (int_of_num (NUMERAL 0%N)))) x))) r) = ((@dest_frag A (@mk_frag A r)) = r).
+Lemma axiom_42 : forall {A : Type'} (r : A -> Z), ((fun f : A -> Z => @FINITE A (@GSPEC A (fun GEN_PVAR_709 : A => exists x : A, @SETSPEC A GEN_PVAR_709 (~ ((f x) = (Z_of_N (NUMERAL 0%N)))) x))) r) = ((@dest_frag A (@mk_frag A r)) = r).
 Proof. intros A r. apply dest_mk. Qed.
 
 (*****************************************************************************)

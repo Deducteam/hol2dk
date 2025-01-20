@@ -304,7 +304,7 @@ builtin "axiom_25" ≔ axiom_25;
 builtin "axiom_26" ≔ axiom_26;
 //TODO: builtin "div" ≔ div;
 //TODO: builtin "rem" ≔ rem;
-builtin "int_of_num" ≔ int_of_num;
+builtin "Z_of_N" ≔ int_of_num;
 builtin "int_of_num_def" ≔ int_of_num_def;
 
 // finite_image
