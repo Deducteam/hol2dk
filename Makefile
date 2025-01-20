@@ -288,7 +288,8 @@ rm-cache:
 	rm -f .lia.cache .nia.cache
 
 .PHONY: opam
-opam: $(BASE)_opam.vo
+opam:
+	$(MAKE) INCLUDE_VO_MK=1 $(BASE)_opam.vo
 
 .PRECIOUS: $(BASE)_opam.v
 
