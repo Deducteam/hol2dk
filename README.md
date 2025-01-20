@@ -218,7 +218,7 @@ For instance, to translate the Multivariate library using the Coq type N for nat
 ```
 mkdir output
 cd output
-hol2dk config Multivariate/make_complex.ml HOLLight HOLLight_Real_With_N.mappings $HOL2DK_DIR/With_N.v BinNat Rbase Rdefinitions Rbasic_fun $HOL2DK_DIR/With_N.mk $HOL2DK_DIR/With_N.lp
+hol2dk config Multivariate/make_complex.ml HOLLight HOLLight_Real_With_N.mappings $HOL2DK_DIR/With_N.v Coq.NArith.BinNat Coq.Reals.Rbase Coq.Reals.Rdefinitions Coq.Reals.Rbasic_fun $HOL2DK_DIR/With_N.mk $HOL2DK_DIR/With_N.lp
 ```
 
 - you can then do in order:
