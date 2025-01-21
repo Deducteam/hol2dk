@@ -122,7 +122,12 @@ echo create _CoqProject ...
 echo "-R . $root_path ." > _CoqProject
 
 echo create MAPPING ...
-echo ${mapping:-$HOL2DK_DIR/With_N.lp} > MAPPING
+if test -z "$mapping"
+then
+    touch mapping.lp
+    mapping=mapping.lp
+fi
+echo $mapping > MAPPING
 
 echo create REQUIRING ...
 echo $requiring > REQUIRING
