@@ -46,13 +46,35 @@ rm-use:
 rm-thp:
 	rm -f $(BASE).thp
 
-BASE_FILES := $(BASE)_types $(BASE)_type_abbrevs $(BASE)_terms $(BASE)_axioms
+BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
+
+.PHONY: lpsig
+lpsig: $(BASE_FILES:%=%.lp)
 
 $(BASE_FILES:%=%.lp) &:
 	$(HOL2DK) sig $(BASE).lp
 
+.PHONY: vsig
+vsig: $(BASE_FILES:%=%.v)
+
 .PHONY: sig
-sig: $(BASE_FILES:%=%.lp)
+sig: vsig
+	$(MAKE) INCLUDE_VO_MK=1 $(BASE_FILES:%=%.vo)
+
+.PRECIOUS: $(BASE_FILES:%=%.v)
+
+.PHONY: opam
+opam: sig
+	$(MAKE) INCLUDE_VO_MK=1 $(BASE)_opam.vo
+
+.PRECIOUS: $(BASE)_opam.v
+
+$(BASE)_opam.lp:
+	$(HOL2DK) axm $(BASE).lp
+
+.PHONY: clean-opam
+clean-opam:
+	rm -f $(BASE)_opam.*
 
 .PHONY: single
 single: $(BASE).lp
@@ -280,18 +302,6 @@ rm-aux:
 rm-cache:
 	rm -f .lia.cache .nia.cache
 
-.PHONY: opam
-opam: $(BASE)_opam.vo
-
-.PRECIOUS: $(BASE)_opam.v
-
-$(BASE)_opam.lp:
-	$(HOL2DK) axm $(BASE).lp
-
-.PHONY: clean-opam
-clean-opam:
-	rm -f $(BASE)_opam.*
-
 .PHONY: clean-all
 clean-all: clean-split clean-lp clean-opam rm-dump
 
@@ -308,24 +318,24 @@ all:
 	$(MAKE) v
 	$(MAKE) vo
 
-.PHONY: vtodo
-vtodo:
+.PHONY: votodo
+votodo:
 	find . -name '*.v' | sort > /tmp/vfiles
 	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
-	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > vtodo
-	@export v=`wc -l vtodo | sed -e 's/ vtodo//'`; export n=`find . -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
+	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > votodo
+	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
 
 .PHONY: lptodo
-lptodo: vtodo
-	sed -e 's/\.v$$/.lp/' vtodo > lptodo
+lptodo: votodo
+	sed -e 's/\.v$$/.lp/' votodo > lptodo
 
 .PHONY: clean-lptodo
 clean-lptodo: lptodo
 	xargs -a lptodo rm -f
 
-.PHONY: clean-vtodo
-clean-vtodo: vtodo
-	xargs -a vtodo rm -f
+.PHONY: clean-votodo
+clean-votodo: votodo
+	xargs -a votodo rm -f
 
 .PHONY: lpsize
 lpsize:

@@ -218,7 +218,7 @@ For instance, to translate the Multivariate library using the Coq type N for nat
 ```
 mkdir output
 cd output
-hol2dk config Multivariate/make_complex.ml HOLLight HOLLight_Real_With_N.mappings $HOL2DK_DIR/With_N.v BinNat Rbase Rdefinitions Rbasic_fun $HOL2DK_DIR/With_N.mk $HOL2DK_DIR/With_N.lp
+hol2dk config Multivariate/make_complex.ml HOLLight HOLLight_Real_With_N.mappings $HOL2DK_DIR/With_N.v Coq.NArith.BinNat Coq.Reals.Rbase Coq.Reals.Rdefinitions Coq.Reals.Rbasic_fun $HOL2DK_DIR/With_N.mk $HOL2DK_DIR/With_N.lp
 ```
 
 - you can then do in order:
@@ -239,10 +239,10 @@ Performances
 
 On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi 83cf0be2, Coq 8.20.0, using the Coq type N for HOL-Light natural numbers:
 
-| HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo      |
-|------------------------------|-------|--------|-------|-------|-----|-----|-------|---------|
-| hol.ml                       | 3m58s | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 49m40s  |
-| Multivariate/make_complex.ml | 3h    | 135 Gb | 85 M  | 40728 | 50m | 31m | 91 Gb | 34h49m |
+| HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo     |
+|------------------------------|-------|--------|-------|-------|-----|-----|-------|--------|
+| hol.ml                       | 4m    | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 50m    |
+| Multivariate/make_complex.ml | 2h30m | 135 Gb | 85 M  | 40728 | 45m | 24m | 91 Gb | 34h49m |
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------

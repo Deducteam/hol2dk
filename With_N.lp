@@ -304,6 +304,8 @@ builtin "axiom_25" ≔ axiom_25;
 builtin "axiom_26" ≔ axiom_26;
 //TODO: builtin "div" ≔ div;
 //TODO: builtin "rem" ≔ rem;
+builtin "Z_of_N" ≔ int_of_num;
+builtin "int_of_num_def" ≔ int_of_num_def;
 
 // finite_image
 builtin "finite_image" ≔ finite_image;
@@ -353,3 +355,52 @@ builtin "_mk_tybit1" ≔ _mk_tybit1;
 builtin "_dest_tybit1" ≔ _dest_tybit1;
 builtin "axiom_39" ≔ axiom_39;
 builtin "axiom_40" ≔ axiom_40;
+
+// frag
+builtin "frag" ≔ frag;
+builtin "mk_frag" ≔ mk_frag;
+builtin "dest_frag" ≔ dest_frag;
+builtin "axiom_41" ≔ axiom_41;
+builtin "axiom_42" ≔ axiom_42;
+
+// group
+builtin "Group" ≔ Group;
+builtin "group" ≔ group;
+builtin "group_operations" ≔ group_operations;
+builtin "axiom_43" ≔ axiom_43;
+builtin "axiom_44" ≔ axiom_44;
+
+// matroid
+builtin "Matroid" ≔ Matroid;
+builtin "matroid" ≔ matroid;
+builtin "dest_matroid" ≔ dest_matroid;
+builtin "axiom_45" ≔ axiom_45;
+builtin "axiom_46" ≔ axiom_46;
+
+// topology
+builtin "Topology" ≔ Topology;
+builtin "topology" ≔ topology;
+builtin "open_in" ≔ open_in;
+builtin "axiom_47" ≔ axiom_47;
+builtin "axiom_48" ≔ axiom_48;
+
+// net
+builtin "net" ≔ net;
+builtin "mk_net" ≔ mk_net;
+builtin "dest_net" ≔ dest_net;
+builtin "axiom_49" ≔ axiom_49;
+builtin "axiom_50" ≔ axiom_50;
+
+// metric_space
+builtin "Metric" ≔ Metric;
+builtin "metric" ≔ metric;
+builtin "dest_metric" ≔ dest_metric;
+builtin "axiom_51" ≔ axiom_51;
+builtin "axiom_52" ≔ axiom_52;
+
+// multivector
+builtin "Multivector" ≔ Multivector;
+builtin "mk_multivector" ≔ mk_multivector;
+builtin "dest_multivector" ≔ dest_multivector;
+builtin "axiom_53" ≔ axiom_53;
+builtin "axiom_54" ≔ axiom_54;
