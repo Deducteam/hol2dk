@@ -210,18 +210,13 @@ mkdir output
 - configure the directory with all the required files:
 ```
 cd output
-hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk] [$mapping.lp]
+hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$mapping.mk] [$mapping.lp]
 ```
 Do `hol2dk config` to get more details.
 
-For instance, to translate the Multivariate library using the Coq type N for natural numbers, we use:
-```
-mkdir output
-cd output
-hol2dk config Multivariate/make_complex.ml HOLLight HOLLight_Real_With_N.mappings $HOL2DK_DIR/With_N.v Coq.NArith.BinNat Coq.Reals.Rbase Coq.Reals.Rdefinitions Coq.Reals.Rbasic_fun $HOL2DK_DIR/With_N.mk $HOL2DK_DIR/With_N.lp
-```
+For instance, to translate the Multivariate library using the Coq type N for natural numbers, we use [CONFIG](https://github.com/Deducteam/coq-hol-light/blob/main/CONFIG).
 
-- you can then do in order:
+- You can then do in order:
   * `make` to get the list of targets and variables
   * `make split` to generate a file for each theorem
   * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
