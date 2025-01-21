@@ -2,7 +2,7 @@
 
 BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
-ERASING := $(shell if test -f ERASING; then cat ERASING; fi)
+MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
 VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
 
@@ -242,7 +242,7 @@ endif
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(ERASING) --use-notations --requiring "$(REQUIRING)" $< > $@
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --erasing $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo

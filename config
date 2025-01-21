@@ -14,14 +14,14 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk] [$erasing.lp]
+usage: `basename $0` $hollight_file.ml $root_path [coq_file_or_module] ... [$mapping.mk] [$mapping.lp]
 
 arguments:
   $hollight_file.ml: path to an ml file relative to $HOLLIGHT_DIR
   $root_path: name of the generated library
   coq_file_or_module: coq modules that needs to be imported in generated files
-  $file.mk: dependencies of vo files given in arguments
-  $erasing.lp: mappings between lambdapi and coq
+  $mapping.mk: dependencies of vo files given in arguments
+  $mapping.lp: mappings between lambdapi and coq
 
 effect in the current directory:
 - create a file CONFIG containing the command used to create links
@@ -29,7 +29,7 @@ effect in the current directory:
 - create a file ROOT_PATH containing $root_path
 - create a file lambdapi.pkg
 - create a file _CoqProject
-- create a file ERASING containing $erasing.lp
+- create a file MAPPING containing $mapping.lp
 - create a file REQUIRING containing the list of Coq module names that need to be imported (in the same order as they are given in the command)
 - create a file VOFILES containing the list of Coq module names corresponding to the Coq files given in arguments with file extension ".vo"
 - add links to $file.mk, the Coq files given in argument and other files in $HOL2DK_DIR and $HOLLIGHT_DIR for translating and checking the proofs of $hollight_file.ml
@@ -47,9 +47,9 @@ parse_args() {
     if test $# -ne 0; then
         case $1 in
             *.lp)
-                if test -z "$erasing"
+                if test -z "$mapping"
                 then
-                    erasing=$1
+                    mapping=$1
                     shift
                     parse_args $*
                 else
@@ -121,8 +121,8 @@ echo "root_path = $root_path" >> lambdapi.pkg
 echo create _CoqProject ...
 echo "-R . $root_path ." > _CoqProject
 
-echo create ERASING ...
-echo ${erasing:-$HOL2DK_DIR/erasing.lp} > ERASING
+echo create MAPPING ...
+echo ${mapping:-$HOL2DK_DIR/With_N.lp} > MAPPING
 
 echo create REQUIRING ...
 echo $requiring > REQUIRING
