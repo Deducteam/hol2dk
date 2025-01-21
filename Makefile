@@ -61,6 +61,21 @@ vsig: $(BASE_FILES:%=%.v)
 sig: vsig
 	$(MAKE) INCLUDE_VO_MK=1 $(BASE_FILES:%=%.vo)
 
+.PRECIOUS: $(BASE_FILES:%=%.v)
+
+.PHONY: opam
+opam: sig
+	$(MAKE) INCLUDE_VO_MK=1 $(BASE)_opam.vo
+
+.PRECIOUS: $(BASE)_opam.v
+
+$(BASE)_opam.lp:
+	$(HOL2DK) axm $(BASE).lp
+
+.PHONY: clean-opam
+clean-opam:
+	rm -f $(BASE)_opam.*
+
 .PHONY: single
 single: $(BASE).lp
 
@@ -286,19 +301,6 @@ rm-aux:
 .PHONY: rm-cache
 rm-cache:
 	rm -f .lia.cache .nia.cache
-
-.PHONY: opam
-opam:
-	$(MAKE) INCLUDE_VO_MK=1 $(BASE)_opam.vo
-
-.PRECIOUS: $(BASE)_opam.v
-
-$(BASE)_opam.lp:
-	$(HOL2DK) axm $(BASE).lp
-
-.PHONY: clean-opam
-clean-opam:
-	rm -f $(BASE)_opam.*
 
 .PHONY: clean-all
 clean-all: clean-split clean-lp clean-opam rm-dump
