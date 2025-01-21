@@ -1,6 +1,8 @@
 TODO
 ----
 
+- replace variables like _1718 by better names
+
 - align functions and predicates on int with those of Z
 
 - always share closed subterms ?
