@@ -191,7 +191,7 @@ Translating HOL-Light proofs to Lambdapi and Coq
 ------------------------------------------------
 
 **Requirements:**
-- lambdapi commit >= c24b28e2 (28/11/24) > 2.5.1
+- lambdapi commit >= 21ee7f3d (21/01/25)
 - coq >= 8.19
 - [coq-hol-light-real-with-N](https://github.com/Deducteam/coq-hol-light-real-with-N)
 - [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
