@@ -18,32 +18,22 @@ Dedukti proofs.
 [Coq](https://coq.inria.fr/) is a proof assistant based on the
 Calculus of Inductive Constructions.
 
-Results
--------
-
-The HOL-Light base library `hol.ml` and small libraries like
-`Arithmetic` and `Logic` can be exported and translated to Dedukti,
-Lambdapi and Coq in a few minutes. The generated Dedukti files can be
-checked in a few minutes as well, but it takes much longer for Coq to
-check the generated files (about 50 minutes with 32 processors for
-`hol.ml`).
-
-For bigger libraries like `Multivariate`, it takes even more time for
-Coq. For instance, the `Multivariate` library up to `topology.ml` can
-be translated to Lambdapi in 18 minutes, then to Coq in 18 more
-minutes, but the verification of the generated files by Coq, without
-the mapping of real numbers, takes 8 hours with 32 processors.
-
 Usability of translated libraries
 ---------------------------------
 
 For the obtained theorems to be readily usable in Coq, we need to
 align the type and functions of HOL-Light with those used in the Coq
-standard library. We already did this for various types including the
-types of natural numbers, lists, real numbers and integers (see
-[With_N.lp](https://github.com/Deducteam/hol2dk/blob/main/mappings_N.v)),
-but more types and functions need to be aligned. Your help is very
-welcome! The correctness of the mappings for types defined before real
+standard library. We already did this for various types and functions
+(see [With_N.lp](https://github.com/Deducteam/hol2dk/blob/main/With_N.lp)):
+
+- types: unit, prod, list, option, sum, ascii, N, R, Z
+- functions on N: pred, add, mul, pow, le, lt, ge, gt, max, min, sub, div, modulo
+- functions on list: app, rev, map, removelast, In, hd, tl
+- functions on R: Rle, Rplus, Rmult, Rinv, Ropp, Rabs, Rdiv, Rminus, Rge, Rgt, Rlt, Rmax, Rmin, IZR
+
+Your help is welcome to align more functions!
+
+The correctness of the mappings for types defined before real
 numbers (e.g. natural numbers and lists) is proved in
 [mappings_N.v](https://github.com/Deducteam/hol2dk/blob/main/mappings_N.v). The
 correctness of the mappings for the other types, including real
@@ -53,9 +43,11 @@ numbers, is proved here in
 The resulting theorems are gathered in the Opam package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
 in the Coq Opam repository [released](https://github.com/coq/opam). It
-currently contains more than 20,000 theorems on arithmetic,
-wellfounded relations, lists, real numbers, integers, basic set
-theory, permutations, group theory, matroids, metric spaces, homology,
+currently contains a translation of the
+[Multivariate](https://github.com/jrh13/hol-light/blob/master/Multivariate/make_complex.ml)
+library with more than 20,000 theorems on arithmetic, wellfounded
+relations, lists, real numbers, integers, basic set theory,
+permutations, group theory, matroids, metric spaces, homology,
 vectors, determinants, topology, convex sets and functions, paths,
 polytopes, Brouwer degree, derivatives, Clifford algebra, integration,
 measure theory, complex numbers and analysis, transcendental numbers,
@@ -201,7 +193,7 @@ Translating HOL-Light proofs to Lambdapi and Coq
 **Requirements:**
 - lambdapi commit >= c24b28e2 (28/11/24) > 2.5.1
 - coq >= 8.19
-- [coq-hol-light-real](https://github.com/Deducteam/coq-hol-light-real)
+- [coq-hol-light-real-with-N](https://github.com/Deducteam/coq-hol-light-real-with-N)
 - [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
 
 **Procedure after dumping:**
@@ -236,7 +228,7 @@ To speed up lp file generation for some theorems with very big proofs, you can w
 Performances
 ------------
 
-On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi 83cf0be2, Coq 8.20.0, using the Coq type N for HOL-Light natural numbers:
+On a machine with 32 processors i9-13950HX, 128 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi 83cf0be2, Coq 8.20.0, using the Coq type N for HOL-Light natural numbers:
 
 | HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo     |
 |------------------------------|-------|--------|-------|-------|-----|-----|-------|--------|
@@ -266,30 +258,6 @@ kocheck -j$jobs file-for-kocheck.dk
 ```
 
 Performances: hol.dk can be checked by dkcheck in 4m11s.
-
-Alignments of HOL-Light types and definitions with those of Coq standard library
---------------------------------------------------------------------------------
-
-While it is possible to translate any HOL-Light library to Coq, the
-obtained theorems may not be directly applicable by Coq users because
-HOL-Light types and functions may not be aligned with those of the Coq
-standard library yet. Currently, only the following types and
-functions have been aligned with those of Coq:
-
-- unit type
-- product type constructor
-- type of natural numbers
-- functions and predicates on natural numbers: addition, multiplication, order, power, maximum, minimum, substraction, factorial, division, division remainder, parity
-- sum type constructor
-- option type constructor
-- type of lists
-- functions on lists
-- type of reals
-- basic functions and predicates on reals
-
-The part of HOL-Light that is aligned with Coq is gathered in the package
-[coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
-in the Coq Opam repository [released](https://github.com/coq/opam).
 
 Getting statistics on proofs
 ----------------------------
