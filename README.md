@@ -40,22 +40,26 @@ Usability of translated libraries
 For the obtained theorems to be readily usable in Coq, we need to
 align the type and functions of HOL-Light with those used in the Coq
 standard library. We already did this for various types including the
-types of natural numbers, lists, real numbers and integers, but more
-types and functions need to be aligned. The correctness of the
-mappings for types defined before real numbers (e.g. natural numbers
-and lists) is proved in
-[HOLLight_Real.v](https://github.com/Deducteam/coq-hol-light-real/blob/main/HOLLight_Real.v). The
+types of natural numbers, lists, real numbers and integers (see
+[With_N.lp](https://github.com/Deducteam/hol2dk/blob/main/mappings_N.v)),
+but more types and functions need to be aligned. Your help is very
+welcome! The correctness of the mappings for types defined before real
+numbers (e.g. natural numbers and lists) is proved in
+[mappings_N.v](https://github.com/Deducteam/hol2dk/blob/main/mappings_N.v). The
 correctness of the mappings for the other types, including real
 numbers, is proved here in
-[HOLLight.v](https://github.com/Deducteam/hol2dk/blob/main/HOLLight.v).
+[With_N.v](https://github.com/Deducteam/hol2dk/blob/main/With_N.v).
 
 The resulting theorems are gathered in the Opam package
 [coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
-in the Coq Opam repository
-[released](https://github.com/coq/opam). For the moment, it only
-contains about 700 theorems on logic, natural numbers and lists. Much
-more theorems will be added soon (the Multivariate library has more
-than 40,000 theorems on analysis).
+in the Coq Opam repository [released](https://github.com/coq/opam). It
+currently contains more than 20,000 theorems on arithmetic,
+wellfounded relations, lists, real numbers, integers, basic set
+theory, permutations, group theory, matroids, metric spaces, homology,
+vectors, determinants, topology, convex sets and functions, paths,
+polytopes, Brouwer degree, derivatives, Clifford algebra, integration,
+measure theory, complex numbers and analysis, transcendental numbers,
+real analysis, complex line integrals, etc.
 
 Coq axioms used to encode HOL-Light proofs
 ------------------------------------------
