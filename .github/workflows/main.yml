@@ -15,7 +15,7 @@ jobs:
         hol-light-commit: [master] # Release-3.0.0]
         lambdapi-version: [master] # >= 31aef37c > 2.5.1
         dedukti-version: [2.7]
-        mapping: [With_nat, With_N]
+        mapping: [mappings_nat, mappings_N]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml

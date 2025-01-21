@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - alignment of the type of reals and basic functions on reals
 - command nbp
-- renamings to handle Multivariate
+- renamings to handle the Multivariate library
 
 ### Changed
 

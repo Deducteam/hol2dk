@@ -210,18 +210,13 @@ mkdir output
 - configure the directory with all the required files:
 ```
 cd output
-hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$file.mk] [$mapping.lp]
+hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$mapping.mk] [$mapping.lp]
 ```
 Do `hol2dk config` to get more details.
 
-For instance, to translate the Multivariate library using the Coq type N for natural numbers, we use:
-```
-mkdir output
-cd output
-hol2dk config Multivariate/make_complex.ml HOLLight HOLLight_Real_With_N.mappings $HOL2DK_DIR/With_N.v Coq.NArith.BinNat Coq.Reals.Rbase Coq.Reals.Rdefinitions Coq.Reals.Rbasic_fun $HOL2DK_DIR/With_N.mk $HOL2DK_DIR/With_N.lp
-```
+For instance, to translate the Multivariate library using the Coq type N for natural numbers, we use [CONFIG](https://github.com/Deducteam/coq-hol-light/blob/main/CONFIG).
 
-- you can then do in order:
+- You can then do in order:
   * `make` to get the list of targets and variables
   * `make split` to generate a file for each theorem
   * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
@@ -237,11 +232,11 @@ To speed up lp file generation for some theorems with very big proofs, you can w
 Performances
 ------------
 
-On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi c24b28e2 and Coq 8.20.0:
+On a machine with 32 processors i9-13950HX, 64 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi 83cf0be2, Coq 8.20.0, using the Coq type N for HOL-Light natural numbers:
 
 | HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo     |
 |------------------------------|-------|--------|-------|-------|-----|-----|-------|--------|
-| hol.ml                       | 3m58s | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 52m21s |
+| hol.ml                       | 4m    | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 50m    |
 | Multivariate/make_complex.ml | 2h30m | 135 Gb | 85 M  | 40728 | 45m | 24m | 91 Gb | 34h49m |
 
 Translating HOL-Light proofs to Dedukti
