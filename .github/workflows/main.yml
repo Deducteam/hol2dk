@@ -68,7 +68,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output1
           cd output1
-          hol2dk config hol_upto_arith.ml HOLLight ../../${{ matrix.mapping }}.v ../../${{ matrix.mapping }}.lp ../../${{ matrix.mapping }}.mk
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           hol2dk hol_upto_arith.dk
           dk check hol_upto_arith.dk
       - name: Test single-threaded lp output
@@ -78,7 +78,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output2
           cd output2
-          hol2dk config hol_upto_arith.ml HOLLight ../../${{ matrix.mapping }}.v ../../${{ matrix.mapping }}.lp ../../${{ matrix.mapping }}.mk
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           lambdapi check hol_upto_arith.lp
       - name: Test multi-threaded dk output with mk
         run: |
@@ -87,7 +87,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output3
           cd output3
-          hol2dk config hol_upto_arith.ml HOLLight ../../${{ matrix.mapping }}.v ../../${{ matrix.mapping }}.lp ../../${{ matrix.mapping }}.mk
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           make -f hol_upto_arith.mk -j3 dk
           dk check hol_upto_arith.dk
       - name: Test multi-threaded lp output with mk
@@ -97,7 +97,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output4
           cd output4
-          hol2dk config hol_upto_arith.ml HOLLight ../../${{ matrix.mapping }}.v ../../${{ matrix.mapping }}.lp ../../${{ matrix.mapping }}.mk
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           make -f hol_upto_arith.mk -j3 lp
           make -f hol_upto_arith.mk -j3 lpo
           make -f hol_upto_arith.mk -j3 v
@@ -108,7 +108,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output5
           cd output5
-          hol2dk config hol_upto_arith.ml HOLLight ../../${{ matrix.mapping }}.v ../../${{ matrix.mapping }}.lp ../../${{ matrix.mapping }}.mk
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           make split
           make -j3 lp
           make -j3 lpo
