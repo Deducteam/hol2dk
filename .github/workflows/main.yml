@@ -79,6 +79,7 @@ jobs:
           mkdir -p output2
           cd output2
           hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
+          hol2dk hol_upto_arith.lp
           lambdapi check hol_upto_arith.lp
       - name: Test multi-threaded dk output with mk
         run: |
