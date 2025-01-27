@@ -314,7 +314,7 @@ let make nb_proofs dg b =
           --encoding $(HOL2DK_DIR)/encoding.lp \
           --renaming $(HOL2DK_DIR)/renaming.lp \
           --mapping $(MAPPING) --use-notations --requiring \"$(REQUIRING)\"";
-  out oc " > $@\n";
+  out oc " $< > $@\n";
   out oc ".PHONY: clean-v\nclean-v:\n\trm -f theory_hol.v %s*.v\n" b;
 
   (* coq files checking *)
@@ -839,6 +839,17 @@ and command = function
           0
        | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
      end
+
+  (* Create b.mk. *)
+  | ["mkfile";b] ->
+     let dump_file = b^".dg" in
+     log_read dump_file;
+     let ic = open_in_bin dump_file in
+     let _nb_parts = input_value ic in
+     let dg = input_value ic in
+     close_in ic;
+     let nb_proofs = read_val (b^".nbp") in
+     make nb_proofs dg b
 
   (* Create b.dg and b.mk. *)
   | ["mk";nb_parts;b] ->
