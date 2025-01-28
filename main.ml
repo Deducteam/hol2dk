@@ -207,37 +207,167 @@ let make nb_proofs dg b =
   log_gen dump_file;
   let oc = open_out dump_file in
   out oc "# file generated with: hol2dk mk %d %s\n" nb_parts b;
+  out oc {|
+ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
+MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
+REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
+VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
 
-  (* variables *)
-  out oc "\nMAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)\n";
-  out oc "REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)\n";
-  out oc "VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)\n";
-  out oc "\nLAMBDAPI = lambdapi\n";
-  out oc "\n.SUFFIXES:\n";
+.SUFFIXES:
+
+.PHONY: default
+default:
+	@echo "usage: make TARGET"
+	@echo "targets: lp lpo v vo opam clean-<target> clean-all"
+
+.PHONY: rm-mk
+rm-mk:
+	rm -f lpo.mk vo.mk
+
+.PHONY: rm-dk
+rm-dk:
+	find . -maxdepth 1 -name '*.dk' -a ! -name theory_hol.dk -delete
+
+.PHONY: rm-typ
+rm-typ:
+	find . -maxdepth 1 -name '*.typ' -delete
+
+.PHONY: rm-sed
+rm-sed:
+	find . -maxdepth 1 -name '*.sed' -delete
+
+.PHONY: rm-lp
+rm-lp:
+	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+
+.PHONY: rm-lpo
+rm-lpo:
+	find . -maxdepth 1 -name '*.lpo' -delete
+
+.PHONY: rm-lpo-mk
+rm-lpo-mk:
+	find . -maxdepth 1 -name '*.lpo.mk' -delete
+
+.PHONY: rm-v
+rm-v:
+	find . -maxdepth 1 -name '*.v' -a -type f -delete
+
+.PHONY: rm-vo
+rm-vo:
+	find . -maxdepth 1 -name '*.vo*' -delete
+
+.PHONY: rm-glob
+rm-glob:
+	find . -maxdepth 1 -name '*.glob' -delete
+
+.PHONY: rm-aux
+rm-aux:
+	find . -maxdepth 1 -name '.*.aux' -delete
+
+.PHONY: rm-cache
+rm-cache:
+	rm -f .lia.cache .nia.cache
+
+.PHONY: clean-lp
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-typ rm-sed rm-lpo clean-lpo clean-v
+	rm -f lpo.mk
+
+.PHONY: clean-lpo
+clean-lpo: rm-lpo
+
+.PHONY: clean-v
+clean-v: rm-v clean-vo
+	rm -f vo.mk
+
+.PHONY: clean-vo
+clean-vo: rm-vo rm-glob rm-aux rm-cache
+
+.PHONY: clean-all
+clean-all: clean-lp
+
+SED_FILES := $(wildcard *.sed)
+
+.PHONY: rename-abbrevs
+rename-abbrevs: $(SED_FILES:%%.sed=%%.lp.rename-abbrevs)
+
+%%.lp.rename-abbrevs: %%.sed
+	sed -i -f $*.sed $*.lp
+
+LP_FILES := $(wildcard *.lp)
+
+.PHONY: lpo
+lpo: $(LP_FILES:%%.lp=%%.lpo)
+
+%%.lpo: %%.lp
+	lambdapi check -v0 -w -c $<
+
+include lpo.mk
+
+LPO_MK_FILES := theory_hol.lpo.mk $(wildcard *.lpo.mk)
+
+lpo.mk: $(LPO_MK_FILES)
+	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
+
+theory_hol.lpo.mk: theory_hol.lp
+	$(HOL2DK_DIR)/dep-lpo $< > $@
+
+.PHONY: clean-lpo
+clean-lpo:
+	rm -f theory_hol.lpo hol*.lpo
+
+.PHONY: v
+v: $(LP_FILES:%%.lp=%%.v)
+
+%%.v: %%.lp
+	lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+
+.PHONY: vo
+vo: $(LP_FILES:%%.lp=%%.vo)
+
+COQC_OPTIONS = -no-glob # -w -coercions
+
+%%.vo: %%.v
+	@echo coqc $<
+	@coqc $(COQC_OPTIONS) -R . $(ROOT_PATH) $<
+
+include vo.mk
+
+vo.mk: lpo.mk
+	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > $@
+
+theory_hol.vo: $(VOFILES)
+
+include deps.mk
+|};
+
+  (* targets common to dk and lp files part *)
+  out oc "\n%s.pos: %s.prf\n\thol2dk pos %s\n" b b b;
+  out oc "\n%s.use: %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
 
   (* dk files generation *)
+  out oc "\n# dk file generation\n";
   out oc "\n.PHONY: dk\n";
   out oc "dk: %s.dk\n" b;
-  out oc "%s.dk: theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
+  out oc "\n%s.dk: theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
     b b b b;
   for i = 1 to nb_parts do
     out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
             %s_part_%d.dk" b i b i b i
   done;
   out oc " %s_theorems.dk\n\tcat $+ > $@\n" b;
-  out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
+  out oc "\n%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
           \thol2dk sig %s.dk\n" b b b b b;
-  out oc "%s_theorems.dk: %s.sig %s.thm %s.pos %s.prf\n\
-          \thol2dk thm %s.dk\n" b b b b b b;
+  out oc "\n%s_theorems.dk: %s.sig %s.thm %s.pos %s.prf\n\
+          \thol2dk thm %s.dk\n\n" b b b b b b;
   let cmd i x y =
     out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
             %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
             \thol2dk part %d %d %d %s.dk\n" b i b i b i b b b i x y b
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
-  out oc ".PHONY: clean-dk\nclean-dk:\n\trm -f %s*.dk\n" b;
 
   (* lp files generation *)
+  out oc "\n# lp file generation\n";
   out oc "\n.PHONY: lp\n";
   out oc "lp: theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
           %s_axioms.lp %s_opam.lp" b b b b b;
@@ -245,10 +375,12 @@ let make nb_proofs dg b =
     out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
             %s_part_%d.lp" b i b i b i
   done;
+  out oc "\n\thol2dk type_abbrevs %s\n" b;
+  out oc "\t$(MAKE) -f %s.mk rename-abbrevs\n" b;
   out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
           \thol2dk sig %s.lp\n" b b b b b;
-  out oc "%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
-          \thol2dk thm %s.lp\n" b b b b b b;
+  out oc "\n%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
+          \thol2dk thm %s.lp\n\n" b b b b b b;
   let cmd i x y =
     out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
             %s_part_%d_term_abbrevs.lp &: %s.sig %s.pos %s.prf %s.use\n\
@@ -256,79 +388,8 @@ let make nb_proofs dg b =
       b i b i b i b b b b i x y b
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
-  out oc "%s_opam.lp: %s.sig %s.thm %s.pos %s.prf\n\
+  out oc "\n%s_opam.lp: %s.sig %s.thm %s.pos %s.prf\n\
           \thol2dk axm %s.lp\n" b b b b b b;
-  out oc ".PHONY: clean-lp\nclean-lp:\n\trm -f %s*.lp\n" b;
-
-  (* targets common to dk and lp files part *)
-  out oc "\n%s.pos: %s.prf\n\thol2dk pos %s\n" b b b;
-  out oc "%s.use: %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
-
-  (* generic function for lpo/vo file generation *)
-  let check e c clean =
-    out oc "\n.PHONY: %so\n" e;
-    out oc "%so: %s.%so\n" e b e;
-    out oc "%s.%so: theory_hol.%so %s_types.%so \
-            %s_terms.%so %s_axioms.%so %s_opam.%so" b e e b e b e b e b e;
-    for i = 1 to nb_parts do out oc " %s_part_%d.%so" b i e done;
-    out oc "\n%s_types.%so: theory_hol.%so\n" b e e;
-    out oc "%s_terms.%so: theory_hol.%so %s_types.%so\n" b e e b e;
-    out oc "%s_axioms.%so: theory_hol.%so %s_types.%so \
-            %s_terms.%so\n" b e e b e b e;
-    for i = 0 to nb_parts - 1 do
-      let j = i+1 in
-      out oc "%s_part_%d_type_abbrevs.%so: theory_hol.%so \
-              %s_types.%so\n" b j e e b e;
-      out oc "%s_part_%d_term_abbrevs.%so: \
-              theory_hol.%so %s_types.%so %s_part_%d_\
-              type_abbrevs.%so %s_terms.%so\n" b j e e b e b j e b e;
-      out oc "%s_part_%d.%so: theory_hol.%so \
-              %s_types.%so %s_part_%d_type_abbrevs.%so %s_terms.%so \
-              %s_part_%d_term_abbrevs.%so %s_axioms.%so"
-        b j e e b e b j e b e b j e b e;
-      for j = 0 to i - 1 do
-        if dg.(i).(j) then out oc " %s_part_%d.%so" b (j+1) e
-      done;
-      out oc "\n"
-    done;
-    out oc "%s_opam.%so: theory_hol.%so %s_types.%so %s_terms.%so \
-            %s_axioms.%so\n" b e e b e b e b e;
-    out oc "%%.%so: %%.%s\n\t%s $<\n" e e c;
-    out oc
-      ".PHONY: clean-%so\nclean-%so:\n\trm -f theory_hol.%so %s*.%so%a\n"
-      e e e b e clean b;
-  in
-
-  (* lp files checking *)
-  check "lp" "$(LAMBDAPI) check -v0 -w -c" (fun _ _ -> ());
-
-  (* v files generation *)
-  out oc "\n.PHONY: v\nv: theory_hol.v \
-          %s_types.v %s_terms.v %s_axioms.v %s_opam.v" b b b b;
-  for i = 1 to nb_parts do
-    out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
-            %s_part_%d.v" b i b i b i
-  done;
-  out oc " %s.v\n" b;
-  out oc "%%.v: %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
-          --encoding $(HOL2DK_DIR)/encoding.lp \
-          --renaming $(HOL2DK_DIR)/renaming.lp \
-          --mapping $(MAPPING) --use-notations --requiring \"$(REQUIRING)\"";
-  out oc " $< > $@\n";
-  out oc ".PHONY: clean-v\nclean-v:\n\trm -f theory_hol.v %s*.v\n" b;
-
-  (* coq files checking *)
-  let clean oc _b = out oc " *.vo* *.glob .*.aux .[nl]ia.cache" in
-  let cmd = Printf.sprintf "coqc -R . %s" !Xlp.root_path in
-  check "v" cmd clean;
-
-  (* clean-all target *)
-  out oc "\n.PHONY: clean-all\nclean-all: \
-          clean-dk clean-lp clean-lpo clean-v clean-vo\n";
-  
-  (* dependencies of theory_vol.co *)
-  out oc "\ntheory_hol.vo: $(VOFILES)\n";
-  out oc "\ninclude deps.mk\n";
   close_out oc;
   0
 ;;
