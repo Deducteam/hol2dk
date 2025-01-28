@@ -32,7 +32,7 @@ rm-sti:
 
 .PHONY: rm-nbp
 rm-nbp:
-	find . -maxdepth 1 -name '*.nbp' -delete
+	find . -maxdepth 1 -name '*.nbp' -a ! -name $(BASE).nbp -delete
 
 .PHONY: rm-pos
 rm-pos:
@@ -303,11 +303,7 @@ rm-cache:
 	rm -f .lia.cache .nia.cache
 
 .PHONY: clean-all
-clean-all: clean-split clean-lp clean-opam rm-dump
-
-.PHONY: rm-dump
-rm-dump:
-	rm -f dump*.prf
+clean-all: clean-split clean-lp clean-opam
 
 .PHONY: all
 all:

@@ -62,7 +62,7 @@ builtin "fun_ext" ≔ fun_ext;
 builtin "prop_ext" ≔ prop_ext;
 
 // unit type
-builtin "unit" ≔ 1;
+builtin "unit" ≔ unit;
 builtin "tt" ≔ one;
 builtin "one_def" ≔ one_def;
 builtin "one_ABS" ≔ one_ABS;
