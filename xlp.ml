@@ -69,6 +69,7 @@ let cst_name = name;;
 let string_of_typ_name n =
   match n with
   | "" -> assert false
+  | "1" -> "unit"
   (* type names used also as constant names are capitalized *)
   |"sum"|"topology"|"metric"|"multiset"|"group"|"multivector"|"real"|"matroid" ->
     String.capitalize_ascii n
