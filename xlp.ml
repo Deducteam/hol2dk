@@ -1144,7 +1144,7 @@ let export_theorems_as_axioms b map_thid_name =
 let export_proofs_part b dg k x y =
   let iter_proofs_part_deps f =
     f (b^"_types");
-    f (b^part k^"_type_abbrevs");
+    f (b^"_type_abbrevs");
     f (b^"_terms");
     f (b^part k^"_term_abbrevs");
     f (b^"_axioms");
