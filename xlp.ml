@@ -722,7 +722,7 @@ print lem%d;\n" x*)
 (* Generate type and term abbreviation files. *)
 (****************************************************************************)
 
-(* In single file generation or in b.mk.
+(* In single file generation.
    [export_type_abbrevs b n] generates [n^"_type_abbrevs.lp"]. *)
 let export_type_abbrevs b n =
   export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs

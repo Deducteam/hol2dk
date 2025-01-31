@@ -99,7 +99,6 @@ rename-abbrevs: $(SED_FILES:%_term_abbrevs.sed=%.lp.rename-abbrevs)
 
 %.lp.rename-abbrevs: %_term_abbrevs.sed
 	sed -i -f $*_term_abbrevs.sed $*.lp $*_term_abbrevs.lp
-	sed -i -e "s/^require .*_type_abbrevs;/require open $(ROOT_PATH).$(BASE)_type_abbrevs;/" $*.lp $*_term_abbrevs.lp
 
 # lpo file generation
 
