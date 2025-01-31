@@ -9,9 +9,7 @@ VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
 .PHONY: default
 default:
 	@echo "usage: make TARGET [VAR=VAL ...]"
-	@echo "targets: part lp lpo v vo opam clean-<target> clean-all"
-	@echo "variables:"
-	@echo "  NB_PARTS"
+	@echo "targets: lp lpo v vo opam clean-<target> clean-all"
 
 .PHONY: part
 part $(BASE).dg &:
@@ -27,6 +25,10 @@ rm-mk:
 .PHONY: rm-dk
 rm-dk:
 	find . -maxdepth 1 -name '*.dk' -a ! -name theory_hol.dk -delete
+
+.PHONY: rm-dko
+rm-dko:
+	find . -maxdepth 1 -name '*.dko' -delete
 
 .PHONY: rm-typ
 rm-typ:
@@ -72,6 +74,9 @@ rm-cache:
 clean-lp: rm-lp rm-lpo-mk rm-mk rm-typ rm-sed rm-lpo clean-lpo clean-v
 	rm -f lpo.mk
 
+.PHONY: clean-dk
+clean-dk: rm-dk rm-dko
+
 .PHONY: clean-lpo
 clean-lpo: rm-lpo
 
@@ -83,7 +88,7 @@ clean-v: rm-v clean-vo
 clean-vo: rm-vo rm-glob rm-aux rm-cache
 
 .PHONY: clean-all
-clean-all: clean-lp
+clean-all: clean-lp clean-dk
 
 # lp type abbrevs replacement
 
@@ -181,4 +186,3 @@ $(BASE)_opam.lp: $(BASE).sig $(BASE).thm $(BASE).pos $(BASE).prf
 
 $(BASE)_type_abbrevs.lp:
 	hol2dk type_abbrevs $(BASE)
-	rm -f *_part_*_type_abbrevs.lp *_part_*_type_abbrevs.lpo.mk

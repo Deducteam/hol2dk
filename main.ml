@@ -213,9 +213,8 @@ let make nb_proofs dg b =
     out oc "$(BASE)_part_%d.dk $(BASE)_part_%d_type_abbrevs.dk \
             $(BASE)_part_%d_term_abbrevs.dk &:\n\
             \thol2dk part %d %d %d $(BASE).dk\n" i i i i x y;
-    out oc "$(BASE)_part_%d.lp $(BASE)_part_%d_type_abbrevs.lp \
-            $(BASE)_part_%d_term_abbrevs.lp &:\n\
-            \thol2dk part %d %d %d $(BASE).lp\n" i i i i x y
+    out oc "$(BASE)_part_%d.lp $(BASE)_part_%d_term_abbrevs.lp &:\n\
+            \thol2dk part %d %d %d $(BASE).lp\n" i i i x y
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
   close_out oc;
@@ -855,8 +854,7 @@ and command = function
        begin
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         Xlp.export_term_abbrevs_in_one_file b (b^part k);
-         Xlp.export_type_abbrevs b (b^part k)
+         Xlp.export_term_abbrevs_in_one_file b (b^part k)
        end;
      close_in ic;
      close_in !Xproof.ic_prf;
