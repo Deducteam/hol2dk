@@ -149,7 +149,7 @@ do
     ln -f -s $f
 done
 
-for f in theory_hol.dk theory_hol.lp Makefile BIG_FILES
+for f in theory_hol.dk theory_hol.lp Makefile BIG_FILES part.mk
 do
     echo ln -f -s $HOL2DK_DIR/$f
     ln -f -s $HOL2DK_DIR/$f

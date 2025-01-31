@@ -206,124 +206,17 @@ let make nb_proofs dg b =
   let dump_file = b^".mk" in
   log_gen dump_file;
   let oc = open_out dump_file in
-  out oc "# file generated with: hol2dk mk %d %s\n" nb_parts b;
-  out oc "\nLAMBDAPI = lambdapi\n";
-  out oc "\n.SUFFIXES:\n";
-
-  (* dk files generation *)
-  out oc "\n.PHONY: dk\n";
-  out oc "dk: %s.dk\n" b;
-  out oc "%s.dk: theory_hol.dk %s_types.dk %s_terms.dk %s_axioms.dk"
-    b b b b;
-  for i = 1 to nb_parts do
-    out oc " %s_part_%d_type_abbrevs.dk %s_part_%d_term_abbrevs.dk \
-            %s_part_%d.dk" b i b i b i
-  done;
-  out oc " %s_theorems.dk\n\tcat $+ > $@\n" b;
-  out oc "%s_types.dk %s_terms.dk %s_axioms.dk &: %s.sig\n\
-          \thol2dk sig %s.dk\n" b b b b b;
-  out oc "%s_theorems.dk: %s.sig %s.thm %s.pos %s.prf\n\
-          \thol2dk thm %s.dk\n" b b b b b b;
+  out oc "# file generated with: hol2dk mk %s\n" b;
+  out oc "\nNB_PARTS := %d\n" nb_parts;
+  out oc "\ninclude part.mk\n\n";
   let cmd i x y =
-    out oc "%s_part_%d.dk %s_part_%d_type_abbrevs.dk \
-            %s_part_%d_term_abbrevs.dk &: %s.sig %s.prf %s.pos\n\
-            \thol2dk part %d %d %d %s.dk\n" b i b i b i b b b i x y b
+    out oc "$(BASE)_part_%d.dk $(BASE)_part_%d_type_abbrevs.dk \
+            $(BASE)_part_%d_term_abbrevs.dk &:\n\
+            \thol2dk part %d %d %d $(BASE).dk\n" i i i i x y;
+    out oc "$(BASE)_part_%d.lp $(BASE)_part_%d_term_abbrevs.lp &:\n\
+            \thol2dk part %d %d %d $(BASE).lp\n" i i i x y
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
-  out oc ".PHONY: clean-dk\nclean-dk:\n\trm -f %s*.dk\n" b;
-
-  (* lp files generation *)
-  out oc "\n.PHONY: lp\n";
-  out oc "lp: theory_hol.lp %s.lp %s_types.lp %s_terms.lp \
-          %s_axioms.lp %s_opam.lp" b b b b b;
-  for i = 1 to nb_parts do
-    out oc " %s_part_%d_type_abbrevs.lp %s_part_%d_term_abbrevs.lp \
-            %s_part_%d.lp" b i b i b i
-  done;
-  out oc "\n%s_types.lp %s_terms.lp %s_axioms.lp &: %s.sig\n\
-          \thol2dk sig %s.lp\n" b b b b b;
-  out oc "%s.lp: %s.sig %s.thm %s.pos %s.prf\n\
-          \thol2dk thm %s.lp\n" b b b b b b;
-  let cmd i x y =
-    out oc "%s_part_%d.lp %s_part_%d_type_abbrevs.lp \
-            %s_part_%d_term_abbrevs.lp &: %s.sig %s.pos %s.prf %s.use\n\
-            \thol2dk part %d %d %d %s.lp\n"
-      b i b i b i b b b b i x y b
-  in
-  Xlib.iter_parts nb_proofs nb_parts cmd;
-  out oc "%s_opam.lp: %s.sig %s.thm %s.pos %s.prf\n\
-          \thol2dk axm %s.lp\n" b b b b b b;
-  out oc ".PHONY: clean-lp\nclean-lp:\n\trm -f %s*.lp\n" b;
-
-  (* targets common to dk and lp files part *)
-  out oc "\n%s.pos: %s.prf\n\thol2dk pos %s\n" b b b;
-  out oc "%s.use: %s.sig %s.prf %s.thm\n\thol2dk use %s\n" b b b b b;
-
-  (* generic function for lpo/vo file generation *)
-  let check e c clean =
-    out oc "\n.PHONY: %so\n" e;
-    out oc "%so: %s.%so\n" e b e;
-    out oc "%s.%so: theory_hol.%so %s_types.%so \
-            %s_terms.%so %s_axioms.%so %s_opam.%so" b e e b e b e b e b e;
-    for i = 1 to nb_parts do out oc " %s_part_%d.%so" b i e done;
-    out oc "\n%s_types.%so: theory_hol.%so\n" b e e;
-    out oc "%s_terms.%so: theory_hol.%so %s_types.%so\n" b e e b e;
-    out oc "%s_axioms.%so: theory_hol.%so %s_types.%so \
-            %s_terms.%so\n" b e e b e b e;
-    for i = 0 to nb_parts - 1 do
-      let j = i+1 in
-      out oc "%s_part_%d_type_abbrevs.%so: theory_hol.%so \
-              %s_types.%so\n" b j e e b e;
-      out oc "%s_part_%d_term_abbrevs.%so: \
-              theory_hol.%so %s_types.%so %s_part_%d_\
-              type_abbrevs.%so %s_terms.%so\n" b j e e b e b j e b e;
-      out oc "%s_part_%d.%so: theory_hol.%so \
-              %s_types.%so %s_part_%d_type_abbrevs.%so %s_terms.%so \
-              %s_part_%d_term_abbrevs.%so %s_axioms.%so"
-        b j e e b e b j e b e b j e b e;
-      for j = 0 to i - 1 do
-        if dg.(i).(j) then out oc " %s_part_%d.%so" b (j+1) e
-      done;
-      out oc "\n"
-    done;
-    out oc "%s_opam.%so: theory_hol.%so %s_types.%so %s_terms.%so \
-            %s_axioms.%so\n" b e e b e b e b e;
-    out oc "%%.%so: %%.%s\n\t%s $<\n" e e c;
-    out oc
-      ".PHONY: clean-%so\nclean-%so:\n\trm -f theory_hol.%so %s*.%so%a\n"
-      e e e b e clean b;
-  in
-
-  (* lp files checking *)
-  check "lp" "$(LAMBDAPI) check -v0 -w -c" (fun _ _ -> ());
-
-  (* v files generation *)
-  out oc "\n.PHONY: v\nv: %s.v theory_hol.v \
-          %s_types.v %s_terms.v %s_axioms.v %s_opam.v" !Xlp.root_path b b b b;
-  for i = 1 to nb_parts do
-    out oc " %s_part_%d_type_abbrevs.v %s_part_%d_term_abbrevs.v \
-            %s_part_%d.v" b i b i b i
-  done;
-  out oc " %s.v\n" b;
-  out oc "%%.v: %%.lp\n\t$(LAMBDAPI) export -o stt_coq \
-          --encoding $(HOL2DK_DIR)/encoding.lp \
-          --renaming $(HOL2DK_DIR)/renaming.lp \
-          --erasing $(HOL2DK_DIR)/erasing.lp \
-          --use-notations --requiring %s.v" !Xlp.root_path;
-  out oc {| $< | sed -e 's/^Require Import hol-light\./Require Import /g'|};
-  out oc " > $@\n";
-  out oc ".PHONY: clean-v\nclean-v:\n\trm -f theory_hol.v %s*.v\n" b;
-
-  (* coq files checking *)
-  let clean oc _b =
-    out oc " %s.vo *.vo[sk] *.glob .*.aux .[nl]ia.cache" !Xlp.root_path in
-  let c = Printf.sprintf "coqc -R . %s" !Xlp.root_path in
-  check "v" c clean;
-  out oc "theory_hol.vo: %s.vo\n" !Xlp.root_path;
-
-  (* clean-all target *)
-  out oc "\n.PHONY: clean-all\nclean-all: \
-          clean-dk clean-lp clean-lpo clean-v clean-vo\n";
   close_out oc;
   0
 ;;
@@ -835,6 +728,17 @@ and command = function
        | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
      end
 
+  (* Create b.mk. *)
+  | ["mkfile";b] ->
+     let dump_file = b^".dg" in
+     log_read dump_file;
+     let ic = open_in_bin dump_file in
+     let _nb_parts = input_value ic in
+     let dg = input_value ic in
+     close_in ic;
+     let nb_proofs = read_val (b^".nbp") in
+     make nb_proofs dg b
+
   (* Create b.dg and b.mk. *)
   | ["mk";nb_parts;b] ->
      let nb_parts = integer nb_parts in
@@ -950,8 +854,7 @@ and command = function
        begin
          let dg = input_value ic in
          Xlp.export_proofs_part b dg k x y;
-         Xlp.export_term_abbrevs_in_one_file b (b^part k);
-         Xlp.export_type_abbrevs b (b^part k)
+         Xlp.export_term_abbrevs_in_one_file b (b^part k)
        end;
      close_in ic;
      close_in !Xproof.ic_prf;

@@ -69,6 +69,7 @@ let cst_name = name;;
 let string_of_typ_name n =
   match n with
   | "" -> assert false
+  | "1" -> "unit"
   (* type names used also as constant names are capitalized *)
   |"sum"|"topology"|"metric"|"multiset"|"group"|"multivector"|"real"|"matroid" ->
     String.capitalize_ascii n
@@ -721,7 +722,7 @@ print lem%d;\n" x*)
 (* Generate type and term abbreviation files. *)
 (****************************************************************************)
 
-(* In single file generation or in b.mk.
+(* In single file generation.
    [export_type_abbrevs b n] generates [n^"_type_abbrevs.lp"]. *)
 let export_type_abbrevs b n =
   export (n^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
@@ -1143,7 +1144,7 @@ let export_theorems_as_axioms b map_thid_name =
 let export_proofs_part b dg k x y =
   let iter_proofs_part_deps f =
     f (b^"_types");
-    f (b^part k^"_type_abbrevs");
+    f (b^"_type_abbrevs");
     f (b^"_terms");
     f (b^part k^"_term_abbrevs");
     f (b^"_axioms");

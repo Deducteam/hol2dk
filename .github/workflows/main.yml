@@ -1,6 +1,6 @@
 on:
   pull_request:
-    types: [opened, synchronize, edited, reopened]
+    types: [opened, synchronize, reopened]
   push:
   workflow_dispatch:
 jobs:
@@ -66,8 +66,9 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          cd hol-light
-          ln -s ../theory_hol.dk
+          mkdir -p output1
+          cd output1
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           hol2dk hol_upto_arith.dk
           dk check hol_upto_arith.dk
       - name: Test single-threaded lp output
@@ -75,17 +76,19 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          cd hol-light
+          mkdir -p output2
+          cd output2
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           hol2dk hol_upto_arith.lp
-          ln -s ../theory_hol.lp
-          ln -s ../lambdapi.pkg
           lambdapi check hol_upto_arith.lp
       - name: Test multi-threaded dk output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          cd hol-light
+          mkdir -p output3
+          cd output3
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           hol2dk mk 3 hol_upto_arith
           make -f hol_upto_arith.mk -j3 dk
           dk check hol_upto_arith.dk
@@ -94,18 +97,22 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          cd hol-light
+          mkdir -p output4
+          cd output4
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
+          hol2dk mk 3 hol_upto_arith
           make -f hol_upto_arith.mk -j3 lp
           make -f hol_upto_arith.mk -j3 lpo
+          make -f hol_upto_arith.mk -j3 v
       - name: Test multi-threaded lp output with split
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          mkdir -p output/hol_upto_arith
-          cd output/hol_upto_arith
-          hol2dk config hol_upto_arith.ml HOLLight ../../${{ matrix.mapping }}.v ../../${{ matrix.mapping }}.lp ../../${{ matrix.mapping }}.mk
+          mkdir -p output5
+          cd output5
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
           make split
           make -j3 lp
-          make -j3 v
           make -j3 lpo
+          make -j3 v
