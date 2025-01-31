@@ -210,10 +210,9 @@ let make nb_proofs dg b =
   out oc "\nNB_PARTS := %d\n" nb_parts;
   out oc "\ninclude part.mk\n\n";
   let cmd i x y =
-    out oc "$(BASE)_part_%d.dk:\n\
-            \thol2dk part %d %d %d $(BASE).dk\n" i i x y;
-    out oc "$(BASE)_part_%d.lp:\n\
-            \thol2dk part %d %d %d $(BASE).lp\n" i i x y
+    out oc "$(BASE)_part_%d.%% $(BASE)_part_%d_type_abbrevs.%% \
+            $(BASE)_part_%d_term_abbrevs.%% &:\n\
+            \thol2dk part %d %d %d $(BASE).dk\n" i i i i x y
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
   close_out oc;
