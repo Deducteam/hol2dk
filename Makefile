@@ -138,15 +138,15 @@ $(BASE)_type_abbrevs.lp:
 	$(HOL2DK) type_abbrevs $(BASE)
 
 .PHONY: rename-abbrevs
-rename-abbrevs: $(SED_FILES:%.sed=.%.lp.rename-abbrevs)
+rename-abbrevs: $(SED_FILES:%.sed=%.lp.rename-abbrevs)
 
-.%.lp.rename-abbrevs: %.lp
+%.lp.rename-abbrevs: %.lp
 	sed -i -f $*.sed $*.lp
 	touch $@
 
 .PHONY: rm-rename-abbrevs
 rm-rename-abbrevs:
-	find . -maxdepth 1 -name '.*.lp.rename-abbrevs' -delete
+	find . -maxdepth 1 -name '*.rename-abbrevs' -delete
 
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
