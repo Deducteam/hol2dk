@@ -1,7 +1,7 @@
 .SUFFIXES:
 
 BASE := $(shell if test -f BASE; then cat BASE; fi)
-ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; else echo HOLLight; fi)
+ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
 VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
@@ -84,6 +84,7 @@ $(BASE).lp:
 
 ifeq ($(INCLUDE_VO_MK),1)
 INCLUDE_LPO_MK=1
+SET_V_FILES=1
 endif
 
 ifeq ($(INCLUDE_LPO_MK),1)
@@ -92,6 +93,10 @@ endif
 
 ifeq ($(SET_LP_FILES),1)
 LP_FILES := $(wildcard *.lp)
+endif
+
+ifeq ($(SET_V_FILES),1)
+V_FILES := $(wildcard *.v)
 endif
 
 ifeq ($(SET_STI_FILES),1)
@@ -130,10 +135,15 @@ lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 	$(MAKE) SET_SED_FILES=1 rename-abbrevs
 
 .PHONY: rename-abbrevs
-rename-abbrevs: $(SED_FILES:%.sed=%.lp.rename-abbrevs)
+rename-abbrevs: $(SED_FILES:%.sed=.%.lp.rename-abbrevs)
 
-%.lp.rename-abbrevs: %.sed
+.%.lp.rename-abbrevs: %.lp
 	sed -i -f $*.sed $*.lp
+	touch $@
+
+.PHONY: rm-rename-abbrevs
+rm-rename-abbrevs:
+	find . -maxdepth 1 -name '.*.lp.rename-abbrevs' -delete
 
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
@@ -159,7 +169,7 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 	$(HOL2DK) abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz clean-lpo clean-v
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz rm-rename-abbrevs clean-lpo clean-v
 	rm -f lpo.mk
 
 .PHONY: rm-lp
@@ -254,21 +264,20 @@ rm-v:
 
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
-
-vo.mk: lpo.mk
-	cp deps.mk $@
-	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk >> $@
+include deps.mk
 endif
 
 .PHONY: dep
-dep:
-	$(MAKE) INCLUDE_VO_MK=1 nothing
-
-.PHONY: nothing
-nothing:
+ifeq ($(INCLUDE_LPO_MK),1)
+dep vo.mk &: lpo.mk
+	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > vo.mk
+else
+dep vo.mk &:
+	$(MAKE) INCLUDE_LPO_MK=1 dep
+endif
 
 .PHONY: vo
-vo: $(LP_FILES:%.lp=%.vo)
+vo: $(V_FILES:%.v=%.vo)
 ifeq ($(PROGRESS),1)
 	rm -f .finished
 	$(HOL2DK_DIR)/progress &
