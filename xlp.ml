@@ -693,7 +693,7 @@ let decl_theorem oc k p d =
     let tvs = type_vars_in_thm thm in
     let rmap = renaming_map tvs xs in
     let term = unabbrev_term rmap in
-    string oc "symbol thm_"; string oc n;
+    string oc "symbol "; string oc n;
     typ_vars oc tvs; list (unabbrev_decl_param rmap) oc xs;
     decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
@@ -1120,16 +1120,19 @@ let export_proofs b r =
 ;;
 
 (* Generate a declaration of the form "thm_name : type" for each named
-   theorem. *)
+   theorem. The prefix "thm_" is used to avoid clashes with terms. *)
 let out_map_thid_name_as_axioms map_thid_name oc =
-  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (DeclThmName n))
+  MapInt.iter
+    (fun k n -> decl_theorem oc k (proof_at k) (DeclThmName ("thm_"^n)))
     map_thid_name
 ;;
 
 (* Used in single file generation and in b.mk. Generate a declaration
-   of the form "name : type := lemXXX" for each named theorem. *)
+   of the form "thm_name : type := lemXXX" for each named theorem. The
+   prefix "thm_" is used to avoid clashes with terms. *)
 let out_map_thid_name map_thid_name oc =
-  MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (DefThmNameAsThmId n))
+  MapInt.iter
+    (fun k n -> decl_theorem oc k (proof_at k) (DefThmNameAsThmId ("thm_"^n)))
     map_thid_name
 ;;
 
