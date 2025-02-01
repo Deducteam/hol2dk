@@ -5,6 +5,12 @@ BASE := $(shell if test -f BASE; then cat BASE; fi)
 .PHONY: default
 default: all
 
+.PHONY: usage
+usage:
+	@echo "usage: make TARGET"
+	@echo "TARGETS: update-vfiles update-vo-mk spec rm-spec"
+	@echo "WARNING: targets must be done in this order"
+
 MAKEFILE := $(firstword $(MAKEFILE_LIST))
 
 .PHONY: all
@@ -13,12 +19,6 @@ all:
 	$(MAKE) -f $(MAKEFILE) update-vo-mk
 	$(MAKE) -f $(MAKEFILE) spec
 	$(MAKE) -f $(MAKEFILE) rm-spec
-
-.PHONY: usage
-usage:
-	@echo "usage: make TARGET"
-	@echo "TARGETS: update-vfiles update-vo-mk spec rm-spec"
-	@echo "WARNING: targets must be done in this order"
 
 FILES := $(shell find . -maxdepth 1 -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_term_abbrevs*.v' -a ! -name $(BASE)_types.v -a ! -name $(BASE)_terms.v -a ! -name $(BASE)_axioms.v -a ! -name $(BASE)_type_abbrevs.v)
 
