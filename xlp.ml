@@ -567,6 +567,12 @@ let typ_vars oc ts =
   | ts -> string oc " ["; list_sep " " typ oc ts; char oc ']'
 ;;
 
+let typ_vars_set oc ts =
+  match ts with
+  | [] -> ()
+  | ts -> string oc " ["; list_sep " " typ oc ts; string oc " : Set]"
+;;
+
 let typ_params = list_prefix " " raw_typ;;
 
 let definition_of n =
@@ -658,30 +664,48 @@ let decl_theorem oc k p d =
     let prv = let l = get_use k in l > 0 && l <= !proof_part_max_idx in
     string oc (if prv then "private" else "opaque");
     string oc " symbol lem"; int oc k; typ_vars oc tvs;
-    list (decl_param rmap) oc xs; decl_hyps term ts; string oc " : Prf ";
-    term oc t; string oc " ≔ "; proof tvs rmap oc p; string oc ";\n";
+    list (decl_param rmap) oc xs; decl_hyps term ts;
+    string oc " : Prf "; term oc t;
+    string oc " ≔ "; proof tvs rmap oc p; string oc ";\n";
   | DeclThmId abbrev ->
     let tvs = type_vars_in_thm thm in
     let rmap = renaming_map tvs xs in
     let term = if abbrev then term rmap else unabbrev_term rmap in
-    string oc "symbol lem"; int oc k; typ_vars oc tvs;
-    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
+    string oc "symbol lem"; int oc k;
+    typ_vars oc tvs; list (unabbrev_decl_param rmap) oc xs;
+    decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
   | DefThmNameAsThmId n ->
     let tvs = type_vars_in_thm thm in
     let rmap = renaming_map tvs xs in
     let term = unabbrev_term rmap in
-    string oc "opaque symbol "; string oc n; typ_vars oc tvs;
-    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
-    string oc " ≔ @lem"; int oc k; list_prefix " " raw_typ oc tvs;
-    list_prefix " " (var rmap) oc xs;
-    List.iteri (fun i _ -> string oc " h"; int oc (i+1)) ts; string oc ";\n"
+    string oc "opaque symbol "; string oc n; string oc " : ";
+    if tvs = [] && xs = [] then
+      begin
+        decl_hyps term ts;
+        string oc " Prf "; term oc t;
+        string oc " ≔ @lem"; int oc k;
+        list_prefix " " raw_typ oc tvs;
+        list_prefix " " (var rmap) oc xs;
+        List.iteri (fun i _ -> string oc " h"; int oc (i+1)) ts;
+      end
+    else
+      begin
+        string oc "Π ";
+        typ_vars_set oc tvs; list (unabbrev_decl_param rmap) oc xs;
+        decl_hyps term ts;
+        string oc ",";
+        string oc " Prf "; term oc t;
+        string oc " ≔ @lem"; int oc k
+      end;
+    string oc ";\n"
   | DeclThmName n ->
     let tvs = type_vars_in_thm thm in
     let rmap = renaming_map tvs xs in
     let term = unabbrev_term rmap in
-    string oc "symbol thm_"; string oc n; typ_vars oc tvs;
-    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
+    string oc "symbol thm_"; string oc n;
+    typ_vars oc tvs; list (unabbrev_decl_param rmap) oc xs;
+    decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
 ;;
 
@@ -1112,8 +1136,8 @@ let out_map_thid_name_as_axioms map_thid_name oc =
     map_thid_name
 ;;
 
-(* Generate a declaration of the form "name : type := lemXXX" for each
-   named theorem. *)
+(* Used in single file generation and in b.mk. Generate a declaration
+   of the form "name : type := lemXXX" for each named theorem. *)
 let out_map_thid_name map_thid_name oc =
   MapInt.iter (fun k n -> decl_theorem oc k (proof_at k) (DefThmNameAsThmId n))
     map_thid_name
