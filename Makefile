@@ -131,8 +131,11 @@ find-big-files:
 lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
-	$(HOL2DK) type_abbrevs $(BASE)
+	$(MAKE) $(BASE)_type_abbrevs.lp
 	$(MAKE) SET_SED_FILES=1 rename-abbrevs
+
+$(BASE)_type_abbrevs.lp:
+	$(HOL2DK) type_abbrevs $(BASE)
 
 .PHONY: rename-abbrevs
 rename-abbrevs: $(SED_FILES:%.sed=.%.lp.rename-abbrevs)
