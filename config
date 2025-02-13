@@ -14,7 +14,7 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` $hollight_file.ml $root_path [coq_file_or_module] ... [$mapping.mk] [$mapping.lp]
+usage: `basename $0` $hollight_file.ml $root_path [--coq [coq_file_or_module] ... [$mapping.mk] [$mapping.lp]] [--lean [lean_file_or_module] ... [$mapping.lp]]
 
 arguments:
   $hollight_file.ml: path to an ml file relative to $HOLLIGHT_DIR
@@ -29,8 +29,10 @@ effect in the current directory:
 - create a file ROOT_PATH containing $root_path
 - create a file lambdapi.pkg
 - create a file _CoqProject
-- create a file MAPPING containing $mapping.lp
-- create a file REQUIRING containing the list of Coq module names that need to be imported (in the same order as they are given in the command)
+- create a file COQ_MAPPING containing the argument $mapping.lp in the --coq part
+- create a file LEAN_MAPPING containing the argument $mapping.lp in the --lean part
+- create a file COQ_REQUIRING containing the list of Coq module names that need to be imported (in the same order as they are given in the command)
+- create a file LEAN_REQUIRING containing the list of Lean module names that need to be imported (in the same order as they are given in the command)
 - create a file VOFILES containing the list of Coq module names corresponding to the Coq files given in arguments with file extension ".vo"
 - add links to $file.mk, the Coq files given in argument and other files in $HOL2DK_DIR and $HOLLIGHT_DIR for translating and checking the proofs of $hollight_file.ml
 __EOF__
@@ -46,15 +48,37 @@ error() {
 parse_args() {
     if test $# -ne 0; then
         case $1 in
+            --coq)
+                stage=coq
+                shift
+                parse_args $*;;
+            --lean)
+                stage=lean
+                shift
+                parse_args $*;;
             *.lp)
-                if test -z "$mapping"
-                then
-                    mapping=$1
-                    shift
-                    parse_args $*
-                else
-                    error 'too many lp files'
-                fi;;
+                case $stage in
+                    coq)
+                        if test -z "$coq_mapping"
+                        then
+                            coq_mapping=$1
+                            shift
+                            parse_args $*
+                        else
+                            error 'too many lp files for coq'
+                        fi;;
+                    lean)
+                        if test -z "$lean_mapping"
+                        then
+                            lean_mapping=$1
+                            shift
+                            parse_args $*
+                        else
+                            error 'too many lp files for lean'
+                        fi;;
+                    *)
+                        error 'missing option --coq or --lean before lp file'
+                esac;;
             *.ml)
                 if test -z "$hollight_file"
                 then
@@ -65,32 +89,46 @@ parse_args() {
                     error 'too many ml files'
                 fi;;
             *.mk)
-                if test -z "$mk_file"
-                then
-                    mk_file=$1
-                    shift
-                    parse_args $*
-                else
-                    error 'too many make files'
-                fi;;
+                case $stage in
+                    coq)
+                        if test -z "$mk_file"
+                        then
+                            mk_file=$1
+                            shift
+                            parse_args $*
+                        else
+                            error 'too many make files'
+                        fi;;
+                    *)
+                        error 'missing option --coq before mk file'
+                esac;;
             *.v)
                 if test -z "$root_path"
                 then
-                    error 'the root_path must be given before Coq files'
+                    error 'the root_path must be given before coq files'
                 else
                     coq_files="$coq_files $1"
                     vo_files="$vo_files `basename $1`o"
-                    requiring="$requiring $root_path.`basename $1 .v`"
+                    coq_requiring="$coq_requiring $root_path.`basename $1 .v`"
+                    shift
+                    parse_args $*
+                fi;;
+            *.lean)
+                if test -z "$root_path"
+                then
+                    error 'the root_path must be given before lean files'
+                else
+                    lean_files="$lean_files $1"
+                    lean_requiring="$lean_requiring $root_path.`basename $1 .lean`"
                     shift
                     parse_args $*
                 fi;;
             *)
-                if test -z "$root_path"
-                then
-                    root_path=$1
-                else
-                    requiring="$requiring $1"
-                fi
+                case $stage in
+                    coq) coq_requiring="$coq_requiring $1";;
+                    lean) lean_requiring="$lean_requiring $1";;
+                    *) root_path=$1;;
+                esac
                 shift
                 parse_args $*;;
         esac
@@ -114,23 +152,37 @@ echo `basename $hollight_file .ml` > BASE
 echo create ROOT_PATH ...
 echo $root_path > ROOT_PATH
 
+for f in theory_hol.dk theory_hol.lp Makefile BIG_FILES part.mk
+do
+    echo ln -f -s $HOL2DK_DIR/$f
+    ln -f -s $HOL2DK_DIR/$f
+done
+
+for ext in prf nbp sig thm pos use
+do
+    echo ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
+    ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
+done
+
 echo create lambdapi.pkg ...
 echo "package_name = $root_path" > lambdapi.pkg
 echo "root_path = $root_path" >> lambdapi.pkg
 
+# coq
+
 echo create _CoqProject ...
 echo "-R . $root_path ." > _CoqProject
 
-echo create MAPPING ...
-if test -z "$mapping"
+echo create COQ_MAPPING ...
+if test -z "$coq_mapping"
 then
-    touch mapping.lp
-    mapping=mapping.lp
+    touch coq_mapping.lp
+    coq_mapping=coq_mapping.lp
 fi
-echo $mapping > MAPPING
+echo $coq_mapping > COQ_MAPPING
 
-echo create REQUIRING ...
-echo $requiring > REQUIRING
+echo create COQ_REQUIRING ...
+echo $coq_requiring > COQ_REQUIRING
 
 echo create VOFILES ...
 echo $vo_files > VOFILES
@@ -149,14 +201,44 @@ do
     ln -f -s $f
 done
 
-for f in theory_hol.dk theory_hol.lp Makefile BIG_FILES part.mk
+# lean
+
+echo mkdir -p $root_path
+mkdir -p $root_path
+
+echo create LEAN_MAPPING ...
+if test -z "$lean_mapping"
+then
+    touch lean_mapping.lp
+    lean_mapping=lean_mapping.lp
+fi
+echo $lean_mapping > LEAN_MAPPING
+
+echo create LEAN_REQUIRING ...
+echo $lean_requiring > LEAN_REQUIRING
+
+echo create LEAN_FILES ...
+echo -n > LEAN_FILES
+for f in $lean_files
 do
-    echo ln -f -s $HOL2DK_DIR/$f
-    ln -f -s $HOL2DK_DIR/$f
+    basename $f >> LEAN_FILES
 done
 
-for ext in prf nbp sig thm pos use
+for f in $lean_files
 do
-    echo ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
-    ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
+    echo cp -f $f $root_path/
+    cp -f $f $root_path/
 done
+
+echo create lakefile.toml ...
+cat > lakefile.toml <<__EOF__
+name = "$root_path"
+version = "0.1.0"
+defaultTargets = ["$root_path"]
+
+[[lean_lib]]
+name = "$root_path"
+__EOF__
+
+echo create $root_path.lean ...
+sed -e "s/\(.*\).lean/$root_path.\1/" LEAN_FILES > $root_path.lean
