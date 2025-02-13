@@ -242,3 +242,6 @@ __EOF__
 
 echo create $root_path.lean ...
 sed -e "s/\(.*\).lean/$root_path.\1/" LEAN_FILES > $root_path.lean
+
+echo create lean-toolchain ...
+echo v4.17.0-rc1 > lean-toolchain
