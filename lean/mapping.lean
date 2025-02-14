@@ -14,28 +14,15 @@ theorem ext_fun {A B} {f g : A -> B} : f = g -> forall x, f x = g x
 /- Type of non-empty types, used to interpret HOL-Light types types -/
 /-**************************************************************************-/
 
-structure Type' where
-type : Type
-el : type
+def el {A:Type} : [Inhabited A] -> A := Inhabited.default
 
-instance : CoeSort Type' Type where
-coe t := t.type
-
-def Bool' : Type' := { type := Bool, el := true }
-
-def Prop' : Type' := { type := Prop, el := True }
-
-def arr (a : Type) (b : Type') : Type' := { type := a -> b, el := fun _ => b.el }
-
-instance (a:Type) (b:Type') : Inhabited (a -> b) where default := fun _ => b.el
+def arr (a : Type) (b : Type) : Type := a -> b
 
 /-**************************************************************************-/
 /- Curryfied versions of some Coq connectives -/
 /-**************************************************************************-/
 
 def imp (p q : Prop) : Prop := p -> q
-
---def ex1 : forall {A : Type'}, (A -> Prop) -> Prop := fun A P => exists! x, P x
 
 /-**************************************************************************-/
 /- := of some HOL-Light rules -/
@@ -74,14 +61,14 @@ theorem ex_elim {a} {p : a -> Prop}
 --Require Import CoqLogicClassicalEpsilon
 
 --def ε : forall {A : Type'}, (A -> Prop) -> A := fun A P => epsilon (inhabits (el A)) P
-axiom ε : forall {A : Type'}, (A -> Prop) -> A
+axiom ε : forall {A : Type}, [Inhabited A] -> (A -> Prop) -> A
 /-:= by
 intro A P; cases Classical.em (Exists P) with
 | inl h => exact Exists.choose h
 | inr _ => exact A.el
 -/
 
-axiom ε_spec {A : Type'} {P : A -> Prop} : (exists x, P x) -> P (ε P)
+axiom ε_spec {A : Type} [Inhabited A] {P : A -> Prop} : (exists x, P x) -> P (ε P)
 -- := by intro h; unfold ε; apply epsilon_spec; exact h
 
 axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, f x = g x) -> f = g
@@ -186,7 +173,7 @@ def COND_dep (Q: Prop) (C: Type) (f1: Q -> C) (f2: ~Q -> C) : C :=
 /- := of HOL-Light axioms -/
 /-**************************************************************************-/
 
-theorem axiom_0 : forall {A B : Type'}, forall t : A -> B, (fun x : A => t x) = t
+theorem axiom_0 : forall {A B : Type}, forall t : A -> B, (fun x : A => t x) = t
 := by intros A B t; rfl
 
 --theorem axiom_1 : forall {A : Type'}, forall P : A -> Prop, forall x : A, (P x) -> P (@ε A P)
@@ -196,9 +183,9 @@ theorem axiom_0 : forall {A B : Type'}, forall t : A -> B, (fun x : A => t x) = 
 /- Alignment of connectives. -/
 /-**************************************************************************-/
 
-def ex1 {A:Type'} := fun P : A -> Prop => (Exists P) /\ (forall x : A, forall y : A, ((P x) /\ (P y)) -> x = y)
+def ex1 {A:Type} := fun P : A -> Prop => (Exists P) /\ (forall x : A, forall y : A, ((P x) /\ (P y)) -> x = y)
 
-theorem ex1_def : forall {A : Type'}, (@ex1 A) = (fun P : A -> Prop => (Exists P) /\ (forall x : A, forall y : A, ((P x) /\ (P y)) -> x = y))
+theorem ex1_def : forall {A : Type}, (@ex1 A) = (fun P : A -> Prop => (Exists P) /\ (forall x : A, forall y : A, ((P x) /\ (P y)) -> x = y))
 := by intro; rfl
 
 theorem F_def : False = (forall p : Prop, p)
@@ -217,7 +204,7 @@ intros pq r pr qr; cases pq with
 | inr h => apply qr h
 intro h; apply h; intro hp; apply Or.inl hp; intro hq; apply Or.inr hq
 
-theorem ex_def : forall {A : Type'}, @Exists A = (fun P : A -> Prop => forall q : Prop, (forall x : A, (P x) -> q) -> q)
+theorem ex_def : forall {A : Type}, @Exists A = (fun P : A -> Prop => forall q : Prop, (forall x : A, (P x) -> q) -> q)
 := by
 intro A; apply fun_ext; intro p; apply prop_ext
 intro h; cases h with
@@ -226,7 +213,7 @@ intro h; apply h; intros x px; exact Exists.intro x px
 
 def all {A:Type} (P:A -> Prop) : Prop := forall x:A, P x
 
-theorem all_def : forall {A : Type'}, @all A = (fun P : A -> Prop => P = (fun x : A => True))
+theorem all_def : forall {A : Type}, @all A = (fun P : A -> Prop => P = (fun x : A => True))
 := by
 intro A; apply fun_ext; intro p; apply prop_ext
 intro h; apply fun_ext; intro x; apply prop_ext
