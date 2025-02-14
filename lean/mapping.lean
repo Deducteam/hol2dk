@@ -69,14 +69,14 @@ theorem ex_elim {a} {p : a -> Prop}
 --Require Import CoqLogicClassicalEpsilon
 
 --def ε : forall {A : Type'}, (A -> Prop) -> A := fun A P => epsilon (inhabits (el A)) P
-axiom ε : forall {A : Type}, [Inhabited A] -> (A -> Prop) -> A
+axiom ε : forall {A : Type'}, (A -> Prop) -> A
 /-:= by
 intro A P; cases Classical.em (Exists P) with
 | inl h => exact Exists.choose h
 | inr _ => exact A.el
 -/
 
-axiom ε_spec {A : Type} [Inhabited A] {P : A -> Prop} : (exists x, P x) -> P (ε P)
+axiom ε_spec {A : Type'} {P : A -> Prop} : (exists x, P x) -> P (ε P)
 -- := by intro h; unfold ε; apply epsilon_spec; exact h
 
 axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, f x = g x) -> f = g
