@@ -269,7 +269,7 @@ rm-lean:
 
 .PHONY: lean-files
 lean-files:
-	find . -name '*.lp' | sed -e "s/\.\/\(.*\)\.lp/import $(ROOT_PATH).\1/"
+	@find . -name '*.lp' | sed -e "s/\.\/\(.*\)\.lp/import $(ROOT_PATH).\1/"
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
