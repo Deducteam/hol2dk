@@ -14,7 +14,15 @@ theorem ext_fun {A B} {f g : A -> B} : f = g -> forall x, f x = g x
 /- Type of non-empty types, used to interpret HOL-Light types types -/
 /-**************************************************************************-/
 
-def el {A:Type} : [Inhabited A] -> A := Inhabited.default
+structure Type' where
+type : Type
+inhabited : Inhabited type
+
+instance : CoeSort Type' Type where coe t := t.type
+
+instance (A:Type') :Inhabited A where default := @default _ A.inhabited
+
+def el {A:Type'} : A := Inhabited.default
 
 def arr (a : Type) (b : Type) : Type := a -> b
 

@@ -3,7 +3,7 @@ The declarations of dk/lp symbols are removed and their occurrences are
 replaced by the given Coq expressions. */
 
 // primitive types
-builtin "Type" ≔ Set;
+builtin "Type'" ≔ Set;
 builtin "el" ≔ el;
 builtin "Prop" ≔ bool;
 builtin "arr" ≔ fun;
