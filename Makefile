@@ -2,9 +2,12 @@
 
 BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
-MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
-REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
+COQ_MAPPING := $(shell if test -f COQ_MAPPING; then cat COQ_MAPPING; fi)
+COQ_REQUIRING := $(shell if test -f COQ_REQUIRING; then cat COQ_REQUIRING; fi)
 VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
+LEAN_MAPPING := $(shell if test -f LEAN_MAPPING; then cat LEAN_MAPPING; fi)
+LEAN_REQUIRING := $(shell if test -f LEAN_REQUIRING; then cat LEAN_REQUIRING; fi)
+LEAN_FILES := $(shell if test -f LEAN_FILES; then cat LEAN_FILES; fi)
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
@@ -247,6 +250,27 @@ clean-lpo: rm-lpo
 rm-lpo:
 	find . -maxdepth 1 -name '*.lpo' -delete
 
+.PHONY: lean
+lean: $(LP_FILES:%.lp=$(ROOT_PATH)/%.lean)
+ifneq ($(SET_LP_FILES),1)
+	$(MAKE) SET_LP_FILES=1 $@
+endif
+
+$(ROOT_PATH)/%.lean: %.lp
+	@echo lambdapi export -o stt_lean $<
+	@lambdapi export -o stt_lean --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(LEAN_MAPPING) --use-notations --requiring "$(LEAN_REQUIRING)" $< | sed -e "s/^namespace /namespace $(ROOT_PATH)./" > $@
+
+.PHONY: clean-lean
+clean-lean: rm-lean
+
+.PHONY: rm-lean
+rm-lean:
+	find $(ROOT_PATH) -maxdepth 1 -name '*.lean' -a -type f -a ! -name $(ROOT_PATH).lean $(LEAN_FILES:%= -a ! -name %) -delete
+
+.PHONY: lean-files
+lean-files:
+	@find . -name '*.lp' | sed -e "s/\.\/\(.*\)\.lp/import $(ROOT_PATH).\1/"
+
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
 ifneq ($(SET_LP_FILES),1)
@@ -255,7 +279,7 @@ endif
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(COQ_MAPPING) --use-notations --requiring "$(COQ_REQUIRING)" $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
