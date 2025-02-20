@@ -48,8 +48,8 @@ spec: $(BASE)_spec.v
 $(BASE)_spec.v:
 	echo Require Import $(REQUIRING). > $@
 	echo Require Import $(ROOT_PATH).theory_hol. >> $@
-	echo Require Import $(ROOT_PATH).hol_upto_arith_types. >> $@
-	echo Require Import $(ROOT_PATH).hol_upto_arith_terms. >> $@
+	echo Require Import $(ROOT_PATH).$(BASE)_types. >> $@
+	echo Require Import $(ROOT_PATH).$(BASE)_terms. >> $@
 	find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^Require /d' -e 's/^Lemma /Axiom /' -e '/^Proof\./d' >> $@
 
 .PHONY: rm-spec
