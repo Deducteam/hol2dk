@@ -266,15 +266,13 @@ rm-v:
 	find . -maxdepth 1 -name '*.v' -a -type f -delete
 
 .PHONY: rm-useless-deps
-rm-useless-deps:
+rm-useless-deps: $(V_FILES:%=%.rm)
 ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
-else
-	$(MAKE) $(V_FILES:%=%.rm)
 endif
 
 %.v.rm: %.v
-	sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" $<
+	if test ! -h $<; then sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" $<; fi
 
 .PHONY: spec
 spec:
@@ -301,7 +299,7 @@ ifeq ($(PROGRESS),1)
 	$(HOL2DK_DIR)/progress &
 endif
 ifneq ($(INCLUDE_VO_MK),1)
-	$(MAKE) INCLUDE_VO_MK=1 vo
+	$(MAKE) INCLUDE_VO_MK=1 $@
 	touch .finished
 endif
 
