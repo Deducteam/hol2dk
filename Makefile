@@ -265,6 +265,21 @@ clean-v: rm-v clean-vo
 rm-v:
 	find . -maxdepth 1 -name '*.v' -a -type f -delete
 
+.PHONY: rm-useless-deps
+rm-useless-deps:
+ifneq ($(SET_V_FILES),1)
+	$(MAKE) SET_V_FILES=1 $@
+else
+	$(MAKE) $(V_FILES:%=%.rm)
+endif
+
+%.v.rm: %.v
+	sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" $<
+
+.PHONY: spec
+spec:
+	$(MAKE) -f $(HOL2DK_DIR)/spec.mk
+
 ifeq ($(INCLUDE_VO_MK),1)
 include vo.mk
 include deps.mk
