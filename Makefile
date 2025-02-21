@@ -270,7 +270,7 @@ rm-useless-deps: $(V_FILES:%=%.rm)
 ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
 else
-	sed -e 's/ theory_hol.vo//' -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
+	sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
 	touch -r vo.mk new-vo.mk
 	cp -p new-vo.mk vo.mk
 	rm -f new-vo.mk
