@@ -28,7 +28,7 @@ FILES := $(shell find . -maxdepth 1 -type f -a -name '*.v' -a ! -name '*_spec.v'
 update-vfiles: $(FILES:%=%.update)
 
 %.update:
-	sed -i -e 's/^\(Require .*_part_.*_spec\)\.$$/\1_./g' -e '/^Require .*_spec\.$$/d' -e 's/^\(Require .*_part_.*_spec\)_\.$$/\1./' -e "s/^Require Import HOLLight.theory_hol\.$$/Require Import HOLLight.theory_hol HOLLight.$(BASE)_spec./" $*
+	sed -i -e 's/^\(Require .*_part_.*_spec\)\.$$/\1_./g' -e "s/^Require .*_spec\.$$/Require Import $(ROOT_PATH).$(BASE)_spec./" -e 's/^\(Require .*_part_.*_spec\)_\.$$/\1./' $*
 
 # https://www.linuxquestions.org/questions/programming-9/how-to-check-duplicate-word-in-line-with-sed-935605/
 .PHONY: update-vo-mk
