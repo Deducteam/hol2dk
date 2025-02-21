@@ -53,6 +53,8 @@ builtin "ex_elim" ≔ ∃ₑ;
 builtin "eq_refl" ≔ REFL;
 builtin "EQ_MP" ≔ EQ_MP;
 builtin "MK_COMB" ≔ MK_COMB;
+builtin "eq_trans" ≔ TRANS;
+builtin "eq_sym" ≔ SYM;
 
 // HOL-Light axioms
 builtin "ε" ≔ ε;
@@ -83,6 +85,7 @@ builtin "fst" ≔ FST;
 builtin "FST_def" ≔ FST_def;
 builtin "snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
+builtin "eq" ≔ GEQ;
 
 // infinite type ind
 builtin "ind" ≔ ind;
@@ -131,16 +134,20 @@ builtin "N.min" ≔ MIN;
 builtin "MIN_def" ≔ MIN_def;
 builtin "N.sub" ≔ -;
 builtin "minus_def" ≔ -_def;
-//builtin "Factorial.fact" ≔ FACT;
-//builtin "FACT_def" ≔ FACT_def;
+builtin "fact" ≔ FACT;
+builtin "FACT_def" ≔ FACT_def;
 builtin "N.div" ≔ DIV;
 builtin "DIV_def" ≔ DIV_def;
 builtin "N.modulo" ≔ MOD;
 builtin "MOD_def" ≔ MOD_def;
-//builtin "N.Even" ≔ EVEN;
-//builtin "EVEN_def" ≔ EVEN_def;
-//builtin "N.Odd" ≔ ODD;
-//builtin "ODD_def" ≔ ODD_def;
+builtin "N.Even" ≔ EVEN;
+builtin "EVEN_def" ≔ EVEN_def;
+builtin "N.Odd" ≔ ODD;
+builtin "ODD_def" ≔ ODD_def;
+
+// wf
+builtin "well_founded" ≔ WF;
+builtin "WF_def" ≔ WF_def;
 
 // indtypes
 builtin "NUMLEFT" ≔ NUMLEFT; // not mandatory
