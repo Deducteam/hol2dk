@@ -62,7 +62,7 @@ builtin "fun_ext" ≔ fun_ext;
 builtin "prop_ext" ≔ prop_ext;
 
 // unit type
-builtin "unit" ≔ unit;
+builtin "unit" ≔ Unit;
 builtin "tt" ≔ one;
 builtin "one_def" ≔ one_def;
 builtin "one_ABS" ≔ one_ABS;
@@ -72,7 +72,7 @@ builtin "axiom_3" ≔ axiom_3;
 
 // product type
 builtin "mk_pair" ≔ mk_pair;
-builtin "prod" ≔ prod;
+builtin "prod" ≔ Prod;
 builtin "ABS_prod" ≔ ABS_prod;
 builtin "REP_prod" ≔ REP_prod;
 builtin "axiom_4" ≔ axiom_4;
@@ -85,7 +85,7 @@ builtin "snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
 
 // infinite type ind
-builtin "ind" ≔ ind;
+builtin "ind" ≔ Ind;
 builtin "ONE_ONE" ≔ ONE_ONE;
 builtin "ONTO" ≔ ONTO;
 builtin "axiom_6" ≔ axiom_6;
@@ -93,7 +93,7 @@ builtin "IND_SUC" ≔ IND_SUC;
 builtin "IND_0" ≔ IND_0;
 
 // type of natural numbers
-builtin "nat" ≔ num;
+builtin "nat" ≔ Num;
 builtin "0" ≔ _0;
 builtin "S" ≔ SUC;
 builtin "mk_num" ≔ mk_num;
@@ -149,12 +149,12 @@ builtin "NUMRIGHT" ≔ NUMRIGHT; // not mandatory
 builtin "NUMRIGHT_def" ≔ NUMRIGHT_def; // not mandatory
 builtin "ZRECSPACE" ≔ ZRECSPACE;
 builtin "ZRECSPACE_def" ≔ ZRECSPACE_def;
-builtin "recspace" ≔ recspace;
+builtin "recspace" ≔ Recspace;
 builtin "_mk_rec" ≔ _mk_rec;
 builtin "_dest_rec" ≔ _dest_rec;
 builtin "axiom_9" ≔ axiom_9;
 builtin "axiom_10" ≔ axiom_10;
-builtin "option" ≔ option;
+builtin "option" ≔ Option;
 builtin "_mk_option" ≔ _mk_option;
 builtin "_dest_option" ≔ _dest_option;
 builtin "axiom_13" ≔ axiom_13;
@@ -174,7 +174,7 @@ builtin "inr" ≔ INR;
 builtin "INR_def" ≔ INR_def;
 
 // lists
-builtin "list" ≔ list;
+builtin "list" ≔ List;
 builtin "FCONS" ≔ FCONS;
 builtin "FCONS_def" ≔ FCONS_def;
 builtin "_dest_list" ≔ _dest_list;
@@ -215,7 +215,7 @@ builtin "tl" ≔ TL;
 builtin "TL_def" ≔ TL_def;
 //builtin "EL" ≔ EL;
 //builtin "EL_def" ≔ EL_def;
-builtin "Ascii.ascii" ≔ char;
+builtin "Ascii.ascii" ≔ Char;
 builtin "_dest_char" ≔ _dest_char;
 builtin "_mk_char" ≔ _mk_char;
 builtin "axiom_17" ≔ axiom_17;
@@ -224,7 +224,7 @@ builtin "axiom_18" ≔ axiom_18;
 // realax
 builtin "dist" ≔ dist;
 builtin "is_nadd" ≔ is_nadd;
-builtin "nadd" ≔ nadd;
+builtin "nadd" ≔ Nadd;
 builtin "dest_nadd" ≔ dest_nadd;
 builtin "mk_nadd" ≔ mk_nadd;
 builtin "axiom_19" ≔ axiom_19;
@@ -238,7 +238,7 @@ builtin "nadd_mul" ≔ nadd_mul;
 builtin "nadd_rinv" ≔ nadd_rinv;
 builtin "nadd_inv" ≔ nadd_inv;
 
-builtin "hreal" ≔ hreal;
+builtin "hreal" ≔ Hreal;
 builtin "mk_hreal" ≔ mk_hreal;
 builtin "dest_hreal" ≔ dest_hreal;
 builtin "axiom_21" ≔ axiom_21;
