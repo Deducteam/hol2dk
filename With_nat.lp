@@ -246,7 +246,6 @@ builtin "axiom_22" ≔ axiom_22;
 
 builtin "hreal_of_num" ≔ hreal_of_num;
 builtin "hreal_le" ≔ hreal_le;
-builtin "hreal_eq" ≔ hreal_eq;
 builtin "hreal_add" ≔ hreal_add;
 builtin "hreal_mul" ≔ hreal_mul;
 builtin "hreal_inv" ≔ hreal_inv;
