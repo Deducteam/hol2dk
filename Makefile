@@ -14,7 +14,7 @@ HOL2DK := hol2dk --root-path $(ROOT_PATH)
 .PHONY: default
 default:
 	@echo "usage: make TARGET [VAR=VAL ...]"
-	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
+	@echo "targets: split lp lpo v spec rm-empty-deps vo opam clean-<target> clean-all"
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
