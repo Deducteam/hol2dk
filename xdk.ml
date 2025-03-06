@@ -45,7 +45,7 @@ let valid_name = function
 let name oc n = string oc (valid_name n);;
 
 let string_of_typ_name n =
-  (* type names also used as constant names are capitalized *)
+  (* type names are capitalized to avoid clashes with constants *)
   if is_valid_id n then String.capitalize_ascii n
   else "{|" ^ String.escaped n ^ "|}"
 ;;

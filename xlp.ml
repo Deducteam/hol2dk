@@ -74,7 +74,7 @@ let string_of_typ_name n =
   | "1" -> "Unit"
   | _ ->
      if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
-     else (* type names also used also as constant names are capitalized *)
+     else (* type names are capitalized to avoid clashes with constants *)
        String.capitalize_ascii n
 ;;
 
