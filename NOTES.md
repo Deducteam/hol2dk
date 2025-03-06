@@ -7,6 +7,10 @@ NOTES
 
 - make spec reduces the Coq checking time by 20%
 
+## 24/01/25
+
+Following PR1181 on Lambdapi, Lambdapi can now check hol.ml in 7m21s.
+
 ## 13/01/25
 
 Files raising a stack overflow:
