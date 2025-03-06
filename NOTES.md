@@ -1,6 +1,12 @@
 NOTES
 -----
 
+## 06/03/25
+
+- the use of Spec_With_N.v divides the Coq checking time by 4
+
+- make spec reduces the Coq checking time by 20%
+
 ## 13/01/25
 
 Files raising a stack overflow:

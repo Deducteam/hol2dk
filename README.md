@@ -218,6 +218,8 @@ For instance, to translate the Multivariate library using the Coq type N for nat
   * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
   * `make -j$jobs lpo` to check Lambdapi files (optional)
   * `make -j$jobs v` to translate Lambdapi files to Coq files
+  * `make -j$jobs spec` to merge all small spec files into a single one
+  * `make -j$jobs rm-empty-deps` to remove `theory_hol.v`, `${base}_types.v` and `${base}_axioms.v` (to use when these files are empty only)
   * `make -j$jobs vo` to check Coq files
 
 To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:

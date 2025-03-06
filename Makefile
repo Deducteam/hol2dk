@@ -265,8 +265,8 @@ clean-v: rm-v clean-vo
 rm-v:
 	find . -maxdepth 1 -name '*.v' -a -type f -delete
 
-.PHONY: rm-useless-deps
-rm-useless-deps: $(V_FILES:%=%.rm)
+.PHONY: rm-empty-deps
+rm-empty-deps: $(V_FILES:%=%.rm)
 ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
 else
@@ -308,7 +308,7 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-COQC_OPTIONS = -no-glob # -w -coercions
+COQC_OPTIONS = -q -no-glob
 %.vo: %.v
 	@echo coqc $<
 	@coqc $(COQC_OPTIONS) -R . $(ROOT_PATH) $<

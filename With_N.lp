@@ -53,6 +53,8 @@ builtin "ex_elim" ≔ ∃ₑ;
 builtin "eq_refl" ≔ REFL;
 builtin "EQ_MP" ≔ EQ_MP;
 builtin "MK_COMB" ≔ MK_COMB;
+builtin "eq_trans" ≔ TRANS;
+builtin "eq_sym" ≔ SYM;
 
 // HOL-Light axioms
 builtin "ε" ≔ ε;
@@ -61,17 +63,34 @@ builtin "axiom_1" ≔ axiom_1;
 builtin "fun_ext" ≔ fun_ext;
 builtin "prop_ext" ≔ prop_ext;
 
+// miscellaneous
+builtin "COND" ≔ COND;
+builtin "COND_def" ≔ COND_def;
+builtin "eq" ≔ GEQ;
+builtin "GEQ_def" ≔ GEQ_def;
+builtin "ExtensionalityFacts.is_inverse" ≔ ISO;
+builtin "ISO_def" ≔ ISO_def;
+builtin "ε" ≔ GABS;
+builtin "GABS_def" ≔ GABS_def;
+builtin "and" ≔ _UNGUARDED_PATTERN;
+builtin "_UNGUARDED_PATTERN_def" ≔ _UNGUARDED_PATTERN_def;
+builtin "False" ≔ _FALSITY_;
+builtin "_FALSITY__def" ≔ _FALSITY__def;
+builtin "True" ≔ hashek;
+builtin "hashek_def" ≔ hashek_def;
+
 // unit type
 builtin "unit" ≔ unit;
-builtin "tt" ≔ one;
-builtin "one_def" ≔ one_def;
 builtin "one_ABS" ≔ one_ABS;
 builtin "one_REP" ≔ one_REP;
 builtin "axiom_2" ≔ axiom_2;
 builtin "axiom_3" ≔ axiom_3;
+builtin "tt" ≔ one;
+builtin "one_def" ≔ one_def;
 
 // product type
 builtin "mk_pair" ≔ mk_pair;
+builtin "mk_pair_def" ≔ mk_pair_def;
 builtin "prod" ≔ prod;
 builtin "ABS_prod" ≔ ABS_prod;
 builtin "REP_prod" ≔ REP_prod;
@@ -87,27 +106,35 @@ builtin "SND_def" ≔ SND_def;
 // infinite type ind
 builtin "ind" ≔ ind;
 builtin "ONE_ONE" ≔ ONE_ONE;
+builtin "ONE_ONE_def" ≔ ONE_ONE_def;
 builtin "ONTO" ≔ ONTO;
+builtin "ONTO_def" ≔ ONTO_def;
 builtin "axiom_6" ≔ axiom_6;
 builtin "IND_SUC" ≔ IND_SUC;
+builtin "IND_SUC_def" ≔ IND_SUC_def;
 builtin "IND_0" ≔ IND_0;
+builtin "IND_0_def" ≔ IND_0_def;
 
 // type of natural numbers
 builtin "N" ≔ num;
-builtin "0%N" ≔ _0;
-builtin "N.succ" ≔ SUC;
 builtin "mk_num" ≔ mk_num;
 builtin "dest_num" ≔ dest_num;
 builtin "NUM_REP" ≔ NUM_REP;
-builtin "_0_def" ≔ _0_def;
-builtin "SUC_def" ≔ SUC_def;
+builtin "NUM_REP_def" ≔ NUM_REP_def;
 builtin "axiom_7" ≔ axiom_7;
 builtin "axiom_8" ≔ axiom_8;
+builtin "N0" ≔ _0;
+builtin "_0_def" ≔ _0_def;
+builtin "N.succ" ≔ SUC;
+builtin "SUC_def" ≔ SUC_def;
 
 // usual mathematical functions on natural numbers
+builtin "NUMERAL" ≔ NUMERAL;
+builtin "NUMERAL_def" ≔ NUMERAL_def;
 builtin "BIT0" ≔ BIT0;
 builtin "BIT0_def" ≔ BIT0_def;
 builtin "BIT1" ≔ BIT1;
+builtin "BIT1_def" ≔ BIT1_def;
 builtin "N.pred" ≔ PRE;
 builtin "PRE_def" ≔ PRE_def;
 builtin "N.add" ≔ +;
@@ -124,29 +151,49 @@ builtin "N.ge" ≔ >=;
 builtin "ge_def" ≔ >=_def;
 builtin "N.gt" ≔ >;
 builtin "gt_def" ≔ >_def;
-builtin "COND" ≔ COND;
 builtin "N.max" ≔ MAX;
 builtin "MAX_def" ≔ MAX_def;
 builtin "N.min" ≔ MIN;
 builtin "MIN_def" ≔ MIN_def;
 builtin "N.sub" ≔ -;
 builtin "minus_def" ≔ -_def;
-//builtin "Factorial.fact" ≔ FACT;
-//builtin "FACT_def" ≔ FACT_def;
+builtin "fact" ≔ FACT;
+builtin "FACT_def" ≔ FACT_def;
 builtin "N.div" ≔ DIV;
 builtin "DIV_def" ≔ DIV_def;
 builtin "N.modulo" ≔ MOD;
 builtin "MOD_def" ≔ MOD_def;
-//builtin "N.Even" ≔ EVEN;
-//builtin "EVEN_def" ≔ EVEN_def;
-//builtin "N.Odd" ≔ ODD;
-//builtin "ODD_def" ≔ ODD_def;
+builtin "N.Even" ≔ EVEN;
+builtin "EVEN_def" ≔ EVEN_def;
+builtin "N.Odd" ≔ ODD;
+builtin "ODD_def" ≔ ODD_def;
+
+// wf
+builtin "well_founded" ≔ WF;
+builtin "WF_def" ≔ WF_def;
 
 // indtypes
-builtin "NUMLEFT" ≔ NUMLEFT; // not mandatory
-builtin "NUMLEFT_def" ≔ NUMLEFT_def; // not mandatory
-builtin "NUMRIGHT" ≔ NUMRIGHT; // not mandatory
-builtin "NUMRIGHT_def" ≔ NUMRIGHT_def; // not mandatory
+builtin "NUMPAIR" ≔ NUMPAIR;
+builtin "NUMPAIR_def" ≔ NUMPAIR_def;
+builtin "NUMFST" ≔ NUMFST;
+builtin "NUMFST_def" ≔ NUMFST_def;
+builtin "NUMSND" ≔ NUMSND;
+builtin "NUMSND_def" ≔ NUMSND_def;
+builtin "NUMSUM" ≔ NUMSUM;
+builtin "NUMSUM_def" ≔ NUMSUM_def;
+builtin "NUMLEFT" ≔ NUMLEFT;
+builtin "NUMLEFT_def" ≔ NUMLEFT_def;
+builtin "NUMRIGHT" ≔ NUMRIGHT;
+builtin "NUMRIGHT_def" ≔ NUMRIGHT_def;
+builtin "INJN" ≔ INJN;
+builtin "INJN_def" ≔ INJN_def;
+builtin "INJP" ≔ INJP;
+builtin "INJP_def" ≔ INJP_def;
+builtin "INJA" ≔ INJA;
+builtin "INJA_def" ≔ INJA_def;
+builtin "INJF" ≔ INJF;
+builtin "INJF_def" ≔ INJF_def;
+
 builtin "ZRECSPACE" ≔ ZRECSPACE;
 builtin "ZRECSPACE_def" ≔ ZRECSPACE_def;
 builtin "recspace" ≔ recspace;
@@ -154,6 +201,16 @@ builtin "_mk_rec" ≔ _mk_rec;
 builtin "_dest_rec" ≔ _dest_rec;
 builtin "axiom_9" ≔ axiom_9;
 builtin "axiom_10" ≔ axiom_10;
+builtin "ZBOT" ≔ ZBOT;
+builtin "ZBOT_def" ≔ ZBOT_def;
+builtin "ZCONSTR" ≔ ZCONSTR;
+builtin "ZCONSTR_def" ≔ ZCONSTR_def;
+builtin "BOTTOM" ≔ BOTTOM;
+builtin "BOTTOM_def" ≔ BOTTOM_def;
+builtin "CONSTR" ≔ CONSTR;
+builtin "CONSTR_def" ≔ CONSTR_def;
+
+// option
 builtin "option" ≔ option;
 builtin "_mk_option" ≔ _mk_option;
 builtin "_dest_option" ≔ _dest_option;
@@ -163,6 +220,8 @@ builtin "None" ≔ NONE;
 builtin "NONE_def" ≔ NONE_def;
 builtin "Some" ≔ SOME;
 builtin "SOME_def" ≔ SOME_def;
+
+// sum
 builtin "Datatypes.sum" ≔ Sum;
 builtin "_mk_sum" ≔ _mk_sum;
 builtin "_dest_sum" ≔ _dest_sum;
@@ -185,9 +244,7 @@ builtin "nil" ≔ NIL;
 builtin "NIL_def" ≔ NIL_def;
 builtin "cons" ≔ CONS;
 builtin "CONS_def" ≔ CONS_def;
-builtin "ExtensionalityFacts.is_inverse" ≔ ISO;
-builtin "ISO_def" ≔ ISO_def;
-builtin "List.app" ≔ APPEND;
+builtin "app" ≔ APPEND;
 builtin "APPEND_def" ≔ APPEND_def;
 builtin "List.rev" ≔ REVERSE;
 builtin "REVERSE_def" ≔ REVERSE_def;
@@ -215,6 +272,8 @@ builtin "tl" ≔ TL;
 builtin "TL_def" ≔ TL_def;
 //builtin "EL" ≔ EL;
 //builtin "EL_def" ≔ EL_def;
+
+// char
 builtin "Ascii.ascii" ≔ char;
 builtin "_dest_char" ≔ _dest_char;
 builtin "_mk_char" ≔ _mk_char;
@@ -223,7 +282,9 @@ builtin "axiom_18" ≔ axiom_18;
 
 // realax
 builtin "dist" ≔ dist;
+builtin "dist_def" ≔ dist_def;
 builtin "is_nadd" ≔ is_nadd;
+builtin "is_nadd_def" ≔ is_nadd_def;
 builtin "nadd" ≔ nadd;
 builtin "dest_nadd" ≔ dest_nadd;
 builtin "mk_nadd" ≔ mk_nadd;
@@ -231,12 +292,19 @@ builtin "axiom_19" ≔ axiom_19;
 builtin "axiom_20" ≔ axiom_20;
 
 builtin "nadd_of_num" ≔ nadd_of_num;
+builtin "nadd_of_num_def" ≔ nadd_of_num_def;
 builtin "nadd_le" ≔ nadd_le;
-builtin "nadd_eq" ≔ nadd_eq;
+builtin "nadd_le_def" ≔ nadd_le_def;
 builtin "nadd_add" ≔ nadd_add;
+builtin "nadd_add_def" ≔ nadd_add_def;
 builtin "nadd_mul" ≔ nadd_mul;
+builtin "nadd_mul_def" ≔ nadd_mul_def;
 builtin "nadd_rinv" ≔ nadd_rinv;
+builtin "nadd_rinv_def" ≔ nadd_rinv_def;
 builtin "nadd_inv" ≔ nadd_inv;
+builtin "nadd_inv_def" ≔ nadd_inv_def;
+builtin "nadd_eq" ≔ nadd_eq;
+builtin "nadd_eq_def" ≔ nadd_eq_def;
 
 builtin "hreal" ≔ hreal;
 builtin "mk_hreal" ≔ mk_hreal;
@@ -245,18 +313,30 @@ builtin "axiom_21" ≔ axiom_21;
 builtin "axiom_22" ≔ axiom_22;
 
 builtin "hreal_of_num" ≔ hreal_of_num;
-builtin "hreal_le" ≔ hreal_le;
+builtin "hreal_of_num_def" ≔ hreal_of_num_def;
 builtin "hreal_add" ≔ hreal_add;
+builtin "hreal_add_def" ≔ hreal_add_def;
 builtin "hreal_mul" ≔ hreal_mul;
+builtin "hreal_mul_def" ≔ hreal_mul_def;
+builtin "hreal_le" ≔ hreal_le;
+builtin "hreal_le_def" ≔ hreal_le_def;
 builtin "hreal_inv" ≔ hreal_inv;
+builtin "hreal_inv_def" ≔ hreal_inv_def;
 
 builtin "treal_of_num" ≔ treal_of_num;
+builtin "treal_of_num_def" ≔ treal_of_num_def;
 builtin "treal_le" ≔ treal_le;
+builtin "treal_le_def" ≔ treal_le_def;
 builtin "treal_eq" ≔ treal_eq;
+builtin "treal_eq_def" ≔ treal_eq_def;
 builtin "treal_add" ≔ treal_add;
+builtin "treal_add_def" ≔ treal_add_def;
 builtin "treal_mul" ≔ treal_mul;
+builtin "treal_mul_def" ≔ treal_mul_def;
 builtin "treal_inv" ≔ treal_inv;
+builtin "treal_inv_def" ≔ treal_inv_def;
 builtin "treal_neg" ≔ treal_neg;
+builtin "treal_neg_def" ≔ treal_neg_def;
 
 builtin "R" ≔ Real;
 builtin "mk_real" ≔ mk_real;
@@ -303,6 +383,8 @@ builtin "real_mod_def" ≔ real_mod_def;
 builtin "Z" ≔ int;
 builtin "IZR" ≔ real_of_int;
 builtin "int_of_real" ≔ int_of_real;
+builtin "integer" ≔ integer;
+builtin "integer_def" ≔ integer_def;
 builtin "axiom_25" ≔ axiom_25;
 builtin "axiom_26" ≔ axiom_26;
 builtin "Z_of_N" ≔ int_of_num;
@@ -346,7 +428,39 @@ builtin "int_gcd_def" ≔ int_gcd_def;
 builtin "int_lcm" ≔ int_lcm;
 builtin "int_lcm_def" ≔ int_lcm_def;
 
+// sets
+builtin "IN" ≔ IN;
+builtin "IN_def" ≔ IN_def;
+builtin "EMPTY" ≔ EMPTY;
+builtin "EMPTY_def" ≔ EMPTY_def;
+builtin "INSERT" ≔ INSERT;
+builtin "INSERT_def" ≔ INSERT_def;
+builtin "UNIV" ≔ UNIV;
+builtin "UNIV_def" ≔ UNIV_def;
+builtin "GSPEC" ≔ GSPEC;
+builtin "GSPEC_def" ≔ GSPEC_def;
+builtin "SETSPEC" ≔ SETSPEC;
+builtin "SETSPEC_def" ≔ SETSPEC_def;
+builtin "SUBSET" ≔ SUBSET;
+builtin "SUBSET_def" ≔ SUBSET_def;
+builtin "INTER" ≔ INTER;
+builtin "INTER_def" ≔ INTER_def;
+builtin "UNIONS" ≔ UNIONS;
+builtin "UNIONS_def" ≔ UNIONS_def;
+
+// finite sets
+builtin "FINITE" ≔ FINITE;
+builtin "FINITE_def" ≔ FINITE_def;
+builtin "ITSET" ≔ ITSET;
+builtin "ITSET_def" ≔ ITSET_def;
+builtin "CARD" ≔ CARD;
+builtin "CARD_def" ≔ CARD_def;
+builtin "dimindex" ≔ dimindex;
+builtin "dimindex_def" ≔ dimindex_def;
+
 // finite_image
+builtin "between" ≔ …;
+builtin "between_def" ≔ …_def;
 builtin "finite_image" ≔ finite_image;
 builtin "finite_index" ≔ finite_index;
 builtin "dest_finite_image" ≔ dest_finite_image;

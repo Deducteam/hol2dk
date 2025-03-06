@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- files Spec_mappings_N.v and Spec_With_N.v
+- scripts check-mappings, simplify
 - alignment of the type of reals and basic functions on reals
 - command nbp
 - renamings to handle the Multivariate library
