@@ -1381,16 +1381,16 @@ Qed.
 if A is finite, and 1 otherwise. *)
 (*****************************************************************************)
 
-Definition between : N -> N -> N -> Prop := fun _69692 : N => fun _69693 : N => @GSPEC N (fun GEN_PVAR_229 : N => exists x : N, @SETSPEC N GEN_PVAR_229 ((N.le _69692 x) /\ (N.le x _69693)) x).
+Definition dotdot : N -> N -> N -> Prop := fun _69692 : N => fun _69693 : N => @GSPEC N (fun GEN_PVAR_229 : N => exists x : N, @SETSPEC N GEN_PVAR_229 ((N.le _69692 x) /\ (N.le x _69693)) x).
 
-Axiom between_def : between = (fun _66922 : N => fun _66923 : N => @GSPEC N (fun GEN_PVAR_231 : N => exists x : N, @SETSPEC N GEN_PVAR_231 ((N.le _66922 x) /\ (N.le x _66923)) x)).
+Axiom dotdot_def : dotdot = (fun _66922 : N => fun _66923 : N => @GSPEC N (fun GEN_PVAR_231 : N => exists x : N, @SETSPEC N GEN_PVAR_231 ((N.le _66922 x) /\ (N.le x _66923)) x)).
 
 Definition finite_image_pred (A:Type') x :=
-  @IN N x (between (NUMERAL (BIT1 0)) (@dimindex A (UNIV A))).
+  @IN N x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (UNIV A))).
 
 Lemma finite_image_pred1 (A:Type') : finite_image_pred A 1.
 Proof.
-  unfold finite_image_pred, IN, between, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  unfold finite_image_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
   exists 1. generalize (dimindex_UNIV_gt_0 A). lia.
 Qed.
 
@@ -1406,7 +1406,7 @@ Definition dest_finite_image : forall {A : Type'}, (finite_image A) -> N :=
 Lemma axiom_27 : forall {A : Type'} (a : finite_image A), (@finite_index A (@dest_finite_image A a)) = a.
 Proof. intros A a. apply mk_dest. Qed.
 
-Lemma axiom_28 : forall {A : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 0)) (@dimindex A (UNIV A)))) r) = ((@dest_finite_image A (@finite_index A r)) = r).
+Lemma axiom_28 : forall {A : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 0)) (@dimindex A (UNIV A)))) r) = ((@dest_finite_image A (@finite_index A r)) = r).
 Proof. intros A r. apply dest_mk. Qed.
 
 (*****************************************************************************)
@@ -1431,11 +1431,11 @@ Proof. intros A B r. apply prop_ext; intros _. reflexivity. exact Logic.I. Qed.
 (* Cart.finite_sum *)
 (*****************************************************************************)
 
-Definition finite_sum_pred (A B: Type') x := @IN N x (between (NUMERAL (BIT1 0)) (N.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B)))).
+Definition finite_sum_pred (A B: Type') x := @IN N x (dotdot (NUMERAL (BIT1 0)) (N.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B)))).
 
 Lemma finite_sum_pred1 (A B:Type') : finite_sum_pred A B 1.
 Proof.
-  unfold finite_sum_pred, IN, between, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  unfold finite_sum_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
   exists 1. generalize (dimindex_UNIV_gt_0 A) (dimindex_UNIV_gt_0 B). lia.
 Qed.
 
@@ -1451,18 +1451,18 @@ Definition dest_finite_sum : forall {A B : Type'}, (finite_sum A B) -> N :=
 Lemma axiom_31 : forall {A B : Type'} (a : finite_sum A B), (@mk_finite_sum A B (@dest_finite_sum A B a)) = a.
 Proof. intros A a. apply mk_dest. Qed.
 
-Lemma axiom_32 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 0)) (N.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B))))) r) = ((@dest_finite_sum A B (@mk_finite_sum A B r)) = r).
+Lemma axiom_32 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 0)) (N.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B))))) r) = ((@dest_finite_sum A B (@mk_finite_sum A B r)) = r).
 Proof. intros A r. apply dest_mk. Qed.
 
 (*****************************************************************************)
 (* Cart.finite_diff *)
 (*****************************************************************************)
 
-Definition finite_diff_pred (A B: Type') x := @IN N x (between (NUMERAL (BIT1 0)) (@COND N (N.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (N.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 0)))).
+Definition finite_diff_pred (A B: Type') x := @IN N x (dotdot (NUMERAL (BIT1 0)) (@COND N (N.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (N.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 0)))).
 
 Lemma finite_diff_pred1 (A B:Type') : finite_diff_pred A B 1.
 Proof.
-  unfold finite_diff_pred, IN, between, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  unfold finite_diff_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
   exists 1. generalize (dimindex_UNIV_gt_0 A) (dimindex_UNIV_gt_0 B); intros.
   case (prop_degen (dimindex (UNIV B) < dimindex (UNIV A))); intro h; rewrite h.
   rewrite COND_True. rewrite is_True in h. lia.
@@ -1481,18 +1481,18 @@ Definition dest_finite_diff : forall {A B : Type'}, (finite_diff A B) -> N :=
 Lemma axiom_33 : forall {A B : Type'} (a : finite_diff A B), (@mk_finite_diff A B (@dest_finite_diff A B a)) = a.
 Proof. intros A a. apply mk_dest. Qed.
 
-Lemma axiom_34 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 0)) (@COND N (N.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (N.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 0))))) r) = ((@dest_finite_diff A B (@mk_finite_diff A B r)) = r).
+Lemma axiom_34 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 0)) (@COND N (N.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (N.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 0))))) r) = ((@dest_finite_diff A B (@mk_finite_diff A B r)) = r).
 Proof. intros A r. apply dest_mk. Qed.
 
 (*****************************************************************************)
 (* Cart.finite_prod *)
 (*****************************************************************************)
 
-Definition finite_prod_pred (A B: Type') x := @IN N x (between (NUMERAL (BIT1 0)) (N.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B)))).
+Definition finite_prod_pred (A B: Type') x := @IN N x (dotdot (NUMERAL (BIT1 0)) (N.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B)))).
 
 Lemma finite_prod_pred1 (A B:Type') : finite_prod_pred A B 1.
 Proof.
-  unfold finite_prod_pred, IN, between, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
+  unfold finite_prod_pred, IN, dotdot, GSPEC, SETSPEC, NUMERAL, BIT1, BIT0.
   exists 1. generalize (dimindex_UNIV_gt_0 A) (dimindex_UNIV_gt_0 B); intros. lia.
 Qed.
 
@@ -1508,7 +1508,7 @@ Definition dest_finite_prod : forall {A B : Type'}, (finite_prod A B) -> N :=
 Lemma axiom_35 : forall {A B : Type'} (a : finite_prod A B), (@mk_finite_prod A B (@dest_finite_prod A B a)) = a.
 Proof. intros A a. apply mk_dest. Qed.
 
-Lemma axiom_36 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 0)) (N.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B))))) r) = ((@dest_finite_prod A B (@mk_finite_prod A B r)) = r).
+Lemma axiom_36 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 0)) (N.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B))))) r) = ((@dest_finite_prod A B (@mk_finite_prod A B r)) = r).
 Proof. intros A r. apply dest_mk. Qed.
 
 (*****************************************************************************)
@@ -1758,11 +1758,11 @@ Proof. intros A r. apply dest_mk. Qed.
 (* Multivariate.Clifford.multivector *)
 (*****************************************************************************)
 
-Definition is_multivector (A:Type') (s:N -> Prop) := SUBSET s (between 1 (dimindex (@UNIV A))).
+Definition is_multivector (A:Type') (s:N -> Prop) := SUBSET s (dotdot 1 (dimindex (@UNIV A))).
 
 Lemma is_multivector0 (A:Type') : is_multivector A (fun n => n = 1).
 Proof.
-  unfold is_multivector, SUBSET, between, dimindex, IN, GSPEC, SETSPEC.
+  unfold is_multivector, SUBSET, dotdot, dimindex, IN, GSPEC, SETSPEC.
   intros x e. subst x. exists 1%N. split. 2: reflexivity. split. reflexivity.
   destruct (prop_degen (FINITE (@UNIV A))); rewrite H.
   rewrite COND_True. apply CARD_ge_1. rewrite H. exact Logic.I.
@@ -1778,5 +1778,5 @@ Definition dest_multivector : forall {N' : Type'}, (Multivector N') -> N -> Prop
 Lemma axiom_53 : forall {N' : Type'} (a : Multivector N'), (@mk_multivector N' (@dest_multivector N' a)) = a.
 Proof. intros A a. apply mk_dest. Qed.
 
-Lemma axiom_54 : forall {N' : Type'} (r : N -> Prop), ((fun s : N -> Prop => @SUBSET N s (between (NUMERAL (BIT1 0%N)) (@dimindex N' (@UNIV N')))) r) = ((@dest_multivector N' (@mk_multivector N' r)) = r).
+Lemma axiom_54 : forall {N' : Type'} (r : N -> Prop), ((fun s : N -> Prop => @SUBSET N s (dotdot (NUMERAL (BIT1 0%N)) (@dimindex N' (@UNIV N')))) r) = ((@dest_multivector N' (@mk_multivector N' r)) = r).
 Proof. intros A r. apply dest_mk. Qed.

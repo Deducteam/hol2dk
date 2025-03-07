@@ -835,9 +835,9 @@ Axiom dimindex_def : forall {A : Type'}, (@dimindex A) = (fun _94156 : A -> Prop
 if A is finite, and 1 otherwise. *)
 (*****************************************************************************)
 
-Axiom between : N -> N -> N -> Prop.
+Axiom dotdot : N -> N -> N -> Prop.
 
-Axiom between_def : between = (fun _66922 : N => fun _66923 : N => @GSPEC N (fun GEN_PVAR_231 : N => exists x : N, @SETSPEC N GEN_PVAR_231 ((N.le _66922 x) /\ (N.le x _66923)) x)).
+Axiom dotdot_def : dotdot = (fun _66922 : N => fun _66923 : N => @GSPEC N (fun GEN_PVAR_231 : N => exists x : N, @SETSPEC N GEN_PVAR_231 ((N.le _66922 x) /\ (N.le x _66923)) x)).
 
 Axiom finite_image : Type' -> Type'.
 
@@ -847,7 +847,7 @@ Axiom dest_finite_image : forall {A : Type'}, (finite_image A) -> N.
 
 Axiom axiom_27 : forall {A : Type'} (a : finite_image A), (@finite_index A (@dest_finite_image A a)) = a.
 
-Axiom axiom_28 : forall {A : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 N0)) (@dimindex A (UNIV A)))) r) = ((@dest_finite_image A (@finite_index A r)) = r).
+Axiom axiom_28 : forall {A : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 N0)) (@dimindex A (UNIV A)))) r) = ((@dest_finite_image A (@finite_index A r)) = r).
 
 (*****************************************************************************)
 (* Cart.cart A B is finite_image B -> A. *)
@@ -877,7 +877,7 @@ Axiom dest_finite_sum : forall {A B : Type'}, (finite_sum A B) -> N.
 
 Axiom axiom_31 : forall {A B : Type'} (a : finite_sum A B), (@mk_finite_sum A B (@dest_finite_sum A B a)) = a.
 
-Axiom axiom_32 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 N0)) (N.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B))))) r) = ((@dest_finite_sum A B (@mk_finite_sum A B r)) = r).
+Axiom axiom_32 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 N0)) (N.add (@dimindex A (UNIV A)) (@dimindex B (UNIV B))))) r) = ((@dest_finite_sum A B (@mk_finite_sum A B r)) = r).
 
 (*****************************************************************************)
 (* Cart.finite_diff *)
@@ -891,7 +891,7 @@ Axiom dest_finite_diff : forall {A B : Type'}, (finite_diff A B) -> N.
 
 Axiom axiom_33 : forall {A B : Type'} (a : finite_diff A B), (@mk_finite_diff A B (@dest_finite_diff A B a)) = a.
 
-Axiom axiom_34 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 N0)) (@COND N (N.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (N.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 N0))))) r) = ((@dest_finite_diff A B (@mk_finite_diff A B r)) = r).
+Axiom axiom_34 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 N0)) (@COND N (N.lt (@dimindex B (UNIV B)) (@dimindex A (UNIV A))) (N.sub (@dimindex A (UNIV A)) (@dimindex B (UNIV B))) (NUMERAL (BIT1 N0))))) r) = ((@dest_finite_diff A B (@mk_finite_diff A B r)) = r).
 
 (*****************************************************************************)
 (* Cart.finite_prod *)
@@ -905,7 +905,7 @@ Axiom dest_finite_prod : forall {A B : Type'}, (finite_prod A B) -> N.
 
 Axiom axiom_35 : forall {A B : Type'} (a : finite_prod A B), (@mk_finite_prod A B (@dest_finite_prod A B a)) = a.
 
-Axiom axiom_36 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (between (NUMERAL (BIT1 N0)) (N.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B))))) r) = ((@dest_finite_prod A B (@mk_finite_prod A B r)) = r).
+Axiom axiom_36 : forall {A B : Type'} (r : N), ((fun x : N => @IN N x (dotdot (NUMERAL (BIT1 N0)) (N.mul (@dimindex A (@UNIV A)) (@dimindex B (@UNIV B))))) r) = ((@dest_finite_prod A B (@mk_finite_prod A B r)) = r).
 
 (*****************************************************************************)
 (* Cart.tybit0 *)
@@ -1061,4 +1061,4 @@ Axiom dest_multivector : forall {N' : Type'}, (Multivector N') -> N -> Prop.
 
 Axiom axiom_53 : forall {N' : Type'} (a : Multivector N'), (@mk_multivector N' (@dest_multivector N' a)) = a.
 
-Axiom axiom_54 : forall {N' : Type'} (r : N -> Prop), ((fun s : N -> Prop => @SUBSET N s (between (NUMERAL (BIT1 N0)) (@dimindex N' (@UNIV N')))) r) = ((@dest_multivector N' (@mk_multivector N' r)) = r).
+Axiom axiom_54 : forall {N' : Type'} (r : N -> Prop), ((fun s : N -> Prop => @SUBSET N s (dotdot (NUMERAL (BIT1 N0)) (@dimindex N' (@UNIV N')))) r) = ((@dest_multivector N' (@mk_multivector N' r)) = r).

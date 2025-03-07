@@ -306,7 +306,7 @@ builtin "treal_neg" ≔ treal_neg;
 builtin "treal_neg_def" ≔ treal_neg_def;
 
 builtin "real" ≔ Real;
-builtin "mk_real" ≔ mk_real;
-builtin "dest_real" ≔ dest_real;
-builtin "axiom_23" ≔ axiom_23;
-builtin "axiom_24" ≔ axiom_24;
+builtin "hl_mk_real" ≔ mk_real;
+builtin "hl_dest_real" ≔ dest_real;
+builtin "hl_axiom_23" ≔ axiom_23;
+builtin "hl_axiom_24" ≔ axiom_24;

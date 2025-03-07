@@ -459,8 +459,8 @@ builtin "dimindex" ≔ dimindex;
 builtin "dimindex_def" ≔ dimindex_def;
 
 // finite_image
-builtin "between" ≔ …;
-builtin "between_def" ≔ …_def;
+builtin "dotdot" ≔ …;
+builtin "dotdot_def" ≔ …_def;
 builtin "finite_image" ≔ finite_image;
 builtin "finite_index" ≔ finite_index;
 builtin "dest_finite_image" ≔ dest_finite_image;

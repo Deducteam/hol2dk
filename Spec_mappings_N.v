@@ -450,6 +450,8 @@ Axiom treal_eq : hreal * hreal -> hreal * hreal -> Prop.
 
 Axiom real : Type'.
 
+Module Export HL.
+
 Axiom mk_real : (prod' hreal hreal -> Prop) -> real.
 
 Axiom dest_real : real -> (prod' hreal hreal -> Prop).
@@ -457,3 +459,5 @@ Axiom dest_real : real -> (prod' hreal hreal -> Prop).
 Axiom axiom_23 : forall (a : real), (mk_real (dest_real a)) = a.
 
 Axiom axiom_24 : forall (r : (prod hreal hreal) -> Prop), ((fun s : (prod hreal hreal) -> Prop => exists x : prod hreal hreal, s = (treal_eq x)) r) = ((dest_real (mk_real r)) = r).
+
+End HL.

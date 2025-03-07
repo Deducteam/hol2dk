@@ -17,7 +17,7 @@ default: help
 .PHONY: help
 help:
 	@echo "usage: make TARGET [VAR=VAL ...]"
-	@echo "targets: split lp lpo v merge-spec rm-empty-deps vo opam clean-<target> clean-all"
+	@echo "targets: split lp lpo v merge-spec-files rm-empty-deps vo opam clean-<target> clean-all"
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
@@ -282,8 +282,8 @@ endif
 %.v.rm: %.v
 	if test ! -h $<; then sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_axioms\.$$/d" $<; fi
 
-.PHONY: merge-spec
-merge-spec:
+.PHONY: merge-spec-files
+merge-spec-files:
 	$(MAKE) -f $(HOL2DK_DIR)/spec.mk
 
 ifeq ($(INCLUDE_VO_MK),1)
@@ -350,7 +350,7 @@ all:
 from-v:
 	$(MAKE) clean-v
 	$(MAKE) v
-	$(MAKE) merge-spec
+	$(MAKE) merge-spec-files
 	$(MAKE) rm-empty-deps
 	/usr/bin/time -f "%E" $(MAKE) vo
 
