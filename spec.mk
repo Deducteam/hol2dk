@@ -50,7 +50,7 @@ $(BASE)_spec.v:
 	echo Require Import $(ROOT_PATH).theory_hol. >> $@
 	echo Require Import $(ROOT_PATH).$(BASE)_types. >> $@
 	echo Require Import $(ROOT_PATH).$(BASE)_terms. >> $@
-	find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^Require /d' -e '/^Definition /d' -e '/^Opaque /d' -e 's/^Lemma /Axiom /' -e '/^Proof\./d' >> $@
+	find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^Require /d' -e 's/^Lemma /Axiom /' -e '/^Proof\./d' >> $@
 
 .PHONY: rm-spec-files
 rm-spec-files:
