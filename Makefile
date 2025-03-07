@@ -12,9 +12,12 @@ MAX_ABBREV = 2_000_000
 HOL2DK := hol2dk --root-path $(ROOT_PATH)
 
 .PHONY: default
-default:
+default: help
+
+.PHONY: help
+help:
 	@echo "usage: make TARGET [VAR=VAL ...]"
-	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
+	@echo "targets: split lp lpo v merge-spec-files rm-empty-deps vo opam clean-<target> clean-all"
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
@@ -265,8 +268,8 @@ clean-v: rm-v clean-vo
 rm-v:
 	find . -maxdepth 1 -name '*.v' -a -type f -delete
 
-.PHONY: rm-useless-deps
-rm-useless-deps: $(V_FILES:%=%.rm)
+.PHONY: rm-empty-deps
+rm-empty-deps: $(V_FILES:%=%.rm)
 ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
 else
@@ -279,8 +282,8 @@ endif
 %.v.rm: %.v
 	if test ! -h $<; then sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_axioms\.$$/d" $<; fi
 
-.PHONY: spec
-spec:
+.PHONY: merge-spec-files
+merge-spec-files:
 	$(MAKE) -f $(HOL2DK_DIR)/spec.mk
 
 ifeq ($(INCLUDE_VO_MK),1)
@@ -308,7 +311,7 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-COQC_OPTIONS = -no-glob # -w -coercions
+COQC_OPTIONS = -q -no-glob
 %.vo: %.v
 	@echo coqc $<
 	@coqc $(COQC_OPTIONS) -R . $(ROOT_PATH) $<
@@ -341,8 +344,15 @@ all:
 	$(MAKE) split
 	$(MAKE) lp
 	$(MAKE) lpo
+	$(MAKE) from-v
+
+.PHONY: from-v
+from-v:
+	$(MAKE) clean-v
 	$(MAKE) v
-	$(MAKE) vo
+	$(MAKE) merge-spec-files
+	$(MAKE) rm-empty-deps
+	/usr/bin/time -f "%E" $(MAKE) vo
 
 .PHONY: votodo
 votodo:

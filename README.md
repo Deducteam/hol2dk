@@ -218,6 +218,8 @@ For instance, to translate the Multivariate library using the Coq type N for nat
   * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
   * `make -j$jobs lpo` to check Lambdapi files (optional)
   * `make -j$jobs v` to translate Lambdapi files to Coq files
+  * `make -j$jobs spec` to merge all small spec files into a single one
+  * `make -j$jobs rm-empty-deps` to remove `theory_hol.v`, `${base}_types.v` and `${base}_axioms.v` (to use when these files are empty only)
   * `make -j$jobs vo` to check Coq files
 
 To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
@@ -232,7 +234,7 @@ On a machine with 32 processors i9-13950HX, 128 Gb RAM, Hol2dk master, HOL-Light
 
 | HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo     |
 |------------------------------|-------|--------|-------|-------|-----|-----|-------|--------|
-| hol.ml                       | 4m    | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 50m    |
+| hol.ml                       | 4m    | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 10m23s |
 | Multivariate/make_complex.ml | 2h30m | 135 Gb | 85 M  | 40728 | 45m | 24m | 91 Gb | 34h49m |
 
 Translating HOL-Light proofs to Dedukti
