@@ -101,7 +101,7 @@ jobs:
           export HOLLIGHT_DIR=`pwd`/hol-light
           mkdir -p output4
           cd output4
-          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp ../${{ matrix.mapping }}.mk
+          hol2dk config hol_upto_arith.ml HOLLight ../${{ matrix.mapping }}.v ../${{ matrix.mapping }}.lp
           hol2dk mk 3 hol_upto_arith
           make -f hol_upto_arith.mk -j3 lp
           make -f hol_upto_arith.mk -j3 lpo
