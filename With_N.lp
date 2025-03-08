@@ -62,7 +62,7 @@ builtin "fun_ext" ≔ fun_ext;
 builtin "prop_ext" ≔ prop_ext;
 
 // unit type
-builtin "unit" ≔ unit;
+builtin "unit" ≔ Unit;
 builtin "tt" ≔ one;
 builtin "one_def" ≔ one_def;
 builtin "one_ABS" ≔ one_ABS;
@@ -72,7 +72,7 @@ builtin "axiom_3" ≔ axiom_3;
 
 // product type
 builtin "mk_pair" ≔ mk_pair;
-builtin "prod" ≔ prod;
+builtin "prod" ≔ Prod;
 builtin "ABS_prod" ≔ ABS_prod;
 builtin "REP_prod" ≔ REP_prod;
 builtin "axiom_4" ≔ axiom_4;
@@ -85,7 +85,7 @@ builtin "snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
 
 // infinite type ind
-builtin "ind" ≔ ind;
+builtin "ind" ≔ Ind;
 builtin "ONE_ONE" ≔ ONE_ONE;
 builtin "ONTO" ≔ ONTO;
 builtin "axiom_6" ≔ axiom_6;
@@ -93,7 +93,7 @@ builtin "IND_SUC" ≔ IND_SUC;
 builtin "IND_0" ≔ IND_0;
 
 // type of natural numbers
-builtin "N" ≔ num;
+builtin "N" ≔ Num;
 builtin "0%N" ≔ _0;
 builtin "N.succ" ≔ SUC;
 builtin "mk_num" ≔ mk_num;
@@ -149,12 +149,12 @@ builtin "NUMRIGHT" ≔ NUMRIGHT; // not mandatory
 builtin "NUMRIGHT_def" ≔ NUMRIGHT_def; // not mandatory
 builtin "ZRECSPACE" ≔ ZRECSPACE;
 builtin "ZRECSPACE_def" ≔ ZRECSPACE_def;
-builtin "recspace" ≔ recspace;
+builtin "recspace" ≔ Recspace;
 builtin "_mk_rec" ≔ _mk_rec;
 builtin "_dest_rec" ≔ _dest_rec;
 builtin "axiom_9" ≔ axiom_9;
 builtin "axiom_10" ≔ axiom_10;
-builtin "option" ≔ option;
+builtin "option" ≔ Option;
 builtin "_mk_option" ≔ _mk_option;
 builtin "_dest_option" ≔ _dest_option;
 builtin "axiom_13" ≔ axiom_13;
@@ -174,7 +174,7 @@ builtin "inr" ≔ INR;
 builtin "INR_def" ≔ INR_def;
 
 // lists
-builtin "list" ≔ list;
+builtin "list" ≔ List;
 builtin "FCONS" ≔ FCONS;
 builtin "FCONS_def" ≔ FCONS_def;
 builtin "_dest_list" ≔ _dest_list;
@@ -215,7 +215,7 @@ builtin "tl" ≔ TL;
 builtin "TL_def" ≔ TL_def;
 //builtin "EL" ≔ EL;
 //builtin "EL_def" ≔ EL_def;
-builtin "Ascii.ascii" ≔ char;
+builtin "Ascii.ascii" ≔ Char;
 builtin "_dest_char" ≔ _dest_char;
 builtin "_mk_char" ≔ _mk_char;
 builtin "axiom_17" ≔ axiom_17;
@@ -224,7 +224,7 @@ builtin "axiom_18" ≔ axiom_18;
 // realax
 builtin "dist" ≔ dist;
 builtin "is_nadd" ≔ is_nadd;
-builtin "nadd" ≔ nadd;
+builtin "nadd" ≔ Nadd;
 builtin "dest_nadd" ≔ dest_nadd;
 builtin "mk_nadd" ≔ mk_nadd;
 builtin "axiom_19" ≔ axiom_19;
@@ -238,7 +238,7 @@ builtin "nadd_mul" ≔ nadd_mul;
 builtin "nadd_rinv" ≔ nadd_rinv;
 builtin "nadd_inv" ≔ nadd_inv;
 
-builtin "hreal" ≔ hreal;
+builtin "hreal" ≔ Hreal;
 builtin "mk_hreal" ≔ mk_hreal;
 builtin "dest_hreal" ≔ dest_hreal;
 builtin "axiom_21" ≔ axiom_21;
@@ -300,7 +300,7 @@ builtin "Rmod_eq" ≔ real_mod;
 builtin "real_mod_def" ≔ real_mod_def;
 
 // integers
-builtin "Z" ≔ int;
+builtin "Z" ≔ Int;
 builtin "IZR" ≔ real_of_int;
 builtin "int_of_real" ≔ int_of_real;
 builtin "axiom_25" ≔ axiom_25;
@@ -347,56 +347,56 @@ builtin "int_lcm" ≔ int_lcm;
 builtin "int_lcm_def" ≔ int_lcm_def;
 
 // finite_image
-builtin "finite_image" ≔ finite_image;
+builtin "finite_image" ≔ Finite_image;
 builtin "finite_index" ≔ finite_index;
 builtin "dest_finite_image" ≔ dest_finite_image;
 builtin "axiom_27" ≔ axiom_27;
 builtin "axiom_28" ≔ axiom_28;
 
 // cart
-builtin "cart" ≔ cart;
+builtin "cart" ≔ Cart;
 builtin "mk_cart" ≔ mk_cart;
 builtin "dest_cart" ≔ dest_cart;
 builtin "axiom_29" ≔ axiom_29;
 builtin "axiom_30" ≔ axiom_30;
 
 // finite_sum
-builtin "finite_sum" ≔ finite_sum;
+builtin "finite_sum" ≔ Finite_sum;
 builtin "mk_finite_sum" ≔ mk_finite_sum;
 builtin "dest_finite_sum" ≔ dest_finite_sum;
 builtin "axiom_31" ≔ axiom_31;
 builtin "axiom_32" ≔ axiom_32;
 
 // finite_diff
-builtin "finite_diff" ≔ finite_diff;
+builtin "finite_diff" ≔ Finite_diff;
 builtin "mk_finite_diff" ≔ mk_finite_diff;
 builtin "dest_finite_diff" ≔ dest_finite_diff;
 builtin "axiom_33" ≔ axiom_33;
 builtin "axiom_34" ≔ axiom_34;
 
 // finite_prod
-builtin "finite_prod" ≔ finite_prod;
+builtin "finite_prod" ≔ Finite_prod;
 builtin "mk_finite_prod" ≔ mk_finite_prod;
 builtin "dest_finite_prod" ≔ dest_finite_prod;
 builtin "axiom_35" ≔ axiom_35;
 builtin "axiom_36" ≔ axiom_36;
 
 // tybit0
-builtin "tybit0" ≔ tybit0;
+builtin "tybit0" ≔ Tybit0;
 builtin "_mk_tybit0" ≔ _mk_tybit0;
 builtin "_dest_tybit0" ≔ _dest_tybit0;
 builtin "axiom_37" ≔ axiom_37;
 builtin "axiom_38" ≔ axiom_38;
 
 // tybit1
-builtin "tybit1" ≔ tybit1;
+builtin "tybit1" ≔ Tybit1;
 builtin "_mk_tybit1" ≔ _mk_tybit1;
 builtin "_dest_tybit1" ≔ _dest_tybit1;
 builtin "axiom_39" ≔ axiom_39;
 builtin "axiom_40" ≔ axiom_40;
 
 // frag
-builtin "frag" ≔ frag;
+builtin "frag" ≔ Frag;
 builtin "mk_frag" ≔ mk_frag;
 builtin "dest_frag" ≔ dest_frag;
 builtin "axiom_41" ≔ axiom_41;
@@ -424,7 +424,7 @@ builtin "axiom_47" ≔ axiom_47;
 builtin "axiom_48" ≔ axiom_48;
 
 // net
-builtin "net" ≔ net;
+builtin "net" ≔ Net;
 builtin "mk_net" ≔ mk_net;
 builtin "dest_net" ≔ dest_net;
 builtin "axiom_49" ≔ axiom_49;

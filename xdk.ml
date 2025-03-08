@@ -45,11 +45,9 @@ let valid_name = function
 let name oc n = string oc (valid_name n);;
 
 let string_of_typ_name n =
-  match n with
-  (* type names used also as constant names are capitalized *)
-  |"group"|"matroid"|"metric"|"multiset"|"multivector"|"real"|"sum"|"topology"
-   -> String.capitalize_ascii n
-  | n -> valid_name n
+  (* type names are capitalized to avoid clashes with constants *)
+  if is_valid_id n then String.capitalize_ascii n
+  else "{|" ^ String.escaped n ^ "|}"
 ;;
 
 let typ_name oc n = string oc (string_of_typ_name n);;

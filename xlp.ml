@@ -25,10 +25,7 @@ let name =
   string oc
     begin match n with
     | "" -> assert false
-    | "," -> "̦‚" (* 201A *)
-    | "@" -> "ε"
-    | "\\/" -> "∨"
-    | "/\\" -> "∧"
+    (* Nicer notations *)
     | "==>" -> "⇒"
     | "!" -> "∀"
     | "?" -> "∃"
@@ -39,22 +36,27 @@ let name =
     | "-->" -> "⟶" (* 27F6 *)
     | "--->" -> "⭬" (* 279F *)
     | "<->" -> "↔" (* 2194 *)
-    (* invalid Lambdapi identifiers *)
+    (* Invalid Lambdapi identifiers *)
+    | "\\/" -> "∨"
+    | "/\\" -> "∧"
+    | "," -> "̦‚" (* 201A *)
+    | "@" -> "ε"
     | "$" -> "﹩" (* FE69 *)
     | "$$" -> "﹩﹩" (* FE69 *)
     | ".." -> "…" (* 2026 *)
     | "|" -> "¦" (* 00A6 *)
     | "||" -> "¦¦"
+    (* Lambdapi keywords *)
     |"_"|"abort"|"admit"|"admitted"|"apply"|"as"|"assert"|"assertnot"
     |"associative"|"assume"|"begin"|"builtin"|"coerce_rule"|"commutative"
-    |"compute"|"constant"|"debug"|"end"|"fail"|"flag"|"generalize"|"have"
-    |"in"|"induction"|"inductive"|"infix"|"injective"|"left"|"let"|"notation"
-    |"off"|"on"|"opaque"|"open"|"postfix"|"prefix"|"print"|"private"
-    |"proofterm"|"protected"|"prover"|"prover_timeout"|"quantifier"|"refine"
-    |"reflexivity"|"remove"|"require"|"rewrite"|"right"|"rule"|"search"
-    |"sequential"|"simplify"|"solve"|"symbol"|"symmetry"|"type"|"TYPE"
-    |"unif_rule"|"verbose"|"why3"|"with" -> "_" ^ n
-    (* for Coq *)
+    |"compute"|"constant"|"debug"|"end"|"eval"|"fail"|"flag"|"generalize"
+    |"have"|"in"|"induction"|"inductive"|"infix"|"injective"|"left"|"let"
+    |"notation"|"off"|"on"|"opaque"|"open"|"postfix"|"prefix"|"print"
+    |"private"|"proofterm"|"protected"|"prover"|"prover_timeout"|"quantifier"
+    |"refine"|"reflexivity"|"remove"|"require"|"rewrite"|"right"|"rule"
+    |"search"|"sequential"|"simplify"|"solve"|"symbol"|"symmetry"|"type"
+    |"TYPE"|"unif_rule"|"verbose"|"why3"|"with" -> "_" ^ n
+    (* Invalid Coq identifiers *)
     | "%" -> n
     | _ -> Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
     end
@@ -69,12 +71,11 @@ let cst_name = name;;
 let string_of_typ_name n =
   match n with
   | "" -> assert false
-  | "1" -> "unit"
-  (* type names used also as constant names are capitalized *)
-  |"group"|"matroid"|"metric"|"multiset"|"multivector"|"real"|"sum"|"topology"
-   -> String.capitalize_ascii n
+  | "1" -> "Unit"
   | _ ->
-    if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1) else n
+     if n.[0] = '?' then "_" ^ String.sub n 1 (String.length n - 1)
+     else (* type names are capitalized to avoid clashes with constants *)
+       String.capitalize_ascii n
 ;;
 
 let typ_name oc n = string oc (string_of_typ_name n);;
