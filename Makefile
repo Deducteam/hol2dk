@@ -352,7 +352,7 @@ from-v:
 	$(MAKE) v
 	$(MAKE) merge-spec-files
 	$(MAKE) rm-empty-deps
-	/usr/bin/time -f "%E" $(MAKE) vo
+	/usr/bin/time -f "%E" $(MAKE) -k vo
 
 .PHONY: votodo
 votodo:
