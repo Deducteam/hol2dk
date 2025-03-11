@@ -127,7 +127,7 @@ echo-big-files:
 .PHONY: find-big-files
 find-big-files:
 	@if test -f BIG_FILES; then cat BIG_FILES; fi > /tmp/big-files
-	@find . -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> /tmp/big-files
+	@find . -maxdepth 1 -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> /tmp/big-files
 	@sort -u /tmp/big-files
 
 .PHONY: lp
@@ -356,10 +356,10 @@ from-v:
 
 .PHONY: votodo
 votodo:
-	find . -name '*.v' | sort > /tmp/vfiles
-	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
+	find . -maxdepth 1 -name '*.v' | sort > /tmp/vfiles
+	find . -maxdepth 1 -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
 	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > votodo
-	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
+	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -maxdepth 1 -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
 
 .PHONY: lptodo
 lptodo: votodo

@@ -232,10 +232,12 @@ Performances
 
 On a machine with 32 processors i9-13950HX, 128 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi 83cf0be2, Coq 8.20.0, using the Coq type N for HOL-Light natural numbers:
 
-| HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo     |
+| HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo (*) |
 |------------------------------|-------|--------|-------|-------|-----|-----|-------|--------|
 | hol.ml                       | 4m    | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 10m23s |
-| Multivariate/make_complex.ml | 2h30m | 135 Gb | 85 M  | 40728 | 45m | 24m | 91 Gb | 34h49m |
+| Multivariate/make_complex.ml | 2h30m | 135 Gb | 85 M  | 40728 | 45m | 24m | 91 Gb | 26h17m |
+
+using `make -j32 lp`, `make -j32 v`, `make -j32 merge-spec-files; make -j32 rm-empty-deps; make -j32 -k v`.
 
 Translating HOL-Light proofs to Dedukti
 ---------------------------------------
