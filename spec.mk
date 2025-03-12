@@ -27,8 +27,10 @@ FILES := $(shell find . -maxdepth 1 -type f -a -name '*.v' -a ! -name '*_spec.v'
 .PHONY: update-vfiles
 update-vfiles: $(FILES:%=%.update)
 
+# https://stackoverflow.com/questions/71744922/how-do-i-remove-duplicate-lines-using-sed-without-sorting
 %.update:
 	sed -i -e 's/^\(Require .*_part_.*_spec\)\.$$/\1_./g' -e "s/^Require .*_spec\.$$/Require Import $(ROOT_PATH).$(BASE)_spec./" -e 's/^\(Require .*_part_.*_spec\)_\.$$/\1./' $*
+	sed -i -e '$$!N; /^\(.*\)\n\1$$/!P; D' $*
 
 # https://www.linuxquestions.org/questions/programming-9/how-to-check-duplicate-word-in-line-with-sed-935605/
 .PHONY: update-vo-mk

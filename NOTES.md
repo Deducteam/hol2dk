@@ -3,7 +3,7 @@ NOTES
 
 ## 06/03/25
 
-- the use of Spec_With_N.v divides the Coq checking time by 4
+- the use of Spec_With_N.v divides the Coq checking time of hol.ml by 5 (10 minutes instead of 50), and the one of Multivariate/make_complex.ml by 25% (26 hours instead of 35 hours)
 
 - make spec reduces the Coq checking time by 20%
 
