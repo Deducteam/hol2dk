@@ -544,6 +544,9 @@ Qed.
 
 Definition integer : R -> Prop := fun _28588 : R => exists n : N, (Rabs _28588) = (R_of_N n).
 
+Lemma integer_def : integer = (fun _28715 : R => exists n : N, (Rabs _28715) = (R_of_N n)).
+Proof. reflexivity. Qed.
+
 Lemma minus_eq_minus x y : -x = y -> x = - y.
 Proof. intro e. subst y. symmetry. apply Ropp_involutive. Qed.
 
@@ -611,7 +614,7 @@ Proof.
   intro p. simpl. lia.
 Qed.
 
-Require Import Coq.micromega.Lra Coq.Reals.R_Ifp.
+Require Import Coq.Reals.R_Ifp.
 
 Lemma up_IZR z : up (IZR z) = (z + 1)%Z.
 Proof. symmetry; apply tech_up; rewrite plus_IZR; lra.

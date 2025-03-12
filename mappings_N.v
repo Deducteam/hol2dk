@@ -12,7 +12,7 @@ Proof. intro e. subst. reflexivity. Qed.
 (* Type of non-empty types, used to interpret HOL-Light types types. *)
 (****************************************************************************)
 
-Record Type' := { type :> Type; el : type }.
+Require Export HOLLight_Real_With_N.type.
 
 Definition bool' := {| type := bool; el := true |}.
 Canonical bool'.
@@ -1650,6 +1650,8 @@ HOL Light: non-empty subsets has minimal, Coq: has induction *)
 
 Require Import Coq.Init.Wf.
 
+Definition well_founded := Coq.Init.Wf.well_founded.
+
 Lemma WF_def {A : Type'} : (@well_founded A) = (fun _6923 : A -> A -> Prop => forall P : A -> Prop, (exists x : A, P x) -> exists x : A, (P x) /\ (forall y : A, (_6923 y x) -> ~ (P y))).
 Proof.
   ext R.
@@ -1749,9 +1751,11 @@ Definition ZBOT {A : Type'} := @INJP A (@INJN A (NUMERAL 0)) (@ε (N -> A -> Pro
 Lemma ZBOT_def {A : Type'} : (@ZBOT A) = (@INJP A (@INJN A (NUMERAL N0)) (@ε (N -> A -> Prop) (fun z : N -> A -> Prop => True))).
 Proof. exact (eq_refl (@ZBOT A)). Qed.
 
-Inductive ZRECSPACE {A : Type'} : (N -> A -> Prop) -> Prop :=
-| ZRECSPACE0 : ZRECSPACE ZBOT
-| ZRECSPACE1 c i r : (forall n, ZRECSPACE (r n)) -> ZRECSPACE (ZCONSTR c i r).
+Inductive _ZRECSPACE {A : Type'} : (N -> A -> Prop) -> Prop :=
+| ZRECSPACE0 : _ZRECSPACE ZBOT
+| ZRECSPACE1 c i r : (forall n, _ZRECSPACE (r n)) -> _ZRECSPACE (ZCONSTR c i r).
+
+Definition ZRECSPACE {A:Type'} := @_ZRECSPACE A.
 
 Lemma ZRECSPACE_def {A : Type'} : (@ZRECSPACE A) = (fun a : N -> A -> Prop => forall ZRECSPACE' : (N -> A -> Prop) -> Prop, (forall a' : N -> A -> Prop, ((a' = (@ZBOT A)) \/ (exists c : N, exists i : A, exists r : N -> N -> A -> Prop, (a' = (@ZCONSTR A c i r)) /\ (forall n : N, ZRECSPACE' (r n)))) -> ZRECSPACE' a') -> ZRECSPACE' a).
 Proof.
@@ -2759,8 +2763,6 @@ Qed.
 Proof.
   intros f f' [b ff'] g g' [c gg'].
 Abort.*)
-
-Require Import Coq.Logic.ProofIrrelevance.
 
 Lemma nadd_add_lcancel x y z : nadd_add x y = nadd_add x z -> y = z.
 Proof.

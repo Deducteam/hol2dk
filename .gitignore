@@ -12,3 +12,7 @@ _build/
 *.glob
 *.lpo
 *.dko
+
+Spec_With_N.v
+Spec_mappings_N.v
+check-spec.mk

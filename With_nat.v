@@ -2,7 +2,7 @@
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Import HOLLight_Real_With_nat.mappings Coq.Reals.Rbase Coq.Reals.Rdefinitions Coq.Reals.Rbasic_fun.
+Require Import HOLLight_Real_With_nat.mappings Coq.Reals.Reals.
 
 Open Scope R_scope.
 

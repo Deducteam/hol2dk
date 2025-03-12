@@ -1,3 +1,5 @@
+Require Export type.
+
 (****************************************************************************)
 (* Coq theory for encoding HOL-Light proofs. *)
 (****************************************************************************)
@@ -8,8 +10,6 @@ Proof. intros fg x. rewrite fg. reflexivity. Qed.
 (****************************************************************************)
 (* Type of non-empty types, used to interpret HOL-Light types types. *)
 (****************************************************************************)
-
-Record Type' := { type :> Type; el : type }.
 
 Definition bool' := {| type := bool; el := true |}.
 Canonical bool'.
