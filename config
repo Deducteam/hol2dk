@@ -137,7 +137,8 @@ echo $vo_files > VOFILES
 
 if test -z "$mk_file"
 then
-    touch deps.mk
+    echo create deps.mk ...
+    echo $vo_files: > deps.mk
 else
     echo ln -f -s $mk_file deps.mk
     ln -f -s $mk_file deps.mk

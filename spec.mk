@@ -19,16 +19,18 @@ MAKEFILE := $(firstword $(MAKEFILE_LIST))
 all:
 	$(MAKE) -f $(MAKEFILE) update-vfiles
 	$(MAKE) -f $(MAKEFILE) update-vo-mk
-	$(MAKE) -f $(MAKEFILE) spec
-	$(MAKE) -f $(MAKEFILE) rm-spec
+	$(MAKE) -f $(MAKEFILE) gen-base-spec
+	$(MAKE) -f $(MAKEFILE) rm-spec-files
 
 FILES := $(shell find . -maxdepth 1 -type f -a -name '*.v' -a ! -name '*_spec.v' -a ! -name '*_term_abbrevs*.v' -a ! -name $(BASE)_types.v -a ! -name $(BASE)_terms.v -a ! -name $(BASE)_axioms.v -a ! -name $(BASE)_type_abbrevs.v)
 
 .PHONY: update-vfiles
 update-vfiles: $(FILES:%=%.update)
 
+# https://stackoverflow.com/questions/71744922/how-do-i-remove-duplicate-lines-using-sed-without-sorting
 %.update:
 	sed -i -e 's/^\(Require .*_part_.*_spec\)\.$$/\1_./g' -e "s/^Require .*_spec\.$$/Require Import $(ROOT_PATH).$(BASE)_spec./" -e 's/^\(Require .*_part_.*_spec\)_\.$$/\1./' $*
+	sed -i -e '$$!N; /^\(.*\)\n\1$$/!P; D' $*
 
 # https://www.linuxquestions.org/questions/programming-9/how-to-check-duplicate-word-in-line-with-sed-935605/
 .PHONY: update-vo-mk
@@ -42,8 +44,8 @@ update-vo-mk: vo.mk
 vo.mk:
 	$(MAKE) dep
 
-.PHONY: spec
-spec: $(BASE)_spec.v
+.PHONY: gen-base-spec
+gen-base-spec: $(BASE)_spec.v
 
 $(BASE)_spec.v:
 	echo Require Import $(REQUIRING). > $@
@@ -52,6 +54,6 @@ $(BASE)_spec.v:
 	echo Require Import $(ROOT_PATH).$(BASE)_terms. >> $@
 	find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^Require /d' -e 's/^Lemma /Axiom /' -e '/^Proof\./d' >> $@
 
-.PHONY: rm-spec
-rm-spec:
+.PHONY: rm-spec-files
+rm-spec-files:
 	find . -maxdepth 1 -name '*_spec.v' -a ! -name '*_part_*_spec.v' -a ! -name $(BASE)_spec.v -delete

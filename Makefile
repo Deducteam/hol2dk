@@ -12,9 +12,12 @@ MAX_ABBREV = 2_000_000
 HOL2DK := hol2dk --root-path $(ROOT_PATH)
 
 .PHONY: default
-default:
+default: help
+
+.PHONY: help
+help:
 	@echo "usage: make TARGET [VAR=VAL ...]"
-	@echo "targets: split lp lpo v vo opam clean-<target> clean-all"
+	@echo "targets: split lp lpo v merge-spec-files rm-empty-deps vo opam clean-<target> clean-all"
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
@@ -124,7 +127,7 @@ echo-big-files:
 .PHONY: find-big-files
 find-big-files:
 	@if test -f BIG_FILES; then cat BIG_FILES; fi > /tmp/big-files
-	@find . -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> /tmp/big-files
+	@find . -maxdepth 1 -name '*.lp' -size +10M | sed -e 's/^.\///' -e 's/.lp$$//' -e 's/_term_abbrevs//' -e 's/_part_.*$$//' >> /tmp/big-files
 	@sort -u /tmp/big-files
 
 .PHONY: lp
@@ -265,8 +268,8 @@ clean-v: rm-v clean-vo
 rm-v:
 	find . -maxdepth 1 -name '*.v' -a -type f -delete
 
-.PHONY: rm-useless-deps
-rm-useless-deps: $(V_FILES:%=%.rm)
+.PHONY: rm-empty-deps
+rm-empty-deps: $(V_FILES:%=%.rm)
 ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
 else
@@ -279,8 +282,8 @@ endif
 %.v.rm: %.v
 	if test ! -h $<; then sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_axioms\.$$/d" $<; fi
 
-.PHONY: spec
-spec:
+.PHONY: merge-spec-files
+merge-spec-files:
 	$(MAKE) -f $(HOL2DK_DIR)/spec.mk
 
 ifeq ($(INCLUDE_VO_MK),1)
@@ -308,7 +311,7 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-COQC_OPTIONS = -no-glob # -w -coercions
+COQC_OPTIONS = -q -no-glob
 %.vo: %.v
 	@echo coqc $<
 	@coqc $(COQC_OPTIONS) -R . $(ROOT_PATH) $<
@@ -341,15 +344,22 @@ all:
 	$(MAKE) split
 	$(MAKE) lp
 	$(MAKE) lpo
+	$(MAKE) from-v
+
+.PHONY: from-v
+from-v:
+	$(MAKE) clean-v
 	$(MAKE) v
-	$(MAKE) vo
+	$(MAKE) merge-spec-files
+	$(MAKE) rm-empty-deps
+	/usr/bin/time -f "%E" $(MAKE) -k vo
 
 .PHONY: votodo
 votodo:
-	find . -name '*.v' | sort > /tmp/vfiles
-	find . -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
+	find . -maxdepth 1 -name '*.v' | sort > /tmp/vfiles
+	find . -maxdepth 1 -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
 	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > votodo
-	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
+	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -maxdepth 1 -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
 
 .PHONY: lptodo
 lptodo: votodo
@@ -366,3 +376,19 @@ clean-votodo: votodo
 .PHONY: lpsize
 lpsize:
 	find . -maxdepth 1 -name '*.lp' -print0 | du --files0-from=- --total -s -h | tail -1
+
+.PHONY: check-spec
+check-spec: check-spec.mk
+	$(MAKE) -f check-spec.mk
+
+HOL2DK_COQ_MODULES := type mappings_N Sig_mappings_N Check_mappings_N With_N Sig_With_N Check_With_N Spec_mappings_N Spec_With_N
+HOL2DK_VFILES := $(HOL2DK_COQ_MODULES:%=%.v)
+
+check-spec.mk: $(HOL2DK_VFILES)
+	coq_makefile -R . HOLLight $+ -o $@
+
+Spec_With_N.v: Spec_mappings_N.v Sig_With_N.v
+	cat $+ | sed -e '/^Require Export HOLLight_Real_With_N.type./d' -e '/^Require HOLLight.Spec_mappings_N./d' -e '/^Module Type Spec./d' -e '/^Include HOLLight.Spec_mappings_N.Spec./d' -e '/^End Spec./d' -e '/^Include Spec./d' > $@
+
+Spec_mappings_N.v: type.v Sig_mappings_N.v
+	cat $+ | sed -e '/^Require Export HOLLight_Real_With_N.type./d' -e '/^Module Type Spec./d' -e '/^End Spec./d' -e '/^Include Spec./d' > $@

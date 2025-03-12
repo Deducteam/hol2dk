@@ -1,0 +1,20 @@
+#!/bin/sh
+
+if test $# -ne 2
+then
+    echo usage: `basename $0` file.v file.lp
+    echo tells which Definition or Axiom in file.v has no builtin in file.lp
+    exit 1
+fi
+
+vfile=$1
+lpfile=$2
+
+for s in `awk -F"[ :]" '/Axiom /{print $2}/Definition /{print $2}' $vfile`
+do
+    builtin=`grep -w $s $lpfile | awk -F"[ ;\"]" '/^\/\//{next}{print $3}'`
+    if test $s != "$builtin"
+    then
+        echo $s not found
+    fi
+done

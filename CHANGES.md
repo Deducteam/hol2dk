@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Sig_mappings_N.v and Sig_With_N.v: axiomatizations of mappings_N.v and With_N.v
+- Makefile target check-spec generates Spec_mappings_N.v and Spec_With_N.v, standalone versions of Sig_mappings_N.v and Sig_With_N.v
+- The use of Spec_With_N.v instead of With_N.v allows to reduce the Coq checking time of Multivariate/make_complex.ml by 40% (21 hours instead of 35 hours)
 - alignment of the type of reals and basic functions on reals
 - command nbp
 - renamings to handle the Multivariate library
