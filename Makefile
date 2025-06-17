@@ -311,10 +311,10 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-COQC_OPTIONS = -q -no-glob
+ROCQ_OPTIONS = -q -no-glob
 %.vo: %.v
-	@echo coqc $<
-	@coqc $(COQC_OPTIONS) -R . $(ROOT_PATH) $<
+	@echo rocq $<
+	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $<
 
 .PHONY: clean-vo
 clean-vo: rm-vo rm-glob rm-aux rm-cache
