@@ -20,37 +20,6 @@ let string_of_file f =
 ;;
 REMOVE*)
 
-(* [eval code] evaluates [code] in the OCaml toplevel. *)
-let [@warning "-27"] eval (code : string) : unit =
-  () (*REMOVE
-  let as_buf = Lexing.from_string code in
-  let parsed = !Toploop.parse_toplevel_phrase as_buf in
-  Stdlib.ignore (Toploop.execute_phrase true Format.std_formatter parsed)
-  REMOVE*)
-
-(* Top-level reference to compute index of named theorems. Must be
-   kept at the toplevel to work. *)
-let idx = Stdlib.ref (-1);;
-
-(* [map_thid_name tnames] get the index of every theorem which name is
-   in [tnames] and build a map associating its name to each theorem
-   index. *)
-let map_thid_name =
-  (* OCaml code for setting [idx] to the index of theorem [name]. *)
-  let cmd_set_idx s = "idx := index_of "^s^";;" in
-  List.fold_left
-    (fun map tname ->
-      (*if tname = "_" then map
-      else*)
-        try
-          (*Printf.printf "%s" tname;*)
-          eval (cmd_set_idx tname);
-          (*Printf.printf " %d" !idx;*)
-          MapInt.add !idx tname map
-        with _ -> (*Printf.printf " not found\n";*) map)
-    MapInt.empty
-;;
-
 (* [thms_of_file f] computes the list of named theorems in [f]. *)
 let thms_of_string content =
   let search1 =
@@ -144,8 +113,39 @@ let thms_of_string content =
 
 let thms_of_file f = thms_of_string (string_of_file f);;
 
+(* [eval code] evaluates [code] in the OCaml toplevel. *)
+let [@warning "-27"] eval (code : string) : unit =
+  () (*REMOVE
+  let as_buf = Lexing.from_string code in
+  let parsed = !Toploop.parse_toplevel_phrase as_buf in
+  Stdlib.ignore (Toploop.execute_phrase true Format.std_formatter parsed)
+  REMOVE*)
+
+(* Top-level reference to compute index of named theorems. Must be
+   kept at the toplevel to work. *)
+let idx = Stdlib.ref (-1);;
+
+(* [map_thid_name tnames] get the index of every theorem which name is
+   in [tnames] and build a map associating its name to each theorem
+   index. *)
+let map_thid_name =
+  (* OCaml code for setting [idx] to the index of theorem [name]. *)
+  let cmd_set_idx s = "idx := index_of "^s^";;" in
+  List.fold_left
+    (fun map tname ->
+      (*if tname = "_" then map
+      else*)
+        try
+          (*Printf.printf "%s" tname;*)
+          eval (cmd_set_idx tname);
+          (*Printf.printf " %d" !idx;*)
+          MapInt.add !idx tname map
+        with _ -> (*Printf.printf " not found\n";*) map)
+    MapInt.empty
+;;
+
 let dump_map_thid_name ofile ifiles =
-  let map = map_thid_name (List.concat_map thms_of_file ifiles) in
+  let map = map_thid_name ifiles in
   (*MapInt.iter (Printf.printf "%d %s\n") map;*)
   Printf.printf "%d named theorems\n" (MapInt.cardinal map);
   let oc = Stdlib.open_out_bin ofile in
