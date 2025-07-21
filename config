@@ -152,8 +152,8 @@ done
 
 for f in theory_hol.dk theory_hol.lp
 do
-    echo cp -f $HOL2DK_DIR/$f
-    cp -f $HOL2DK_DIR/$f
+    echo cp -f $HOL2DK_DIR/$f .
+    cp -f $HOL2DK_DIR/$f .
 done
 
 for f in Makefile BIG_FILES part.mk
