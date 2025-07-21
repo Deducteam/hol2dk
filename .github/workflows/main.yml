@@ -2,19 +2,25 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   push:
-    paths-ignore:
-      - '**/*.md'
+    paths:
+      - '*.ml'
+      - 'Makefile'
+      - 'dune'
+      - 'dune-project'
+      - 'config'
+      - 'patch'
+      - 'unpatch'
   workflow_dispatch:
 jobs:
   ci:
     strategy:
       fail-fast: false
       matrix:
-        ocaml-version: [5.2.1]
-        dune-version: [3.17.2]
-        camlp5-version: [8.03.01]
-        hol-light-version: [3.0.0]
-        hol-light-commit: [master] # Release-3.0.0]
+        ocaml-version: [5.3.0]
+        dune-version: [3.19.1]
+        camlp5-version: [8.03.06]
+        hol-light-version: [3.1.0]
+        hol-light-commit: [master]
         lambdapi-version: [master] # >= 31aef37c > 2.5.1
         dedukti-version: [2.7]
         mapping: [mappings_nat, mappings_N]
