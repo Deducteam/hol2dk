@@ -3,9 +3,7 @@ TODO
 
 - replace variables like _1718 by better names
 
-- align functions and predicates on int with those of Z
-
-- always share closed subterms ?
+- always share closed subterms
 
 - automatically rename type names that are used as symbol names too
 
