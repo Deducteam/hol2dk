@@ -66,7 +66,7 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          cp hol_upto_arith.ml hol_lib_upto_arith.ml hol-light/
+          cp test/hol_upto_arith.ml test/hol_lib_upto_arith.ml hol-light/
           cd hol-light
           hol2dk dump-simp-before-hol hol_upto_arith.ml
       - name: Test single-threaded dk output
