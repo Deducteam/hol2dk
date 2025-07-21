@@ -12,7 +12,7 @@ Proof. intro e. subst. reflexivity. Qed.
 (* Type of non-empty types, used to interpret HOL-Light types types. *)
 (****************************************************************************)
 
-Require Export HOLLight_Real_With_N.type.
+Require Export HOLLight.type.
 
 Definition bool' := {| type := bool; el := true |}.
 Canonical bool'.
