@@ -145,7 +145,7 @@ let map_thid_name =
 ;;
 
 let dump_map_thid_name ofile ifiles =
-  let map = map_thid_name ifiles in
+  let map = map_thid_name (List.concat_map thms_of_file ifiles) in
   (*MapInt.iter (Printf.printf "%d %s\n") map;*)
   Printf.printf "%d named theorems\n" (MapInt.cardinal map);
   let oc = Stdlib.open_out_bin ofile in
