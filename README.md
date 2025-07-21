@@ -307,15 +307,15 @@ b.prf: proof steps
 
 b.sig: signature (types, constants, axioms, definitions)
 
-b.thm: map from proof step index to theorem name
+b.thm: map from theorem indexes having a name to their name
 
 b.thp: map every useful theorem index to its name and position (similar to f.thm but with position)
 
 f.nbp: number of proof steps
 
-f.pos: array providing the positions in b.prf of each proof step index
+f.pos: array providing the positions in b.prf of each theorem index
 
-f.use: array lastuse such that lastuse.(i) = 0 if i is a named theorem, the highest proof step index using i if there is one, and -1 otherwise
+f.use: array lastuse such that lastuse.(i) = 0 if i is a named theorem, the highest theorem index using i if there is one, and -1 otherwise
 
 n.sti: starting index (in f.prf) of theorem n
 
@@ -323,7 +323,7 @@ n.siz: estimation of the size of the proof of n
 
 `n_part_k.idx`: min and max index (in n.prf) of part k proof steps
 
-n.max: array of max proof step indexes of each part of n
+n.max: array of max theorem indexes of each part of n
 
 n.typ: map from type expression strings to digests and number of type variables
 
