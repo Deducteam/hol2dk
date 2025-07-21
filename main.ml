@@ -924,18 +924,11 @@ and command = function
        write_val (n^".pos") (Array.sub !prf_pos start_index len);
        write_val (n^".use") (Array.sub !last_use start_index len);
        let p = Array.get !prf_pos end_index in
-       map := MapInt.add end_index (n,p) !map;
-       (*let dump_file = n^".prf" in
-       log "write %s ...\n%!" dump_file;
-       let oc = open_out_bin dump_file in
-       seek_in !ic_prf (get_pos start_index);
-       for _k = 1 to len do
-         let p : proof = input_value !ic_prf in
-         output_value oc p
-       done;
-       close_out oc*)
+       map := MapInt.add end_index (n,p) !map
      in
+     (* read proof steps from the end *)
      let end_idx = ref (Array.length !prf_pos - 1) in
+     (* ignore last unused proof steps *)
      while Array.get !last_use !end_idx < 0 do decr end_idx done;
      for k = !end_idx - 1 downto 0 do
        let l = Array.get !last_use k in

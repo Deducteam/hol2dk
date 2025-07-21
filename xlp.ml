@@ -327,7 +327,7 @@ let term rmap oc t = abbrev_term oc (rename rmap t);;
 
 let root_path = ref "HOLLight";;
 
-let require oc n = out oc "require open %s.%s;\n" !root_path n;;
+let require oc n = out oc "require private open %s.%s;\n" !root_path n;;
 
 (* [create_file_with_deps tmp n iter_deps gen] creates a file
    [tmp^".lp"], which will be renamed or included in [n^".lp"] in the
