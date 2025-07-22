@@ -120,7 +120,7 @@ lpo.mk: $(LPO_MK_FILES)
 	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 
 theory_hol.lpo.mk: theory_hol.lp
-	$(HOL2DK_DIR)/dep-lpo $< > $@
+	echo 'theory_hol.lpo:' > $@
 
 # v file generation
 

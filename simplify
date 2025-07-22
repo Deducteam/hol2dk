@@ -1,3 +1,0 @@
-#!/bin/sh
-
-sed -i -e 's/NUMERAL //g' terms.v theorems.v

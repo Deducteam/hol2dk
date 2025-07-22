@@ -14,14 +14,14 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` \$hollight_file.ml \$root_path [coq_file_or_module] ... [\$mapping.mk] [\$mapping.lp]
+usage: `basename $0` \$hollight_file.ml \$root_path [rocq_file_or_module] ... [\$mapping.mk] [\$mapping.lp]
 
 arguments:
   \$hollight_file.ml: path to an ml file relative to \$HOLLIGHT_DIR
   \$root_path: name of the generated library
-  coq_file_or_module: coq modules that needs to be imported in generated files
+  rocq_file_or_module: rocq module that needs to be imported in generated files
   \$mapping.mk: dependencies of vo files given in arguments
-  \$mapping.lp: mappings between lambdapi and coq
+  \$mapping.lp: mappings between lambdapi and rocq
 
 effect in the current directory:
 - create a file CONFIG containing the command used to create links
@@ -30,9 +30,9 @@ effect in the current directory:
 - create a file lambdapi.pkg
 - create a file _CoqProject
 - create a file MAPPING containing \$mapping.lp
-- create a file REQUIRING containing the list of Coq module names that need to be imported (in the same order as they are given in the command)
-- create a file VOFILES containing the list of Coq module names corresponding to the Coq files given in arguments with file extension ".vo"
-- add links to \$file.mk, the Coq files given in argument and other files in \$HOL2DK_DIR and \$HOLLIGHT_DIR for translating and checking the proofs of \$hollight_file.ml
+- create a file REQUIRING containing the list of Rocq module names that need to be imported (in the same order as they are given in the command)
+- create a file VOFILES containing the list of Rocq module names corresponding to the Rocq files given in arguments with file extension ".vo"
+- add links to \$file.mk, the Rocq files given in argument and other files in \$HOL2DK_DIR and \$HOLLIGHT_DIR for translating and checking the proofs of \$hollight_file.ml
 __EOF__
 }
 
@@ -76,9 +76,9 @@ parse_args() {
             *.v)
                 if test -z "$root_path"
                 then
-                    error 'the root_path must be given before Coq files'
+                    error 'the root_path must be given before Rocq files'
                 else
-                    coq_files="$coq_files $1"
+                    rocq_files="$rocq_files $1"
                     vo_files="$vo_files `basename $1`o"
                     requiring="$requiring $root_path.`basename $1 .v`"
                     shift
@@ -144,13 +144,19 @@ else
     ln -f -s $mk_file deps.mk
 fi
 
-for f in $coq_files
+for f in $rocq_files
 do
     echo ln -f -s $f
     ln -f -s $f
 done
 
-for f in theory_hol.dk theory_hol.lp Makefile BIG_FILES part.mk
+for f in theory_hol.dk theory_hol.lp
+do
+    echo cp -f $HOL2DK_DIR/$f .
+    cp -f $HOL2DK_DIR/$f .
+done
+
+for f in Makefile BIG_FILES part.mk
 do
     echo ln -f -s $HOL2DK_DIR/$f
     ln -f -s $HOL2DK_DIR/$f

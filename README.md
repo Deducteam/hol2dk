@@ -1,7 +1,7 @@
-Export HOL-Light proofs to Dedukti, Lambdapi and Coq
-====================================================
+Export HOL-Light proofs to Dedukti, Lambdapi and Rocq
+=====================================================
 
-This project provides a tool, hol2dk, to translate [HOL-Light](https://github.com/jrh13/hol-light) proofs to [Dedukti](https://github.com/Deducteam/Dedukti/), [Lambdapi](https://github.com/Deducteam/lambdapi) and [Coq](https://coq.inria.fr/).
+This project provides a tool, hol2dk, to translate [HOL-Light](https://github.com/jrh13/hol-light) proofs to [Dedukti](https://github.com/Deducteam/Dedukti/), [Lambdapi](https://github.com/Deducteam/lambdapi) and [Rocq](https://rocq-prover.org/).
 
 [HOL-Light](https://github.com/jrh13/hol-light) is a proof assistant
 based on higher-order logic, aka simple type theory.
@@ -15,77 +15,54 @@ rewriting rules).
 based on the λΠ-calculus modulo rewriting that can read and generate
 Dedukti proofs.
 
-[Coq](https://coq.inria.fr/) is a proof assistant based on the
+[Rocq](https://rocq-prover.org/) is a proof assistant based on the
 Calculus of Inductive Constructions.
 
-Usability of translated libraries
----------------------------------
+Examples:
+---------
 
-For the obtained theorems to be readily usable in Coq, we need to
-align the type and functions of HOL-Light with those used in the Coq
-standard library. We already did this for various types and functions
-(see [With_N.lp](https://github.com/Deducteam/hol2dk/blob/main/With_N.lp)):
-
-- types: unit, prod, list, option, sum, ascii, N, R, Z
-- functions on N: pred, add, mul, pow, le, lt, ge, gt, max, min, sub, div, modulo
-- functions on list: app, rev, map, removelast, In, hd, tl
-- functions on R: Rle, Rplus, Rmult, Rinv, Ropp, Rabs, Rdiv, Rminus, Rge, Rgt, Rlt, Rmax, Rmin, IZR
-
-Your help is welcome to align more functions!
-
-The correctness of the mappings for types defined before real
-numbers (e.g. natural numbers and lists) is proved in
-[mappings_N.v](https://github.com/Deducteam/hol2dk/blob/main/mappings_N.v). The
-correctness of the mappings for the other types, including real
-numbers, is proved here in
-[With_N.v](https://github.com/Deducteam/hol2dk/blob/main/With_N.v).
-
-The resulting theorems are gathered in the Opam package
-[coq-hol-light](https://github.com/Deducteam/coq-hol-light) available
-in the Coq Opam repository [released](https://github.com/coq/opam). It
-currently contains a translation of the
+hol2dk has been used to translate to Rocq the
 [Multivariate](https://github.com/jrh13/hol-light/blob/master/Multivariate/make_complex.ml)
-library with more than 20,000 theorems on arithmetic, wellfounded
-relations, lists, real numbers, integers, basic set theory,
-permutations, group theory, matroids, metric spaces, homology,
-vectors, determinants, topology, convex sets and functions, paths,
-polytopes, Brouwer degree, derivatives, Clifford algebra, integration,
-measure theory, complex numbers and analysis, transcendental numbers,
-real analysis, complex line integrals, etc.
-
-Coq axioms used to encode HOL-Light proofs
-------------------------------------------
-
-HOL-Light is based on classical higher-order logic with functional and propositional extensionality. We use the following Coq axioms to encode them:
-```
-Axiom classic : forall P:Prop, P \/ ~ P.
-Axiom constructive_indefinite_description : forall (A : Type) (P : A->Prop), (exists x, P x) -> { x : A | P x }.
-Axiom fun_ext : forall {A B : Type} {f g : A -> B}, (forall x, (f x) = (g x)) -> f = g.
-Axiom prop_ext : forall {P Q : Prop}, (P -> Q) -> (Q -> P) -> P = Q.
-Axiom proof_irrelevance : forall (P:Prop) (p1 p2:P), p1 = p2.
-```
+library of HOL-Light which contains more than 20,000 theorems on
+arithmetic, wellfounded relations, lists, real numbers, integers,
+basic set theory, permutations, group theory, matroids, metric spaces,
+homology, vectors, determinants, topology, convex sets and functions,
+paths, polytopes, Brouwer degree, derivatives, Clifford algebra,
+integration, measure theory, complex numbers and analysis,
+transcendental numbers, real analysis, complex line integrals,
+etc. The resulting Rocq theorems are provided in the Opam package
+[coq-hol-light](https://github.com/Deducteam/coq-hol-light). Various
+HOL-Light types and functions have been mapped to the corresponding
+types and functions of the Rocq standard library so that, for
+instance, a HOL-Light theorem on HOL-Light real numbers is translated
+to a Rocq theorem on Rocq real numbers. The provided theorems can
+therefore be readily used within other Rocq developments based on the
+Rocq standard library.
 
 Bibliography
 ------------
 
-- [Translating HOL-Light proofs to Coq](https://files.inria.fr/blanqui/lpar24.pdf), Frédéric Blanqui, 4 April 2024
+- [Translating HOL-Light proofs to Coq](https://doi.org/10.29007/6k4x), Frédéric Blanqui, 25th International Conference on Logic for Programming, Artificial Intelligence and Reasoning (LPAR), 2024.
+
+Dependencies
+------------
+
+- ocaml >= 4.13
+- hol_light >= 3.0.0
+- lambdapi >= 3.0.0
+- rocq >= 9.0
 
 Installing HOL-Light sources
 ----------------------------
 
-**Requirement:** hol_light >= 3.0.0
-
 ```
+opam install -y --deps-only hol_light.3.0.0
 git clone https://github.com/jrh13/hol-light
 make -C hol-light
 ```
 
 Installing hol2dk
 -----------------
-
-**Requirements:**
-- ocaml >= 4.13
-- dune >= 3.7
 
 hol2dk is available on [Opam](https://opam.ocaml.org/). To install it, simply do:
 ```
@@ -187,16 +164,8 @@ The command `purge` compute in `file.use` all the theorems that do not need to b
 
 The command `simp` is the sequential composition of `rewrite` and `purge`.
 
-Translating HOL-Light proofs to Lambdapi and Coq
-------------------------------------------------
-
-**Requirements:**
-- lambdapi commit >= 21ee7f3d (21/01/25)
-- coq >= 8.19
-- [coq-hol-light-real-with-N](https://github.com/Deducteam/coq-hol-light-real-with-N)
-- [coq-fourcolor-reals](https://github.com/coq-community/fourcolor/blob/master/coq-fourcolor-reals.opam)
-
-**Procedure after dumping:**
+Translating HOL-Light proofs to Lambdapi and Rocq
+-------------------------------------------------
 
 - create a directory where all files will be generated:
 ```
@@ -206,26 +175,24 @@ mkdir output
 - configure the directory with all the required files:
 ```
 cd output
-hol2dk config $hollight_file.ml $root_path [coq_file_or_module] ... [$mapping.mk] [$mapping.lp]
+hol2dk config $hollight_file.ml $root_path [rocq_file_or_module] ... [$mapping.mk] [$mapping.lp]
 ```
 Do `hol2dk config` to get more details.
-
-For instance, to translate the Multivariate library using the Coq type N for natural numbers, we use [CONFIG](https://github.com/Deducteam/coq-hol-light/blob/main/CONFIG).
 
 - You can then do in order:
   * `make` to get the list of targets and variables
   * `make split` to generate a file for each theorem
   * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
   * `make -j$jobs lpo` to check Lambdapi files (optional)
-  * `make -j$jobs v` to translate Lambdapi files to Coq files
+  * `make -j$jobs v` to translate Lambdapi files to Rocq files
   * `make -j$jobs spec` to merge all small spec files into a single one
   * `make -j$jobs rm-empty-deps` to remove `theory_hol.v`, `${base}_types.v` and `${base}_axioms.v` (to use when these files are empty only)
-  * `make -j$jobs vo` to check Coq files
+  * `make -j$jobs vo` to check Rocq files
 
 To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
 - `make -j$jobs MAX_PROOF=500_000 MAX_ABBREV=2_000_000 lp`
 
-**Remark:** for the checking of generated Coq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`.
+**Remark:** for the checking of generated Rocq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`.
 
 Performances
 ------------
@@ -340,15 +307,15 @@ b.prf: proof steps
 
 b.sig: signature (types, constants, axioms, definitions)
 
-b.thm: map from proof step index to theorem name
+b.thm: map from theorem indexes having a name to their name
 
 b.thp: map every useful theorem index to its name and position (similar to f.thm but with position)
 
 f.nbp: number of proof steps
 
-f.pos: array providing the positions in b.prf of each proof step index
+f.pos: array providing the positions in b.prf of each theorem index
 
-f.use: array lastuse such that lastuse.(i) = 0 if i is a named theorem, the highest proof step index using i if there is one, and -1 otherwise
+f.use: array lastuse such that lastuse.(i) = 0 if i is a named theorem, the highest theorem index using i if there is one, and -1 otherwise
 
 n.sti: starting index (in f.prf) of theorem n
 
@@ -356,7 +323,7 @@ n.siz: estimation of the size of the proof of n
 
 `n_part_k.idx`: min and max index (in n.prf) of part k proof steps
 
-n.max: array of max proof step indexes of each part of n
+n.max: array of max theorem indexes of each part of n
 
 n.typ: map from type expression strings to digests and number of type variables
 

@@ -1,4 +1,4 @@
-Require Export type.
+Require Export HOLLight.type.
 
 (****************************************************************************)
 (* Coq theory for encoding HOL-Light proofs. *)
