@@ -309,8 +309,6 @@ b.sig: signature (types, constants, axioms, definitions)
 
 b.thm: map from theorem indexes having a name to their name
 
-b.fmi: map from file names to their greatest theorem index
-
 b.thp: map every useful theorem index to its name and position (similar to f.thm but with position)
 
 f.nbp: number of proof steps
