@@ -890,7 +890,8 @@ and command = function
      theorem in f.ml, a declaration "symbol thm_name : type". *)
   | ["files";f] ->
      let dk = is_dk f in
-     let b = Filename.chop_extension (Filename.basename f) in
+     let f = Filename.chop_extension f in
+     let b = Filename.basename f in
      read_sig b;
      let map_thid_name = read_val (b^".thm") in
      read_pos b;
@@ -899,8 +900,7 @@ and command = function
        try
          let d = Sys.getenv "HOLLIGHT_DIR" in
          let dg = dep_graph d (files d) in
-         let root_file = Filename.chop_extension f^".ml" in
-         let files = trans_file_deps dg [root_file] in
+         let files = trans_file_deps dg [f^".ml"] in
          let gen file =
            let thm_names = thms_of_file (Filename.concat d file) in
            let cond _ n = List.mem n thm_names in
