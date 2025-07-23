@@ -267,7 +267,7 @@ close_out oc_dump;;
 dump_nb_proofs "%s.nbp";;
 dump_signature "%s.sig";;
 #use "xnames.ml";;
-dump_map_thid_name "%s" %a;;
+dump_map_thid_name "%s.thm" %a;;
 |} cmd after_hol f b use after_hol b b b (olist ostring) deps;
   close_out oc;
   Sys.command ("ocaml -w -A -I . "^ml_file)
