@@ -22,59 +22,59 @@ $(BASE).mk: $(BASE).dg
 
 .PHONY: rm-mk
 rm-mk:
-	rm -f lpo.mk vo.mk
+	-rm -f lpo.mk vo.mk
 
 .PHONY: rm-dk
 rm-dk:
-	find . -maxdepth 1 -name '*.dk' -a ! -name theory_hol.dk -delete
+	-find . -maxdepth 1 -name '*.dk' -a ! -name theory_hol.dk -delete
 
 .PHONY: rm-dko
 rm-dko:
-	find . -maxdepth 1 -name '*.dko' -delete
+	-find . -maxdepth 1 -name '*.dko' -delete
 
 .PHONY: rm-typ
 rm-typ:
-	find . -maxdepth 1 -name '*.typ' -delete
+	-find . -maxdepth 1 -name '*.typ' -delete
 
 .PHONY: rm-sed
 rm-sed:
-	find . -maxdepth 1 -name '*.sed' -delete
+	-find . -maxdepth 1 -name '*.sed' -delete
 
 .PHONY: rm-lp
 rm-lp:
-	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+	-find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
 .PHONY: rm-lpo
 rm-lpo:
-	find . -maxdepth 1 -name '*.lpo' -delete
+	-find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: rm-lpo-mk
 rm-lpo-mk:
-	find . -maxdepth 1 -name '*.lpo.mk' -delete
+	-find . -maxdepth 1 -name '*.lpo.mk' -delete
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a -type f -delete
+	-find . -maxdepth 1 -name '*.v' -a -type f -delete
 
 .PHONY: rm-vo
 rm-vo:
-	find . -maxdepth 1 -name '*.vo*' -delete
+	-find . -maxdepth 1 -name '*.vo*' -delete
 
 .PHONY: rm-glob
 rm-glob:
-	find . -maxdepth 1 -name '*.glob' -delete
+	-find . -maxdepth 1 -name '*.glob' -delete
 
 .PHONY: rm-aux
 rm-aux:
-	find . -maxdepth 1 -name '.*.aux' -delete
+	-find . -maxdepth 1 -name '.*.aux' -delete
 
 .PHONY: rm-cache
 rm-cache:
-	rm -f .lia.cache .nia.cache
+	-rm -f .lia.cache .nia.cache
 
 .PHONY: clean-lp
 clean-lp: rm-lp rm-lpo-mk rm-mk rm-typ rm-sed rm-lpo clean-lpo clean-v
-	rm -f lpo.mk
+	-rm -f lpo.mk
 
 .PHONY: clean-dk
 clean-dk: rm-dk rm-dko
@@ -84,7 +84,7 @@ clean-lpo: rm-lpo
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
-	rm -f vo.mk
+	-rm -f vo.mk
 
 .PHONY: clean-vo
 clean-vo: rm-vo rm-glob rm-aux rm-cache

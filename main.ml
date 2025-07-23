@@ -262,7 +262,7 @@ close_out oc_dump;;
 dump_nb_proofs "%s.nbp";;
 dump_signature "%s.sig";;
 #use "xnames.ml";;
-dump_map_thid_name "%s.thm" %a;;
+dump_map_thid_name "%s" %a;;
 |} cmd after_hol f b use after_hol b b b (olist ostring) deps;
   close_out oc;
   Sys.command ("ocaml -w -A -I . "^ml_file)
@@ -912,7 +912,6 @@ and command = function
   | ["split";b] ->
      read_pos b;
      read_use b;
-     (*init_proof_reading b;*)
      let map_thid_name = read_val (b^".thm") in
      let map = ref MapInt.empty in
      let create_segment start_index end_index =

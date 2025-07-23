@@ -47,7 +47,7 @@ rm-use:
 
 .PHONY: rm-thp
 rm-thp:
-	rm -f $(BASE).thp
+	-rm -f $(BASE).thp
 
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 
@@ -77,7 +77,7 @@ $(BASE)_opam.lp:
 
 .PHONY: clean-opam
 clean-opam:
-	rm -f $(BASE)_opam.*
+	-rm -f $(BASE)_opam.*
 
 .PHONY: single
 single: $(BASE).lp
@@ -176,51 +176,51 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 
 .PHONY: clean-lp
 clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz rm-rename-abbrevs clean-lpo clean-v
-	rm -f lpo.mk
+	-rm -f lpo.mk
 
 .PHONY: rm-lp
 rm-lp:
-	find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+	-find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
 
 .PHONY: rm-lpo-mk
 rm-lpo-mk:
-	find . -maxdepth 1 -name '*.lpo.mk' -delete
+	-find . -maxdepth 1 -name '*.lpo.mk' -delete
 
 .PHONY: rm-mk
 rm-mk:
-	rm -f lpo.mk vo.mk
+	-rm -f lpo.mk vo.mk
 
 .PHONY: rm-max
 rm-max:
-	find . -maxdepth 1 -name '*.max' -delete
+	-find . -maxdepth 1 -name '*.max' -delete
 
 .PHONY: rm-idx
 rm-idx:
-	find . -maxdepth 1 -name '*.idx' -delete
+	-find . -maxdepth 1 -name '*.idx' -delete
 
 .PHONY: rm-brv
 rm-brv:
-	find . -maxdepth 1 -name '*.brv' -delete
+	-find . -maxdepth 1 -name '*.brv' -delete
 
 .PHONY: rm-brp
 rm-brp:
-	find . -maxdepth 1 -name '*.brp' -delete
+	-find . -maxdepth 1 -name '*.brp' -delete
 
 .PHONY: rm-min
 rm-min:
-	find . -maxdepth 1 -name '*.min' -delete
+	-find . -maxdepth 1 -name '*.min' -delete
 
 .PHONY: rm-typ
 rm-typ:
-	find . -maxdepth 1 -name '*.typ' -delete
+	-find . -maxdepth 1 -name '*.typ' -delete
 
 .PHONY: rm-sed
 rm-sed:
-	find . -maxdepth 1 -name '*.sed' -delete
+	-find . -maxdepth 1 -name '*.sed' -delete
 
 .PHONY: rm-siz
 rm-siz:
-	find . -maxdepth 1 -name '*.siz' -delete
+	-find . -maxdepth 1 -name '*.siz' -delete
 
 ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
@@ -228,7 +228,7 @@ include lpo.mk
 LPO_MK_FILES := theory_hol.lpo.mk $(wildcard *.lpo.mk)
 
 lpo.mk: $(LPO_MK_FILES)
-	find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
+	-find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 
 theory_hol.lpo.mk: theory_hol.lp
 	echo 'theory_hol.lpo:' > $@
@@ -248,7 +248,7 @@ clean-lpo: rm-lpo
 
 .PHONY: rm-lpo
 rm-lpo:
-	find . -maxdepth 1 -name '*.lpo' -delete
+	-find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
@@ -262,11 +262,11 @@ endif
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
-	rm -f vo.mk
+	-rm -f vo.mk
 
 .PHONY: rm-v
 rm-v:
-	find . -maxdepth 1 -name '*.v' -a -type f -delete
+	-find . -maxdepth 1 -name '*.v' -a -type f -delete
 
 .PHONY: rm-empty-deps
 rm-empty-deps: $(V_FILES:%=%.rm)
@@ -276,7 +276,7 @@ else
 	sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
 	touch -r vo.mk new-vo.mk
 	cp -p new-vo.mk vo.mk
-	rm -f new-vo.mk
+	-rm -f new-vo.mk
 endif
 
 %.v.rm: %.v
@@ -303,7 +303,7 @@ endif
 .PHONY: vo
 vo: $(V_FILES:%.v=%.vo)
 ifeq ($(PROGRESS),1)
-	rm -f .finished
+	-rm -f .finished
 	$(HOL2DK_DIR)/progress &
 endif
 ifneq ($(INCLUDE_VO_MK),1)
@@ -321,19 +321,19 @@ clean-vo: rm-vo rm-glob rm-aux rm-cache
 
 .PHONY: rm-vo
 rm-vo:
-	find . -maxdepth 1 -name '*.vo*' -delete
+	-find . -maxdepth 1 -name '*.vo*' -delete
 
 .PHONY: rm-glob
 rm-glob:
-	find . -maxdepth 1 -name '*.glob' -delete
+	-find . -maxdepth 1 -name '*.glob' -delete
 
 .PHONY: rm-aux
 rm-aux:
-	find . -maxdepth 1 -name '.*.aux' -delete
+	-find . -maxdepth 1 -name '.*.aux' -delete
 
 .PHONY: rm-cache
 rm-cache:
-	rm -f .lia.cache .nia.cache
+	-rm -f .lia.cache .nia.cache
 
 .PHONY: clean-all
 clean-all: clean-split clean-lp clean-opam

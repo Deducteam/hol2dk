@@ -144,12 +144,37 @@ let map_thid_name =
     MapInt.empty
 ;;
 
-let dump_map_thid_name ofile ifiles =
-  let map = map_thid_name (List.concat_map thms_of_file ifiles) in
+(* [map_thid_name ifilenames] get the index of every theorem which
+   name is in some of the [ifilenames] and build a map associating
+   each theorem index to its name, and each file to the greatest index
+   of its named theorems. *)
+let map_thid_name: string list -> string MapInt.t * int MapStr.t =
+  (* OCaml code for setting [idx] to the index of theorem [name]. *)
+  let cmd_set_idx s = "idx := index_of "^s^";;" in
+  List.fold_left
+    (fun (idx_map, file_map) ifilename ->
+      let idx_map, max_idx =
+        List.fold_left
+          (fun (idx_map, max_idx) tname ->
+            try
+              eval (cmd_set_idx tname);
+              MapInt.add !idx tname idx_map, max max_idx !idx
+            with _ -> idx_map, max_idx)
+          (idx_map, min_int)
+          (thms_of_file ifilename)
+      in idx_map, MapStr.add ifilename max_idx file_map)
+    (MapInt.empty, MapStr.empty)
+;;
+
+let dump_map_thid_name obasename ifilenames =
+  let idx_map, file_map = map_thid_name ifilenames in
   (*MapInt.iter (Printf.printf "%d %s\n") map;*)
-  Printf.printf "%d named theorems\n" (MapInt.cardinal map);
-  let oc = Stdlib.open_out_bin ofile in
-  Stdlib.output_value oc map;
+  Printf.printf "%d named theorems\n" (MapInt.cardinal idx_map);
+  let oc = Stdlib.open_out_bin (obasename^".thm") in
+  Stdlib.output_value oc idx_map;
+  Stdlib.close_out oc;
+  let oc = Stdlib.open_out_bin (obasename^".fmi") in
+  Stdlib.output_value oc file_map;
   Stdlib.close_out oc
 ;;
 
