@@ -122,13 +122,18 @@ hol2dk sig $base
   generate dk/lp signature files from $base.sig
 
 hol2dk thm $base.(dk|lp)
-  generate $base.(dk|lp) from $base.thm
-
-hol2dk axm $base.(dk|lp)
-  generate ${base}_opam.(dk|lp) from $base.thm (same as thm but without proofs)
+  generate $base.(dk|lp)
 
 Other commands
 --------------
+
+hol2dk axm $base.(dk|lp)
+  generate ${base}_opam.(dk|lp) with all the statements of all the theorems
+  but without proofs
+
+hol2dk files [$path/]$base.(dk|lp)
+  for each HOL-Light file required by $path/$base.ml, generate a (dk|lp) file
+  with the statements of the theorems proved in that file
 
 hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
@@ -883,8 +888,9 @@ and command = function
 
   (* Called in Makefile to generate a file f.lp with, for each named
      theorem in f.ml, a declaration "symbol thm_name : type". *)
-  | ["files";b;f] ->
+  | ["files";f] ->
      let dk = is_dk f in
+     let b = Filename.chop_extension (Filename.basename f) in
      read_sig b;
      let map_thid_name = read_val (b^".thm") in
      read_pos b;
