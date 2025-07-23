@@ -823,7 +823,8 @@ and command = function
      read_pos b;
      init_proof_reading b;
      begin
-       if dk then Xdk.export_theorems b map_thid_name
+       if dk then Xdk.export_theorems (b^"_theorems")
+                    map_thid_name (fun _ _ -> true) true
        else let nb_parts = read_val (b^".dg") in
             Xlp.export_theorems_part nb_parts b map_thid_name
      end;
@@ -878,8 +879,8 @@ and command = function
      init_proof_reading b;
      let cond _ _ = true in
      begin
-       if dk then Xdk.export_theorems_as_axioms (b^"_opam") map_thid_name cond
-       else Xlp.export_theorems_as_axioms (b^"_opam") b map_thid_name cond
+       if dk then Xdk.export_theorems (b^"_opam") map_thid_name cond false
+       else Xlp.export_theorems (b^"_opam") b map_thid_name cond false
      end;
      close_in !Xproof.ic_prf;
      0
@@ -905,8 +906,8 @@ and command = function
            let thm_names = thms_of_file (Filename.concat d file) in
            let cond _ n = List.mem n thm_names in
            let f = Filename.chop_extension file in
-           if dk then Xdk.export_theorems_as_axioms f map_thid_name cond
-           else Xlp.export_theorems_as_axioms f b map_thid_name cond
+           if dk then Xdk.export_theorems f map_thid_name cond false
+           else Xlp.export_theorems f b map_thid_name cond false
          in
          List.iter gen files;
          close_in !Xproof.ic_prf;
@@ -1139,7 +1140,9 @@ and command = function
      if dk then
        begin
          Xdk.export_proofs b r;
-         if r = All then Xdk.export_theorems b (read_val (b^".thm"));
+         if r = All then
+           Xdk.export_theorems (b^"_theorems")
+             (read_val (b^".thm")) (fun _ _ -> true) true;
          Xdk.export_term_abbrevs b;
          Xdk.export_type_abbrevs b;
          log_gen f;
@@ -1156,7 +1159,7 @@ and command = function
      else
        begin
          Xlp.export_proofs b r;
-         if r = All then Xlp.export_theorems b (read_val (b^".thm"));
+         if r = All then Xlp.single_export_theorems b b (read_val (b^".thm"));
          Xlp.export_term_abbrevs_in_one_file b b;
          Xlp.export_type_abbrevs b b
        end;
