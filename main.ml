@@ -370,7 +370,7 @@ and command = function
      0
 
   (* Print the names of theorems proved in all files in the current
-     directort and its subdirectories recursively. *)
+     directory and its subdirectories recursively. *)
   | ["name"] ->
      List.iter
        (fun f -> List.iter (log "%s %s\n" f) (thms_of_file f))
