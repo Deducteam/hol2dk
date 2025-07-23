@@ -1121,9 +1121,11 @@ let export_proofs b r =
 
 (* Generate a declaration of the form "thm_name : type" for each named
    theorem. The prefix "thm_" is used to avoid clashes with terms. *)
-let out_map_thid_name_as_axioms map_thid_name oc =
+let out_map_thid_name_as_axioms map_thid_name cond oc =
   MapInt.iter
-    (fun k n -> decl_theorem oc k (proof_at k) (DeclThmName ("thm_"^n)))
+    (fun k n ->
+      if cond k n
+      then decl_theorem oc k (proof_at k) (DeclThmName ("thm_"^n)))
     map_thid_name
 ;;
 
@@ -1151,9 +1153,9 @@ let export_theorems b map_thid_name =
 
 (* Called in Makefile by the command "axm" to generate b_opam.lp with,
    for each named theorem name, a declaration "symbol thm_name : type". *)
-let export_theorems_as_axioms b map_thid_name =
-  export (b^"_opam") [b^"_types";b^"_terms"]
-    (out_map_thid_name_as_axioms map_thid_name)
+let export_theorems_as_axioms f b map_thid_name cond =
+  export f [b^"_types";b^"_terms"]
+    (out_map_thid_name_as_axioms map_thid_name cond)
 ;;
 
 (* Called in b.mk by the command "part" to create b_part_k and the
