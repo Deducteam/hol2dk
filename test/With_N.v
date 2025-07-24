@@ -1,10 +1,10 @@
-Require Import HOLLight_Real_With_N.mappings.
+Require Import HOLLight.mappings_N.
 
 (*****************************************************************************)
 (* Proof that Coq R is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Import Coq.Reals.Reals.
+Require Import Stdlib.Reals.Reals.
 
 Open Scope R_scope.
 
@@ -12,7 +12,7 @@ Definition R' := {| type := R; el := 0%R |}.
 
 Canonical R'.
 
-Require Import Coq.Logic.ClassicalEpsilon.
+Require Import Stdlib.Logic.ClassicalEpsilon.
 
 Definition Rsup : (R -> Prop) -> R.
 Proof.
@@ -31,7 +31,7 @@ Qed.
 
 Require Import fourcolor.reals.real.
 Import Real.
-Require Import Coq.Init.Datatypes.
+Require Import Stdlib.Init.Datatypes.
 
 Definition R_struct : structure := {|
   val := R;
@@ -112,10 +112,10 @@ Proof. exact eq_R_struct. Qed.
 (* Proof that real is a fourcolor.model of real numbers. *)
 (*****************************************************************************)
 
-Require Import HOLLight_Real_With_N.terms.
+Require Import HOLLight.terms Stdlib.NArith.BinNat.
 
 Lemma real_add_of_num p q :
-  real_of_num (p + q)%N = real_add (real_of_num p) (real_of_num q).
+  real_of_num (N.add p q) = real_add (real_of_num p) (real_of_num q).
 Proof.
   unfold real_of_num, real_add.
   f_equal. rewrite treal_add_of_num. apply fun_ext; intro x.
@@ -155,7 +155,7 @@ Definition real_struct : structure := {|
 
 Canonical real_struct.
 
-Require Import HOLLight_Real_With_N.theorems.
+Require Import HOLLight.theorems.
 
 Lemma real_sup_is_lub E :
   has_sup E -> ub E (real_sup E) /\ (forall b, ub E b -> real_le (real_sup E) b).
@@ -189,7 +189,7 @@ Proof.
   unfold eq. rewrite thm_REAL_LE_ANTISYM. reflexivity.
 Qed.
 
-Require Import Coq.micromega.Lia.
+Require Import Stdlib.micromega.Lia.
 
 Lemma real_axioms : axioms real_struct.
 Proof.
@@ -345,7 +345,7 @@ Definition R_of_N n :=
   | N.pos p => IPR p
   end.
 
-Require Import Coq.micromega.Lra.
+Require Import Stdlib.micromega.Lra.
 
 Lemma R_of_N_succ n : R_of_N (N.succ n) = R_of_N n + 1.
 Proof.
@@ -473,14 +473,14 @@ Proof.
   align_ε.
   { cbn. split. 1: reflexivity.
     intros x n.
-    unfold Rpow. rewrite <- !N_nat_Z.
+    unfold Rpow. rewrite <- !Znat.N_nat_Z.
     rewrite <- !Rfunctions.pow_powerRZ.
     rewrite Nnat.N2Nat.inj_succ. reflexivity.
   }
   cbn. intros pow' [h0 hS].
   ext r n.
   rewrite <- (Nnat.N2Nat.id n).
-  unfold Rpow. rewrite nat_N_Z.
+  unfold Rpow. rewrite Znat.nat_N_Z.
   generalize (N.to_nat n) as m. clear n. intro n.
   rewrite <- Rfunctions.pow_powerRZ.
   induction n as [| n ih].
@@ -614,7 +614,7 @@ Proof.
   intro p. simpl. lia.
 Qed.
 
-Require Import Coq.Reals.R_Ifp.
+Require Import Stdlib.Reals.R_Ifp.
 
 Lemma up_IZR z : up (IZR z) = (z + 1)%Z.
 Proof. symmetry; apply tech_up; rewrite plus_IZR; lra.
@@ -762,20 +762,20 @@ Proof.
   rewrite <- (Nnat.N2Nat.id m).
   generalize (N.to_nat m) as k. clear m. intro m.
   unfold Zpow, Rpow.
-  rewrite nat_N_Z.
+  rewrite Znat.nat_N_Z.
   rewrite <- Rfunctions.pow_powerRZ.
   rewrite <- axiom_25 at 1. f_equal.
   induction m as [| m ih].
   - cbn. reflexivity.
-  - rewrite Nat2Z.inj_succ. rewrite Z.pow_succ_r. 2: lia.
+  - rewrite Znat.Nat2Z.inj_succ. rewrite Z.pow_succ_r. 2: lia.
     rewrite mult_IZR. rewrite ih. reflexivity.
 Qed.
 
 Definition Zdiv a b := (Z.sgn b * (a / Z.abs b))%Z.
-(* = Coq.ZArith.Zeuclid.ZEuclid.div but Coq.ZArith.Zeuclid is deprecated *)
+(* = Stdlib.ZArith.Zeuclid.ZEuclid.div but Stdlib.ZArith.Zeuclid is deprecated *)
 
 Definition Zrem a b := (a mod Z.abs b)%Z.
-(* = Coq.ZArith.Zeuclid.ZEuclid.modulo but Coq.ZArith.Zeuclid is deprecated *)
+(* = Stdlib.ZArith.Zeuclid.ZEuclid.modulo but Stdlib.ZArith.Zeuclid is deprecated *)
 
 Lemma div_def :
   Zdiv = (@ε ((prod N (prod N N)) -> Z -> Z -> Z) (fun q : (prod N (prod N N)) -> Z -> Z -> Z => forall _29326 : prod N (prod N N), exists r : Z -> Z -> Z, forall m : Z, forall n : Z, @COND Prop (n = (Z_of_N (NUMERAL 0%N))) (((q _29326 m n) = (Z_of_N (NUMERAL 0%N))) /\ ((r m n) = m)) ((Z.le (Z_of_N (NUMERAL 0%N)) (r m n)) /\ ((Z.lt (r m n) (Z.abs n)) /\ (m = (Z.add (Z.mul (q _29326 m n) n) (r m n)))))) (@pair N (prod N N) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 0%N)))))))) (@pair N N (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 0%N)))))))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 0%N))))))))))).
@@ -1121,7 +1121,7 @@ Proof.
   right. exists a. exists s. split. reflexivity. apply IHh. exact H.
 Qed.
 
-Require Import Coq.Lists.List.
+Require Import Stdlib.Lists.List.
 
 Lemma finite_list_NoDup {A:Type'} (s:A -> Prop):
   finite s = (exists l, NoDup l /\ s = fun x => In x l).
@@ -1177,7 +1177,7 @@ Proof.
   rewrite e. simpl. left. reflexivity.
 Qed.
 
-Require Import Coq.Sorting.Permutation.
+Require Import Stdlib.Sorting.Permutation.
 
 Lemma eq_mod_permut A (l: list A):
   forall l', (forall x, In x l = In x l') -> NoDup l -> NoDup l' -> Permutation l l'.

@@ -1,13 +1,15 @@
 open Xprelude;;
 open Xlib;;
 
-(* [files()] computes the list of HOL-Light files in the current
-   directory and its subdirectories recursively. *)
-let files() : string list =
+(* [files d] computes the list of HOL-Light files in directory [d] and
+   all its subdirectories recursively (except ["_opam"]). For the
+   current directory, use ["."]. The returned filenames are relative
+   to [d]. *)
+let files (root:string): string list =
   let rec walk acc = function
   | [] -> acc
   | dir::tail ->
-     let contents = Array.to_list (Sys.readdir dir) in
+     let contents = Array.to_list (Sys.readdir (Filename.concat root dir)) in
      let dirs, files =
        List.fold_left
          (fun (dirs,files) f ->
@@ -24,7 +26,8 @@ let files() : string list =
                (*Unix.(match (stat f).st_kind with
                | S_DIR -> (f::dirs, files)
                | _ -> (dirs, files))*)
-               if Sys.is_directory f then (f::dirs, files)
+               if Sys.is_directory (Filename.concat root f) then
+                 (f::dirs, files)
                else (dirs, files)
            with Sys_error _ -> (dirs, files))
          ([],[]) contents
@@ -33,10 +36,10 @@ let files() : string list =
   in walk [] ["."]
 ;;
 
-(* [dep_graph files] computes the dependency graph of [files]. *)
+(* [dep_graph root files] computes the dependency graph of [files]
+   relative to [root]. *)
 let dep_graph =
-  let re =
-    Str.regexp "\\(load[st]\\|needs\\|#use\\)[ \t]+\"\\([^.]+.[mh]l\\)\"" in
+  let re = Str.regexp "\\(load[st]\\|needs\\|#use\\)[ \t]*\"\\([^\";]*\\)\"" in
   let search content =
     let rec search acc start =
       try
@@ -45,10 +48,11 @@ let dep_graph =
       with _ -> acc
     in List.rev (search [] 0)
   in
-  fun (files : string list) : string list MapStr.t ->
+  fun (root:string) (files : string list) : string list MapStr.t ->
   List.fold_left
     (fun map filename ->
-      MapStr.add filename (search (string_of_file filename)) map)
+      let f = Filename.concat root filename in
+      MapStr.add filename (search (string_of_file f)) map)
     MapStr.empty files
 ;;
 

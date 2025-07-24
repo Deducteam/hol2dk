@@ -18,10 +18,10 @@ Dedukti proofs.
 [Rocq](https://rocq-prover.org/) is a proof assistant based on the
 Calculus of Inductive Constructions.
 
-Examples:
----------
+Examples
+--------
 
-hol2dk has been used to translate to Rocq the
+hol2dk is used to translate to Rocq the
 [Multivariate](https://github.com/jrh13/hol-light/blob/master/Multivariate/make_complex.ml)
 library of HOL-Light which contains more than 20,000 theorems on
 arithmetic, wellfounded relations, lists, real numbers, integers,

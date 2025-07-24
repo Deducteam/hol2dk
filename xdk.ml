@@ -663,7 +663,8 @@ let theorem oc k p = decl_theorem oc k p Xlp.DefThmIdProof;;
 
 (* [theorem_as_axiom oc k p] outputs on [oc] the proof [p] of index
    [k] as an axiom, with abbreviated terms if [abbrev]. *)
-let theorem_as_axiom abbrev oc k p = decl_theorem oc k p (Xlp.DeclThmId abbrev);;
+let theorem_as_axiom abbrev oc k p =
+  decl_theorem oc k p (Xlp.DeclThmId abbrev);;
 
 (* [proofs_in_interval oc x y] outputs on [oc] the proofs in interval
    [x] .. [y]. *)
@@ -801,21 +802,16 @@ let export_proofs b r =
   export (b^"_proofs")
     (fun oc -> string oc "\n(; theorems ;)\n"; proofs_in_range oc r);;
 
-let export_theorems b map_thid_name =
-  export (b^"_theorems")
+let export_theorems f map_thid_name cond with_proof =
+  export f
     (fun oc ->
       string oc "\n(; named theorems ;)\n";
       MapInt.iter
-        (fun k n -> decl_theorem oc k (proof_at k) (Xlp.DefThmNameAsThmId n))
-        map_thid_name)
-;;
-
-let export_theorems_as_axioms b map_thid_name =
-  export (b^"_opam")
-    (fun oc ->
-      string oc "\n(; named theorems ;)\n";
-      MapInt.iter
-        (fun k _ -> decl_theorem oc k (proof_at k) (Xlp.DeclThmId false))
+        (fun k n ->
+          if cond k n then
+            if with_proof then
+              decl_theorem oc k (proof_at k) (Xlp.DefThmNameAsThmId n)
+            else decl_theorem oc k (proof_at k) (Xlp.DeclThmName n))
         map_thid_name)
 ;;
 

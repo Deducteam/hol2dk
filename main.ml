@@ -98,7 +98,7 @@ hol2dk thmsplit $base $thm.lp
   split the proof of $thm in various pieces according to --max-proof-size
 
 hol2dk thmpart $base ${thm}_part_$k.lp
-  generate ${thm}_part_$k.lp and its term abbreviations
+  generate ${thm}_part_$k.lp and record its term abbreviations
   according to --max-abbrev-size
 
 hol2dk abbrev $base ${thm}_term_abbrevs_part_$k.lp
@@ -122,13 +122,18 @@ hol2dk sig $base
   generate dk/lp signature files from $base.sig
 
 hol2dk thm $base.(dk|lp)
-  generate $base.(dk|lp) from $base.thm
-
-hol2dk axm $base.(dk|lp)
-  generate ${base}_opam.(dk|lp) from $base.thm (same as thm but without proofs)
+  generate $base.(dk|lp)
 
 Other commands
 --------------
+
+hol2dk axm $base.(dk|lp)
+  generate ${base}_opam.(dk|lp) with all the statements of all the theorems
+  but without proofs
+
+hol2dk files [$path/]$base.(dk|lp)
+  for each HOL-Light file required by $HOLLIGHT_DIR/$path/$base.ml, generate
+  a (dk|lp) file with the statements of the theorems proved in that file
 
 hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
@@ -245,7 +250,7 @@ let dump after_hol f b =
     if after_hol then out oc "#use \"hol.ml\";;\nneeds \"%s\";;" f
     else out oc "#use \"%s\";;" f
   in
-  let dg = dep_graph (files()) in
+  let dg = dep_graph "" (files ".") in
   let deps = trans_file_deps dg (if after_hol then ["hol.ml";f] else [f]) in
   let cmd oc after_hol =
     if after_hol then out oc " dump" else out oc " dump-before-hol" in
@@ -344,14 +349,14 @@ and command = function
 
   (* Print dependencies of the ml file f. *)
   | ["dep";f] ->
-     let dg = dep_graph (files()) in
+     let dg = dep_graph "" (files ".") in
      log "%a\n" (list_sep " " string) (trans_file_deps dg [f]);
      0
 
   (* Print dependencies of all ml files in the current directory and
      its subdirectories recursively. *)
   | ["dep"] ->
-     out_dep_graph stdout (dep_graph (files()));
+     out_dep_graph stdout (dep_graph "" (files "."));
      0
 
   | "dep"::_ -> wrong_nb_args()
@@ -363,18 +368,18 @@ and command = function
 
   (* Print the names of theorems proved in f and all its dependencies. *)
   | ["name";"upto";f] ->
-     let dg = dep_graph (files()) in
+     let dg = dep_graph "" (files ".") in
      List.iter
        (fun d -> List.iter (log "%s %s\n" d) (thms_of_file d))
        (trans_file_deps dg [f]);
      0
 
   (* Print the names of theorems proved in all files in the current
-     directort and its subdirectories recursively. *)
+     directory and its subdirectories recursively. *)
   | ["name"] ->
      List.iter
        (fun f -> List.iter (log "%s %s\n" f) (thms_of_file f))
-       (files());
+       (files ".");
      0
 
   | "name"::_ -> wrong_nb_args()
@@ -818,7 +823,8 @@ and command = function
      read_pos b;
      init_proof_reading b;
      begin
-       if dk then Xdk.export_theorems b map_thid_name
+       if dk then Xdk.export_theorems (b^"_theorems")
+                    map_thid_name (fun _ _ -> true) true
        else let nb_parts = read_val (b^".dg") in
             Xlp.export_theorems_part nb_parts b map_thid_name
      end;
@@ -863,7 +869,7 @@ and command = function
   | "part"::_ -> wrong_nb_args()
 
   (* Called in Makefile to generate b_opam.lp with, for each named
-     theorem name, a declaration "symbol thm_name : type". *)
+     theorem, a declaration "symbol thm_name : type". *)
   | ["axm";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
@@ -871,14 +877,48 @@ and command = function
      let map_thid_name = read_val (b^".thm") in
      read_pos b;
      init_proof_reading b;
+     let cond _ _ = true in
      begin
-       if dk then Xdk.export_theorems_as_axioms b map_thid_name
-       else Xlp.export_theorems_as_axioms b map_thid_name
+       if dk then Xdk.export_theorems (b^"_opam") map_thid_name cond false
+       else Xlp.export_theorems (b^"_opam") b map_thid_name cond
      end;
      close_in !Xproof.ic_prf;
      0
 
   | "axm"::_ -> wrong_nb_args()
+
+  (* Called in Makefile to generate a file f.lp with, for each named
+     theorem in f.ml, a declaration "symbol thm_name : type". *)
+  | ["files";f] ->
+     let dk = is_dk f in
+     let f = Filename.chop_extension f in
+     let b = Filename.basename f in
+     read_sig b;
+     let map_thid_name = read_val (b^".thm") in
+     read_pos b;
+     init_proof_reading b;
+     begin
+       try
+         let d = Sys.getenv "HOLLIGHT_DIR" in
+         let dg = dep_graph d (files d) in
+         let files = trans_file_deps dg [f^".ml"] in
+         let gen file =
+           let thm_names = thms_of_file (Filename.concat d file) in
+           let cond _ n = List.mem n thm_names in
+           let f = Filename.chop_extension file in
+           if dk then Xdk.export_theorems f map_thid_name cond false
+           else Xlp.export_theorems f b map_thid_name cond
+         in
+         List.iter gen files;
+         close_in !Xproof.ic_prf;
+         0
+       with Not_found ->
+         close_in !Xproof.ic_prf;
+         err "set $HOLLIGHT_DIR first\n";
+         1
+     end
+
+  | "files"::_ -> wrong_nb_args()
 
   (* Called in Makefile when n is in BIG_FILES to create the file
      n.siz which contains an array mapping every proof step index used
@@ -912,7 +952,6 @@ and command = function
   | ["split";b] ->
      read_pos b;
      read_use b;
-     (*init_proof_reading b;*)
      let map_thid_name = read_val (b^".thm") in
      let map = ref MapInt.empty in
      let create_segment start_index end_index =
@@ -1101,7 +1140,9 @@ and command = function
      if dk then
        begin
          Xdk.export_proofs b r;
-         if r = All then Xdk.export_theorems b (read_val (b^".thm"));
+         if r = All then
+           Xdk.export_theorems (b^"_theorems")
+             (read_val (b^".thm")) (fun _ _ -> true) true;
          Xdk.export_term_abbrevs b;
          Xdk.export_type_abbrevs b;
          log_gen f;
@@ -1118,7 +1159,7 @@ and command = function
      else
        begin
          Xlp.export_proofs b r;
-         if r = All then Xlp.export_theorems b (read_val (b^".thm"));
+         if r = All then Xlp.single_export_theorems b b (read_val (b^".thm"));
          Xlp.export_term_abbrevs_in_one_file b b;
          Xlp.export_type_abbrevs b b
        end;

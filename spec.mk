@@ -10,7 +10,7 @@ default: all
 .PHONY: usage
 usage:
 	@echo "usage: make TARGET"
-	@echo "TARGETS: update-vfiles update-vo-mk spec rm-spec"
+	@echo "TARGETS: update-vfiles update-vo-mk gen-base-spec rm-spec-files"
 	@echo "WARNING: targets must be done in this order"
 
 MAKEFILE := $(firstword $(MAKEFILE_LIST))

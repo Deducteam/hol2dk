@@ -7,17 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Sig_mappings_N.v and Sig_With_N.v: axiomatizations of mappings_N.v and With_N.v
-- Makefile target check-spec generates Spec_mappings_N.v and Spec_With_N.v, standalone versions of Sig_mappings_N.v and Sig_With_N.v
-- The use of Spec_With_N.v instead of With_N.v allows to reduce the Coq checking time of Multivariate/make_complex.ml by 40% (21 hours instead of 35 hours)
-- alignment of the type of reals and basic functions on reals
-- command nbp
+- command nbp to print the number of (useful) proofs
+- command files to print theorem statements following the file structuration in HOL-Light
 - renamings to handle the Multivariate library
+- test/Sig_mappings_N.v and test/Sig_With_N.v: axiomatizations of mappings_N.v and With_N.v respectively
+
+- test/Makefile: generates Spec_mappings_N.v and Spec_With_N.v, standalone versions of Sig_mappings_N.v and Sig_With_N.v, and checks the correctness of mappings_N.v and With_N.v wrt to those specification files
+  the use of Spec_With_N.v instead of With_N.v allows to reduce the Coq checking time of Multivariate/make_complex.ml by 40% (21 hours instead of 35 hours)
 
 ### Changed
 
 - command link renamed into config and improved
-- update to work with HOL-Light 3.0
+- update to work with HOL-Light 3.1 and Rocq 9.0
 - minimize dependencies in spec files
 - theory_hol.lp: rename T into ⊤ and F into ⊥
 

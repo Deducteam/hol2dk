@@ -1119,41 +1119,31 @@ let export_proofs b r =
   export_iter (b^"_proofs") iter_proofs_deps (fun oc -> proofs_in_range oc r)
 ;;
 
-(* Generate a declaration of the form "thm_name : type" for each named
-   theorem. The prefix "thm_" is used to avoid clashes with terms. *)
-let out_map_thid_name_as_axioms map_thid_name oc =
-  MapInt.iter
-    (fun k n -> decl_theorem oc k (proof_at k) (DeclThmName ("thm_"^n)))
-    map_thid_name
-;;
-
-(* Used in single file generation and in b.mk. Generate a declaration
-   of the form "thm_name : type := lemXXX" for each named theorem. The
+(* Generate a declaration of the form "thm_name : type", or "thm_name
+   : type := lemXXX" if [with_proof], for each named theorem. The
    prefix "thm_" is used to avoid clashes with terms. *)
-let out_map_thid_name map_thid_name oc =
+let out_map_thid_name map_thid_name cond with_proof oc =
   MapInt.iter
-    (fun k n -> decl_theorem oc k (proof_at k) (DefThmNameAsThmId ("thm_"^n)))
+    (fun k n ->
+      if cond k n
+      then if with_proof then
+             decl_theorem oc k (proof_at k) (DefThmNameAsThmId ("thm_"^n))
+           else decl_theorem oc k (proof_at k) (DeclThmName ("thm_"^n)))
     map_thid_name
 ;;
 
-(* Called in single file generation. Generate b.lp with a declaration
+(* Called in single file generation. Generate f.lp with a declaration
    of the form "name : type := lemXXX" for each named theorem. *)
-let export_theorems b map_thid_name =
-  let iter_theorems_deps f =
-    f (b^"_types");
-    f (b^"_type_abbrevs");
-    f (b^"_terms");
-    f (b^"_axioms");
-    f (b^"_proofs")
-  in
-  export_iter b iter_theorems_deps (out_map_thid_name map_thid_name)
+let single_export_theorems f b map_thid_name =
+  export f [b^"_types";b^"_terms";b^"_proofs"]
+    (out_map_thid_name map_thid_name (fun _ _ -> true) true)
 ;;
 
-(* Called in Makefile by the command "axm" to generate b_opam.lp with,
-   for each named theorem name, a declaration "symbol thm_name : type". *)
-let export_theorems_as_axioms b map_thid_name =
-  export (b^"_opam") [b^"_types";b^"_terms"]
-    (out_map_thid_name_as_axioms map_thid_name)
+(* Called in Makefile by the command "axm". Generate f.lp with, for
+   each named theorem name, a declaration "symbol thm_name : type". *)
+let export_theorems f b map_thid_name cond =
+  export f [b^"_types";b^"_terms"]
+    (out_map_thid_name map_thid_name cond false)
 ;;
 
 (* Called in b.mk by the command "part" to create b_part_k and the
@@ -1182,5 +1172,6 @@ let export_theorems_part k b map_thid_name =
     f (b^"_axioms");
     for i = 1 to k do f (b^part i) done
   in
-  export_iter b iter_theorems_part_deps (out_map_thid_name map_thid_name)
+  export_iter b iter_theorems_part_deps
+    (out_map_thid_name map_thid_name (fun _ _ -> true) false)
 ;;
