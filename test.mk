@@ -73,6 +73,7 @@ do-test5:
 	make -j3 lpo
 	make -j3 v
 
-# clean
+# cleaning
+
 clean:
-	-rm -f output1 output2 output3 output4 output5
+	-rm -rf output1 output2 output3 output4 output5
