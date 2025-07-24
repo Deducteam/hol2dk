@@ -87,7 +87,7 @@ Tactic Notation "intro_ext" simple_intropattern(e) ident(x) :=
 (* Hilbert's ε operator. *)
 (****************************************************************************)
 
-Require Import Coq.Logic.ClassicalEpsilon.
+Require Import Stdlib.Logic.ClassicalEpsilon.
 
 Definition ε : forall {A : Type'}, (type A -> Prop) -> type A :=
   fun A P => epsilon (inhabits (el A)) P.
@@ -139,7 +139,7 @@ Proof.
   - exact(proj2 H).
 Qed.
 
-Require Import Coq.Logic.ClassicalFacts.
+Require Import Stdlib.Logic.ClassicalFacts.
 
 Lemma prop_degen : forall P, P = True \/ P = False.
 Proof.
@@ -346,7 +346,7 @@ Proof. exact (eq_refl False). Qed.
 Lemma hashek_def : True = True.
 Proof. exact (eq_refl True). Qed.
 
-Require Import Coq.Logic.ExtensionalityFacts.
+Require Import Stdlib.Logic.ExtensionalityFacts.
 
 Lemma ISO_def {A B : Type'} : (@is_inverse A B) = (fun _17569 : A -> B => fun _17570 : B -> A => (forall x : B, (_17569 (_17570 x)) = x) /\ (forall y : A, (_17570 (_17569 y)) = y)).
 Proof. ext f g. unfold is_inverse. apply prop_ext; tauto. Qed.
@@ -367,7 +367,7 @@ Qed.
 (* Alignment of subtypes. *)
 (*****************************************************************************)
 
-Require Import Coq.Logic.ProofIrrelevance.
+Require Import Stdlib.Logic.ProofIrrelevance.
 
 Section Subtype.
 
@@ -902,7 +902,7 @@ Qed.
 (* Alignment of the type of natural numbers. *)
 (****************************************************************************)
 
-Require Import Coq.NArith.BinNat Coq.micromega.Lia.
+Require Import Stdlib.NArith.BinNat Stdlib.micromega.Lia.
 
 Open Scope N_scope.
 
@@ -1648,9 +1648,9 @@ Qed.
 HOL Light: non-empty subsets has minimal, Coq: has induction *)
 (****************************************************************************)
 
-Require Import Coq.Init.Wf.
+Require Import Corelib.Init.Wf.
 
-Definition well_founded := Coq.Init.Wf.well_founded.
+Definition well_founded := Corelib.Init.Wf.well_founded.
 
 Lemma WF_def {A : Type'} : (@well_founded A) = (fun _6923 : A -> A -> Prop => forall P : A -> Prop, (exists x : A, P x) -> exists x : A, (P x) /\ (forall y : A, (_6923 y x) -> ~ (P y))).
 Proof.
@@ -1692,7 +1692,7 @@ Qed.
 (* Alignment of  measures, that is functions A -> N which creates a wf order by inverse image *)
 (****************************************************************************)
 
-Require Import Coq.Arith.PeanoNat.
+Require Import Stdlib.Arith.PeanoNat.
 
 Lemma inj_lt m n: (N.to_nat m > N.to_nat n)%nat = (n < m).
 Proof.
@@ -2158,7 +2158,7 @@ Proof.
   set (l' := ε (_mk_list_pred r)). unfold _mk_list_pred. auto.
 Qed.
 
-Require Import Coq.Lists.List.
+Require Import Stdlib.Lists.List.
 
 Lemma APPEND_def {A : Type'} : (@app A) = (@ε ((prod N (prod N (prod N (prod N (prod N N))))) -> (list' A) -> (list' A) -> list' A) (fun APPEND' : (prod N (prod N (prod N (prod N (prod N N))))) -> (list A) -> (list A) -> list A => forall _17935 : prod N (prod N (prod N (prod N (prod N N)))), (forall l : list A, (APPEND' _17935 (@nil A) l) = l) /\ (forall h : A, forall t : list A, forall l : list A, (APPEND' _17935 (@cons A h t) l) = (@cons A h (APPEND' _17935 t l)))) (@pair N (prod N (prod N (prod N (prod N N)))) (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair N (prod N (prod N (prod N N))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair N (prod N (prod N N)) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 0)))))))) (@pair N (prod N N) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))) (@pair N N (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 0)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 0)))))))))))))).
 Proof.
@@ -2505,7 +2505,7 @@ rewrite nth_of_Suc. rewrite (IHn (tl l)). symmetry. apply H.  Qed.*)
 (* Note the mismatch between Coq's ascii which takes booleans as arguments
 and HOL-Light's char which takes propositions as arguments. *)
 
-Require Import Coq.Strings.Ascii.
+Require Import Stdlib.Strings.Ascii.
 
 Definition ascii' := {| type := ascii; el := zero |}.
 Canonical ascii'.
@@ -2745,7 +2745,7 @@ Add Relation _ nadd_eq
     transitivity proved by nadd_eq_trans
 as nadd_eq_rel.
 
-Require Import Coq.Setoids.Setoid.
+Require Import Stdlib.Setoids.Setoid.
 
 Add Morphism nadd_add
     with signature nadd_eq ==> nadd_eq ==> nadd_eq

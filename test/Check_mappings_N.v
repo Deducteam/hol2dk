@@ -1,14 +1,14 @@
 Require HOLLight.Sig_mappings_N HOLLight.mappings_N.
-Require Import HOLLight_Real_With_N.type Coq.NArith.BinNat Coq.ZArith.ZArith.
+Require Import HOLLight.type Stdlib.NArith.BinNat Stdlib.ZArith.ZArith.
 
 Module Extra.
   
   Definition GEQ {A:Type'} := @eq A.
 
-  Module ExtensionalityFacts := Coq.Logic.ExtensionalityFacts.
+  Module ExtensionalityFacts := Stdlib.Logic.ExtensionalityFacts.
   
-  Definition N := Coq.Numbers.BinNums.N.
-  Definition N0 := Coq.Numbers.BinNums.N0.
+  Definition N := Corelib.Numbers.BinNums.N.
+  Definition N0 := Corelib.Numbers.BinNums.N0.
 
   Module N.
     Definition succ := N.succ.
@@ -40,8 +40,8 @@ Module Extra.
   End List.
 
   Module Ascii.
-    Definition ascii := Coq.Strings.Ascii.ascii.
-    Definition zero := Coq.Strings.Ascii.zero.
+    Definition ascii := Stdlib.Strings.Ascii.ascii.
+    Definition zero := Stdlib.Strings.Ascii.zero.
   End Ascii.
 
 End Extra.

@@ -1,4 +1,4 @@
-Require Export HOLLight_Real_With_N.type.
+Require Export HOLLight.type.
 Require HOLLight.Sig_mappings_N.
 
 Module Type Spec.
