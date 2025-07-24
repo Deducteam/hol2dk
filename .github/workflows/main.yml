@@ -42,7 +42,6 @@ jobs:
           dune install
       - name: Install dependencies
         run: |
-          sudo apt-get install -y xdot #libipc-system-simple-perl libstring-shellquote-perl
           opam install -y --deps-only hol_light.${{ matrix.hol-light-version }}
           opam install -y dedukti.${{ matrix.dedukti-version }}
       - name: Install lambdapi
