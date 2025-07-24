@@ -1141,9 +1141,9 @@ let single_export_theorems f b map_thid_name =
 
 (* Called in Makefile by the command "axm". Generate f.lp with, for
    each named theorem name, a declaration "symbol thm_name : type". *)
-let export_theorems f b map_thid_name cond with_proof =
+let export_theorems f b map_thid_name cond =
   export f [b^"_types";b^"_terms"]
-    (out_map_thid_name map_thid_name cond with_proof)
+    (out_map_thid_name map_thid_name cond false)
 ;;
 
 (* Called in b.mk by the command "part" to create b_part_k and the

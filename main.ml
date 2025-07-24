@@ -132,8 +132,8 @@ hol2dk axm $base.(dk|lp)
   but without proofs
 
 hol2dk files [$path/]$base.(dk|lp)
-  for each HOL-Light file required by $path/$base.ml, generate a (dk|lp) file
-  with the statements of the theorems proved in that file
+  for each HOL-Light file required by $HOLLIGHT_DIR/$path/$base.ml, generate
+  a (dk|lp) file with the statements of the theorems proved in that file
 
 hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
@@ -880,7 +880,7 @@ and command = function
      let cond _ _ = true in
      begin
        if dk then Xdk.export_theorems (b^"_opam") map_thid_name cond false
-       else Xlp.export_theorems (b^"_opam") b map_thid_name cond false
+       else Xlp.export_theorems (b^"_opam") b map_thid_name cond
      end;
      close_in !Xproof.ic_prf;
      0
@@ -907,7 +907,7 @@ and command = function
            let cond _ n = List.mem n thm_names in
            let f = Filename.chop_extension file in
            if dk then Xdk.export_theorems f map_thid_name cond false
-           else Xlp.export_theorems f b map_thid_name cond false
+           else Xlp.export_theorems f b map_thid_name cond
          in
          List.iter gen files;
          close_in !Xproof.ic_prf;
