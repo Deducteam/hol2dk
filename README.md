@@ -185,7 +185,7 @@ Do `hol2dk config` to get more details.
   * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
   * `make -j$jobs lpo` to check Lambdapi files (optional)
   * `make -j$jobs v` to translate Lambdapi files to Rocq files
-  * `make -j$jobs spec` to merge all small spec files into a single one
+  * `make -j$jobs merge-spec-files` to merge all small spec files into a single one
   * `make -j$jobs rm-empty-deps` to remove `theory_hol.v`, `${base}_types.v` and `${base}_axioms.v` (to use when these files are empty only)
   * `make -j$jobs vo` to check Rocq files
 

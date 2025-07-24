@@ -3,16 +3,22 @@
 .PHONY: default
 default: test1 test2 test3 test4 test5
 
+clean:
+	-rm -rf output1 output2 output3 output4 output5
+
+.PHONY: config
+config:
+	hol2dk config hol_upto_arith.ml HOLLight Stdlib.NArith.BinNat ../test/type.v ../test/mappings_N.v ../test/mappings_N.mk ../test/mappings_N.lp
+
 # single dk
 
 .PHONY: test1
-test1:
-	mkdir -p output1
-	$(MAKE) -C output1 -f ../test.mk do-test1
+test%:
+	mkdir -p output$*
+	$(MAKE) -C output$* -f ../test.mk do-test$*
 
 .PHONY: do-test1
-do-test1:
-	hol2dk config hol_upto_arith.ml HOLLight ../test/mappings_N.v ../test/mappings_N.lp
+do-test1: config
 	hol2dk hol_upto_arith.dk
 	dk check hol_upto_arith.dk
 
@@ -24,8 +30,7 @@ test2:
 	$(MAKE) -C output2 -f ../test.mk do-test2
 
 .PHONY: do-test2
-do-test2:
-	hol2dk config hol_upto_arith.ml HOLLight ../test/mappings_N.v ../test/mappings_N.lp
+do-test2: config
 	hol2dk hol_upto_arith.lp
 	lambdapi check -v0 -w -c hol_upto_arith.lp
 
@@ -37,10 +42,9 @@ test3:
 	$(MAKE) -C output3 -f ../test.mk do-test3
 
 .PHONY: do-test3
-do-test3:
-	hol2dk config hol_upto_arith.ml HOLLight ../test/mappings_N.v ../test/mappings_N.lp
+do-test3: config
 	hol2dk mk 3 hol_upto_arith
-	make -f hol_upto_arith.mk -j3 dk
+	$(MAKE) -f hol_upto_arith.mk dk
 	dk check hol_upto_arith.dk
 
 # multi lp with mk
@@ -51,12 +55,12 @@ test4:
 	$(MAKE) -C output1 -f ../test.mk do-test4
 
 .PHONY: do-test4
-do-test4:
-	hol2dk config hol_upto_arith.ml HOLLight ../test/mappings_N.v ../test/mappings_N.lp
+do-test4: config
 	hol2dk mk 3 hol_upto_arith
-	make -f hol_upto_arith.mk -j3 lp
-	make -f hol_upto_arith.mk -j3 lpo
-	make -f hol_upto_arith.mk -j3 v
+	$(MAKE) -f hol_upto_arith.mk lp
+	$(MAKE) -f hol_upto_arith.mk lpo
+	$(MAKE) -f hol_upto_arith.mk v
+	$(MAKE) -f hol_upto_arith.mk vo
 
 # multi lp with split
 
@@ -66,14 +70,11 @@ test5:
 	$(MAKE) -C output5 -f ../test.mk do-test5
 
 .PHONY: do-test5
-do-test5:
-	hol2dk config hol_upto_arith.ml HOLLight ../test/mappings_N.v ../test/mappings_N.lp
-	make split
-	make -j3 lp
-	make -j3 lpo
-	make -j3 v
-
-# cleaning
-
-clean:
-	-rm -rf output1 output2 output3 output4 output5
+do-test5: config
+	$(MAKE) split
+	$(MAKE) lp
+	$(MAKE) lpo
+	$(MAKE) v
+	$(MAKE) merge-spec-files
+	$(MAKE) rm-empty-deps
+	$(MAKE) vo

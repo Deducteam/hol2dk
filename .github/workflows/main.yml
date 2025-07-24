@@ -16,12 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ocaml-version: [5.3.0]
         dune-version: [3.19.1]
+        ocaml-version: [5.3.0]
         camlp5-version: [8.03.06]
         hol-light-version: [3.1.0]
         hol-light-commit: [master]
-        lambdapi-version: [master] # >= 31aef37c > 2.5.1
+        lambdapi-version: [master] # >= 3.0.0
+        rocq-version: [9.0.0]
         dedukti-version: [2.7]
         mapping: [mappings_N]
     runs-on: ubuntu-latest
@@ -43,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: |
           opam install -y --deps-only hol_light.${{ matrix.hol-light-version }}
-          opam install -y dedukti.${{ matrix.dedukti-version }}
+          opam install -y dedukti.${{ matrix.dedukti-version }} rocq-prover.${{ matrix.rocq-version }}
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
@@ -85,16 +86,16 @@ jobs:
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          make -f test.mk test3
+          make -j3 -f test.mk test3
       - name: Test multi-threaded lp output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          make -f test.mk test4
+          make -j3 -f test.mk test4
       - name: Test multi-threaded lp output with split
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
-          make -f test.mk test5
+          make -j3 -f test.mk test5
