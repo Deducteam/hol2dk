@@ -6,16 +6,16 @@ default: test1 test2 test3 test4 test5
 clean:
 	-rm -rf output1 output2 output3 output4 output5
 
-.PHONY:
+.PHONY: config
 config:
 	hol2dk config hol_upto_arith.ml HOLLight Stdlib.NArith.BinNat ../test/type.v ../test/mappings_N.v ../test/mappings_N.mk ../test/mappings_N.lp
 
 # single dk
 
 .PHONY: test1
-test1:
-	mkdir -p output1
-	$(MAKE) -C output1 -f ../test.mk do-test1
+test%:
+	mkdir -p output$*
+	$(MAKE) -C output$* -f ../test.mk do-test$*
 
 .PHONY: do-test1
 do-test1: config
