@@ -9,7 +9,7 @@ check-spec.mk: $(HOL2DK_VFILES)
 	rocq makefile -R . HOLLight $+ -o $@
 
 Spec_%.v: Sig_%.v
-	sed -e '/^Module Type Spec./d' -e '/^End Spec./d' -e '/^Include Spec./d' $* > $@
+	sed -e '/^Module Type Spec./d' -e '/^End Spec./d' -e '/^Include Spec./d' Sig_$*.v > $@
 
 .PHONY: clean
 clean:
