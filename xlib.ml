@@ -45,7 +45,10 @@ let percent k n = (100 * k) / n;;
 (****************************************************************************)
 
 let command s =
-  if Sys.command s <> 0 then (log "Error: \"%s\" failed.\n" s; exit 1);;
+  match Sys.command s with
+  | 0 -> ()
+  | n -> log "Error: \"%s\" failed.\n" s; exit n
+;;
 
 (****************************************************************************)
 (* Functions on files. *)
@@ -61,11 +64,12 @@ let create_file_bin n f = let oc = log_open_out_bin n in f oc; close_out oc;;
 
 let read_file_bin n f = let ic = log_open_in_bin n in f ic; close_in ic;;
 
-let concat f1 f2 f3 =
-  log "generate %s ...\n%!" f3; command ("cat "^f1^" "^f2^" > "^f3)
+let concat fs out =
+  log "generate %s ...\n%!" out;
+  command ("cat "^String.concat " " fs^" > "^out)
 ;;
 
-let remove f = command ("rm -f "^f);;
+let remove fs = command ("rm -f "^String.concat " " fs);;
 
 let copy f1 f2 = log "generate %s ...\n%!" f2; command ("cp -f "^f1^" "^f2);;
 

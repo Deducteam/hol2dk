@@ -887,8 +887,9 @@ and command = function
 
   | "axm"::_ -> wrong_nb_args()
 
-  (* Called in Makefile to generate a file f.lp with, for each named
-     theorem in f.ml, a declaration "symbol thm_name : type". *)
+  (* Called in Makefile to generate, for each file n required by f, a
+     file n.lp with a declaration "symbol thm_name : type" for each
+     named theorem in n.ml. *)
   | ["files";f] ->
      let dk = is_dk f in
      let f = Filename.chop_extension f in
@@ -1047,6 +1048,64 @@ and command = function
 
   | "theorem"::_ -> wrong_nb_args()
 
+  (* List theorems proved in file f. *)
+  | ["thms";b;f] ->
+     let thm_names = thms_of_file f in
+     let map_thid_name = read_val (b^".thm") in
+     let map_name_thid =
+       MapInt.fold (fun k n map -> MapStr.add n k map) map_thid_name
+         MapStr.empty
+     in
+     let thm_ids = List.map (fun n -> MapStr.find n map_name_thid) thm_names in
+     let min_id, max_id =
+       List.fold_left (fun (min_id, max_id) k -> min min_id k, max max_id k)
+         (max_int, min_int) thm_ids
+     in
+     let map_thid_pos = read_val (b^".thp") in
+     let f k (n,_) = if min_id <= k && k <= max_id then log " %s" n in
+     MapInt.iter f map_thid_pos;
+     log "\n";
+     0
+
+  | "thms"::_ -> wrong_nb_args()
+
+  (* Called in Makefile to create n.lp when n is not in BIG_FILES. *)
+  | ["theorems";b;f] ->
+     (* get theorems in f.ml *)
+     let thm_names = thms_of_file f in
+     let map_thid_name = read_val (b^".thm") in
+     let map_name_thid =
+       MapInt.fold (fun k n map -> MapStr.add n k map) map_thid_name
+         MapStr.empty
+     in
+     let thm_ids = List.map (fun n -> MapStr.find n map_name_thid) thm_names in
+     let min_id, max_id =
+       List.fold_left (fun (min_id, max_id) k -> min min_id k, max max_id k)
+         (max_int, min_int) thm_ids
+     in
+     map_thid_pos := read_val (b^".thp");
+     let add_file k (n,_) acc =
+       if min_id <= k && k <= max_id then n::acc else acc in
+     let files = MapInt.fold add_file !map_thid_pos [] in
+     (* generate proof steps *)
+     read_sig b;
+     init_proof_reading b;
+     let gen n =
+       read_pos n;
+       read_use n;
+       the_start_idx := read_val (n^".sti");
+       Xlp.export_theorem_proof b n
+     in
+     List.iter gen files;
+     close_in !Xproof.ic_prf;
+     let n = Filename.chop_extension (Filename.basename f) in
+     Xlp.export_term_abbrevs_in_one_file b n;
+     
+     Xlp.export_theorem_deps b n;
+     0
+
+  | "theorems"::_ -> wrong_nb_args()
+
   (* Merge all maps in typ files into a single map, give a unique
      index to every entry in the obtained map, generate
      b^"_type_abbrevs.lp" and a sed file for every typ file. *)
@@ -1152,9 +1211,7 @@ and command = function
            List.map (fun s -> b^"_"^s^".dk")
              (if r = All then deps @ ["theorems"] else deps)
          in
-         exit
-           (Sys.command
-              ("cat theory_hol.dk "^String.concat " " infiles^" > "^b^".dk"))
+         Xlib.concat ("theory_hol.dk"::infiles) (b^".dk")
        end
      else
        begin
