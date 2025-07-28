@@ -1085,27 +1085,50 @@ and command = function
      in
      (* get all the theorem filenames between [min_id] and [max_id]. *)
      map_thid_pos := read_val (b^".thp");
-     let add_file k (n,_) acc =
-       if min_id <= k && k <= max_id then n::acc else acc in
-     let files = MapInt.fold add_file !map_thid_pos [] in
+     let add_file (k,(n,_)) =
+       if min_id <= k && k <= max_id then Some n else None in
+     let files = List.filter_map add_file (MapInt.bindings !map_thid_pos) in
      (* generate proof steps *)
      read_sig b;
      init_proof_reading b;
+     let deps = ref SetStr.empty in
      let gen n =
        read_pos n;
        read_use n;
        the_start_idx := read_val (n^".sti");
-       Xlp.export_theorem_proof b n
+       Xlp.export_theorem_proof b n;
+       (* record external dependencies *)
+       for i = 1 to !Xlp.proof_part do
+         deps := SetStr.fold
+                   (fun n acc ->
+                     if MapStr.mem n map_name_thid then acc
+                     else SetStr.add n acc)
+                   (Hashtbl.find Xlp.htbl_thm_deps i)
+                   !deps
+       done
      in
      List.iter gen files;
      close_in !Xproof.ic_prf;
-     (* merge all files into [n.lp]. *)
+     (* merge all proof files into [n_proofs.lp]. *)
      let n = Filename.chop_extension (Filename.basename f) in
      Xlib.concat (List.map (fun s -> s^"_proofs.lp") files) (n^"_proofs.lp");
      Xlib.concat (List.rev_map (fun s -> s^".sed") files @ [" | sort -u "])
        (n^".sed");
+     Xlib.copy (n^".sed") (n^"_term_abbrevs.sed");
      Xlp.export_term_abbrevs_in_one_file b n;
-     Xlp.export_theorem_deps b n;
+     (* export deps *)
+     let iter_deps f =
+       f (b^"_types");
+       f (b^"_terms");
+       f (b^"_axioms");
+       f (b^"_type_abbrevs");
+       if !use_sharing then f (n^"_subterm_abbrevs");
+       f (n^"_term_abbrevs");
+       SetStr.iter (Xlp.spec f) !deps
+     in
+     Xlp.create_file_with_deps (n^"_deps") n iter_deps (fun _ -> ());
+     Xlib.concat [n^"_deps.lp";n^"_proofs.lp"] (n^".lp");
+     (*Xlib.remove [p^"_deps.lp";p^"_proofs.lp"]*)
      0
 
   | "theorems"::_ -> wrong_nb_args()
