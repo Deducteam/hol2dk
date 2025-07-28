@@ -908,8 +908,8 @@ let export_theorem_deps b n =
       SetStr.iter (spec f) (Hashtbl.find htbl_thm_deps i);
     in
     create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
-    Xlib.concat [p^"_deps.lp";p^"_proofs.lp"] (p^".lp");
-    Xlib.remove [p^"_deps.lp";p^"_proofs.lp"]
+    Xlib.concat [p^"_deps.lp";p^"_proofs.lp"] (p^".lp")(*;
+    Xlib.remove [p^"_deps.lp";p^"_proofs.lp"]*)
   done
 ;;
 
