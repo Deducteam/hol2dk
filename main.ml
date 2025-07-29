@@ -1096,7 +1096,7 @@ and command = function
        read_pos n;
        read_use n;
        the_start_idx := read_val (n^".sti");
-       (*Xlib.remove [n^".pos";n^".use";n^".sti"];*)
+       Xlib.remove [n^".pos";n^".use";n^".sti"];
        (* part of Xlp.export_theorem_proof b n; *)
        let thid = !the_start_idx + Array.length !prf_pos - 1 in
        Xlp.export_proofs_in_interval n !the_start_idx thid;
