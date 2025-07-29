@@ -1092,11 +1092,11 @@ and command = function
      read_sig b;
      init_proof_reading b;
      let deps = ref SetStr.empty in
-     let gen n =
+     let gen oc_spec n =
        read_pos n;
        read_use n;
        the_start_idx := read_val (n^".sti");
-       Xlib.remove [n^".pos";n^".use";n^".sti"];
+       Xlib.remove [n^".pos";n^".use";n^".sti";n^".nbp"];
        (* part of Xlp.export_theorem_proof b n; *)
        let thid = !the_start_idx + Array.length !prf_pos - 1 in
        Xlp.export_proofs_in_interval n !the_start_idx thid;
@@ -1108,13 +1108,16 @@ and command = function
                      if List.mem n files then acc else SetStr.add n acc)
                    (Hashtbl.find Xlp.htbl_thm_deps i)
                    !deps
-       done
+       done;
+       (* generate corresponding spec *)
+       Xlp.theorem_as_axiom false oc_spec thid (proof_at thid)
      in
-     List.iter gen files;
+     let n = Filename.chop_extension (Filename.basename f) in
+     Xlp.export (n^"_spec") [b^"_types";b^"_terms"]
+       (fun oc_spec -> List.iter (gen oc_spec) files);
      close_in !Xproof.ic_prf;
      (* merge all proof files into [n_proofs.lp]. *)
      let proof_files = List.map (fun s -> s^"_proofs.lp") files in
-     let n = Filename.chop_extension (Filename.basename f) in
      Xlib.concat proof_files (n^"_proofs.lp");
      Xlib.remove proof_files;
      Xlp.export_term_abbrevs_in_one_file b n;
