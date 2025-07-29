@@ -1096,13 +1096,16 @@ and command = function
        read_pos n;
        read_use n;
        the_start_idx := read_val (n^".sti");
-       Xlp.export_theorem_proof b n;
+       (*Xlib.remove [n^".pos";n^".use";n^".sti"];*)
+       (* part of Xlp.export_theorem_proof b n; *)
+       let thid = !the_start_idx + Array.length !prf_pos - 1 in
+       Xlp.export_proofs_in_interval n !the_start_idx thid;
+       Xlib.rename (n^part !Xlp.proof_part^"_proofs.lp") (n^"_proofs.lp");
        (* record external dependencies *)
        for i = 1 to !Xlp.proof_part do
          deps := SetStr.fold
                    (fun n acc ->
-                     if MapStr.mem n map_name_thid then acc
-                     else SetStr.add n acc)
+                     if List.mem n files then acc else SetStr.add n acc)
                    (Hashtbl.find Xlp.htbl_thm_deps i)
                    !deps
        done
@@ -1110,12 +1113,12 @@ and command = function
      List.iter gen files;
      close_in !Xproof.ic_prf;
      (* merge all proof files into [n_proofs.lp]. *)
+     let proof_files = List.map (fun s -> s^"_proofs.lp") files in
      let n = Filename.chop_extension (Filename.basename f) in
-     Xlib.concat (List.map (fun s -> s^"_proofs.lp") files) (n^"_proofs.lp");
-     Xlib.concat (List.rev_map (fun s -> s^".sed") files @ [" | sort -u "])
-       (n^".sed");
-     Xlib.copy (n^".sed") (n^"_term_abbrevs.sed");
+     Xlib.concat proof_files (n^"_proofs.lp");
+     Xlib.remove proof_files;
      Xlp.export_term_abbrevs_in_one_file b n;
+     write_val (n^".typ") !Xlp.map_typ_abbrev;
      (* export deps *)
      let iter_deps f =
        f (b^"_types");
@@ -1128,7 +1131,7 @@ and command = function
      in
      Xlp.create_file_with_deps (n^"_deps") n iter_deps (fun _ -> ());
      Xlib.concat [n^"_deps.lp";n^"_proofs.lp"] (n^".lp");
-     (*Xlib.remove [p^"_deps.lp";p^"_proofs.lp"]*)
+     Xlib.remove [n^"_deps.lp";n^"_proofs.lp"];
      0
 
   | "theorems"::_ -> wrong_nb_args()
