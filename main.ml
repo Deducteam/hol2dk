@@ -337,12 +337,16 @@ and command = function
   | "--max-abbrev-size"::k::args ->
      Xlp.max_abbrev_part_size := integer k; command args
 
+  | ["--max-abbrev-size"] -> wrong_nb_args()
+
   | "--max-proof-size"::k::args ->
      Xlp.max_proof_part_size := integer k; command args
 
+  | ["--max-proof-size"] -> wrong_nb_args()
+
   | "--root-path"::arg::args -> Xlp.root_path := arg; command args
 
-  | ["--root-path"] -> err "missing root path\n"; 1
+  | ["--root-path"] -> wrong_nb_args()
 
   | s::_ when String.starts_with ~prefix:"--" s ->
      err "unknown option \"%s\"\n" s; 1
@@ -1069,25 +1073,39 @@ and command = function
 
   | "thms"::_ -> wrong_nb_args()
 
+  (* Generate p.lp and its associated files, where
+     p=chop_extension(basename f), with all the theorems (named or
+     not) proved in f. *)
   | ["theorems";b;f] ->
+     let p = Filename.chop_extension (Filename.basename f) in
      (* get theorem names in f.ml *)
      let thm_names = thms_of_file f in
-     (* get the corresponding theorem ids by inverting [map_thid_name]. *)
-     let map_thid_name = read_val (b^".thm") in
+     (* get the corresponding theorem ids by inverting b.thm. *)
      let map_name_thid =
-       MapInt.fold (fun k n map -> MapStr.add n k map) map_thid_name
+       MapInt.fold (fun k n map -> MapStr.add n k map)
+         (read_val (b^".thm"))
          MapStr.empty
      in
-     let thm_ids = List.map (fun n -> MapStr.find n map_name_thid) thm_names in
-     let min_id, max_id =
-       List.fold_left (fun (min_id, max_id) k -> min min_id k, max max_id k)
-         (max_int, min_int) thm_ids
-     in
-     (* get all the theorem filenames between [min_id] and [max_id]. *)
-     map_thid_pos := read_val (b^".thp");
-     let add_file (k,(n,_)) =
-       if min_id <= k && k <= max_id then Some n else None in
-     let files = List.filter_map add_file (MapInt.bindings !map_thid_pos) in
+     let min_id = ref max_int and max_id = ref min_int in
+     List.iter
+       (fun n ->
+         let k = MapStr.find n map_name_thid in
+         min_id := min !min_id k;
+         max_id := max !max_id k)
+       thm_names;
+     (* update b.thp and set Xproof.map_thid_pos for export *)
+     let thm_names = ref SetStr.empty and map_thid_name = ref MapInt.empty in
+     Xproof.map_thid_pos :=
+       MapInt.mapi (fun k ((name,pos) as v) ->
+           if !min_id <= k && k <= !max_id then
+             begin
+               thm_names := SetStr.add name !thm_names;
+               map_thid_name := MapInt.add k name !map_thid_name;
+               (p,pos)
+             end
+           else v)
+         (read_val (b^".thp"));
+     write_val (b^".thp") !Xproof.map_thid_pos;
      (* generate proof steps *)
      read_sig b;
      init_proof_reading b;
@@ -1105,36 +1123,38 @@ and command = function
        for i = 1 to !Xlp.proof_part do
          deps := SetStr.fold
                    (fun n acc ->
-                     if List.mem n files then acc else SetStr.add n acc)
+                     if SetStr.mem n !thm_names then acc else SetStr.add n acc)
                    (Hashtbl.find Xlp.htbl_thm_deps i)
                    !deps
        done;
        (* generate corresponding spec *)
        Xlp.theorem_as_axiom false oc_spec thid (proof_at thid)
      in
-     let n = Filename.chop_extension (Filename.basename f) in
-     Xlp.export (n^"_spec") [b^"_types";b^"_terms"]
-       (fun oc_spec -> List.iter (gen oc_spec) files);
+     Xlp.export (p^"_spec") [b^"_types";b^"_terms"]
+       (fun oc_spec -> SetStr.iter (gen oc_spec) !thm_names);
      close_in !Xproof.ic_prf;
-     (* merge all proof files into [n_proofs.lp]. *)
-     let proof_files = List.map (fun s -> s^"_proofs.lp") files in
-     Xlib.concat proof_files (n^"_proofs.lp");
+     (* merge all proof files into [n_proofs.lp]. The order of proof
+        files is important. *)
+     let proof_files =
+       List.map (fun (_,n) -> n^"_proofs.lp")
+         (MapInt.bindings !map_thid_name) in
+     Xlib.concat proof_files (p^"_proofs.lp");
      Xlib.remove proof_files;
-     Xlp.export_term_abbrevs_in_one_file b n;
-     write_val (n^".typ") !Xlp.map_typ_abbrev;
+     Xlp.export_term_abbrevs_in_one_file b p;
+     write_val (p^".typ") !Xlp.map_typ_abbrev;
      (* export deps *)
      let iter_deps f =
        f (b^"_types");
        f (b^"_terms");
        f (b^"_axioms");
        f (b^"_type_abbrevs");
-       if !use_sharing then f (n^"_subterm_abbrevs");
-       f (n^"_term_abbrevs");
+       if !use_sharing then f (p^"_subterm_abbrevs");
+       f (p^"_term_abbrevs");
        SetStr.iter (Xlp.spec f) !deps
      in
-     Xlp.create_file_with_deps (n^"_deps") n iter_deps (fun _ -> ());
-     Xlib.concat [n^"_deps.lp";n^"_proofs.lp"] (n^".lp");
-     Xlib.remove [n^"_deps.lp";n^"_proofs.lp"];
+     Xlp.create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
+     Xlib.concat [p^"_deps.lp";p^"_proofs.lp"] (p^".lp");
+     Xlib.remove [p^"_deps.lp";p^"_proofs.lp"];
      0
 
   | "theorems"::_ -> wrong_nb_args()
