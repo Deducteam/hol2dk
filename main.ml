@@ -1083,21 +1083,20 @@ and command = function
          err "\"%s.lp\" already exists. If you generated it using \"hol2dk merge\", you cannot regenerate it again unless you remove it and do \"hol2dk split\" again.\n" p;
          exit 1
        end;
-     (* get theorem names in f.ml *)
-     let thm_names = thms_of_file f in
-     (* get the corresponding theorem ids by inverting b.thm. *)
-     let map_name_thid =
-       MapInt.fold (fun k n map -> MapStr.add n k map)
+     (* compute the minimum and maximum theorem indexes in f *)
+     let min_id = ref max_int and max_id = ref min_int in
+     let map_name_thid = (* inverse of b.thm *)
+       MapInt.fold (fun k n map -> log "%s %d\n" n k; MapStr.add n k map)
          (read_val (b^".thm"))
          MapStr.empty
      in
-     let min_id = ref max_int and max_id = ref min_int in
      List.iter
        (fun n ->
-         let k = MapStr.find n map_name_thid in
+         let k = try MapStr.find n map_name_thid
+                 with Not_found -> log "unknown name: %s\n" n; assert false in
          min_id := min !min_id k;
          max_id := max !max_id k)
-       thm_names;
+       (thms_of_file f);
      (* update b.thp and set Xproof.map_thid_pos for export *)
      let thm_names = ref SetStr.empty and map_thid_name = ref MapInt.empty in
      Xproof.map_thid_pos :=
