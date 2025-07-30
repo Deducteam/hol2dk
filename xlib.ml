@@ -66,7 +66,9 @@ let read_file_bin n f = let ic = log_open_in_bin n in f ic; close_in ic;;
 
 let concat fs out =
   log "generate %s ...\n%!" out;
-  command ("cat "^String.concat " " fs^" > "^out)
+  match fs with
+  | [] -> command ("touch "^out)
+  | _ -> command ("cat "^String.concat " " fs^" > "^out)
 ;;
 
 let remove fs = command ("rm -f "^String.concat " " fs);;

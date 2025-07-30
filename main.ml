@@ -1076,8 +1076,13 @@ and command = function
   (* Generate p.lp and its associated files, where
      p=chop_extension(basename f), with all the theorems (named or
      not) proved in f. *)
-  | ["theorems";b;f] ->
+  | ["merge";b;f] ->
      let p = Filename.chop_extension (Filename.basename f) in
+     if Sys.file_exists (p^".lp") then
+       begin
+         err "\"%s.lp\" already exists. If you generated it using \"hol2dk merge\", you cannot regenerate it again unless you remove it and do \"hol2dk split\" again.\n" p;
+         exit 1
+       end;
      (* get theorem names in f.ml *)
      let thm_names = thms_of_file f in
      (* get the corresponding theorem ids by inverting b.thm. *)
@@ -1097,8 +1102,9 @@ and command = function
      let thm_names = ref SetStr.empty and map_thid_name = ref MapInt.empty in
      Xproof.map_thid_pos :=
        MapInt.mapi (fun k ((name,pos) as v) ->
-           if !min_id <= k && k <= !max_id then
+           if !min_id <= k && k <= !max_id && name <> p then
              begin
+               log "%d %s\n" k name;
                thm_names := SetStr.add name !thm_names;
                map_thid_name := MapInt.add k name !map_thid_name;
                (p,pos)
@@ -1157,7 +1163,7 @@ and command = function
      Xlib.remove [p^"_deps.lp";p^"_proofs.lp"];
      0
 
-  | "theorems"::_ -> wrong_nb_args()
+  | "merge"::_ -> wrong_nb_args()
 
   (* Merge all maps in typ files into a single map, give a unique
      index to every entry in the obtained map, generate
