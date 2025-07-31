@@ -1066,7 +1066,7 @@ and command = function
            match List.find_opt (in_range k) ranges with
            | Some(_,f) ->
               (*FIXME: these files should not be generated in the
-                first place. package and split should be merged somehow. *)
+                first place. unsplit and split should be merged somehow. *)
               let n = thm_name map_thid_name k in
               Xlib.remove [n^".pos";n^".use";n^".sti";n^".nbp"];
               f,p
@@ -1076,7 +1076,7 @@ and command = function
      write_val (b^".thp") map;
      0
 
-  | "package"::_ -> wrong_nb_args()
+  | "unsplit"::_ -> wrong_nb_args()
 
   (* Called in Makefile when f is in BIG_FILES to create the files
      n.lp, n_spec.lp, n_part_k.idx, which contains the first and last
