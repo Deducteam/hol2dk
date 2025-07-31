@@ -1066,7 +1066,8 @@ and command = function
               (*FIXME: these files should not be generated in the
                 first place. unsplit and split should be merged somehow. *)
               let n = thm_name map_thid_name k in
-              Xlib.remove [n^".pos";n^".use";n^".sti";n^".nbp"];
+              if not(List.exists (fun (_,f) -> f=n) ranges) then
+                Xlib.remove [n^".pos";n^".use";n^".sti";n^".nbp"];
               f,p
            | None -> v)
          (read_val (b^".thp"))

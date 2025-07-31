@@ -3,6 +3,8 @@ TODO
 
 - do not generate _spec files anymore since we need only one
 
+- merge the commands split and unsplit into a single one
+
 - xnames.ml: define string_of_file as an iterator
 
 - replace variables like _1718 by better names
