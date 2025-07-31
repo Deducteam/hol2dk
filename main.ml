@@ -311,10 +311,9 @@ let wrong_nb_args() = err "wrong number of arguments\n"; 1;;
 (* compute the minimum and maximum theorem indexes in f *)
 let thid_range_of_file b f =
   let min_id = ref max_int and max_id = ref min_int in
-  let map_name_thid = (* inverse of b.thm *)
-    MapInt.fold (fun k n map -> log "%s %d\n" n k; MapStr.add n k map)
-      (read_val (b^".thm"))
-      MapStr.empty
+  let map_thid_name = read_val (b^".thm") in
+  let map_name_thid = (* inverse of map_thid_name *)
+    MapInt.fold (fun k n map -> MapStr.add n k map) map_thid_name MapStr.empty
   in
   List.iter
     (fun n ->
@@ -324,7 +323,7 @@ let thid_range_of_file b f =
         max_id := max !max_id k
       with Not_found -> ())
     (thms_of_file f);
-  !min_id, !max_id
+  !min_id, !max_id, map_thid_name
 ;;
 
 let rec log_command l =
@@ -1073,10 +1072,14 @@ and command = function
 
   (* List theorems proved in file f. *)
   | ["thms";b;f] ->
-     let min_id, max_id = thid_range_of_file b f in
-     let f k (n,_) = if min_id <= k && k <= max_id then log " %s" n in
-     MapInt.iter f (read_val (b^".thp"));
-     log "\n";
+     let min_id, max_id, map_thid_name = thid_range_of_file b f in
+     let map,_,_ = MapInt.split (max_id + 1) (read_val (b^".thp")) in
+     let _,_,map = MapInt.split (min_id - 1) map in
+     MapInt.iter
+       (fun k _ ->
+         try log "%s\n" (MapInt.find k map_thid_name)
+         with Not_found -> log "thm%d\n" k)
+       map;
      0
 
   | "thms"::_ -> wrong_nb_args()
@@ -1092,7 +1095,7 @@ and command = function
          exit 1
        end;
      (* update b.thp and set Xproof.map_thid_pos for export *)
-     let min_id, max_id = thid_range_of_file b f
+     let min_id, max_id, _ = thid_range_of_file b f
      and thm_names = ref SetStr.empty
      and map_thid_name = ref MapInt.empty in
      Xproof.map_thid_pos :=
