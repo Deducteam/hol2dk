@@ -308,6 +308,25 @@ let print_env_var n =
 
 let wrong_nb_args() = err "wrong number of arguments\n"; 1;;
 
+(* compute the minimum and maximum theorem indexes in f *)
+let thid_range_of_file b f =
+  let min_id = ref max_int and max_id = ref min_int in
+  let map_name_thid = (* inverse of b.thm *)
+    MapInt.fold (fun k n map -> log "%s %d\n" n k; MapStr.add n k map)
+      (read_val (b^".thm"))
+      MapStr.empty
+  in
+  List.iter
+    (fun n ->
+      try
+        let k = MapStr.find n map_name_thid in
+        min_id := min !min_id k;
+        max_id := max !max_id k
+      with Not_found -> ())
+    (thms_of_file f);
+  !min_id, !max_id
+;;
+
 let rec log_command l =
   print_string "\nhol2dk";
   List.iter (fun s -> print_char ' '; print_string s) l;
@@ -1054,20 +1073,9 @@ and command = function
 
   (* List theorems proved in file f. *)
   | ["thms";b;f] ->
-     let thm_names = thms_of_file f in
-     let map_thid_name = read_val (b^".thm") in
-     let map_name_thid =
-       MapInt.fold (fun k n map -> MapStr.add n k map) map_thid_name
-         MapStr.empty
-     in
-     let thm_ids = List.map (fun n -> MapStr.find n map_name_thid) thm_names in
-     let min_id, max_id =
-       List.fold_left (fun (min_id, max_id) k -> min min_id k, max max_id k)
-         (max_int, min_int) thm_ids
-     in
-     let map_thid_pos = read_val (b^".thp") in
+     let min_id, max_id = thid_range_of_file b f in
      let f k (n,_) = if min_id <= k && k <= max_id then log " %s" n in
-     MapInt.iter f map_thid_pos;
+     MapInt.iter f (read_val (b^".thp"));
      log "\n";
      0
 
@@ -1083,26 +1091,13 @@ and command = function
          err "\"%s.lp\" already exists. If you generated it using \"hol2dk merge\", you cannot regenerate it again unless you remove it and do \"hol2dk split\" again.\n" p;
          exit 1
        end;
-     (* compute the minimum and maximum theorem indexes in f *)
-     let min_id = ref max_int and max_id = ref min_int in
-     let map_name_thid = (* inverse of b.thm *)
-       MapInt.fold (fun k n map -> log "%s %d\n" n k; MapStr.add n k map)
-         (read_val (b^".thm"))
-         MapStr.empty
-     in
-     List.iter
-       (fun n ->
-         try
-           let k = MapStr.find n map_name_thid in
-           min_id := min !min_id k;
-           max_id := max !max_id k
-         with Not_found -> ())
-       (thms_of_file f);
      (* update b.thp and set Xproof.map_thid_pos for export *)
-     let thm_names = ref SetStr.empty and map_thid_name = ref MapInt.empty in
+     let min_id, max_id = thid_range_of_file b f
+     and thm_names = ref SetStr.empty
+     and map_thid_name = ref MapInt.empty in
      Xproof.map_thid_pos :=
        MapInt.mapi (fun k ((name,pos) as v) ->
-           if !min_id <= k && k <= !max_id && name <> p then
+           if min_id <= k && k <= max_id && name <> p then
              begin
                log "%d %s\n" k name;
                thm_names := SetStr.add name !thm_names;
