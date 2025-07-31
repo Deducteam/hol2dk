@@ -92,8 +92,10 @@ hol2dk split $base
   for each theorem $thm in $base
 
 hol2dk unsplit $base $module ...
-  for each file $HOLLIGHT_DIR/$module.lp, generate the files $module.sti,
-  $module.pos, $module.use and $module.nbp
+  for each file $module, generate the files $module.sti, $module.pos,
+  $module.use and $module.nbp for all the theorems $thm proved in
+  $HOLLIGHT_DIR/$module.ml, remove all the files $thm.sti,
+  $thm.pos, $thm.use and $thm.nbp, and update $base.thm
 
 hol2dk merge $base [$path/]$file.(dk|lp)
   generate a single lp file for the proofs of all the theorems (named or not)
