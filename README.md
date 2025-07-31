@@ -309,7 +309,7 @@ b.sig: signature (types, constants, axioms, definitions)
 
 b.thm: map from theorem indexes having a name to their name
 
-b.thp: map every useful theorem index to its name and position
+b.thp: map every useful theorem index to its position in b.prf and the lp filename where its proof is translated
 
 f.nbp: number of proof steps
 
