@@ -13,9 +13,9 @@ config:
 # single dk
 
 .PHONY: test1
-test%:
-	mkdir -p output$*
-	$(MAKE) -C output$* -f ../test.mk do-test$*
+test1:
+	mkdir -p output1
+	$(MAKE) -C output1 -f ../test.mk do-test1
 
 .PHONY: do-test1
 do-test1: config
