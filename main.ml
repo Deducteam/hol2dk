@@ -1092,10 +1092,11 @@ and command = function
      in
      List.iter
        (fun n ->
-         let k = try MapStr.find n map_name_thid
-                 with Not_found -> log "unknown name: %s\n" n; assert false in
-         min_id := min !min_id k;
-         max_id := max !max_id k)
+         try
+           let k = MapStr.find n map_name_thid in
+           min_id := min !min_id k;
+           max_id := max !max_id k
+         with Not_found -> ())
        (thms_of_file f);
      (* update b.thp and set Xproof.map_thid_pos for export *)
      let thm_names = ref SetStr.empty and map_thid_name = ref MapInt.empty in

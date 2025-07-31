@@ -129,18 +129,10 @@ let idx = Stdlib.ref (-1);;
    in [tnames] and build a map associating its name to each theorem
    index. *)
 let map_thid_name =
-  (* OCaml code for setting [idx] to the index of theorem [name]. *)
-  let cmd_set_idx s = "idx := index_of "^s^";;" in
   List.fold_left
     (fun map tname ->
-      (*if tname = "_" then map
-      else*)
-        try
-          (*Printf.printf "%s" tname;*)
-          eval (cmd_set_idx tname);
-          (*Printf.printf " %d" !idx;*)
-          MapInt.add !idx tname map
-        with _ -> (*Printf.printf " not found\n";*) map)
+      try eval ("idx := index_of "^tname^";;"); MapInt.add !idx tname map
+      with _ -> Printf.printf "%s not found\n" tname; map)
     MapInt.empty
 ;;
 
