@@ -88,8 +88,12 @@ hol2dk config hollight_file.ml root_path [coq_module_or_file ...] [mappings.lp] 
   (do hol2dk config without arguments to get more details)
  
 hol2dk split $base
-  generate $base.thp and the files $thm.sti, $thm.pos and $thm.use
-  for each theorem $thm
+  generate $base.thp and the files $thm.sti, $thm.pos, $thm.use and $thm.nbp
+  for each theorem $thm in $base
+
+hol2dk unsplit $base $module ...
+  for each file $HOLLIGHT_DIR/$module.lp, generate the files $module.sti,
+  $module.pos, $module.use and $module.nbp
 
 hol2dk merge $base [$path/]$file.(dk|lp)
   generate a single lp file for the proofs of all the theorems (named or not)
@@ -299,8 +303,6 @@ let print_hstats() =
     hstats (Hashtbl.stats Xlp.htbl_abbrev_part_max)
 ;;
 
-let valid_coq_filename s = match s with "at" -> "_"^s | _ -> s;;
-
 let call_script s args =
   match Sys.getenv_opt "HOL2DK_DIR" with
   | None -> err "set $HOL2DK_DIR first\n"; 1
@@ -316,12 +318,8 @@ let print_env_var n =
 let wrong_nb_args() = err "wrong number of arguments\n"; 1;;
 
 (* compute the minimum and maximum theorem indexes in f *)
-let thid_range_of_file b f =
+let thid_range map_name_thid f =
   let min_id = ref max_int and max_id = ref min_int in
-  let map_thid_name = read_val (b^".thm") in
-  let map_name_thid = (* inverse of map_thid_name *)
-    MapInt.fold (fun k n map -> MapStr.add n k map) map_thid_name MapStr.empty
-  in
   List.iter
     (fun n ->
       try
@@ -330,7 +328,28 @@ let thid_range_of_file b f =
         max_id := max !max_id k
       with Not_found -> ())
     (thms_of_file f);
-  !min_id, !max_id, map_thid_name
+  if !min_id > !max_id then
+    (err "\"%s\" has no recorded named theorem.\n" f; exit 1);
+  !min_id, !max_id
+;;
+
+let inverse map_thid_name =
+  MapInt.fold (fun k n map -> MapStr.add n k map) map_thid_name MapStr.empty
+;;
+
+let valid_coq_filename s = match s with "at" -> "_"^s | _ -> s;;
+
+let thm_name map_thid_name k =
+  try valid_coq_filename (MapInt.find k map_thid_name)
+  with Not_found -> "thm"^string_of_int k
+;;
+
+let create_segment n start_index end_index =
+  let len = end_index - start_index + 1 in
+  write_val (n^".nbp") len;
+  write_val (n^".sti") start_index;
+  write_val (n^".pos") (Array.sub !prf_pos start_index len);
+  write_val (n^".use") (Array.sub !last_use start_index len)
 ;;
 
 let rec log_command l =
@@ -983,10 +1002,9 @@ and command = function
      read_pos b;
      read_use b;
      let map_thid_name = read_val (b^".thm") in
-     let map = ref MapInt.empty in
+     let map = ref MapInt.empty in (* to build b.thp *)
      let create_segment start_index end_index =
-       let n = try valid_coq_filename (MapInt.find end_index map_thid_name)
-               with Not_found -> "thm"^string_of_int end_index in
+       let n = thm_name map_thid_name end_index in
        let len = end_index - start_index + 1 in
        write_val (n^".nbp") len;
        write_val (n^".sti") start_index;
@@ -1013,6 +1031,52 @@ and command = function
      0
 
   | "split"::_ -> wrong_nb_args()
+
+  (* For each f in files such that $HOLLIGHT_DIR/f.ml exists, generate
+     the files f.sti, f.pos, f.use and f.nbp, and remove all the files
+     t.sti, t.pos, t.use and t.nbp such that t is proved in f. Update
+     b.thp accordingly. *)
+  | "unsplit"::_::[] -> 0
+  | "unsplit"::b::files ->
+     let d =
+       try Sys.getenv "HOLLIGHT_DIR"
+       with Not_found -> err "HOLLIGHT_DIR needs to be set first"; exit 1
+     in
+     read_pos b;
+     read_use b;
+     let map_thid_name = read_val (b^".thm") in
+     let map_name_thid = inverse map_thid_name in
+     let ranges =
+       List.map
+         (fun f ->
+           let min,max =
+             thid_range map_name_thid (Filename.concat d (f^".ml")) in
+           let k = ref (min - 1) in
+           let cond() = let l = Array.get !last_use !k in l <> 0 && l <= max in
+           while cond() do decr k done;
+           let min = !k + 1 in
+           let f = Filename.basename f in
+           create_segment f min max;
+           (min,max),f)
+         files
+     in
+     let map =
+       MapInt.mapi (fun k ((_,p) as v) ->
+           let in_range k ((min,max),_) = min <= k && k <= max in
+           match List.find_opt (in_range k) ranges with
+           | Some(_,f) ->
+              (*FIXME: these files should not be generated in the
+                first place. package and split should be merged somehow. *)
+              let n = thm_name map_thid_name k in
+              Xlib.remove [n^".pos";n^".use";n^".sti";n^".nbp"];
+              f,p
+           | None -> v)
+         (read_val (b^".thp"))
+     in
+     write_val (b^".thp") map;
+     0
+
+  | "package"::_ -> wrong_nb_args()
 
   (* Called in Makefile when f is in BIG_FILES to create the files
      n.lp, n_spec.lp, n_part_k.idx, which contains the first and last
@@ -1079,14 +1143,11 @@ and command = function
 
   (* List theorems proved in file f. *)
   | ["thms";b;f] ->
-     let min_id, max_id, map_thid_name = thid_range_of_file b f in
+     let map_thid_name = read_val (b^".thm") in
+     let min_id, max_id = thid_range (inverse map_thid_name) f in
      let map,_,_ = MapInt.split (max_id + 1) (read_val (b^".thp")) in
      let _,_,map = MapInt.split (min_id - 1) map in
-     MapInt.iter
-       (fun k _ ->
-         try log "%s\n" (MapInt.find k map_thid_name)
-         with Not_found -> log "thm%d\n" k)
-       map;
+     MapInt.iter (fun k _ -> log "%s\n" (thm_name map_thid_name k)) map;
      0
 
   | "thms"::_ -> wrong_nb_args()
@@ -1102,7 +1163,7 @@ and command = function
          exit 1
        end;
      (* update b.thp and set Xproof.map_thid_pos for export *)
-     let min_id, max_id, _ = thid_range_of_file b f
+     let min_id, max_id = thid_range (inverse (read_val (b^".thm"))) f
      and thm_names = ref SetStr.empty
      and map_thid_name = ref MapInt.empty in
      Xproof.map_thid_pos :=
@@ -1119,6 +1180,11 @@ and command = function
      (* generate proof steps *)
      read_sig b;
      init_proof_reading b;
+     let map_thid_name = read_val (b^".thm") in
+     let thm_names =
+       MapInt.fold (fun _ n acc -> SetStr.add n acc) map_thid_name
+         SetStr.empty
+     in
      let deps = ref SetStr.empty in
      let gen oc_spec n =
        read_pos n;
@@ -1133,7 +1199,7 @@ and command = function
        for i = 1 to !Xlp.proof_part do
          deps := SetStr.fold
                    (fun n acc ->
-                     if SetStr.mem n !thm_names then acc else SetStr.add n acc)
+                     if SetStr.mem n thm_names then acc else SetStr.add n acc)
                    (Hashtbl.find Xlp.htbl_thm_deps i)
                    !deps
        done;
@@ -1141,7 +1207,7 @@ and command = function
        Xlp.theorem_as_axiom false oc_spec thid (proof_at thid)
      in
      Xlp.export (p^"_spec") [b^"_types";b^"_terms"]
-       (fun oc_spec -> SetStr.iter (gen oc_spec) !thm_names);
+       (fun oc_spec -> SetStr.iter (gen oc_spec) thm_names);
      close_in !Xproof.ic_prf;
      (* merge all proof files into [n_proofs.lp]. The order of proof
         files is important. *)
