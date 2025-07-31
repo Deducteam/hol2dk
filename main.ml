@@ -1109,7 +1109,6 @@ and command = function
        MapInt.mapi (fun k ((name,pos) as v) ->
            if min_id <= k && k <= max_id && name <> p then
              begin
-               log "%d %s\n" k name;
                thm_names := SetStr.add name !thm_names;
                map_thid_name := MapInt.add k name !map_thid_name;
                (p,pos)
