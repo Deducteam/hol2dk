@@ -189,8 +189,7 @@ Do `hol2dk config` to get more details.
   * `make -j$jobs rm-empty-deps` to remove `theory_hol.v`, `${base}_types.v` and `${base}_axioms.v` (to use when these files are empty only)
   * `make -j$jobs vo` to check Rocq files
 
-To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` as follows:
-- `make -j$jobs MAX_PROOF=500_000 MAX_ABBREV=2_000_000 lp`
+To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` by writing `make MAX_PROOF=500_000 MAX_ABBREV=2_000_000`.
 
 **Remark:** for the checking of generated Rocq files to not fail because of lack of RAM, we generate for each theorem `${thm}.lp` one or several files for its proof, and a file `${thm}_spec.lp` declaring this theorem as an axiom. Moreover, each other theorem proof using `${thm}` requires `${thm}_spec` instead of `${thm}`.
 
@@ -199,7 +198,7 @@ Performances
 
 On a machine with 32 processors i9-13950HX, 128 Gb RAM, Hol2dk master, HOL-Light 3.0.0, OCaml 5.2.1, Camlp5 8.03.01, Lambdapi 83cf0be2, Coq 8.20.0, using the Coq type N for HOL-Light natural numbers:
 
-| HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo (*) |
+| HOL-Light file               | dump  | size   | steps | thms  | lp  | v   | size  | vo     |
 |------------------------------|-------|--------|-------|-------|-----|-----|-------|--------|
 | hol.ml                       | 4m    | 3 Gb   | 3 M   | 5687  | 40s | 37s | 1 Gb  | 10m23s |
 | Multivariate/make_complex.ml | 2h30m | 135 Gb | 85 M  | 40728 | 45m | 24m | 91 Gb | 21h14m |
