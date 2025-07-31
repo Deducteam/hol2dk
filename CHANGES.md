@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - command nbp to print the number of (useful) proofs
 - command files to print theorem statements following the file structuration in HOL-Light
+- command thms to print theorems (named or not) proved in a file
+- command merge to generate a single lp file for the proofs of all the theorems (named or not) proved in a file
 - renamings to handle the Multivariate library
 - test/Sig_mappings_N.v and test/Sig_With_N.v: axiomatizations of mappings_N.v and With_N.v respectively
 

@@ -32,7 +32,7 @@ let prf_pos : int array ref = ref [||];;
 
 let read_pos b = prf_pos := read_val (b ^ ".pos");;
 
-(* [!map_thid_pos] maps proof indexes to positions. *)
+(* [!map_thid_pos] maps proof indexes to names and positions. *)
 let map_thid_pos : (string * int) MapInt.t ref = ref MapInt.empty;;
 
 (* Dependencies of the current theorem wrt previous theorems. *)

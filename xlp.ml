@@ -752,11 +752,16 @@ let export_subterm_abbrevs b n =
    [export_term_abbrevs_in_one_file b n] generates
    [n^"_term_abbrevs.lp"] and [n^"_term_abbrevs.typ"]. *)
 let export_term_abbrevs_in_one_file b n =
-  let deps = [b^"_types";b^"_type_abbrevs";b^"_terms"] in
-  export (n^"_term_abbrevs")
-    (if !use_sharing then deps @ [n^"_subterm_abbrevs"] else deps)
-    decl_term_abbrevs;
-  if !use_sharing then export_subterm_abbrevs b n;
+  begin
+    if !use_sharing then
+      let deps =
+        [b^"_types";b^"_type_abbrevs";b^"_terms";n^"_subterm_abbrevs"] in
+      export (n^"_term_abbrevs") deps decl_term_abbrevs;
+      export_subterm_abbrevs b n
+    else
+      let deps = [b^"_types";b^"_type_abbrevs";b^"_terms"] in
+      export (n^"_term_abbrevs") deps decl_term_abbrevs
+  end;
   write_val (n^"_term_abbrevs.typ") !map_typ_abbrev
 ;;
 
@@ -790,8 +795,8 @@ let export_theorem_term_abbrevs_part b n k =
   in
   create_file_with_deps (p^"_head") p iter_deps (fun _ -> ());
   (* generate [p^".lp"] *)
-  concat (p^"_head.lp") (p^"_tail.lp") (p^".lp");
-  remove (p^"_head.lp "^p^"_tail.lp")
+  Xlib.concat [p^"_head.lp";p^"_tail.lp"] (p^".lp");
+  Xlib.remove [p^"_head.lp";p^"_tail.lp"]
 ;;
 
 (****************************************************************************)
@@ -908,8 +913,8 @@ let export_theorem_deps b n =
       SetStr.iter (spec f) (Hashtbl.find htbl_thm_deps i);
     in
     create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
-    concat (p^"_deps.lp") (p^"_proofs.lp") (p^".lp");
-    remove (p^"_deps.lp "^p^"_proofs.lp")
+    Xlib.concat [p^"_deps.lp";p^"_proofs.lp"] (p^".lp");
+    Xlib.remove [p^"_deps.lp";p^"_proofs.lp"]
   done
 ;;
 
@@ -1070,9 +1075,9 @@ let export_theorem_proof_part b n k =
   in
   create_file_with_deps (p^"_spec_deps") (p^"_spec") iter_deps (fun _ -> ());
   (* generate [n^part(k)^".lp"] and [n^part(k)^"_spec.lp"] *)
-  concat (p^"_deps.lp") (p^"_body.lp") (p^".lp");
-  concat (p^"_spec_deps.lp") (p^"_spec_body.lp") (p^"_spec.lp");
-  remove (p^"_deps.lp "^p^"_body.lp "^p^"_spec_deps.lp "^p^"_spec_body.lp")
+  Xlib.concat [p^"_deps.lp";p^"_body.lp"] (p^".lp");
+  Xlib.concat [p^"_spec_deps.lp";p^"_spec_body.lp"] (p^"_spec.lp");
+  Xlib.remove [p^"_deps.lp";p^"_body.lp";p^"_spec_deps.lp";p^"_spec_body.lp"]
 ;;
 
 (****************************************************************************)

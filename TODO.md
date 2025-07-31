@@ -1,6 +1,8 @@
 TODO
 ----
 
+- xnames.ml: define string_of_file as an iterator
+
 - replace variables like _1718 by better names
 
 - always share closed subterms
