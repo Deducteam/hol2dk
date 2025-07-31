@@ -97,10 +97,6 @@ hol2dk unsplit $base $module ...
   $HOLLIGHT_DIR/$module.ml, remove all the files $thm.sti,
   $thm.pos, $thm.use and $thm.nbp, and update $base.thm
 
-hol2dk merge $base [$path/]$file.(dk|lp)
-  generate a single lp file for the proofs of all the theorems (named or not)
-  proved in [$path/]$file.(dk|lp)
- 
 hol2dk theorem $base $thm.lp
   generate the lp proof of the theorem $thm
 
@@ -1153,89 +1149,6 @@ and command = function
      0
 
   | "thms"::_ -> wrong_nb_args()
-
-  (* Generate p.lp and its associated files, where
-     p=chop_extension(basename f), with all the theorems (named or
-     not) proved in f. *)
-  | ["merge";b;f] ->
-     let p = Filename.chop_extension (Filename.basename f) in
-     if Sys.file_exists (p^".lp") then
-       begin
-         err "\"%s.lp\" already exists. If you generated it using \"hol2dk merge\", you cannot regenerate it again unless you remove it and do \"hol2dk split\" again.\n" p;
-         exit 1
-       end;
-     (* update b.thp and set Xproof.map_thid_pos for export *)
-     let min_id, max_id = thid_range (inverse (read_val (b^".thm"))) f
-     and thm_names = ref SetStr.empty
-     and map_thid_name = ref MapInt.empty in
-     Xproof.map_thid_pos :=
-       MapInt.mapi (fun k ((name,pos) as v) ->
-           if min_id <= k && k <= max_id && name <> p then
-             begin
-               thm_names := SetStr.add name !thm_names;
-               map_thid_name := MapInt.add k name !map_thid_name;
-               (p,pos)
-             end
-           else v)
-         (read_val (b^".thp"));
-     write_val (b^".thp") !Xproof.map_thid_pos;
-     (* generate proof steps *)
-     read_sig b;
-     init_proof_reading b;
-     let map_thid_name = read_val (b^".thm") in
-     let thm_names =
-       MapInt.fold (fun _ n acc -> SetStr.add n acc) map_thid_name
-         SetStr.empty
-     in
-     let deps = ref SetStr.empty in
-     let gen oc_spec n =
-       read_pos n;
-       read_use n;
-       the_start_idx := read_val (n^".sti");
-       Xlib.remove [n^".pos";n^".use";n^".sti";n^".nbp"];
-       (* part of Xlp.export_theorem_proof b n; *)
-       let thid = !the_start_idx + Array.length !prf_pos - 1 in
-       Xlp.export_proofs_in_interval n !the_start_idx thid;
-       Xlib.rename (n^part !Xlp.proof_part^"_proofs.lp") (n^"_proofs.lp");
-       (* record external dependencies *)
-       for i = 1 to !Xlp.proof_part do
-         deps := SetStr.fold
-                   (fun n acc ->
-                     if SetStr.mem n thm_names then acc else SetStr.add n acc)
-                   (Hashtbl.find Xlp.htbl_thm_deps i)
-                   !deps
-       done;
-       (* generate corresponding spec *)
-       Xlp.theorem_as_axiom false oc_spec thid (proof_at thid)
-     in
-     Xlp.export (p^"_spec") [b^"_types";b^"_terms"]
-       (fun oc_spec -> SetStr.iter (gen oc_spec) thm_names);
-     close_in !Xproof.ic_prf;
-     (* merge all proof files into [n_proofs.lp]. The order of proof
-        files is important. *)
-     let proof_files =
-       List.map (fun (_,n) -> n^"_proofs.lp")
-         (MapInt.bindings !map_thid_name) in
-     Xlib.concat proof_files (p^"_proofs.lp");
-     Xlib.remove proof_files;
-     Xlp.export_term_abbrevs_in_one_file b p;
-     write_val (p^".typ") !Xlp.map_typ_abbrev;
-     (* export deps *)
-     let iter_deps f =
-       f (b^"_types");
-       f (b^"_terms");
-       f (b^"_axioms");
-       f (b^"_type_abbrevs");
-       if !use_sharing then f (p^"_subterm_abbrevs");
-       f (p^"_term_abbrevs");
-       SetStr.iter (Xlp.spec f) !deps
-     in
-     Xlp.create_file_with_deps (p^"_deps") p iter_deps (fun _ -> ());
-     Xlib.concat [p^"_deps.lp";p^"_proofs.lp"] (p^".lp");
-     Xlib.remove [p^"_deps.lp";p^"_proofs.lp"];
-     0
-
-  | "merge"::_ -> wrong_nb_args()
 
   (* Merge all maps in typ files into a single map, give a unique
      index to every entry in the obtained map, generate
