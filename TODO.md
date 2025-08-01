@@ -1,6 +1,8 @@
 TODO
 ----
 
+- use HOL-Light database functions to get the list of theorems
+
 - do not generate _spec files anymore since we need only one
 
 - merge the commands split and unsplit into a single one
