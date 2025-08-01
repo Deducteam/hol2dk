@@ -5,7 +5,7 @@
 )
 
 (install
- (files theory_hol.dk theory_hol.lp encoding.lp renaming.lp fusion.ml bool.ml equal.ml xnames.ml patch unpatch config Makefile progress README.md)
+ (files theory_hol.dk theory_hol.lp encoding.lp renaming.lp fusion.ml bool.ml equal.ml xnames.ml patch unpatch config Makefile progress README.md BIG_FILES part.mk spec.mk)
  (section share)
  (package hol2dk)
 )
