@@ -146,8 +146,8 @@ fi
 
 for f in $rocq_files
 do
-    echo ln -f -s $f
-    ln -f -s $f
+    echo cp -f $f .
+    cp -f $f .
 done
 
 for f in theory_hol.dk theory_hol.lp
