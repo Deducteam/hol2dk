@@ -50,7 +50,7 @@ vo.mk:
 gen-base-spec: $(BASE)_spec.v
 
 $(BASE)_spec.v:
-	@generate $@ ...
+	@echo generate $@ ...
 	@echo Require Import $(REQUIRING). > $@
 	@echo Require Import $(ROOT_PATH).theory_hol. >> $@
 	@echo Require Import $(ROOT_PATH).$(BASE)_types. >> $@
