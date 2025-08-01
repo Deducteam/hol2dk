@@ -51,29 +51,14 @@ rm-thp:
 
 BASE_FILES := $(BASE)_types $(BASE)_terms $(BASE)_axioms
 
-.PHONY: lpsig
-lpsig: $(BASE_FILES:%=%.lp)
-
 $(BASE_FILES:%=%.lp) &:
 	$(HOL2DK) sig $(BASE).lp
 
-.PHONY: vsig
-vsig: $(BASE_FILES:%=%.v)
-
-.PHONY: sig
-sig: vsig
-	$(MAKE) INCLUDE_VO_MK=1 $(BASE_FILES:%=%.vo)
-
-.PRECIOUS: $(BASE_FILES:%=%.v)
-
-.PHONY: opam
-opam: sig
-	$(MAKE) INCLUDE_VO_MK=1 $(BASE)_opam.vo
-
-.PRECIOUS: $(BASE)_opam.v
-
 $(BASE)_opam.lp:
 	$(HOL2DK) axm $(BASE).lp
+
+.PHONY: opam
+opam: $(BASE_FILES:%=%.v) $(BASE)_opam.v
 
 .PHONY: clean-opam
 clean-opam:
@@ -266,7 +251,7 @@ clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	-find . -maxdepth 1 -name '*.v' -a -type f -delete
+	-find . -maxdepth 1 -name '*.v' $(VOFILES:%.vo=-a ! -name %.v) -delete
 
 .PHONY: rm-empty-deps
 rm-empty-deps: $(V_FILES:%=%.rm)
