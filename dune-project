@@ -16,12 +16,12 @@
 
 (package
  (name hol2dk)
- (synopsis "HOL-Light to Dedukti/Lambdapi and Coq translator")
- (description "HOL-Light to Dedukti/Lambdapi and Coq translator")
+ (synopsis "HOL-Light to Dedukti/Lambdapi and Rocq translator")
+ (description "HOL-Light to Dedukti/Lambdapi and Rocq translator")
  (depends
-  (ocaml (>= 4.13))
   dune
-  (hol_light (>= 3.0.0))
+  (ocaml (>= 4.13))
+  (hol_light (= 3.0.0))
  )
 )
 
