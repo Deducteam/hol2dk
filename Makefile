@@ -273,14 +273,16 @@ rm-empty-deps: $(V_FILES:%=%.rm)
 ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
 else
-	sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
-	touch -r vo.mk new-vo.mk
-	cp -p new-vo.mk vo.mk
-	-rm -f new-vo.mk
+	@echo update vo.mk ...
+	@sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
+	@touch -r vo.mk new-vo.mk
+	@cp -p new-vo.mk vo.mk
+	@-rm -f new-vo.mk
 endif
 
 %.v.rm: %.v
-	if test ! -h $<; then sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_axioms\.$$/d" $<; fi
+	@echo update $<
+	@if test ! -h $<; then sed -i -e "/^Require Import $(ROOT_PATH)\.theory_hol\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_types\.$$/d" -e "/^Require Import $(ROOT_PATH)\.$(BASE)_axioms\.$$/d" $<; fi
 
 .PHONY: merge-spec-files
 merge-spec-files:

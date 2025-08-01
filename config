@@ -156,7 +156,7 @@ do
     cp -f $HOL2DK_DIR/$f .
 done
 
-for f in Makefile BIG_FILES part.mk
+for f in Makefile BIG_FILES part.mk spec.mk
 do
     echo ln -f -s $HOL2DK_DIR/$f
     ln -f -s $HOL2DK_DIR/$f
