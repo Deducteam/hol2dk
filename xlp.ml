@@ -890,7 +890,11 @@ let export_theorem_proof b n =
   Xlib.rename (n^part !proof_part^"_proofs.lp") (n^"_proofs.lp");
   write_val (n^".typ") !map_typ_abbrev;
   export (n^"_spec") [b^"_types";b^"_terms"]
-    (fun oc -> theorem_as_axiom false oc thid (proof_at thid))
+    (fun oc ->
+      for k = !the_start_idx to thid do
+        let l = get_use k in
+        if l=0 || l>thid then theorem_as_axiom false oc k (proof_at k)
+      done)
 ;;
 
 (* 3rd step in command "theorem" when n is not in BIG_FILES.
