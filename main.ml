@@ -595,6 +595,31 @@ and command = function
 
   | "proof"::_ -> wrong_nb_args()
 
+  (* Print statements between x and y. *)
+  | ["concl";b;x;y] ->
+     let x = integer x and y = integer y in
+     let nb_proofs = read_val (b^".nbp") in
+     if x < 0 || y < x || y >= nb_proofs then
+       (err "[%d,%d] is not a valid interval\n" x y; exit 1);
+     read_pos b;
+     init_proof_reading b;
+     read_use b;
+     read_sig b;
+     for k = x to y do
+       if Array.get !Xproof.last_use k >= 0 then
+         match proof_at k with
+         | Proof(th,_) ->
+            log "%a |- %a\n"
+              (Xlib.list_sep ", " Xlp.raw_term) (hyp th)
+              Xlp.raw_term (concl th)
+     done;
+     close_in !Xproof.ic_prf;
+     0
+
+  | ["concl";b;x] -> command ["concl";b;x;x]
+
+  | "concl"::_ -> wrong_nb_args()
+
   (* Simplify some proof steps in b.prf. *)
   | ["rewrite";b] ->
      read_pos b;
@@ -603,23 +628,31 @@ and command = function
      let dump_file = b^"-simp.prf" in
      log_gen dump_file;
      let oc = open_out_bin dump_file in
-     (* count the number of simplications *)
-     let n = ref 0 in
+     (* count the number of simplications and duplications *)
+     let n = ref 0 and d = ref 0 in
      (* map from theorem indexes to their new proofs *)
-     let map = ref MapInt.empty in
-     let add i c = map := MapInt.add i c !map in
+     let map_thid_pc = ref MapInt.empty in
+     let add i c = map_thid_pc := MapInt.add i c !map_thid_pc in
      let pc_at j =
-       match MapInt.find_opt j !map with
+       match MapInt.find_opt j !map_thid_pc with
        | Some c -> c
        | None -> content_of (proof_at j)
      in
+     (* map from theorem statements to theorem indexes *)
+     let map_stmt_thid = Hashtbl.create 10_000_000 in
+     let rmap = ref MapInt.empty in
      (* simplification of proof p at index k *)
      let simp k p =
-       let default() = output_value oc p in
        let l = Array.get !last_use k in
-       if l < 0 then default() else
+       if l < 0 then (*FIXME:we should do nothing*) output_value oc p else
+       let Proof(th,c) = p in let v = hyp th, concl th in
+       begin match Hashtbl.find_opt map_stmt_thid v with
+       | Some k' -> incr d; rmap := MapInt.add k k' !rmap
+       | None -> Hashtbl.add map_stmt_thid v k
+       end;
+       let default() = output_value oc (change_content p (rename_pc !rmap c)) in
        let out c = incr n; add k c; output_value oc (change_content p c) in
-       begin match content_of p with
+       begin match c with
        | Ptrans(i,j) ->
           let ci = pc_at i and cj = pc_at j in
           begin match ci, cj with
@@ -663,13 +696,14 @@ and command = function
        end;
        (* we can empty the map since the proofs coming after a named
           theorem cannot refer to proofs coming before it *)
-       if l = 0 then map := MapInt.empty
+       if l = 0 then map_thid_pc := MapInt.empty
      in
-     for k = 0 to Array.length !prf_pos - 1 do simp k (proof_at k) done;
+     let nb_proofs = Array.length !prf_pos in
+     for k = 0 to nb_proofs - 1 do simp k (proof_at k) done;
      close_in !Xproof.ic_prf;
      close_out oc;
-     let nb_proofs = Array.length !prf_pos in
      log "%d simplifications (%d%%)\n" !n (percent !n nb_proofs);
+     log "%d duplications removed (%d%%)\n" !d (percent !d nb_proofs);
      (* replace file.prf by file-simp.prf, and recompute file.pos and
         file.use *)
      log "replace %s.prf by %s-simp.prf ...\n" b b;

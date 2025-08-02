@@ -772,6 +772,34 @@ let canonical_term
 (* Functions on proofs. *)
 (****************************************************************************)
 
+(* rename theorem indexes according to [map]. *)
+let rename_pc map pc =
+  let rename i = try MapInt.find i map with Not_found -> i in
+  match pc with
+  | Ptrans(i,j) -> Ptrans(rename i,rename j)
+  | Pmkcomb(i,j) -> Pmkcomb(rename i,rename j)
+  | Pabs(i,t) -> Pabs(rename i,t)
+  | Peqmp(i,j) -> Peqmp(rename i,rename j)
+  | Pdeduct(i,j) -> Pdeduct(rename i,rename j)
+  | Pinst(i,s) -> Pinst(rename i,s)
+  | Pinstt(i,s) -> Pinstt(rename i,s)
+  | Pdeft(i,t,s,a) -> Pdeft(rename i,t,s,a)
+  | Pconj(i,j) -> Pconj(rename i,rename j)
+  | Pconjunct1 i -> Pconjunct1(rename i)
+  | Pconjunct2 i -> Pconjunct2(rename i)
+  | Pmp(i,j) -> Pmp(rename i,rename j)
+  | Pdisch(t,i) -> Pdisch(t,rename i)
+  | Pspec(t,i) -> Pspec(t,rename i)
+  | Pgen(t,i) -> Pgen(t,rename i)
+  | Pexists(t,u,i) -> Pexists(t,u,rename i)
+  | Pchoose(t,i,j) -> Pchoose(t,rename i,rename j)
+  | Pdisj1(t,i) -> Pdisj1(t,rename i)
+  | Pdisj2(t,i) -> Pdisj2(t,rename i)
+  | Pdisj_cases(i,j,k) -> Pdisj_cases(rename i,rename j,rename k)
+  | Psym i -> Psym(rename i)
+  | Prefl _ | Pbeta _ | Passume _ | Paxiom _ | Pdef _ | Ptruth -> pc
+;;
+
 (* [size_content nb_type_vars nb_term_vars content] computes an
    approximation of the tree size of the Dedukti representation of the
    proof [content]. *)
