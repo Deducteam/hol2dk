@@ -22,10 +22,12 @@ Options
 
 --root-path MODNAME: set lambdapi and coq's root_path (default is HOLLight)
 
+--max-dup INT: maximum number of proof step duplications (default is 200)
+
 --max-proof-size INT: maximum size of proof files (default is 500_000)
 
 --max-abbrev-size INT: maximum size of term abbreviation files (default is 2_000_000)
-
+ 
 --use-sharing: define term abbreviations using let's
 
 --print-stats: print statistics on hash tables at exit
@@ -231,8 +233,7 @@ let make nb_proofs dg b =
             \thol2dk part %d %d %d $(BASE).lp\n" i i i x y
   in
   Xlib.iter_parts nb_proofs nb_parts cmd;
-  close_out oc;
-  0
+  close_out oc
 ;;
 
 let range args =
@@ -279,7 +280,7 @@ dump_signature "%s.sig";;
 dump_map_thid_name "%s.thm" %a;;
 |} cmd after_hol f b use after_hol b b b (olist ostring) deps;
   close_out oc;
-  Sys.command ("ocaml -w -A -I . "^ml_file)
+  Xlib.command ("ocaml -w -A -I . "^ml_file)
 ;;
 
 let basename_ml f =
@@ -303,8 +304,8 @@ let print_hstats() =
 
 let call_script s args =
   match Sys.getenv_opt "HOL2DK_DIR" with
-  | None -> err "set $HOL2DK_DIR first\n"; 1
-  | Some d -> Sys.command (d^"/"^s^" "^String.concat " " args)
+  | None -> err "set $HOL2DK_DIR first\n"; exit 1
+  | Some d -> exit (Sys.command (d^"/"^s^" "^String.concat " " args))
 ;;
 
 let print_env_var n =
@@ -313,7 +314,7 @@ let print_env_var n =
   | Some v -> log "%s = \"%s\"\n" n v
 ;;
 
-let wrong_nb_args() = err "wrong number of arguments\n"; 1;;
+let wrong_nb_args() = err "wrong number of arguments\n"; exit 1;;
 
 (* compute the minimum and maximum theorem indexes in f *)
 let thid_range map_name_thid f =
@@ -350,6 +351,8 @@ let create_segment n start_index end_index =
   write_val (n^".use") (Array.sub !last_use start_index len)
 ;;
 
+let max_dup = ref 200;;
+
 let rec log_command l =
   print_string "\nhol2dk";
   List.iter (fun s -> print_char ' '; print_string s) l;
@@ -359,18 +362,13 @@ let rec log_command l =
 
 and dump_and_simp after_hol f =
   let b = basename_ml f in
-  match dump after_hol f b with
-  | 0 -> begin match log_command ["pos";b] with
-         | 0 -> begin match log_command ["use";b] with
-                | 0 -> command ["simp";b]
-                | e -> e
-                end
-         | e -> e
-         end
-  | e -> e
+  dump after_hol f b;
+  log_command ["pos";b];
+  log_command ["use";b];
+  command ["simp";b]
 
 and command = function
-  | [] | ["-h"|"--help"|"help"] -> usage(); 0
+  | [] | ["-h"|"--help"|"help"] -> usage()
 
   | "--print-stats"::args -> at_exit print_hstats; command args
 
@@ -386,51 +384,49 @@ and command = function
 
   | ["--max-proof-size"] -> wrong_nb_args()
 
+  | "--max-dup"::k::args -> max_dup := integer k; command args
+  | ["--max-dup"] -> wrong_nb_args()
+
   | "--root-path"::arg::args -> Xlp.root_path := arg; command args
 
   | ["--root-path"] -> wrong_nb_args()
 
   | s::_ when String.starts_with ~prefix:"--" s ->
-     err "unknown option \"%s\"\n" s; 1
+     err "unknown option \"%s\"\n" s; exit 1
 
   (* Print dependencies of the ml file f. *)
   | ["dep";f] ->
      let dg = dep_graph "" (files ".") in
-     log "%a\n" (list_sep " " string) (trans_file_deps dg [f]);
-     0
+     log "%a\n" (list_sep " " string) (trans_file_deps dg [f])
 
   (* Print dependencies of all ml files in the current directory and
      its subdirectories recursively. *)
   | ["dep"] ->
-     out_dep_graph stdout (dep_graph "" (files "."));
-     0
+     out_dep_graph stdout (dep_graph "" (files "."))
 
   | "dep"::_ -> wrong_nb_args()
 
   (* Print the names of theorems proved in f. *)
   | ["name";f] ->
-     log "%a\n" (list_sep "\n" string) (thms_of_file f);
-     0
+     log "%a\n" (list_sep "\n" string) (thms_of_file f)
 
   (* Print the names of theorems proved in f and all its dependencies. *)
   | ["name";"upto";f] ->
      let dg = dep_graph "" (files ".") in
      List.iter
        (fun d -> List.iter (log "%s %s\n" d) (thms_of_file d))
-       (trans_file_deps dg [f]);
-     0
+       (trans_file_deps dg [f])
 
   (* Print the names of theorems proved in all files in the current
      directory and its subdirectories recursively. *)
   | ["name"] ->
      List.iter
        (fun f -> List.iter (log "%s %s\n" f) (thms_of_file f))
-       (files ".");
-     0
+       (files ".")
 
   | "name"::_ -> wrong_nb_args()
 
-  | ["env"] -> print_env_var "HOL2DK_DIR"; print_env_var "HOLLIGHT_DIR"; 0
+  | ["env"] -> print_env_var "HOL2DK_DIR"; print_env_var "HOLLIGHT_DIR"
   | "env"::_ -> wrong_nb_args()
 
   | ["patch" as s] -> call_script s []
@@ -475,8 +471,7 @@ and command = function
      log_gen dump_file;
      let oc = open_out_bin dump_file in
      output_value oc pos;
-     close_out oc;
-     0
+     close_out oc
 
   | "pos"::_ -> wrong_nb_args()
 
@@ -495,8 +490,7 @@ and command = function
      read_prf b handle_proof;
      print_string "compute statistics ...\n";
      print_histogram thm_uses;
-     print_rule_uses rule_uses (nb_proofs - !unused);
-     0
+     print_rule_uses rule_uses (nb_proofs - !unused)
 
   (* Print statistics on the proof steps for theorem s. *)
   | ["stat";b;s] ->
@@ -520,8 +514,7 @@ and command = function
      close_in ic;
      print_string "compute statistics ...\n";
      print_histogram thm_uses;
-     print_rule_uses rule_uses (nb_proofs - !unused);
-     0
+     print_rule_uses rule_uses (nb_proofs - !unused)
 
   | "stat"::_ -> wrong_nb_args()
 
@@ -531,8 +524,7 @@ and command = function
        Array.fold_left (fun n k -> if k >= 0 then n+1 else n) 0 !last_use in
      let nb_proofs = Array.length !last_use in
      log "%#d / %#d = %2d%% useful proof steps\n"
-       n nb_proofs (percent n nb_proofs);
-     0
+       n nb_proofs (percent n nb_proofs)
 
   | "nbp"::_ -> wrong_nb_args()
 
@@ -564,8 +556,7 @@ and command = function
      log "%#d terms, average size = %#d, max size = %#d, \
           %#d terms of size >%#d (%d%%)\n"
        !nb_terms (!sum_size / !nb_terms) !max_size
-       !nb_terms_gtl l (percent !nb_terms_gtl !nb_terms);
-     0
+       !nb_terms_gtl l (percent !nb_terms_gtl !nb_terms)
 
   | "size"::_ -> wrong_nb_args()
 
@@ -588,8 +579,7 @@ and command = function
        end;
        log "\n"
      done;
-     close_in !Xproof.ic_prf;
-     0
+     close_in !Xproof.ic_prf
 
   | ["proof";b;x] -> command ["proof";b;x;x]
 
@@ -613,8 +603,7 @@ and command = function
               (Xlib.list_sep ", " Xlp.raw_term) (hyp th)
               Xlp.raw_term (concl th)
      done;
-     close_in !Xproof.ic_prf;
-     0
+     close_in !Xproof.ic_prf
 
   | ["concl";b;x] -> command ["concl";b;x;x]
 
@@ -642,79 +631,87 @@ and command = function
      let map_stmt_thid = Hashtbl.create 10_000_000 in
      let rmap = ref MapInt.empty in
      (* simplification of proof p at index k *)
+     let default k p th c =
+       let v = hyp th, concl th in
+       begin match Hashtbl.find_opt map_stmt_thid v with
+       | Some (k',l) ->
+          if l >= !max_dup then (incr d; rmap := MapInt.add k k' !rmap)
+          else Hashtbl.replace map_stmt_thid v (k',l+1)
+       | None -> Hashtbl.add map_stmt_thid v (k,1)
+       end;
+       output_value oc (change_content p (rename_pc !rmap c))
+     in
+     let out k p c =
+       incr n; add k c; output_value oc (change_content p c)
+     in
      let simp k p =
        let l = Array.get !last_use k in
-       if l < 0 then (*FIXME:we should do nothing*) output_value oc p else
-       let Proof(th,c) = p in let v = hyp th, concl th in
-       begin match Hashtbl.find_opt map_stmt_thid v with
-       | Some k' -> incr d; rmap := MapInt.add k k' !rmap
-       | None -> Hashtbl.add map_stmt_thid v k
-       end;
-       let default() = output_value oc (change_content p (rename_pc !rmap c)) in
-       let out c = incr n; add k c; output_value oc (change_content p c) in
-       begin match c with
-       | Ptrans(i,j) ->
-          let ci = pc_at i and cj = pc_at j in
-          begin match ci, cj with
-          | Prefl _, _ -> (* i:t=t j:t=u ==> k:t=u *) out cj
-          | _, Prefl _ -> (* i:t=u j:u=u ==> k:t=u *) out ci
-          | _ -> default()
-          end
-       | Psym i ->
-          let ci = pc_at i in
-          begin match ci with
-          | Prefl _ -> (* i:t=t ==> k:t=t *) out ci
-          | Psym j -> (* j:t=u ==> i:u=t ==> k:t=u *) out (pc_at j)
-          | _ -> default()
-          end
-       | Pconjunct1 i ->
-          begin match pc_at i with
-          | Pconj(j,_) -> (* j:p ==> i:p/\q ==> k:p *) out (pc_at j)
-          | _ -> default()
-          end
-       | Pconjunct2 i ->
-          begin match pc_at i with
-          | Pconj(_,j) -> (* j:q ==> i:p/\q ==> k:q *) out (pc_at j)
-          | _ -> default()
-          end
-       | Pmkcomb(i,j) ->
-          begin match pc_at i with
-          | Prefl t ->
-             begin match pc_at j with
-             | Prefl u -> (* i:t=t j:u=u ==> k:tu=tu *)
-                out (Prefl(mk_comb(t,u)))
-             | _ -> default()
-             end
-          | _ -> default()
-          end
-       | Peqmp(i,j) ->
-          begin match pc_at i with
-          | Prefl _ -> (* i:p=p j:p ==> k:p *) out (pc_at j)
-          | _ -> default()
-          end
-       | _ -> default()
-       end;
-       (* we can empty the map since the proofs coming after a named
-          theorem cannot refer to proofs coming before it *)
-       if l = 0 then map_thid_pc := MapInt.empty
+       if l < 0 then output_value oc p (* unused proof step *)
+       else
+         begin
+           let Proof(th,c) = p in
+           begin match c with
+           | Prefl _ | Pbeta _ | Passume _ | Paxiom _ | Pdef _ | Ptruth ->
+              (* proof steps with no dependency do not need to be shared *)
+              output_value oc p
+           | Pabs _ | Pdeduct _ | Pinst _ | Pinstt _ | Pdeft _ | Pconj _
+           | Pmp _ | Pdisch _ | Pspec _ | Pgen _ | Pexists _ | Pchoose _
+           | Pdisj1 _ | Pdisj2 _ | Pdisj_cases _ ->
+              default k p th c
+           | Ptrans(i,j) ->
+              let ci = pc_at i and cj = pc_at j in
+              begin match ci, cj with
+              | Prefl _, _ -> (* i:t=t j:t=u ==> k:t=u *) out k p cj
+              | _, Prefl _ -> (* i:t=u j:u=u ==> k:t=u *) out k p ci
+              | _ -> default k p th c
+              end
+           | Psym i ->
+              let ci = pc_at i in
+              begin match ci with
+              | Prefl _ -> (* i:t=t ==> k:t=t *) out k p ci
+              | Psym j -> (* j:t=u ==> i:u=t ==> k:t=u *) out k p (pc_at j)
+              | _ -> default k p th c
+              end
+           | Pconjunct1 i ->
+              begin match pc_at i with
+              | Pconj(j,_) -> (* j:p ==> i:p/\q ==> k:p *) out k p (pc_at j)
+              | _ -> default k p th c
+              end
+           | Pconjunct2 i ->
+              begin match pc_at i with
+              | Pconj(_,j) -> (* j:q ==> i:p/\q ==> k:q *) out k p (pc_at j)
+              | _ -> default k p th c
+              end
+           | Pmkcomb(i,j) ->
+              begin match pc_at i with
+              | Prefl t ->
+                 begin match pc_at j with
+                 | Prefl u -> (* i:t=t j:u=u ==> k:tu=tu *)
+                    out k p (Prefl(mk_comb(t,u)))
+                 | _ -> default k p th c
+                 end
+              | _ -> default k p th c
+              end
+           | Peqmp(i,j) ->
+              begin match pc_at i with
+              | Prefl _ -> (* i:p=p j:p ==> k:p *) out k p (pc_at j)
+              | _ -> default k p th c
+              end
+           end;
+           (* we can empty the map since the proofs coming after a named
+              theorem cannot refer to proofs coming before it *)
+           if l = 0 then map_thid_pc := MapInt.empty
+         end
      in
      let nb_proofs = Array.length !prf_pos in
      for k = 0 to nb_proofs - 1 do simp k (proof_at k) done;
      close_in !Xproof.ic_prf;
      close_out oc;
-     log "%d simplifications (%d%%)\n" !n (percent !n nb_proofs);
-     log "%d duplications removed (%d%%)\n" !d (percent !d nb_proofs);
-     (* replace file.prf by file-simp.prf, and recompute file.pos and
-        file.use *)
-     log "replace %s.prf by %s-simp.prf ...\n" b b;
-     begin match Sys.command ("mv "^b^"-simp.prf "^b^".prf") with
-     | 0 ->
-        begin match log_command ["pos";b] with
-        | 0 -> log_command ["use";b]
-        | e -> e
-        end
-     | e -> e
-     end
+     log "%#d simplifications (%#d%%)\n" !n (percent !n nb_proofs);
+     log "%#d duplications removed (%#d%%)\n" !d (percent !d nb_proofs);
+     Xlib.command ("mv "^b^"-simp.prf "^b^".prf");
+     log_command ["pos";b];
+     log_command ["use";b]
 
   | "rewrite"::_ -> wrong_nb_args()
 
@@ -748,17 +745,14 @@ and command = function
      log_gen dump_file;
      let oc = open_out_bin dump_file in
      output_value oc !Xproof.last_use;
-     log "%d useless proof steps (%d%%)\n"
-       !nb_useless (percent !nb_useless nb_proofs);
-     0
+     log "%#d useless proof steps (%d%%)\n"
+       !nb_useless (percent !nb_useless nb_proofs)
 
   | "purge"::_ -> wrong_nb_args()
 
   | ["simp";b] ->
-     begin match log_command ["rewrite";b] with
-     | 0 -> log_command ["purge";b]
-     | e -> e
-     end
+     log_command ["rewrite";b];
+     log_command ["purge";b]
 
   | "simp"::_ -> wrong_nb_args()
 
@@ -778,16 +772,8 @@ and command = function
      output_value oc last_use;
      let unused = ref 0 in
      Array.iter (fun n -> if n < 0 then incr unused) last_use;
-     log "%d unused proof steps (including named theorems) (%d%%)\n"
-       !unused (percent !unused nb_proofs);
-     close_out oc;
-     let first = ref (-1) in
-     let exception Found in
-     (try Array.iteri
-            (fun i j -> if j < 0 then (first := i; raise Found)) last_use
-      with Found -> ());
-     log "first unused: %d\n" !first;
-     0
+     log "%#d unused proof steps (%d%%)\n" !unused (percent !unused nb_proofs);
+     close_out oc
 
   | "use"::_ -> wrong_nb_args()
 
@@ -798,8 +784,7 @@ and command = function
      if k < 0 || k >= nb_proofs then
        (err "%d is not a valid proof index\n" k; exit 1);
      read_use b;
-     log "%d\n" (Array.get !Xproof.last_use k);
-     0
+     log "%d\n" (Array.get !Xproof.last_use k)
 
   | "print"::"use"::_ -> wrong_nb_args()
 
@@ -808,8 +793,7 @@ and command = function
        match Filename.extension f with
        | ".thm"  ->
           let b = Filename.chop_extension f in
-          MapInt.iter (log "%d %s\n") (read_val (b^".thm"));
-          0
+          MapInt.iter (log "%d %s\n") (read_val (b^".thm"))
        | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
      end
 
@@ -886,8 +870,7 @@ and command = function
          Xlp.export_types b;
          Xlp.export_terms b;
          Xlp.export_axioms b
-       end;
-     0
+       end
 
   | "sig"::_ -> wrong_nb_args()
 
@@ -908,8 +891,7 @@ and command = function
        else let nb_parts = read_val (b^".dg") in
             Xlp.export_theorems_part nb_parts b map_thid_name
      end;
-     close_in !Xproof.ic_prf;
-     0
+     close_in !Xproof.ic_prf
 
   | "thm"::_ -> wrong_nb_args()
 
@@ -943,8 +925,7 @@ and command = function
          Xlp.export_term_abbrevs_in_one_file b (b^part k)
        end;
      close_in ic;
-     close_in !Xproof.ic_prf;
-     0
+     close_in !Xproof.ic_prf
 
   | "part"::_ -> wrong_nb_args()
 
@@ -962,8 +943,7 @@ and command = function
        if dk then Xdk.export_theorems (b^"_opam") map_thid_name cond false
        else Xlp.export_theorems (b^"_opam") b map_thid_name cond
      end;
-     close_in !Xproof.ic_prf;
-     0
+     close_in !Xproof.ic_prf
 
   | "axm"::_ -> wrong_nb_args()
 
@@ -991,12 +971,11 @@ and command = function
            else Xlp.export_theorems f b map_thid_name cond
          in
          List.iter gen files;
-         close_in !Xproof.ic_prf;
-         0
+         close_in !Xproof.ic_prf
        with Not_found ->
          close_in !Xproof.ic_prf;
          err "set $HOLLIGHT_DIR first\n";
-         1
+         exit 1
      end
 
   | "files"::_ -> wrong_nb_args()
@@ -1023,7 +1002,6 @@ and command = function
        !Xproof.prf_pos;
      write_val (n^".siz") size;
      (*log "size: %#d\n" !total;*)
-     0
 
   | "thmsize"::_ -> wrong_nb_args()
 
@@ -1035,7 +1013,9 @@ and command = function
      read_use b;
      let map_thid_name = read_val (b^".thm") in
      let map = ref MapInt.empty in (* to build b.thp *)
+     let s = ref 0 in
      let create_segment start_index end_index =
+       incr s;
        let n = thm_name map_thid_name end_index in
        let len = end_index - start_index + 1 in
        write_val (n^".nbp") len;
@@ -1060,7 +1040,7 @@ and command = function
      create_segment 0 !end_idx;
      (*MapInt.iter (fun i (n,_) -> log "%d %s\n" i n) !map;*)
      write_val (b^".thp") !map;
-     0
+     log "%d proof files\n" !s
 
   | "split"::_ -> wrong_nb_args()
 
@@ -1068,7 +1048,7 @@ and command = function
      the files f.sti, f.pos, f.use and f.nbp, and remove all the files
      t.sti, t.pos, t.use and t.nbp such that t is proved in f. Update
      b.thp accordingly. *)
-  | "unsplit"::_::[] -> 0
+  | "unsplit"::_::[] -> ()
   | "unsplit"::b::files ->
      let d =
        try Sys.getenv "HOLLIGHT_DIR"
@@ -1106,8 +1086,7 @@ and command = function
            | None -> v)
          (read_val (b^".thp"))
      in
-     write_val (b^".thp") map;
-     0
+     write_val (b^".thp") map
 
   | "unsplit"::_ -> wrong_nb_args()
 
@@ -1125,8 +1104,8 @@ and command = function
      map_thid_pos := read_val (b^".thp");
      read_pos n;
      init_proof_reading b;
-     if is_dk f then (err "dk output not available for this command\n"; 1)
-     else (Xlp.split_theorem_proof b n; 0)
+     if is_dk f then (err "dk output not available for this command\n"; exit 1)
+     else Xlp.split_theorem_proof b n
 
   | "thmsplit"::_ -> wrong_nb_args()
 
@@ -1139,7 +1118,7 @@ and command = function
        let f = Filename.chop_extension f in
        match get_part f "" with
        | None -> err "\"%s\" does not end with \"_part_\" \
-                      followed by an integer\n" f; 1
+                      followed by an integer\n" f; exit 1
        | Some(n,k) ->
           read_sig b;
           map_thid_pos := read_val (b^".thp");
@@ -1147,8 +1126,8 @@ and command = function
           read_use n;
           the_start_idx := read_val (n^".sti");
           init_proof_reading b;
-          if dk then (err "dk output not available for this command\n"; 1)
-          else (Xlp.export_theorem_proof_part b n k; 0)
+          if dk then (err "dk output not available for this command\n"; exit 1)
+          else Xlp.export_theorem_proof_part b n k
      end
 
   | "thmpart"::_ -> wrong_nb_args()
@@ -1162,14 +1141,13 @@ and command = function
      read_use n;
      the_start_idx := read_val (n^".sti");
      init_proof_reading b;
-     if is_dk f then (err "dk output not available for this command\n"; 1)
+     if is_dk f then (err "dk output not available for this command\n"; exit 1)
      else
        begin
          Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs_in_one_file b n;
-         Xlp.export_theorem_deps b n;
-         0
+         Xlp.export_theorem_deps b n
        end
 
   | "theorem"::_ -> wrong_nb_args()
@@ -1180,8 +1158,7 @@ and command = function
      let min_id, max_id = thid_range (inverse map_thid_name) f in
      let map,_,_ = MapInt.split (max_id + 1) (read_val (b^".thp")) in
      let _,_,map = MapInt.split (min_id - 1) map in
-     MapInt.iter (fun k _ -> log "%s\n" (thm_name map_thid_name k)) map;
-     0
+     MapInt.iter (fun k _ -> log "%s\n" (thm_name map_thid_name k)) map
 
   | "thms"::_ -> wrong_nb_args()
 
@@ -1228,8 +1205,7 @@ and command = function
       in
       MapStr.iter abbrev map
     in
-    Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs;
-    0
+    Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 
   | "type_abbrevs"::_ -> wrong_nb_args()
 
@@ -1240,15 +1216,14 @@ and command = function
        let f = Filename.chop_extension f in
        match get_part f "_term_abbrevs" with
        | None -> err "\"%s\" does not end with \"_term_abbrevs_part_\"\
-                      followed by an integer\n" f; 1
+                      followed by an integer\n" f; exit 1
        | Some(n,k) ->
-         if dk then (err "dk output not available for this command\n"; 1)
+         if dk then (err "dk output not available for this command\n"; exit 1)
          else
            begin
              read_sig b;
              map_thid_pos := read_val (b^".thp");
-             Xlp.export_theorem_term_abbrevs_part b n k;
-             0
+             Xlp.export_theorem_term_abbrevs_part b n k
            end
      end
 
@@ -1299,9 +1274,8 @@ and command = function
          Xlp.export_term_abbrevs_in_one_file b b;
          Xlp.export_type_abbrevs b b
        end;
-     close_in !Xproof.ic_prf;
-     0
+     close_in !Xproof.ic_prf
 
 let _ =
   (*Memtrace.trace_if_requested ();*)
-  exit (command (List.tl (Array.to_list Sys.argv)))
+  command (List.tl (Array.to_list Sys.argv))
