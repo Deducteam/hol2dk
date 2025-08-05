@@ -22,12 +22,12 @@ Options
 
 --root-path MODNAME: set lambdapi and coq's root_path (default is HOLLight)
 
---max-dup INT: maximum number of proof step duplications (default is 200)
+--max-dup INT: maximum number of proof step duplications
 
 --max-proof-size INT: maximum size of proof files (default is 500_000)
 
 --max-abbrev-size INT: maximum size of term abbreviation files (default is 2_000_000)
- 
+
 --use-sharing: define term abbreviations using let's
 
 --print-stats: print statistics on hash tables at exit
@@ -351,7 +351,8 @@ let create_segment n start_index end_index =
   write_val (n^".use") (Array.sub !last_use start_index len)
 ;;
 
-let max_dup = ref 200;;
+(* maximum number of proof duplications before creating a new theorem *)
+let max_dup = ref max_int;;
 
 let rec log_command l =
   print_string "\nhol2dk";
@@ -536,12 +537,12 @@ and command = function
      read_use b;
      init_proof_reading b;
      let max_size = ref 0 and sum_size = ref 0 and nb_terms = ref 0
-     and nb_terms_gtl = ref 0 in
+     and nb_terms_gt_l = ref 0 in
      let handle_term t =
        incr nb_terms;
        let s = nb_cons t in
        if s > !max_size then max_size := s;
-       if s > l then incr nb_terms_gtl;
+       if s > l then incr nb_terms_gt_l;
        sum_size := s + !sum_size
      in
      let handle_proof k p =
@@ -556,7 +557,7 @@ and command = function
      log "%#d terms, average size = %#d, max size = %#d, \
           %#d terms of size >%#d (%d%%)\n"
        !nb_terms (!sum_size / !nb_terms) !max_size
-       !nb_terms_gtl l (percent !nb_terms_gtl !nb_terms)
+       !nb_terms_gt_l l (percent !nb_terms_gt_l !nb_terms)
 
   | "size"::_ -> wrong_nb_args()
 
@@ -628,25 +629,31 @@ and command = function
        | None -> content_of (proof_at j)
      in
      (* map from theorem statements to theorem indexes *)
-     let map_stmt_thid = Hashtbl.create 10_000_000 in
+     let map_stmt_thid = Hashtbl.create
+                           (if !max_dup < max_int then 10_000_000 else 0) in
      let rmap = ref MapInt.empty in
      (* simplification of proof p at index k *)
      let default k p th c =
        let v = hyp th, concl th in
-       begin match Hashtbl.find_opt map_stmt_thid v with
-       | Some (k',l) ->
-          if l >= !max_dup then (incr d; rmap := MapInt.add k k' !rmap)
-          else Hashtbl.replace map_stmt_thid v (k',l+1)
-       | None -> Hashtbl.add map_stmt_thid v (k,1)
-       end;
-       output_value oc (change_content p (rename_pc !rmap c))
+       if !max_dup < max_int then
+         begin
+           begin match Hashtbl.find_opt map_stmt_thid v with
+           | Some (k',l) ->
+              if l >= !max_dup then (incr d; rmap := MapInt.add k k' !rmap)
+              else Hashtbl.replace map_stmt_thid v (k',l+1)
+           | None -> Hashtbl.add map_stmt_thid v (k,1)
+           end;
+           output_value oc (change_content p (rename_pc !rmap c))
+         end
+       else output_value oc p
      in
      let out k p c =
        incr n; add k c; output_value oc (change_content p c)
      in
+     let p0 = proof_at 0 in
      let simp k p =
        let l = Array.get !last_use k in
-       if l < 0 then output_value oc p (* unused proof step *)
+       if l < 0 then output_value oc p0 (* unused proof step *)
        else
          begin
            let Proof(th,c) = p in
