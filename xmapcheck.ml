@@ -394,6 +394,6 @@ let generate_check_file_in oc =
   ast oc (Parser.parse_file inputfile) ;
   string oc "conclusion.\nAbort." 
 
-let generate_check_file =
+let generate_check_file () =
   let check_file = Out_channel.open_text outputfile
   in generate_check_file_in check_file ; Out_channel.close check_file
