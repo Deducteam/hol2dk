@@ -242,7 +242,6 @@ get-check-mappings:
 ROCQ_OPTIONS = -q -no-glob
 .PHONY: check-mappings
 check-mappings: get-check-mappings
-	rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(MAPPING)
 	rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(BASE)_checkmappings.v
 	-rm -f $(BASE)_checkmappings.v
 	-rm -f $(BASE)_checkmappings.vo
