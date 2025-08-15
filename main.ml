@@ -1241,9 +1241,12 @@ and command = function
   | "abbrev"::_ -> wrong_nb_args()
 
   (* generate file to check mappings *)
-  | "check-mappings"::b::r ->
+  | "check-mappings"::b::e::rn::m::rq ->
     Xmapcheck.base := b ;
-    Xmapcheck.requiring := String.concat " " r ;
+    Xmapcheck.set_renaming rn ;
+    Xmapcheck.set_encoding e ;
+    Xmapcheck.set_mapping m ;
+    Xmapcheck.requiring := String.concat " " rq ;
     Xmapcheck.generate_check_file() ;
     0
 

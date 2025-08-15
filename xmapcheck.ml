@@ -163,9 +163,9 @@ let qident oc {elt=(mp,s);_} =
 
 (** Translation of terms. *)
 
-let stt = Stdlib.ref false
+let stt = Stdlib.ref true
 let use_implicits = Stdlib.ref false
-let use_notations = Stdlib.ref false
+let use_notations = Stdlib.ref true
 
 (* redefinition of p_get_args ignoring P_Wrap's. *)
 let p_get_args : p_term -> p_term * p_term list = fun t ->
