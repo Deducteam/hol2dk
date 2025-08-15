@@ -353,7 +353,9 @@ obj ctype c atype : error ctype c atype.
 
 Tactic Notation \"check\" string(ident) uconstr(constr) uconstr(type) :=
   let temp := fresh in
-  tryif assert_fails assert (temp := type) then idtac
+  tryif assert_fails assert (temp := type)
+  then idtac \"Type\" type \"of\" ident \"is not a correct Rocq type.\";
+    idtac \"If it is not because of a previous mapping error (in particular if it is the first error), please report the error\" 
   else 
   tryif assert_fails assert (temp := constr)
   then idtac ident \"is not mapped to an existing object.\";
