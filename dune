@@ -1,7 +1,7 @@
 (executable
  (public_name hol2dk)
  (name main)
- (libraries str unix)
+ (libraries str unix lambdapi.lplib lambdapi.common lambdapi.parsing lambdapi.core)
 )
 
 (install
