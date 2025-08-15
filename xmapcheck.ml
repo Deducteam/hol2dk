@@ -389,11 +389,13 @@ let inputfile = !base ^ "_terms.lp"
 let outputfile = !base ^ "_checkmappings.v"
 
 let generate_check_file_in oc =
+  let inputfile = !base ^ "_terms.lp" in
   string oc ("Require Import " ^ !requiring ^ ".\n") ;
   string oc check_file_header ;
   ast oc (Parser.parse_file inputfile) ;
   string oc "conclusion.\nAbort." 
 
 let generate_check_file () =
+  let outputfile = !base ^ "_checkmappings.v" in
   let check_file = Out_channel.open_text outputfile
   in generate_check_file_in check_file ; Out_channel.close check_file
