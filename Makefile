@@ -239,10 +239,15 @@ rm-lpo:
 get-check-mappings:
 	hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
 
+ROCQ_OPTIONS = -q -no-glob
 .PHONY: check-mappings
 check-mappings: get-check-mappings
-	rocq compile $(BASE)_checkmappings.v
+	rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(MAPPING)
+	rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(BASE)_checkmappings.v
 	-rm -f $(BASE)_checkmappings.v
+	-rm -f $(BASE)_checkmappings.vo
+	-rm -f $(BASE)_checkmappings.vok
+	-rm -f $(BASE)_checkmappings.vos
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
@@ -307,7 +312,6 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-ROCQ_OPTIONS = -q -no-glob
 %.vo: %.v
 	@echo rocq $<
 	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $<
