@@ -143,6 +143,10 @@ hol2dk files [$path/]$base.(dk|lp)
   for each HOL-Light file required by $HOLLIGHT_DIR/$path/$base.ml, generate
   a (dk|lp) file with the statements of the theorems proved in that file
 
+hol2dk check-mappings $base $requiring
+  generates a file $base.checkappings.v that can be used to check the types of
+  every mapped term.
+
 hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
 
@@ -1235,6 +1239,15 @@ and command = function
      end
 
   | "abbrev"::_ -> wrong_nb_args()
+
+  (* generate file to check mappings *)
+  | "check-mappings"::b::r ->
+    Xmapcheck.base := b ;
+    Xmapcheck.requiring := String.concat " " r ;
+    Xmapcheck.generate_check_file ;
+    0
+
+  | "check-mappings"::_ -> wrong_nb_args()
 
   (* Single file generation (used neither in b.mk nor in Makefile). *)
   | f::args ->

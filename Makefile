@@ -235,6 +235,15 @@ clean-lpo: rm-lpo
 rm-lpo:
 	-find . -maxdepth 1 -name '*.lpo' -delete
 
+.PHONY: get-check-mappings
+get-check-mappings:
+	hol2dk check-mappings $(BASE) $(REQUIRING)
+
+.PHONY: check-mappings
+check-mappings: get-check-mappings
+	rocq compile $(BASE)_checkmappings.v
+	-rm -f $(BASE)_checkmappings.v
+
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
 ifneq ($(SET_LP_FILES),1)
