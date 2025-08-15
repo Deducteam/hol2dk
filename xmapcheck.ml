@@ -352,9 +352,14 @@ let check_file_header =
 obj ctype c atype : error ctype c atype.
 
 Tactic Notation \"check\" string(ident) constr(constr) constr(type) :=
+  tryif assert_fails let temp := fresh in assert (temp := constr)
+  then idtac ident \"is not mapped to an existing object.\";
+    idtac \"Try checking for a typo or adding a path.\"
+  else
   tryif assert_succeeds let temp := fresh in assert (temp := (constr : type))
   then idtac
-  else match type of constr with ?T =>
+  else
+  match type of constr with ?T =>
     idtac \"Incorrect mapping:\" ;
     idtac ident \"is mapped to\" constr \"of type\" T ;
     idtac \"while it is expected to have type\" type ;
