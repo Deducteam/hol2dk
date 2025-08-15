@@ -351,12 +351,15 @@ let check_file_header =
 "Variant error : forall constrtype, constrtype -> Type -> Type :=
 obj ctype c atype : error ctype c atype.
 
-Tactic Notation \"check\" string(ident) constr(constr) constr(type) :=
-  tryif assert_fails let temp := fresh in assert (temp := constr)
+Tactic Notation \"check\" string(ident) uconstr(constr) uconstr(type) :=
+  let temp := fresh in
+  tryif assert_fails assert (temp := type) then idtac
+  else 
+  tryif assert_fails assert (temp := constr)
   then idtac ident \"is not mapped to an existing object.\";
     idtac \"Try checking for a typo or adding a path.\"
   else
-  tryif assert_succeeds let temp := fresh in assert (temp := (constr : type))
+  tryif assert_succeeds assert (temp := (constr : type))
   then idtac
   else
   match type of constr with ?T =>
