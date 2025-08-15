@@ -145,6 +145,8 @@ let raw_ident oc s = string oc (translate_ident s)
 
 let ident oc {elt;_} = raw_ident oc elt
 
+let untouched_ident oc ({elt;_} : p_ident) = string oc elt
+
 let param_id oc idopt =
   match idopt with
   | Some id -> ident oc id
@@ -276,6 +278,13 @@ and params_list_in_abs oc l =
 (* starts with a space if <> None *)
 and typopt oc t = Option.iter (prefix " : " term oc) t
 
+let params_no_implicit oc ((ids,t,b) as x) =
+  match b, t with
+  | true, _ | false, Some _ -> char oc '('; raw_params oc x; char oc ')'
+  | false, None -> param_ids oc ids 
+
+let params_list_no_implicit oc = List.iter (prefix " " params_no_implicit oc)
+
 (** Translation of commands. *)
 
 let is_lem x = is_opaq x || is_priv x
@@ -310,13 +319,17 @@ let command oc {elt; pos} =
       begin match QidMap.find_opt ([],p_sym_nam.elt) !map_erased_qid_coq with
 (* Instead of erasing mapped terms, check their type *)
       | Some s ->
+        let s = if String.starts_with ~prefix:"@" s
+          then s
+          else "@"^s
+        in 
         begin match p_sym_arg, p_sym_typ with
           | [], Some t ->
-            string oc "check "; ident oc p_sym_nam; string oc " (" ;
+            string oc "check \""; untouched_ident oc p_sym_nam; string oc "\" (" ;
             string oc s ; string oc ") (" ; term oc t ; string oc ").\n"
           |  _, Some t ->
-            string oc "check "; ident oc p_sym_nam; string oc " (" ;
-            string oc s ; string oc ") (forall" ; params_list oc p_sym_arg ;
+            string oc "check "; untouched_ident oc p_sym_nam; string oc " (" ;
+            string oc s ; string oc ") (forall" ; params_list_no_implicit oc p_sym_arg ;
             string oc ", " ; term oc t ; string oc ").\n"
           | _ -> wrn pos "Command not translated."
         end
@@ -354,31 +367,25 @@ let ast oc = Stream.iter (command oc)
 (* Rocq code to print mapping errors. *)
 
 let check_file_header =
-"Ltac Print_error ident constr constrtype actualtype  :=
-  idtac \"Incorrect mapping:\" ;
-  idtac ident \"is mapped to\" constr \"of type\" constrtype ;
-  idtac \"while it is expected to have type\" actualtype.
+"Variant error : forall constrtype, constrtype -> Type -> Type :=
+obj ctype c atype : error ctype c atype.
 
-Variant error : forall constrtype, constrtype -> Type -> Type :=
-  obj ctype c atype : error ctype c atype.
-
-Ltac error ident constr type := match type of constr with ?T =>
-  Print_error ident constr T type ;
-  lazymatch goal with
-  | s : _ |- _ => idtac
-  | _ => assert (ident : error T constr type) ; try apply obj end end.
-
-Ltac check ident constr type :=
+Tactic Notation \"check\" string(ident) constr(constr) constr(type) :=
   tryif assert_succeeds let temp := fresh in assert (temp := (constr : type))
   then idtac
-  else error ident constr type.
+  else match type of constr with ?T =>
+    idtac \"Incorrect mapping:\" ;
+    idtac ident \"is mapped to\" constr \"of type\" T ;
+    idtac \"while it is expected to have type\" type ;
+    lazymatch goal with |- True => generalize (obj T constr type) end end.
 
 Ltac conclusion := match goal with
-  | s : error ?ctype ?c ?atype |- _ => idtac \"the first error was:\" ;
-  Print_error s c ctype atype
-  | _ => idtac \"No mapping error detected, all checks passed.\" end.
+| |- error ?ctype ?c ?atype -> _ => idtac \"the first error was:\" ;
+     idtac c \"has type\" ctype ;
+     idtac \"while it it is expected to have type\" atype
+| _ => idtac \"No mapping error detected, all checks passed.\" end.
 
-Goal True."
+Goal True.\n"
 
 let base = ref ""
 
