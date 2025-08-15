@@ -291,19 +291,7 @@ let is_lem x = is_opaq x || is_priv x
 
 let command oc {elt; pos} =
   begin match elt with
-  | P_open(true,ps) ->
-      string oc "Import "; list path " " oc ps; string oc ".\n"
-  | P_open(false,ps) ->
-      string oc "Export "; list path " " oc ps; string oc ".\n"
-  | P_require (None, ps) ->
-      string oc "Require "; list path " " oc ps; string oc ".\n"
-  | P_require (Some true, ps) ->
-      string oc "Require Import "; list path " " oc ps; string oc ".\n"
-  | P_require (Some false, ps) ->
-      string oc "Require Export "; list path " " oc ps; string oc ".\n"
-  | P_require_as (p,i) ->
-    string oc "Module "; ident oc i; string oc " := "; path oc p;
-    string oc ".\n"
+  | P_open _ | P_require _ -> ()
   | P_symbol
     { p_sym_mod; p_sym_nam; p_sym_arg; p_sym_typ;
       p_sym_trm; p_sym_prf=_; p_sym_def } ->
@@ -328,7 +316,7 @@ let command oc {elt; pos} =
             string oc "check \""; untouched_ident oc p_sym_nam; string oc "\" (" ;
             string oc s ; string oc ") (" ; term oc t ; string oc ").\n"
           |  _, Some t ->
-            string oc "check "; untouched_ident oc p_sym_nam; string oc " (" ;
+            string oc "check \""; untouched_ident oc p_sym_nam; string oc "\" (" ;
             string oc s ; string oc ") (forall" ; params_list_no_implicit oc p_sym_arg ;
             string oc ", " ; term oc t ; string oc ").\n"
           | _ -> wrn pos "Command not translated."
