@@ -237,7 +237,7 @@ rm-lpo:
 
 .PHONY: get-check-mappings
 get-check-mappings:
-	hol2dk check-mappings $(BASE) $(REQUIRING)
+	hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
 
 .PHONY: check-mappings
 check-mappings: get-check-mappings
