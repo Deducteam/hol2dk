@@ -1244,7 +1244,7 @@ and command = function
   | "check-mappings"::b::r ->
     Xmapcheck.base := b ;
     Xmapcheck.requiring := String.concat " " r ;
-    Xmapcheck.generate_check_file ;
+    Xmapcheck.generate_check_file() ;
     0
 
   | "check-mappings"::_ -> wrong_nb_args()
