@@ -237,16 +237,19 @@ rm-lpo:
 
 .PHONY: get-check-mappings
 get-check-mappings:
-	hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
+	@echo generate mappings-checking file..
+	@hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
 
 ROCQ_OPTIONS = -q -no-glob -w none
-.PHONY: check-mappings
+.PHONY: check-get-mappings
 check-mappings: get-check-mappings
-	rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(BASE)_checkmappings.v
-	-rm -f $(BASE)_checkmappings.v
-	-rm -f $(BASE)_checkmappings.vo
-	-rm -f $(BASE)_checkmappings.vok
-	-rm -f $(BASE)_checkmappings.vos
+	@echo start checking
+	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(BASE)_checkmappings.v
+	@echo clean files
+	@-rm -f $(BASE)_checkmappings.v
+	@-rm -f $(BASE)_checkmappings.vo
+	@-rm -f $(BASE)_checkmappings.vok
+	@-rm -f $(BASE)_checkmappings.vos
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
