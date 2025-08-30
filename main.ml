@@ -22,7 +22,7 @@ Options
 
 --root-path MODNAME: set lambdapi and coq's root_path (default is HOLLight)
 
---max-dup INT: maximum number of proof step duplications
+--max-dup INT: maximum number of theorem duplications
 
 --max-proof-size INT: maximum size of proof files (default is 500_000)
 
