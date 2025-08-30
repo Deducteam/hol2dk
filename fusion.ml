@@ -183,8 +183,7 @@ module Hol : Hol_kernel = struct
             | Abs of term * term
 
 
-  type thm = Sequent of (term list * term * int)
-  (*REMOVE*)let dummy_thm = Sequent([],Var("x",Tyvar("a")),0)
+  type [@warning "-37"] thm = Sequent of (term list * term * int)
 
 (*---------------------------------------------------------------------------*)
 (* Proof dumping.                                                            *)

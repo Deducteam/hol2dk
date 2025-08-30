@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command files to print theorem statements following the file structuration in HOL-Light
 - command thms to print theorems (named or not) proved in a file
 - command unsplit to put the proofs of all the theorems proved in a HOL-Light file in the same Lambdapi file
+- command concl to print the statements of theorems between two indexes
+- option --max-dup $k to share the proof of a theorem if it is duplicated more than $k times
 - renamings to handle the Multivariate library
 - test/Sig_mappings_N.v and test/Sig_With_N.v: axiomatizations of mappings_N.v and With_N.v respectively
 
