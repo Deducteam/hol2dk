@@ -22,7 +22,8 @@
   dune
   (ocaml (>= 4.13))
   (hol_light (= 3.0.0))
- )
+  (lambdapi (= 3.0.0))
+)
 )
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
