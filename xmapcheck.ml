@@ -403,7 +403,7 @@ let generate_check_file_in oc =
   let l = StrSet.elements !unused_mappings in
   if l = [] then string oc "Abort."
   else string oc "idtac \"Warning, the following mappings were not used: ";
-  list string " " oc l ; string oc "\"\nAbort."
+  list string " " oc l ; string oc "\".\nAbort."
   
 
 let generate_check_file () =
