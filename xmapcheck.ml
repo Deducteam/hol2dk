@@ -323,11 +323,11 @@ let command oc {elt; pos} =
         end
       | None -> 
         begin match p_sym_def, p_sym_trm, p_sym_arg, p_sym_typ with
-          | true, Some t, _, Some _ when List.exists is_lem p_sym_mod ->
+          | true, Some _, _, Some _ when List.exists is_lem p_sym_mod ->
             (* Do not translate lemmas to avoid nested proofs but still print them. *)
-            string oc "(* Definition " ; ident oc p_sym_nam;
+            string oc "(* Lemma " ; ident oc p_sym_nam;
             params_list oc p_sym_arg; typopt oc p_sym_typ;
-            string oc " := "; term oc t; string oc ". *)\n"
+            string oc ". *)\n"
           | true, Some t, _, _ ->
             string oc "Definition "; ident oc p_sym_nam;
             params_list oc p_sym_arg; typopt oc p_sym_typ;
