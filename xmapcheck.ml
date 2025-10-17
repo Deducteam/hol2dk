@@ -73,6 +73,7 @@ module Qid = struct type t = Term.qident let compare = Stdlib.compare end
 module QidMap = Map.Make(Qid)
 
 let map_erased_qid_coq = ref QidMap.empty
+let unused_mappings = ref StrSet.empty
 
 let set_mapping : string -> unit = fun f ->
   let consume = function
@@ -82,6 +83,7 @@ let set_mapping : string -> unit = fun f ->
         let id = snd lp_qid.elt in
         if Logger.log_enabled() then log "erase %s" id;
         erase := StrSet.add id !erase;
+        unused_mappings := StrSet.add id !unused_mappings;
         map_erased_qid_coq :=
           QidMap.add lp_qid.elt coq_id !map_erased_qid_coq;
         if fst lp_qid.elt = [] && id <> coq_id then
@@ -203,14 +205,17 @@ let rec term oc t =
   | P_NLit i ->
       if !stt then
         match QidMap.find_opt ([],i) !map_erased_qid_coq with
-        | Some s -> string oc s
+        | Some s -> unused_mappings := StrSet.remove i !unused_mappings;
+          string oc s
         | None -> raw_ident oc i
       else raw_ident oc i
   | P_Iden(qid,b) ->
       if b then char oc '@';
       if !stt then
         match QidMap.find_opt qid.elt !map_erased_qid_coq with
-        | Some s -> string oc s
+        | Some s ->
+          unused_mappings := StrSet.remove (snd qid.elt) !unused_mappings;
+          string oc s
         | None -> qident oc qid
       else qident oc qid
   | P_Arro(u,v) -> arrow oc u v
@@ -307,6 +312,7 @@ let command oc {elt; pos} =
       begin match QidMap.find_opt ([],p_sym_nam.elt) !map_erased_qid_coq with
 (* Instead of erasing mapped terms, check their type *)
       | Some s ->
+        unused_mappings := StrSet.remove p_sym_nam.elt !unused_mappings;
         let s = if String.starts_with ~prefix:"@" s
           then s
           else "@"^s
@@ -393,7 +399,12 @@ let generate_check_file_in oc =
   string oc ("Require Import " ^ !requiring ^ ".\n") ;
   string oc check_file_header ;
   ast oc (Parser.parse_file inputfile) ;
-  string oc "conclusion.\nAbort." 
+  string oc "conclusion.\n";
+  let l = StrSet.elements !unused_mappings in
+  if l = [] then string oc "Abort."
+  else string oc "idtac \"Warning, the following mappings were not used: ";
+  list string " " oc l ; string oc "\"\nAbort."
+  
 
 let generate_check_file () =
   let outputfile = !base ^ "_checkmappings.v" in
