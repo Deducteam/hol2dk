@@ -368,7 +368,7 @@ Tactic Notation \"check\" string(ident) uconstr(constr) uconstr(type) :=
     idtac \"Incorrect mapping:\" ;
     idtac ident \"is mapped to\" constr \"of type\" T ;
     idtac \"while it is expected to have type\" type ;
-    lazymatch goal with |- True => generalize (obj T constr type) end end.
+    try lazymatch goal with |- True => generalize (obj T constr type) end end.
 
 Ltac conclusion := match goal with
 | |- error ?ctype ?c ?atype -> _ => idtac \"the first error was:\" ;
