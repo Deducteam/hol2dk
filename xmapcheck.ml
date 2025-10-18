@@ -320,7 +320,7 @@ let command oc {elt; pos} =
 (* Instead of erasing mapped terms, check their type *)
       | Some s ->
         unused_mappings := StrSet.remove p_sym_nam.elt !unused_mappings;
-        let s = if String.starts_with ~prefix:"@" s
+        let s = if String.starts_with ~prefix:"@" s || s = "Prop"
           then s
           else "@"^s
         in 
@@ -355,15 +355,19 @@ let command oc {elt; pos} =
             params_list oc p_sym_arg; typopt oc p_sym_typ;
             string oc " := "; term oc t; string oc ".\n"
           | false, _, [], Some t ->
-            axlist := (p_sym_nam.elt,t) :: !axlist ;
+            let s = p_sym_nam.elt in begin if s = "El" || s = "Prf"
+            then ()
+            else
+            axlist := (s,t) :: !axlist ;
             string oc "Axiom "; ident oc p_sym_nam; string oc " : ";
             term oc t; string oc ".\n"
+            end
           | false, _, _, Some t ->
             axlist := (p_sym_nam.elt,t) :: !axlist ;
             string oc "Axiom "; ident oc p_sym_nam; string oc " : forall";
             params_list oc p_sym_arg; string oc ", "; term oc t;
             string oc ".\n"
-          | _ -> wrn pos "Command not translated."
+          | _ -> ()
           end
         end
   | _ -> wrn pos "Command not translated."
@@ -427,9 +431,9 @@ let generate_check_file_in oc =
     list unmappedaxiom ",\n" oc l ; string oc ".\".\n"
   end ;
   let l = StrSet.elements !unused_mappings in
-  if l = [] then string oc "Abort."
+  begin if l = [] then string oc "Abort."
   else string oc "idtac \"Warning, the following mappings were not used: ";
-  list string " " oc l ; string oc "\".\nAbort."
+  list string " " oc l ; string oc "\".\nAbort." end
   
 let generate_check_file () =
   let outputfile = !base ^ "_checkmappings.v" in
