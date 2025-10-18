@@ -367,10 +367,10 @@ let command oc {elt; pos} =
             string oc "Axiom "; ident oc p_sym_nam; string oc " : forall";
             params_list oc p_sym_arg; string oc ", "; term oc t;
             string oc ".\n"
-          | _ -> ()
+          | _ -> wrn pos "Command not translated."
           end
         end
-  | _ -> wrn pos "Command not translated."
+  | _ -> ()
   end
 
 let ast oc = Stream.iter (command oc)
