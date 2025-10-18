@@ -192,7 +192,7 @@ let app t default cases =
     | _ -> default h ts
   else default h ts
 
-let rec term oc t =
+let rec term ?(implicits=true) oc t =
   (*if Logger.log_enabled() then
     log "pp %a" (*Pos.short t.pos*) Pretty.term t;*)
   match t.elt with
@@ -218,77 +218,71 @@ let rec term oc t =
           string oc s
         | None -> qident oc qid
       else qident oc qid
-  | P_Arro(u,v) -> arrow oc u v
-  | P_Abst(xs,u) -> abst oc xs u
-  | P_Prod(xs,u) -> prod oc xs u
+  | P_Arro(u,v) -> arrow oc u v ~implicits
+  | P_Abst(xs,u) -> abst oc xs u ~implicits
+  | P_Prod(xs,u) -> prod oc xs u ~implicits
   | P_LLet(x,xs,a,u,v) ->
-    string oc "let "; ident oc x; params_list oc xs; typopt oc a;
-    string oc " := "; term oc u; string oc " in "; term oc v
-  | P_Wrap u -> term oc u
+    string oc "let "; ident oc x; params_list oc xs ~implicits ; typopt oc a ~implicits ;
+    string oc " := "; term oc u ~implicits ; string oc " in "; term oc v ~implicits
+  | P_Wrap u -> term oc u ~implicits
   | P_Appl _ ->
-      let default h ts = paren oc h; char oc ' '; list paren " " oc ts in
+      let default h ts = paren oc h ~implicits ; char oc ' '; list (paren ~implicits) " " oc ts in
       app t default
         (fun h ts expl builtin ->
           match !use_notations, !use_implicits && not expl, builtin, ts with
-          | _, _, (El|Prf), [u] -> term oc u
-          | _, _, (Arr|Imp), [u;v] -> arrow oc u v
+          | _, _, (El|Prf), [u] -> term oc u ~implicits
+          | _, _, (Arr|Imp), [u;v] -> arrow oc u v ~implicits
           | _, _, All, [_;{elt=P_Wrap({elt=P_Abst([_] as xs,u);_});_}]
           | _, true, All, [{elt=P_Wrap({elt=P_Abst([_] as xs,u);_});_}]
-            -> prod oc xs u
+            -> prod oc xs u ~implicits
           | _, _, Ex, [_;{elt=P_Wrap({elt=P_Abst([x],u);_});_}]
           | _, true, Ex, [{elt=P_Wrap({elt=P_Abst([x],u);_});_}] ->
-              string oc "exists "; raw_params oc x; string oc ", "; term oc u
+              string oc "exists "; raw_params oc x ~implicits; string oc ", "; term oc u ~implicits
           | true, _, Eq, [_;u;v]
-          | true, true, Eq, [u;v] -> paren oc u; string oc " = "; paren oc v
-          | true, _, Or, [u;v] -> paren oc u; string oc " \\/ "; paren oc v
-          | true, _, And, [u;v] ->  paren oc u; string oc " /\\ "; paren oc v
-          | true, _, Not, [u] -> string oc "~ "; paren oc u
+          | true, true, Eq, [u;v] -> paren oc u ~implicits; string oc " = "; paren oc v ~implicits
+          | true, _, Or, [u;v] -> paren oc u ~implicits; string oc " \\/ "; paren oc v ~implicits
+          | true, _, And, [u;v] ->  paren oc u ~implicits; string oc " /\\ "; paren oc v ~implicits
+          | true, _, Not, [u] -> string oc "~ "; paren oc u ~implicits
           | _ -> default h ts)
 
-and arrow oc u v = paren oc u; string oc " -> "; term oc v
-and abst oc xs u =
-  string oc "fun"; params_list_in_abs oc xs; string oc " => "; term oc u
-and prod oc xs u =
-  string oc "forall"; params_list_in_abs oc xs; string oc ", "; term oc u
+and arrow ?(implicits=true) oc u v = paren oc u ~implicits ; string oc " -> "; term oc v ~implicits
+and abst ?(implicits=true) oc xs u =
+  string oc "fun"; params_list_in_abs oc xs ~implicits; string oc " => "; term oc u ~implicits
+and prod ?(implicits=true) oc xs u =
+  string oc "forall"; params_list_in_abs oc xs ~implicits; string oc ", "; term oc u ~implicits
 
-and paren oc t =
-  let default() = char oc '('; term oc t; char oc ')' in
+and paren ?(implicits=true) oc t =
+  let default() = char oc '('; term oc t ~implicits ; char oc ')' in
   match t.elt with
   | P_Arro _ | P_Abst _ | P_Prod _ | P_LLet _ | P_Wrap _ -> default()
   | P_Appl _ ->
       app t (fun _ _ -> default())
         (fun _ ts _ builtin ->
           match builtin, ts with
-          | (El|Prf), [u] -> paren oc u
+          | (El|Prf), [u] -> paren oc u ~implicits
           | _ -> default())
-  | _ -> term oc t
+  | _ -> term oc t ~implicits
 
-and raw_params oc (ids,t,_) = param_ids oc ids; typopt oc t
+and raw_params ?(implicits=true) oc (ids,t,_) = param_ids oc ids; typopt oc t ~implicits
 
-and params oc ((ids,t,b) as x) =
-  match b, t with
-  | true, _ -> char oc '{'; raw_params oc x; char oc '}'
-  | false, Some _ -> char oc '('; raw_params oc x; char oc ')'
-  | false, None -> param_ids oc ids
-
-(* starts with a space if the list is not empty *)
-and params_list oc = List.iter (prefix " " params oc)
+and params ?(implicits=true) oc ((ids,t,b) as x) =
+  match b, t , implicits with
+  | true, _ , true -> char oc '{'; raw_params oc x ~implicits; char oc '}'
+  | _ , Some _ , _ -> char oc '('; raw_params oc x ~implicits; char oc ')'
+  | _ , None , _ -> param_ids oc ids
 
 (* starts with a space if the list is not empty *)
-and params_list_in_abs oc l =
+and params_list ?(implicits=true) oc l =
+  List.iter (prefix " " (params ~implicits) oc) l
+
+(* starts with a space if the list is not empty *)
+and params_list_in_abs ?(implicits=true) oc l =
   match l with
-  | [ids,t,false] -> char oc ' '; param_ids oc ids; typopt oc t
-  | _ -> params_list oc l
+  | [ids,t,false] -> char oc ' '; param_ids oc ids; typopt oc t ~implicits
+  | _ -> params_list oc l ~implicits
 
 (* starts with a space if <> None *)
-and typopt oc t = Option.iter (prefix " : " term oc) t
-
-let params_no_implicit oc ((ids,t,b) as x) =
-  match b, t with
-  | true, _ | false, Some _ -> char oc '('; raw_params oc x; char oc ')'
-  | false, None -> param_ids oc ids 
-
-let params_list_no_implicit oc = List.iter (prefix " " params_no_implicit oc)
+and typopt ?(implicits=true) oc t = Option.iter (prefix " : " (term ~implicits) oc) t
 
 (** Translation of commands. *)
 
@@ -327,11 +321,11 @@ let command oc {elt; pos} =
         begin match p_sym_arg, p_sym_typ with
           | [], Some t ->
             string oc "check \""; untouched_ident oc p_sym_nam; string oc "\" (" ;
-            string oc s ; string oc ") (" ; term oc t ; string oc ").\n"
+            string oc s ; string oc ") (" ; term oc t ~implicits:false ; string oc ").\n"
           |  _, Some t ->
             string oc "check \""; untouched_ident oc p_sym_nam; string oc "\" (" ;
-            string oc s ; string oc ") (forall" ; params_list_no_implicit oc p_sym_arg ;
-            string oc ", " ; term oc t ; string oc ").\n"
+            string oc s ; string oc ") (forall" ; params_list oc p_sym_arg ~implicits:false ;
+            string oc ", " ; term oc t ~implicits:false ; string oc ").\n"
           | _ -> wrn pos "Command not translated."
         end
       | None -> 
