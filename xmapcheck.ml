@@ -294,6 +294,13 @@ let params_list_no_implicit oc = List.iter (prefix " " params_no_implicit oc)
 
 let is_lem x = is_opaq x || is_priv x
 
+type unmapped_def_kind =
+| UMLem of string
+| UMDef of string
+
+let last_unmapped = ref (UMLem "")
+let axlist : (string*p_term) list ref = ref []
+
 let command oc {elt; pos} =
   begin match elt with
   | P_open _ | P_require _ -> ()
@@ -331,17 +338,28 @@ let command oc {elt; pos} =
         begin match p_sym_def, p_sym_trm, p_sym_arg, p_sym_typ with
           | true, Some _, _, Some _ when List.exists is_lem p_sym_mod ->
             (* Do not translate lemmas to avoid nested proofs but still print them. *)
-            string oc "(* Lemma " ; ident oc p_sym_nam;
-            params_list oc p_sym_arg; typopt oc p_sym_typ;
-            string oc ". *)\n"
+            begin match !last_unmapped with
+            | UMLem s | UMDef s when s ^ "_def" <> p_sym_nam.elt ->
+              string oc "idtac \"Error: " ; untouched_ident oc p_sym_nam ;
+              string oc "was not mapped, yet the object it defines was.\".\n"
+            | _ -> ()
+            end ; last_unmapped := UMLem p_sym_nam.elt
           | true, Some t, _, _ ->
+            begin match !last_unmapped with
+            | UMDef s ->
+              string oc "idtac \"Error: " ; string oc s ;
+              string oc "was not mapped but its definitional Lemma was\".\n"
+            | _ -> ()
+            end ; last_unmapped := UMDef p_sym_nam.elt ;
             string oc "Definition "; ident oc p_sym_nam;
             params_list oc p_sym_arg; typopt oc p_sym_typ;
             string oc " := "; term oc t; string oc ".\n"
           | false, _, [], Some t ->
+            axlist := (p_sym_nam.elt,t) :: !axlist ;
             string oc "Axiom "; ident oc p_sym_nam; string oc " : ";
             term oc t; string oc ".\n"
           | false, _, _, Some t ->
+            axlist := (p_sym_nam.elt,t) :: !axlist ;
             string oc "Axiom "; ident oc p_sym_nam; string oc " : forall";
             params_list oc p_sym_arg; string oc ", "; term oc t;
             string oc ".\n"
@@ -382,7 +400,7 @@ Ltac conclusion := match goal with
 | |- error ?ctype ?c ?atype -> _ => idtac \"the first error was:\" ;
      idtac c \"has type\" ctype ;
      idtac \"while it it is expected to have type\" atype
-| _ => idtac \"No mapping error detected, all checks passed.\" end.
+| _ => idtac \"All checks passed, all correctly mapped objects are correctly typed.\" end.
 
 Goal True.\n"
 
@@ -390,22 +408,29 @@ let base = ref ""
 
 let requiring = ref ""
 
-let inputfile = !base ^ "_terms.lp"
+let lpfile name = !base ^ "_" ^ name ^ ".lp"
+
+let chainread oc = List.iter (fun name -> ast oc (Parser.parse_file (lpfile name)))
 
 let outputfile = !base ^ "_checkmappings.v"
 
+let unmappedaxiom oc (name,typ) = string oc (name ^ " of type ") ; term oc typ 
+
 let generate_check_file_in oc =
-  let inputfile = !base ^ "_terms.lp" in
   string oc ("Require Import " ^ !requiring ^ ".\n") ;
-  string oc check_file_header ;
-  ast oc (Parser.parse_file inputfile) ;
+  string oc check_file_header ; ast oc (Parser.parse_file "theory_hol.lp") ;
+  chainread oc ["types";"axioms";"terms"] ;
   string oc "conclusion.\n";
+  begin match !axlist with
+  | [] -> ()
+  | _ as l -> string oc "idtac \"Warning, the following axioms were not mapped:\n" ;
+    list unmappedaxiom ",\n" oc l ; string oc ".\".\n"
+  end ;
   let l = StrSet.elements !unused_mappings in
   if l = [] then string oc "Abort."
   else string oc "idtac \"Warning, the following mappings were not used: ";
   list string " " oc l ; string oc "\".\nAbort."
   
-
 let generate_check_file () =
   let outputfile = !base ^ "_checkmappings.v" in
   let check_file = Out_channel.open_text outputfile
