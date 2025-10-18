@@ -355,13 +355,13 @@ let command oc {elt; pos} =
             params_list oc p_sym_arg; typopt oc p_sym_typ;
             string oc " := "; term oc t; string oc ".\n"
           | false, _, [], Some t ->
-            let s = p_sym_nam.elt in begin if s = "El" || s = "Prf"
+            let s = p_sym_nam.elt in
+            if s = "El" || s = "Prf"
             then ()
-            else
+            else (
             axlist := (s,t) :: !axlist ;
             string oc "Axiom "; ident oc p_sym_nam; string oc " : ";
-            term oc t; string oc ".\n"
-            end
+            term oc t; string oc ".\n" )
           | false, _, _, Some t ->
             axlist := (p_sym_nam.elt,t) :: !axlist ;
             string oc "Axiom "; ident oc p_sym_nam; string oc " : forall";
@@ -431,9 +431,9 @@ let generate_check_file_in oc =
     list unmappedaxiom ",\n" oc l ; string oc ".\".\n"
   end ;
   let l = StrSet.elements !unused_mappings in
-  begin if l = [] then string oc "Abort."
-  else string oc "idtac \"Warning, the following mappings were not used: ";
-  list string " " oc l ; string oc "\".\nAbort." end
+  if l = [] then string oc "Abort."
+  else (string oc "idtac \"Warning, the following mappings were not used: ";
+  list string " " oc l ; string oc "\".\nAbort.")
   
 let generate_check_file () =
   let outputfile = !base ^ "_checkmappings.v" in
