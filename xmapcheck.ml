@@ -303,7 +303,7 @@ let rec is_Set t =
   | _ -> false
 
 (* mappings that have incorrect type but it's ok. *)
-let ignore_mappings = ["funext";"∧ᵢ"]
+let ignore_mappings = ["fun_ext";"∧ᵢ"]
 
 let command oc {elt; pos} =
   begin match elt with
