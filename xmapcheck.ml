@@ -433,12 +433,12 @@ let generate_check_file_in oc =
   chainread oc ["types";"axioms";"terms"] ;
   string oc "conclusion.\n";
   begin match !axlist with
-  | [] -> string oc "all axioms are mapped.\n"
+  | [] -> string oc "idtac \"All axioms are mapped.\".\n"
   | _ as l -> string oc "idtac \"Warning, the following axioms were not mapped:\n" ;
     list unmappedaxiom ",\n" oc l ; string oc ".\".\n"
   end ;
   let l = StrSet.elements !unused_mappings in
-  if l = [] then string oc "All mappings are used.\nAbort."
+  if l = [] then string oc "idtac \"All mappings are used.\".\nAbort."
   else (string oc "idtac \"Warning, the following mappings were not used: ";
   list string " " oc l ; string oc "\".\nAbort.")
   
