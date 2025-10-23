@@ -298,8 +298,8 @@ let axlist : (string*p_term) list ref = ref []
 (* Identify types, possibly parametrized *)
 let rec is_Set t =
   match t.elt with
-  | P_Iden (qid,_) when qid.elt = sym Set -> true
-  | P_Prod (_,t) -> is_Set t
+  | P_Iden (qid,_) -> qid.elt = sym Set
+  | P_Prod (_,t) | P_Arro (_,t) -> is_Set t
   | _ -> false
 
 (* mappings that have incorrect type but it's ok. *)
@@ -328,7 +328,7 @@ let command oc {elt; pos} =
         then ()
         else
         let s = match p_sym_typ with
-          | Some t when is_Set t && not (String.starts_with ~prefix:"@" s) -> "@" ^ s
+          | Some t when not (is_Set t) && not (String.starts_with ~prefix:"@" s) -> "@" ^ s
           | _ -> s
         in 
         begin match p_sym_arg, p_sym_typ with
