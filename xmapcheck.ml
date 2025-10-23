@@ -295,6 +295,16 @@ type unmapped_def_kind =
 let last_unmapped = ref (UMLem "")
 let axlist : (string*p_term) list ref = ref []
 
+(* Identify types, possibly parametrized *)
+let rec is_Set t =
+  match t.elt with
+  | P_Iden (qid,_) when qid.elt = sym Set -> true
+  | P_Prod (_,t) -> is_Set t
+  | _ -> false
+
+(* mappings that have incorrect type but it's ok. *)
+let ignore_mappings = ["funext";"∧ᵢ"]
+
 let command oc {elt; pos} =
   begin match elt with
   | P_open _ | P_require _ -> ()
@@ -314,9 +324,12 @@ let command oc {elt; pos} =
 (* Instead of erasing mapped terms, check their type *)
       | Some s ->
         unused_mappings := StrSet.remove p_sym_nam.elt !unused_mappings;
-        let s = if String.starts_with ~prefix:"@" s || s = "Prop"
-          then s
-          else "@"^s
+        if List.mem p_sym_nam.elt ignore_mappings
+        then ()
+        else
+        let s = match p_sym_typ with
+          | Some t when is_Set t && not (String.starts_with ~prefix:"@" s) -> "@" ^ s
+          | _ -> s
         in 
         begin match p_sym_arg, p_sym_typ with
           | [], Some t ->
