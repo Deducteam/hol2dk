@@ -237,7 +237,7 @@ rm-lpo:
 	-find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: get-check-mappings
-get-check-mappings:
+get-check-mappings: opam
 	@echo generate mappings-checking file ...
 	@hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
 
