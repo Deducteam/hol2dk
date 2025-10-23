@@ -411,7 +411,7 @@ Ltac conclusion := match goal with
 | |- error ?ctype ?c ?atype -> _ => idtac \"the first error was:\" ;
      idtac c \"has type\" ctype ;
      idtac \"while it it is expected to have type\" atype
-| _ => idtac \"All checks passed, all correctly mapped objects are correctly typed.\" end.
+| _ => idtac \"All checks passed, all mapped objects are correctly typed.\" end.
 
 Goal True.\n"
 
@@ -433,12 +433,12 @@ let generate_check_file_in oc =
   chainread oc ["types";"axioms";"terms"] ;
   string oc "conclusion.\n";
   begin match !axlist with
-  | [] -> ()
+  | [] -> string oc "all axioms are mapped.\n"
   | _ as l -> string oc "idtac \"Warning, the following axioms were not mapped:\n" ;
     list unmappedaxiom ",\n" oc l ; string oc ".\".\n"
   end ;
   let l = StrSet.elements !unused_mappings in
-  if l = [] then string oc "Abort."
+  if l = [] then string oc "All mappings are used.\nAbort."
   else (string oc "idtac \"Warning, the following mappings were not used: ";
   list string " " oc l ; string oc "\".\nAbort.")
   
