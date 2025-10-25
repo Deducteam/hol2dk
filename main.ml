@@ -144,8 +144,9 @@ hol2dk files [$path/]$base.(dk|lp)
   a (dk|lp) file with the statements of the theorems proved in that file
 
 hol2dk check-mappings $base $requiring
-  generates a file $base.checkappings.v that can be used to check the types of
-  every mapped term.
+  generates a file $(base).checkmappings.v that can be used to diagnose
+  badly typed mappings, unused mappings, unmapped axioms and non-fully
+  mapped definitions.
 
 hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
