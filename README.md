@@ -22,7 +22,7 @@ Examples
 --------
 
 hol2dk is used to translate to Rocq the
-[Multivariate](https://github.com/jrh13/hol-light/blob/master/Multivariate/make_complex.ml)
+HOL-Light [Multivariate](https://github.com/jrh13/hol-light/blob/master/Multivariate/make_complex.ml)
 library of HOL-Light which contains more than 20,000 theorems on
 arithmetic, wellfounded relations, lists, real numbers, integers,
 basic set theory, permutations, group theory, matroids, metric spaces,
@@ -38,6 +38,15 @@ instance, a HOL-Light theorem on HOL-Light real numbers is translated
 to a Rocq theorem on Rocq real numbers. The provided theorems can
 therefore be readily used within other Rocq developments based on the
 Rocq standard library.
+
+hol2dk has also been used to translate to Rocq the HOL-Light
+[Logic](https://github.com/jrh13/hol-light/blob/master/Logic/make.ml)
+library which also contains many useful functions and results like
+unification, resolution, rewriting, LPO, skolemization, the
+Löwenheim-Skolem theorems, the compactness theorem, Herbrand's
+theorem, Birkhoff's theorem, etc. The resulting Rocq theorems are
+provided in the Opam package
+[rocq-hollight-logic](https://github.com/Deducteam/rocq-hollight-logic).
 
 Bibliography
 ------------
