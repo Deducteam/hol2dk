@@ -305,7 +305,7 @@ let print_hstats() =
 let call_script s args =
   match Sys.getenv_opt "HOL2DK_DIR" with
   | None -> err "set $HOL2DK_DIR first\n"; exit 1
-  | Some d -> exit (Sys.command (d^"/"^s^" "^String.concat " " args))
+  | Some d -> exit (Sys.command ("bash "^d^"/"^s^" "^String.concat " " args))
 ;;
 
 let print_env_var n =
