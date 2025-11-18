@@ -40,16 +40,18 @@ jobs:
           eval `opam env`
           dune build
           dune install
-      - name: Install dependencies
+      - name: Install dedukti
         run: |
-          opam install -y --deps-only hol_light.${{ matrix.hol-light-version }}
-          opam install -y dedukti.${{ matrix.dedukti-version }} rocq-prover.${{ matrix.rocq-version }}
+          opam install -y dedukti.${{ matrix.dedukti-version }}
       - name: Install lambdapi
         run: |
           git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
           sudo apt-get install -y libev-dev
           opam pin lambdapi lambdapi
           opam install -y lambdapi
+      - name: Install HOL-Light dependencies
+        run: |
+          opam install -y --deps-only hol_light.${{ matrix.hol-light-version }}
       - name: Get hol-light and patch it
         run: |
           eval `opam env`
