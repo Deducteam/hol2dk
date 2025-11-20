@@ -50,7 +50,7 @@ jobs:
           opam install -y lambdapi
       - name: Install camlp5
         run: |
-          opam pin camlp5 ${{ matrix.campl5-version }}
+          opam pin camlp5 ${{ matrix.camlp5-version }}
       - name: Install HOL-Light dependencies
         run: |
           opam install -y --deps-only hol_light.${{ matrix.hol-light-version }}
