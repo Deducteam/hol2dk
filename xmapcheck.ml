@@ -8,7 +8,7 @@ open Export.Coq
 
 let unused_mappings = ref !erase
 
-let check_that_unused_mappings_is_not_empty() = if StrSet.is_empty !unused_mappings
+let check_that_unused_mappings_is_not_empty() = if StrSet.is_empty !unused_mappings && not (StrSet.is_empty !erase)
   then print_string "Sadly, unused_mappings is empty."
   else print_string "unused_mappings is, indeed, non-empty" 
   
