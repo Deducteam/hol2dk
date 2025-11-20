@@ -11,7 +11,7 @@ bug-reports: "https://github.com/Deducteam/hol2dk/issues"
 depends: [
   "dune" {>= "3.7"}
   "ocaml" {>= "4.13"}
-  "hol_light" {= "3.0.0"}
+  #"hol_light" {= "3.1.0"}
   "odoc" {with-doc}
 ]
 build: [
