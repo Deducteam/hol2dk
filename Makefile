@@ -241,16 +241,13 @@ get-check-mappings: opam
 	@echo generate mappings-checking file ...
 	@hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
 
-ROCQ_OPTIONS = -q -no-glob -w none
-.PHONY: check-get-mappings
-check-mappings: get-check-mappings $(VOFILES)
+ROCQ_OPTIONS = -q -no-glob
+.PHONY: check-mappings
+check-mappings: get-check-mappings $(VOFILES) FILE=$(BASE)_checkmappings.
 	@echo start checking ...
-	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(BASE)_checkmappings.v
+	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(FILE).v
 	@echo clean files ...
-	@-rm -f $(BASE)_checkmappings.v
-	@-rm -f $(BASE)_checkmappings.vo
-	@-rm -f $(BASE)_checkmappings.vok
-	@-rm -f $(BASE)_checkmappings.vos
+	@-rm -f $(FILE).v $(FILE).vo $(FILE).vok $(FILE).vos
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)

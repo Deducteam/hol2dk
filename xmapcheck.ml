@@ -4,93 +4,14 @@
 open Lplib open Extra
 open Common open Pos open Error
 open Parsing open Syntax
-open Core
+open Export.Coq
 
-let log = Logger.make 'x' "xprt" "export"
-let log = log.pp
+let unused_mappings = ref !erase
 
-(** Symbols necessary to encode STT. *)
-
-type builtin =
-  Set | Prop | Arr | El | Imp | All | Prf | Eq | Or | And | Ex | Not
-
-let index_of_builtin = function
-  | Set -> 0 | Prop -> 1 | Arr -> 2 | El -> 3 | Imp -> 4 | All -> 5
-  | Prf -> 6 | Eq -> 7 | Or -> 8 | And -> 9 | Ex -> 10 | Not -> 11
-
-let nb_builtins = 12
-
-let builtin_of_index = function
-  | 0 -> Set | 1 -> Prop | 2 -> Arr | 3 -> El | 4 -> Imp | 5 -> All
-  | 6 -> Prf | 7 -> Eq | 8 -> Or | 9 -> And | 10 -> Ex | 11 -> Not
-  | _ -> assert false
-
-let _ = (* sanity check *)
-  for i = 0 to nb_builtins - 1 do
-    assert (index_of_builtin (builtin_of_index i) = i)
-  done
-
-let index_of_name = function
-  | "Set" -> Some 0 | "prop" -> Some 1 | "arr" -> Some 2 | "El" -> Some 3
-  | "imp" -> Some 4 | "all" -> Some 5 | "Prf" -> Some 6 | "eq" -> Some 7
-  | "or" -> Some 8 | "and" -> Some 9 | "ex" -> Some 10 | "not" -> Some 11
-  | _ -> None
-
-let name_of_index = function
-  | 0 -> "Set" | 1 -> "prop" | 2 -> "arr" | 3 -> "El" | 4 -> "imp"| 5 -> "all"
-  | 6 -> "Prf" | 7 -> "eq" | 8 -> "or" | 9 -> "and" | 10 -> "ex" | 11 -> "not"
-  | _ -> assert false
-
-let _ = (* sanity check *)
-  for i = 0 to nb_builtins - 1 do
-    assert (index_of_name (name_of_index i) = Some i)
-  done
-
-let builtin : Term.qident array =
-  let path = ["STTfa"] in
-  Array.init nb_builtins (fun i -> path, name_of_index i)
-
-let sym b = builtin.(index_of_builtin b)
-
-(** Set renaming map from file. *)
-
-let rmap = ref StrMap.empty
-
-let set_renaming : string -> unit = fun f ->
-  let consume = function
-    | {elt=P_builtin(coq_id,{elt=([],lp_id);_});_} ->
-        if Logger.log_enabled() then log "rename %s into %s" lp_id coq_id;
-        rmap := StrMap.add lp_id coq_id !rmap
-    | {pos;_} -> fatal pos "Invalid command."
-  in
-  Stream.iter consume (Parser.parse_file f)
-
-(** Set symbols whose declarations have to be erased. *)
-
-let erase = ref StrSet.empty
-
-module Qid = struct type t = Term.qident let compare = Stdlib.compare end
-module QidMap = Map.Make(Qid)
-
-let map_erased_qid_coq = ref QidMap.empty
-let unused_mappings = ref StrSet.empty
-
-let set_mapping : string -> unit = fun f ->
-  let consume = function
-    | {elt=P_builtin(coq_id,lp_qid);_} ->
-        if Logger.log_enabled() then
-          log "rename %a into %s" Pretty.qident lp_qid coq_id;
-        let id = snd lp_qid.elt in
-        if Logger.log_enabled() then log "erase %s" id;
-        erase := StrSet.add id !erase;
-        unused_mappings := StrSet.add id !unused_mappings;
-        map_erased_qid_coq :=
-          QidMap.add lp_qid.elt coq_id !map_erased_qid_coq;
-        if fst lp_qid.elt = [] && id <> coq_id then
-          rmap := StrMap.add id coq_id !rmap
-    | {pos;_} -> fatal pos "Invalid command."
-  in
-  Stream.iter consume (Parser.parse_file f)
+let check_that_unused_mappings_is_not_empty() = if StrSet.is_empty !unused_mappings
+  then print_string "Sadly, unused_mappings is empty."
+  else print_string "unused_mappings is, indeed, non-empty" 
+  
 
 (** Set encoding. *)
 
@@ -392,7 +313,7 @@ Tactic Notation \"check\" string(ident) uconstr(constr) uconstr(type) :=
   let temp := fresh in
   tryif assert_fails assert (temp := type)
   then idtac \"Type\" type \"of\" ident \"is not a correct Rocq type.\";
-    idtac \"If it is not because of a previous mapping error (in particular if it is the first error), please report the error\" 
+    idtac \"If it is not because of a previous mapping error (in particular if it is the first error), please report the error.\" 
   else 
   tryif assert_fails assert (temp := constr)
   then idtac ident \"is not mapped to an existing object.\";
