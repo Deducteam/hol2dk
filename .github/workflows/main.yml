@@ -17,13 +17,12 @@ jobs:
       fail-fast: false
       matrix:
         dune-version: [3.20.2]
-        ocaml-version: [5.3.0]
-        camlp5-version: [8.03.06]
-        hol-light-version: [3.0.0]
-        hol-light-commit: [72b2b70]
+        ocaml-version: [5.4.0]
+        camlp5-version: [8.04.00]
+        hol-light-version: [3.1.0]
+        hol-light-commit: [37af947]
         lambdapi-version: [master] # >= 3.0.0
         dedukti-version: [2.7]
-        #rocq-version: [9.0.0]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -49,6 +48,9 @@ jobs:
           sudo apt-get install -y libev-dev
           opam pin lambdapi lambdapi
           opam install -y lambdapi
+      - name: Install camlp5
+        run: |
+          opam pin camlp5 ${{ matrix.campl5-version }}
       - name: Install HOL-Light dependencies
         run: |
           opam install -y --deps-only hol_light.${{ matrix.hol-light-version }}
