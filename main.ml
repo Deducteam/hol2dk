@@ -1242,14 +1242,17 @@ and command = function
   | "abbrev"::_ -> wrong_nb_args()
 
   (* generate file to check mappings *)
-  | "check-mappings"::b::e::rn::[m](*::rq*) ->
+  | "check-mappings"::b::e::rn::m::rq ->
     Xmapcheck.base := b ;
+    Export.Coq.stt := true ;
+    Export.Coq.use_implicits := false ;
+    Export.Coq.use_notations := true ;
     Export.Coq.set_renaming rn ;
-    Export.Coq.set_encoding e ;
     Export.Coq.set_mapping m ;
-    Xmapcheck.check_that_unused_mappings_is_not_empty()
-    (* Xmapcheck.requiring := String.concat " " rq ;
-    Xmapcheck.generate_check_file() *)
+    Xmapcheck.unused_mappings := !Export.Coq.erase ;
+    Export.Coq.set_encoding e ;
+    Xmapcheck.requiring := String.concat " " rq ;
+    Xmapcheck.generate_check_file()
 
   | "check-mappings"::_ -> wrong_nb_args()
 
