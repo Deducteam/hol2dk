@@ -27,7 +27,7 @@ jobs:
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
       - name: Checkout hol2dk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Install opam
         uses: avsm/setup-ocaml@v3
         with:
