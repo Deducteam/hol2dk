@@ -21,6 +21,7 @@ help:
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
+	@echo "  EXTRA_ROCQ_OPTIONS: additional options for rocq compile (empty by default)"
 
 .PHONY: split
 split:
