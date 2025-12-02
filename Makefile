@@ -298,10 +298,15 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-ROCQ_OPTIONS = -q -no-glob
+BASE_ROCQ_OPTIONS := -q -no-glob -R . $(ROOT_PATH)
+# User specifiable rocq options
+EXTRA_ROCQ_OPTIONS =
+ROCQ_OPTIONS = "$(BASE_ROCQ_OPTIONS) $(EXTRA_ROCQ_OPTIONS)"
+
+
 %.vo: %.v
 	@echo rocq $<
-	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $<
+	@rocq compile $(ROCQ_OPTIONS) $<
 
 .PHONY: clean-vo
 clean-vo: rm-vo rm-glob rm-aux rm-cache
