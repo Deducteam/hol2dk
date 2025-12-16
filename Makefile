@@ -238,18 +238,20 @@ rm-lpo:
 
 .PHONY: get-check-mappings
 get-check-mappings: opam
-	@echo generate mappings-checking file ...
+	@echo generate check_mappings file ...
 	@hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
 
-ROCQ_OPTIONS = -q -no-glob
+BASE_ROCQ_OPTIONS := -q -no-glob -R . $(ROOT_PATH)
+# User specifiable rocq options
+EXTRA_ROCQ_OPTIONS ?=
+ROCQ_OPTIONS := $(BASE_ROCQ_OPTIONS) $(EXTRA_ROCQ_OPTIONS)
 
-CHECKFILE=$(BASE)_checkmappings
 .PHONY: check-mappings
-check-mappings: get-check-mappings $(VOFILES) 
-	@echo start checking ...
-	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(CHECKFILE).v
-	@echo clean files ...
-	@-rm -f $(CHECKFILE).v $(CHECKFILE).vo $(CHECKFILE).vok $(CHECKFILE).vos
+check-mappings: get-check-mappings
+	rocq compile $(ROCQ_OPTIONS) $(MAPPING)
+	@echo check generated file ...
+	@rocq compile $(ROCQ_OPTIONS) $(BASE)_checkmappings.v
+	rm -f $(BASE)_checkmappings.v $(BASE)_checkmappings.vo $(BASE)_checkmappings.vok $(BASE)_checkmappings.vos
 
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
@@ -314,14 +316,7 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-<<<<<<< HEAD
-BASE_ROCQ_OPTIONS := -q -no-glob -R . $(ROOT_PATH)
-# User specifiable rocq options
-EXTRA_ROCQ_OPTIONS ?=
-ROCQ_OPTIONS := $(BASE_ROCQ_OPTIONS) $(EXTRA_ROCQ_OPTIONS)
 
-=======
->>>>>>> 20e5b3a (fix)
 %.vo: %.v
 	@echo rocq $<
 	@rocq compile $(ROCQ_OPTIONS) $<
