@@ -236,6 +236,23 @@ clean-lpo: rm-lpo
 rm-lpo:
 	-find . -maxdepth 1 -name '*.lpo' -delete
 
+.PHONY: get-check-mappings
+get-check-mappings: opam
+	@echo generate check_mappings file ...
+	@hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
+
+BASE_ROCQ_OPTIONS := -q -no-glob -R . $(ROOT_PATH)
+# User specifiable rocq options
+EXTRA_ROCQ_OPTIONS ?=
+ROCQ_OPTIONS := $(BASE_ROCQ_OPTIONS) $(EXTRA_ROCQ_OPTIONS)
+
+.PHONY: check-mappings
+check-mappings: get-check-mappings
+	rocq compile $(ROCQ_OPTIONS) $(MAPPING)
+	@echo check generated file ...
+	@rocq compile $(ROCQ_OPTIONS) $(BASE)_checkmappings.v
+	rm -f $(BASE)_checkmappings.v $(BASE)_checkmappings.vo $(BASE)_checkmappings.vok $(BASE)_checkmappings.vos
+
 .PHONY: v
 v: $(LP_FILES:%.lp=%.v)
 ifneq ($(SET_LP_FILES),1)
@@ -299,10 +316,6 @@ ifneq ($(INCLUDE_VO_MK),1)
 	touch .finished
 endif
 
-BASE_ROCQ_OPTIONS := -q -no-glob -R . $(ROOT_PATH)
-# User specifiable rocq options
-EXTRA_ROCQ_OPTIONS ?=
-ROCQ_OPTIONS := $(BASE_ROCQ_OPTIONS) $(EXTRA_ROCQ_OPTIONS)
 
 %.vo: %.v
 	@echo rocq $<
