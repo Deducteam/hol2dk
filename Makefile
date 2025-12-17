@@ -249,7 +249,7 @@ ROCQ_OPTIONS := $(BASE_ROCQ_OPTIONS) $(EXTRA_ROCQ_OPTIONS)
 .PHONY: check-mappings
 check-mappings: get-check-mappings
 	for file in $(subst .vo,.v,$(VOFILES)); do\
-		rocq compile $(ROCQ_OPTIONS) $(REQUIRING);\
+		rocq compile $(ROCQ_OPTIONS) $$file;\
 	done
 	@echo check generated file ...
 	@rocq compile $(ROCQ_OPTIONS) $(BASE)_checkmappings.v
