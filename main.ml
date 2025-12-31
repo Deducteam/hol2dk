@@ -143,6 +143,11 @@ hol2dk files [$path/]$base.(dk|lp)
   for each HOL-Light file required by $HOLLIGHT_DIR/$path/$base.ml, generate
   a (dk|lp) file with the statements of the theorems proved in that file
 
+hol2dk check-mappings $base $encoding.lp $renaming.lp $mappings.lp $requiring
+  generates a file $(base).checkmappings.v that can be used to diagnose
+  badly typed mappings, unused mappings, unmapped axioms and non-fully
+  mapped definitions.
+
 hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
 
@@ -1235,6 +1240,22 @@ and command = function
      end
 
   | "abbrev"::_ -> wrong_nb_args()
+
+  (* generate file to check mappings *)
+  | "check-mappings"::b::e::rn::m::rq ->
+    Xmapcheck.base := b ;
+    Export.Coq.stt := true ;
+    Export.Coq.use_implicits := false ;
+    Export.Coq.use_notations := true ;
+    Export.Coq.set_renaming rn ;
+    Xmapcheck.initial_rmap := !Export.Coq.rmap ;
+    Export.Coq.set_mapping m ;
+    Xmapcheck.unused_mappings := !Export.Coq.erase ;
+    Export.Coq.set_encoding e ;
+    Xmapcheck.requiring := String.concat " " rq ;
+    Xmapcheck.generate_check_file()
+
+  | "check-mappings"::_ -> wrong_nb_args()
 
   (* Single file generation (used neither in b.mk nor in Makefile). *)
   | f::args ->
