@@ -140,7 +140,10 @@ let command oc {elt; pos} =
         if List.mem p_sym_nam.elt ignore_mappings
         then ()
         else
-        (* remove implicit arguments, as they cannot be parsed by tactics.
+        let name =
+          Option.fold (fun _ s -> s) p_sym_nam.elt (StrMap.find_opt p_sym_nam.elt !rmap)
+        in 
+        (* remove implicit arguments, as they cannot be parsed by tactics. with
            types have no implicit arguments in the first place and should not start
            with an @ (example: (list term) is a valid mapping for a type and won't work
            with an @ in front) *)
@@ -150,12 +153,12 @@ let command oc {elt; pos} =
         in 
         begin match p_sym_arg, p_sym_typ with
           | [], Some t ->
-            string oc "check \""; untouched_ident oc p_sym_nam; string oc "\" (" ;
-            string oc s ; string oc ") (" ; term oc t ~implicits:false ; string oc ").\n"
+            string oc ("check " ^ name ^ " (") ; string oc s ; string oc ") (" ;
+            term oc t ~implicits:false ; string oc ").\n"
           |  _, Some t ->
-            string oc "check \""; untouched_ident oc p_sym_nam; string oc "\" (" ;
-            string oc s ; string oc ") (forall" ; params_list oc p_sym_arg ~implicits:false ;
-            string oc ", " ; term oc t ~implicits:false ; string oc ").\n"
+            string oc ("check " ^ name ^ " (") ; string oc s ; string oc ") (forall" ;
+            params_list oc p_sym_arg ~implicits:false ; string oc ", " ;
+            term oc t ~implicits:false ; string oc ").\n"
           | _ -> wrn pos "Command not translated."
         end
       | None -> 
@@ -205,18 +208,22 @@ let ast oc = Stream.iter (command oc)
 (* Rocq code to print mapping errors. *)
 
 let check_file_header =
-"Variant error : forall constrtype, constrtype -> Type -> Type :=
-obj ctype c atype : error ctype c atype.
+"Variant wrong : forall constrtype, constrtype -> Type -> Type :=
+wrongC ctype c atype : wrong ctype c atype.
 
-Tactic Notation \"check\" string(ident) uconstr(constr) uconstr(type) :=
+Variant inexistant : Type := inexistantC.
+
+Tactic Notation \"check\" simple_intropattern(ident) uconstr(constr) uconstr(type) :=
   let temp := fresh in
   tryif assert_fails assert (temp := type)
   then idtac \"Type\" type \"of\" ident \"is not a correct Rocq type.\";
-    idtac \"If it is not because of a previous mapping error (in particular if it is the first error), please report the error.\" 
-  else 
+    idtac \"If this is not a numbered axiom and the error is not because of a previous mapping error, please report the error.\";
+    try lazymatch goal with | _ := _ |- _ => fail | |- True => set (failwitness := true) end
+  else
   tryif assert_fails assert (temp := constr)
   then idtac ident \"is not mapped to an existing object.\";
-    idtac \"Try checking for a typo or adding a path.\"
+    idtac \"Try checking for a typo or adding a path or import.\";
+    try lazymatch goal with |- True => generalize inexistantC as ident end
   else
   tryif assert_succeeds assert (temp := (constr : type))
   then idtac
@@ -225,13 +232,21 @@ Tactic Notation \"check\" string(ident) uconstr(constr) uconstr(type) :=
     idtac \"Incorrect mapping:\" ;
     idtac ident \"is mapped to\" constr \"of type\" T ;
     idtac \"while it is expected to have type\" type ;
-    try lazymatch goal with |- True => generalize (obj T constr type) end end.
+    try lazymatch goal with |- True => generalize (wrongC T constr type) as ident end end.
 
-Ltac conclusion := match goal with
-| |- error ?ctype ?c ?atype -> _ => idtac \"the first error was:\" ;
-     idtac c \"has type\" ctype ;
+Ltac conclusion := lazymatch goal with
+| |- forall ident : wrong ?ctype ?c ?atype, _ =>
+     idtac \"the first error was:\" ;
+     idtac ident \"is mapped to\" c \"of type\" ctype ;
      idtac \"while it it is expected to have type\" atype
-| _ => idtac \"All checks passed, all mapped objects are correctly typed.\" end.
+| |- forall ident : inexistant, _ =>
+     idtac \"the first error was:\" ;
+     idtac ident \"is not mapped to an existing object.\" ;
+     idtac \"Try checking for a typo or adding a path or import\"
+| failwitness := _ |- True =>
+     idtac \"There is a problem, as only (an) incorrect type error(s) occurred.\" ;
+     idtac \"Please investigate, and report if abnormal.\"
+| |- _ => idtac \"All checks passed, all mapped objects are correctly typed.\" end.
 
 Goal True.\n"
 
@@ -262,7 +277,8 @@ let generate_check_file_in oc =
   let l = StrSet.elements !unused_mappings in
   if l = [] then string oc "idtac \"All mappings are used.\".\nAbort."
   else (string oc "idtac \"Warning, the following mappings were not used: ";
-  list string " " oc l ; string oc "\".\nAbort.")
+  list string " " oc l ; string oc ("\".\nidtac \"think about looking in renamings.lp " ^
+    "for names that differ between HOL Light and rocq\".\nAbort."))
   
 let generate_check_file () =
   let outputfile = !base ^ "_checkmappings.v" in

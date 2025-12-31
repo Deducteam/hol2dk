@@ -1,6 +1,36 @@
 // map for renaming dk/lp identifiers (on the right)
 // to Coq expressions (on the left)
 
+builtin "type'" ≔ Set;
+builtin "arrow" ≔ fun;
+builtin "equal" ≔ =;
+builtin "exists_1" ≔ ∃₁;
+builtin "exists_1_def" ≔ ∃₁_def;
+builtin "neg" ≔ ¬;
+builtin "neg_def" ≔ ¬_def;
+builtin "bottom" ≔ ⊥;
+builtin "bottom_def" ≔ ⊥_def;
+builtin "vee" ≔ ∨;
+builtin "vee_def" ≔ ∨_def;
+builtin "existsq" ≔ ∃;
+builtin "exists_def" ≔ ∃_def;
+builtin "forallq" ≔ ∀;
+builtin "forall_def" ≔ ∀_def;
+builtin "doublearrow" ≔ ⇒;
+builtin "doublearrow_def" ≔ ⇒_def;
+builtin "wedge" ≔ ∧;
+builtin "wedge_def" ≔ ∧_def;
+builtin "top" ≔ ⊤;
+builtin "top_def" ≔ ⊤_def;
+builtin "top_i" ≔ ⊤ᵢ;
+builtin "wedge_e1" ≔ ∧ₑ₁;
+builtin "wedge_e2" ≔ ∧ₑ₂;
+builtin "exists_i" ≔ ∃ᵢ;
+builtin "exists_e" ≔ ∃ₑ;
+builtin "vee_i1" ≔ ∨ᵢ₁;
+builtin "vee_i2" ≔ ∨ᵢ₂;
+builtin "vee_e" ≔ ∨ₑ;
+
 builtin "minus" ≔ -;
 builtin "minus_def" ≔ -_def;
 builtin "minus'" ≔ -';
