@@ -1248,6 +1248,7 @@ and command = function
     Export.Coq.use_implicits := false ;
     Export.Coq.use_notations := true ;
     Export.Coq.set_renaming rn ;
+    Xmapcheck.initial_rmap := !Export.Coq.rmap ;
     Export.Coq.set_mapping m ;
     Xmapcheck.unused_mappings := !Export.Coq.erase ;
     Export.Coq.set_encoding e ;

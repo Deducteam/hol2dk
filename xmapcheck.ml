@@ -9,6 +9,9 @@ open Export.Coq
 (* Initialised to Export.Coq.erase in main.ml *)
 let unused_mappings = ref StrSet.empty
 
+(* Initialised to !rmap right after set_renaming in main.ml *)
+let initial_rmap : string StrMap.t ref = ref StrMap.empty
+
 let untouched_ident oc ({elt;_} : p_ident) = string oc elt
 
 (* Export.Coq.term but for each identifier encountered, update unused_mappings.
@@ -140,8 +143,7 @@ let command oc {elt; pos} =
         if List.mem p_sym_nam.elt ignore_mappings
         then ()
         else
-        let name =
-          Option.fold (fun _ s -> s) p_sym_nam.elt (StrMap.find_opt p_sym_nam.elt !rmap)
+        let name = Option.get p_sym_nam.elt (StrMap.find_opt p_sym_nam.elt !initial_rmap)
         in 
         (* remove implicit arguments, as they cannot be parsed by tactics. with
            types have no implicit arguments in the first place and should not start
