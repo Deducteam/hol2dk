@@ -1117,8 +1117,8 @@ and command = function
   | "thmsplit"::_ -> wrong_nb_args()
 
   (* Called in Makefile with f=n_part_k when n is in BIG_FILES to
-     create the files f.lp, f_spec.lp, f.typ, f.brv, f.brp and
-     f_term_abbrevs_part_i.min. *)
+     create the files f.lp, f_spec.lp, f.typ, f.brv, f.brp,
+     f_term_abbrevs_part_i.min and f_term_abbrevs_part_i.max. *)
   | ["thmpart";b;f] ->
      begin
        let dk = is_dk f in

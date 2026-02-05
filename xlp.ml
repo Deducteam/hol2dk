@@ -862,7 +862,8 @@ let export_proofs_in_interval n x y =
       if get_use !i >= 0 then size := !size + size_proof_at !i;
       incr i
     done;
-    proof_part_max_idx := !i - 2
+    proof_part_max_idx := !i - 2;
+    tvs_map := MapStr.empty
   in
   let end_part() =
     close_out !cur_oc;
@@ -982,10 +983,11 @@ let split_theorem_proof b n =
   export_iter (n^"_spec") iter_deps (fun oc -> decl_theorem oc max p t)
 ;;
 
-(* Called in [export_theorem_proof_part] which is
-   called by command "thmpart" in Makefile when n is in BIG_FILES.
+(* Called in [export_theorem_proof_part] which is called by command
+   "thmpart" in Makefile when n is in BIG_FILES.
    [split_theorem_abbrevs n] generates the files [n^".brv"],
-   [n^".brp"] and [n^"_term_abbrevs"^part(k)^".min"]. *)
+   [n^".brp"], [n^"_term_abbrevs"^part(k)^".min"] and
+   [n^"_term_abbrevs"^part(k)^".max"]. *)
 let split_theorem_abbrevs n =
   (* generate the file [n^".brv"]. *)
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
