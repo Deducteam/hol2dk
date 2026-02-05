@@ -12,7 +12,7 @@ open Xproof
 (****************************************************************************)
 
 (* Rename HOL-Light names to valid (and sometimes nicer) identifiers. *)
-let name =
+let lp_name =
   let prefixes = (* the order is important *)
     [ "|----", "vdash4"
     ; "|---", "vdash3"
@@ -21,9 +21,8 @@ let name =
     ; "|-", "vdash"
     ; "|=>", "bar_imp"]
   in
-  fun oc n ->
-  string oc
-    begin match n with
+  fun n ->
+  match n with
     | "" -> assert false
     | "," -> "̦‚" (* 201A *)
     | "@" -> "ε"
@@ -57,10 +56,9 @@ let name =
     (* for Coq *)
     | "%" -> n
     | _ -> Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
-    end
 ;;
 
-let cst_name = name;;
+let name oc n = string oc (lp_name n);;
 
 (****************************************************************************)
 (* Translation of types. *)
@@ -184,9 +182,9 @@ let rec raw_term oc t =
   | Var(n,_) -> name oc n
   | Const(n,b) ->
      begin match const_typ_vars_pos n with
-     | [] -> cst_name oc n
+     | [] -> name oc n
      | ps ->
-        string oc "(@"; cst_name oc n;
+        string oc "(@"; name oc n;
         List.iter (fun p -> char oc ' '; raw_typ oc (subtyp b p)) ps;
         char oc ')'
      end
@@ -195,7 +193,7 @@ let rec raw_term oc t =
      begin match h, ts with
      | Const("=" as n,_), [_;_]
      | Const(("!"|"?") as n,_), [_] ->
-       char oc '('; cst_name oc n; list_prefix " " raw_term oc ts; char oc ')'
+       char oc '('; name oc n; list_prefix " " raw_term oc ts; char oc ')'
      | _ ->
        char oc '('; raw_term oc h; list_prefix " " raw_term oc ts; char oc ')'
      end
@@ -223,7 +221,7 @@ let unabbrev_term =
      begin match h, ts with
      | Const("=" as n,_), [_;_]
      | Const(("!"|"?") as n,_), [_] ->
-       char oc '('; cst_name oc n; list_prefix " " (term rmap) oc ts;
+       char oc '('; name oc n; list_prefix " " (term rmap) oc ts;
        char oc ')'
      | _ ->
        char oc '('; term rmap oc h; list_prefix " " (term rmap) oc ts;
@@ -502,7 +500,7 @@ let proof tvs rmap =
       list_prefix " " typ oc (type_vars_in_term t);
       list_prefix " " term oc (frees t)
     | Pdef(t,n,_) ->
-       char oc '@'; cst_name oc n; string oc "_def";
+       char oc '@'; name oc n; string oc "_def";
        list_prefix " " typ oc (type_vars_in_term t)
     | Pdeft(_,t,_,_) ->
       string oc "@axiom_";
@@ -585,45 +583,54 @@ let definition_of n =
   in List.find_map f !the_definitions
 ;;
 
-let decl_sym oc (n,b) =
-  match definition_of n with
+let update_tvs_map tvs_map n tvs =
+  match tvs with
+  | [] -> ()
+  | _ -> tvs_map := MapStr.add n (List.length tvs) !tvs_map
+;;
+
+let decl_sym tvs_map oc (n0,b) =
+  let n = lp_name n0 in
+  let tvsb = tyvars b in
+  update_tvs_map tvs_map n tvsb;
+  match definition_of n0 with
   | None ->
-    string oc "symbol "; cst_name oc n; typ_vars oc (tyvars b);
-    string oc " : El "; raw_typ oc b; string oc ";\n"
+     string oc "symbol "; string oc n; typ_vars oc tvsb;
+     string oc " : El "; raw_typ oc b; string oc ";\n"
   | Some (t,r) ->
      let tvst = type_vars_in_term t in
      let rmap = renaming_map tvst [] in
+     update_tvs_map tvs_map (n^"_def") tvst;
      match n with
      |"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T" ->
-       string oc "symbol "; cst_name oc n; string oc "_def"; typ_vars oc tvst;
+       (* symbols already declared in theory_hol.lp *)
+       string oc "symbol "; string oc n; string oc "_def"; typ_vars oc tvst;
        string oc " : Prf "; unabbrev_term rmap oc t; string oc ";\n"
      | _ ->
-        let tvsb = tyvars b in
-        string oc "symbol "; cst_name oc n; typ_vars oc tvsb;
+        string oc "symbol "; string oc n; typ_vars oc tvsb;
         string oc " : El "; raw_typ oc b; string oc " ≔ ";
         unabbrev_term rmap oc r; string oc ";\n";
-        if tvsb = [] then
-          begin
-            string oc "opaque symbol "; cst_name oc n; string oc "_def";
-            typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
-            string oc " ≔ REFL "; cst_name oc n; string oc ";\n"
-          end
-        else
-          begin
-            string oc "opaque symbol "; cst_name oc n; string oc "_def";
-            typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
-            string oc " ≔ REFL (@"; cst_name oc n; char oc ' ';
-            typ_params oc tvsb; string oc ");\n"
-          end
+        match tvsb with
+        | [] ->
+           string oc "opaque symbol "; string oc n; string oc "_def";
+           typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
+           string oc " ≔ REFL "; string oc n; string oc ";\n"
+        | _ ->
+           string oc "opaque symbol "; string oc n; string oc "_def";
+           typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
+           string oc " ≔ REFL (@"; string oc n; char oc ' ';
+           typ_params oc tvsb; string oc ");\n"
 ;;
 
-let decl_axioms oc ths =
+let decl_axioms tvs_map oc ths =
   let axiom i th =
     let t = concl th in (* axioms have no assumptions *)
     let tvs = type_vars_in_term t in
     let xs = frees t in
     let rmap = renaming_map tvs xs in
-    string oc "symbol axiom_"; int oc i; typ_vars oc (type_vars_in_term t);
+    let n = "axiom_"^string_of_int i in
+    update_tvs_map tvs_map n tvs;
+    string oc "symbol "; string oc n; typ_vars oc tvs;
     list (unabbrev_decl_param rmap) oc xs; string oc " : Prf ";
     unabbrev_term rmap oc t; string oc ";\n"
   in
@@ -1106,12 +1113,18 @@ let constants() =
 ;;
 
 let export_terms b =
-  export (b^"_terms") [b^"_types"] (fun oc -> list decl_sym oc (constants()))
+  let n = b^"_terms" in
+  let tvs_map = ref MapStr.empty in
+  export n [b^"_types"] (fun oc -> list (decl_sym tvs_map) oc (constants()));
+  write_val (n^".tvs") !tvs_map
 ;;
 
 let export_axioms b =
-  export (b^"_axioms") [b^"_types"; b^"_terms"]
-    (fun oc -> decl_axioms oc !the_axioms)
+  let n = b^"_axioms" in
+  let tvs_map = ref MapStr.empty in
+  export n [b^"_types"; b^"_terms"]
+    (fun oc -> decl_axioms tvs_map oc !the_axioms);
+  write_val (n^".tvs") !tvs_map
 ;;
 
 (* Used in single file generation. Generate b_proofs.lp. *)
