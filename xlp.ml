@@ -583,16 +583,18 @@ let definition_of n =
   in List.find_map f !the_definitions
 ;;
 
-let update_tvs_map tvs_map n tvs =
+let tvs_map = ref MapStr.empty
+
+let update_tvs_map n tvs =
   match tvs with
   | [] -> ()
   | _ -> tvs_map := MapStr.add n (List.length tvs) !tvs_map
 ;;
 
-let decl_sym tvs_map oc (n0,b) =
+let decl_sym oc (n0,b) =
   let n = lp_name n0 in
   let tvsb = tyvars b in
-  update_tvs_map tvs_map n tvsb;
+  update_tvs_map n tvsb;
   match definition_of n0 with
   | None ->
      string oc "symbol "; string oc n; typ_vars oc tvsb;
@@ -600,7 +602,7 @@ let decl_sym tvs_map oc (n0,b) =
   | Some (t,r) ->
      let tvst = type_vars_in_term t in
      let rmap = renaming_map tvst [] in
-     update_tvs_map tvs_map (n^"_def") tvst;
+     update_tvs_map (n^"_def") tvst;
      match n with
      |"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T" ->
        (* symbols already declared in theory_hol.lp *)
@@ -622,14 +624,15 @@ let decl_sym tvs_map oc (n0,b) =
            typ_params oc tvsb; string oc ");\n"
 ;;
 
-let decl_axioms tvs_map oc ths =
+let decl_axioms oc ths =
+  tvs_map := MapStr.empty;
   let axiom i th =
     let t = concl th in (* axioms have no assumptions *)
     let tvs = type_vars_in_term t in
     let xs = frees t in
     let rmap = renaming_map tvs xs in
     let n = "axiom_"^string_of_int i in
-    update_tvs_map tvs_map n tvs;
+    update_tvs_map n tvs;
     string oc "symbol "; string oc n; typ_vars oc tvs;
     list (unabbrev_decl_param rmap) oc xs; string oc " : Prf ";
     unabbrev_term rmap oc t; string oc ";\n"
@@ -664,26 +667,30 @@ let decl_theorem oc k p d =
   let decl_hyps term = List.iteri (decl_hyp term) in
   match d with
   | DefThmIdProof ->
+    let n = "lem"^string_of_int k in
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let extras = extra_type_vars_in_proof_content proof_at pc in
     let rmap = renaming_map (extras @ tvs) xs in
     let term = term rmap in
     let prv = let l = get_use k in l > 0 && l <= !proof_part_max_idx in
     string oc (if prv then "private" else "opaque");
-    string oc " symbol lem"; int oc k; typ_vars oc tvs;
+    string oc " symbol "; string oc n; typ_vars oc tvs;
     list (decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t;
     string oc " ≔ "; proof tvs rmap oc p; string oc ";\n";
   | DeclThmId abbrev ->
+    let n = "lem"^string_of_int k in
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let rmap = renaming_map tvs xs in
     let term = if abbrev then term rmap else unabbrev_term rmap in
-    string oc "symbol lem"; int oc k;
-    typ_vars oc tvs; list (unabbrev_decl_param rmap) oc xs;
-    decl_hyps term ts;
+    string oc "symbol "; string oc n; typ_vars oc tvs;
+    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
   | DefThmNameAsThmId n ->
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let rmap = renaming_map tvs xs in
     let term = unabbrev_term rmap in
     string oc "opaque symbol "; string oc n; string oc " : ";
@@ -698,6 +705,7 @@ let decl_theorem oc k p d =
     string oc " ≔ @lem"; int oc k; string oc ";\n"
   | DeclThmName n ->
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let rmap = renaming_map tvs xs in
     let term = unabbrev_term rmap in
     string oc "symbol "; string oc n;
@@ -1114,16 +1122,16 @@ let constants() =
 
 let export_terms b =
   let n = b^"_terms" in
-  let tvs_map = ref MapStr.empty in
-  export n [b^"_types"] (fun oc -> list (decl_sym tvs_map) oc (constants()));
+  tvs_map := MapStr.empty;
+  export n [b^"_types"] (fun oc -> list decl_sym oc (constants()));
   write_val (n^".tvs") !tvs_map
 ;;
 
 let export_axioms b =
   let n = b^"_axioms" in
-  let tvs_map = ref MapStr.empty in
+  tvs_map := MapStr.empty;
   export n [b^"_types"; b^"_terms"]
-    (fun oc -> decl_axioms tvs_map oc !the_axioms);
+    (fun oc -> decl_axioms oc !the_axioms);
   write_val (n^".tvs") !tvs_map
 ;;
 
