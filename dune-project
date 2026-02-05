@@ -1,4 +1,4 @@
-(lang dune 3.7)
+(lang dune 3.18)
 
 (name hol2dk)
 
@@ -18,10 +18,10 @@
  (name hol2dk)
  (synopsis "HOL-Light to Dedukti/Lambdapi and Rocq translator")
  (description "HOL-Light to Dedukti/Lambdapi and Rocq translator")
+ (maintenance_intent "(latest)")
  (depends
   dune
   (ocaml (>= 4.13))
-  (hol_light (= 3.0.0))
  )
 )
 

@@ -20,13 +20,13 @@ hol2dk options command arguments
 Options
 -------
 
---root-path MODNAME: set lambdapi and coq's root_path (default is HOLLight)
+--root-path MODNAME: set lambdapi and coq's root_path (default to HOLLight)
 
 --max-dup INT: maximum number of theorem duplications
 
---max-proof-size INT: maximum size of proof files (default is 500_000)
+--max-proof-size INT: maximum size of proof files (default to 500_000)
 
---max-abbrev-size INT: maximum size of term abbreviation files (default is 2_000_000)
+--max-abbrev-size INT: maximum size of term abbreviation files (default to 2_000_000)
 
 --use-sharing: define term abbreviations using let's
 
@@ -95,9 +95,9 @@ hol2dk split $base
 
 hol2dk unsplit $base $module ...
   for each file $module, generate the files $module.sti, $module.pos,
-  $module.use and $module.nbp for all the theorems $thm proved in
-  $HOLLIGHT_DIR/$module.ml, remove all the files $thm.sti,
-  $thm.pos, $thm.use and $thm.nbp, and update $base.thm
+  $module.use, $module.nbp and, for each theorem $thm proved in
+  $HOLLIGHT_DIR/$module.ml, remove the files $thm.sti, $thm.pos, $thm.use and
+  $thm.nbp, and update $base.thp
 
 hol2dk theorem $base $thm.lp
   generate the lp proof of the theorem $thm
