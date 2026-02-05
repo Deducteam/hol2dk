@@ -1139,7 +1139,7 @@ and command = function
 
   | "thmpart"::_ -> wrong_nb_args()
 
-  (* Called in Makefile to create n.lp when n is not in BIG_FILES. *)
+  (* Called in Makefile to create n.lp when n is NOT in BIG_FILES. *)
   | ["theorem";b;f] ->
      read_sig b;
      map_thid_pos := read_val (b^".thp");

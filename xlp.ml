@@ -763,7 +763,7 @@ let export_subterm_abbrevs b n =
     decl_subterm_abbrevs
 ;;
 
-(* 2nd step in command "theorem" when n is not in BIG_FILES.
+(* 2nd step in command "theorem" when n is NOT in BIG_FILES.
    [export_term_abbrevs_in_one_file b n] generates
    [n^"_term_abbrevs.lp"] and [n^"_term_abbrevs.typ"]. *)
 let export_term_abbrevs_in_one_file b n =
@@ -841,7 +841,7 @@ let proof_part_of = Hashtbl.find htbl_thm_part;;
 let proof_deps = ref SetInt.empty;;
 
 (* Used in [export_theorem_proof],
-   1st step in command "theorem" when n is not in BIG_FILES.
+   1st step in command "theorem" when n is NOT in BIG_FILES.
    [export_proofs_in_interval n x y] generates the proof steps of
    index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
 let export_proofs_in_interval n x y =
@@ -896,7 +896,7 @@ let export_proofs_in_interval n x y =
   Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev
 ;;
 
-(* 1st step in command "theorem" when n is not in BIG_FILES.
+(* 1st step in command "theorem" when n is NOT in BIG_FILES.
   [export_theorem_proof b n] generates the files
   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part], [n^"_proofs.lp"],
   [n^".typ"] and [n^"_spec.lp"]. *)
@@ -913,7 +913,7 @@ let export_theorem_proof b n =
       done)
 ;;
 
-(* 3rd step in command "theorem" when n is not in BIG_FILES.
+(* 3rd step in command "theorem" when n is NOT in BIG_FILES.
    [export_theorem_deps b n] generates for [1<=i<=!proof_part] the
    files [n^part(i)^"_deps.lp"] and [n^part(i)^".lp"] assuming that
    the files [n^part(i)^"_proofs.lp"] are already generated. *)
