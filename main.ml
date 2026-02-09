@@ -115,6 +115,9 @@ hol2dk abbrev $base ${thm}_term_abbrevs_part_$k.lp
 hol2dk type_abbrevs $base
   generate ${file}_type_abbrevs.lp
 
+hol2dk tvs $base
+  generate $base.tvs
+
 Multi-threaded dk/lp file generation by splitting proofs in $n parts
 --------------------------------------------------------------------
 
@@ -155,8 +158,11 @@ hol2dk proof $base $x [$y]
 hol2dk print use $base $x
   print the contents of $base.use for theorem index $x
 
-hol2dk print $base.thm
-  print the contents of $base.thm (named theorems with their indexes)
+hol2dk print $file.tvs
+  print the contents of $file.tvs (number of type parameters of each symbol)
+
+hol2dk print $file.thm
+  print the contents of $file.thm (named theorems with their indexes)
 
 hol2dk thms $base [$path/]$file.(ml|hl)
   print the list of theorems (named or not) proved in [$path/]$file.(ml|hl)
@@ -793,16 +799,15 @@ and command = function
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k)
 
-  | "print"::"use"::_ -> wrong_nb_args()
-
   | ["print";f] ->
      begin
        match Filename.extension f with
-       | ".thm"  ->
-          let b = Filename.chop_extension f in
-          MapInt.iter (log "%d %s\n") (read_val (b^".thm"))
-       | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
+       | ".thm" -> MapInt.iter (log "%d %s\n") (read_val f)
+       | ".tvs" -> MapStr.iter (log "%s %d\n") (read_val f)
+       | _ -> err "\"%s\" does not end with \".thm\" or \".tvs\"\n" f; exit 1
      end
+
+  | "print"::_ -> wrong_nb_args()
 
   (* Create b.mk. *)
   | ["mkfile";b] ->
@@ -1183,11 +1188,6 @@ and command = function
     write_val n !map
 
   | "tvs"::_ -> wrong_nb_args()
-
-  (* Print the contents of the file b^".tvs" for debug *)
-  | ["print";"tvs";b] ->
-     MapStr.iter (out stdout "%s %d\n") (read_val (b^".tvs"))
-  | "print"::"tvs"::_ -> wrong_nb_args()
 
   (* Merge all maps in typ files into a single map, give a unique
      index to every entry in the obtained map, generate

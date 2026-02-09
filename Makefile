@@ -23,6 +23,10 @@ help:
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
 	@echo "  EXTRA_ROCQ_OPTIONS: additional options for rocq compile (empty by default)"
 
+.PHONY: tvs
+tvs:
+	hol2dk tvs $(BASE)
+
 .PHONY: split
 split:
 	hol2dk split $(BASE)
