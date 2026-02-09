@@ -359,13 +359,22 @@ let export n deps = export_iter n (fun f -> List.iter f deps);;
 (* Translation of term abbreviations. *)
 (****************************************************************************)
 
+(* map recording the number of type variables of each symbol *)
+let tvs_map = ref MapStr.empty;;
+let raw_update_tvs_map n k = tvs_map := MapStr.add n k !tvs_map;;
+let update_tvs_map n tvs =
+  if tvs <> [] then raw_update_tvs_map n (List.length tvs)
+
 let print_let oc (t,t',_,_) =
   string oc "\n  let "; raw_term oc t'; string oc " ≔ "; raw_term oc t;
-  string oc " in";;
+  string oc " in"
+;;
 
-let decl_term_abbrev oc t (k,n,bs) =
-  string oc "symbol term"; int oc k;
-  for i=0 to n-1 do string oc " a"; int oc i done;
+let decl_term_abbrev oc t (k,ntvs,bs) =
+  let n = "term"^string_of_int k in
+  if ntvs > 0 then raw_update_tvs_map n ntvs;
+  string oc "symbol "; string oc n;
+  for i=0 to ntvs-1 do string oc " a"; int oc i done;
   let decl_var i b =
     string oc " (x"; int oc i; string oc ": El "; abbrev_typ oc b; char oc ')'
   in
@@ -373,7 +382,8 @@ let decl_term_abbrev oc t (k,n,bs) =
   if !use_sharing then
     begin
       let t', l = shared t in
-      string oc " ≔"; list print_let oc l; char oc ' '; raw_term oc t'; string oc ";\n"
+      string oc " ≔"; list print_let oc l; char oc ' '; raw_term oc t';
+      string oc ";\n"
     end
   else
     begin
@@ -581,14 +591,6 @@ let definition_of n =
        if n'=n then Some(t,r) else None
     | _ -> assert false
   in List.find_map f !the_definitions
-;;
-
-let tvs_map = ref MapStr.empty
-
-let update_tvs_map n tvs =
-  match tvs with
-  | [] -> ()
-  | _ -> tvs_map := MapStr.add n (List.length tvs) !tvs_map
 ;;
 
 let decl_sym oc (n0,b) =
@@ -1125,16 +1127,14 @@ let constants() =
 let export_terms b =
   let n = b^"_terms" in
   tvs_map := MapStr.empty;
-  export n [b^"_types"] (fun oc -> list decl_sym oc (constants()));
-  write_val (n^".tvs") !tvs_map
+  export n [b^"_types"] (fun oc -> list decl_sym oc (constants()))
 ;;
 
 let export_axioms b =
   let n = b^"_axioms" in
   tvs_map := MapStr.empty;
   export n [b^"_types"; b^"_terms"]
-    (fun oc -> decl_axioms oc !the_axioms);
-  write_val (n^".tvs") !tvs_map
+    (fun oc -> decl_axioms oc !the_axioms)
 ;;
 
 (* Used in single file generation. Generate b_proofs.lp. *)

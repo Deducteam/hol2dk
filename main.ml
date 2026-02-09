@@ -876,7 +876,8 @@ and command = function
        begin
          Xlp.export_types b;
          Xlp.export_terms b;
-         Xlp.export_axioms b
+         Xlp.export_axioms b;
+         write_val (b^".tvs") !Xlp.tvs_map
        end
 
   | "sig"::_ -> wrong_nb_args()
@@ -1133,8 +1134,9 @@ and command = function
           read_use n;
           the_start_idx := read_val (n^".sti");
           init_proof_reading b;
-          if dk then (err "dk output not available for this command\n"; exit 1)
-          else Xlp.export_theorem_proof_part b n k
+          if dk then (err "dk output not available for this command\n"; exit 1);
+          Xlp.export_theorem_proof_part b n k;
+          write_val (n^part(k)^".tvs") !Xlp.tvs_map
      end
 
   | "thmpart"::_ -> wrong_nb_args()
@@ -1154,7 +1156,8 @@ and command = function
          Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs_in_one_file b n;
-         Xlp.export_theorem_deps b n
+         Xlp.export_theorem_deps b n;
+         write_val (n^".tvs") !Xlp.tvs_map
        end
 
   | "theorem"::_ -> wrong_nb_args()
@@ -1225,13 +1228,11 @@ and command = function
        | None -> err "\"%s\" does not end with \"_term_abbrevs_part_\"\
                       followed by an integer\n" f; exit 1
        | Some(n,k) ->
-         if dk then (err "dk output not available for this command\n"; exit 1)
-         else
-           begin
-             read_sig b;
-             map_thid_pos := read_val (b^".thp");
-             Xlp.export_theorem_term_abbrevs_part b n k
-           end
+         if dk then (err "dk output not available for this command\n"; exit 1);
+         read_sig b;
+         map_thid_pos := read_val (b^".thp");
+         Xlp.export_theorem_term_abbrevs_part b n k;
+         write_val (n^"_term_abbrevs"^part(k)^".tvs") !Xlp.tvs_map
      end
 
   | "abbrev"::_ -> wrong_nb_args()
