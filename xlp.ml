@@ -403,6 +403,12 @@ let decl_subterm_abbrevs =
   and cmp (_,_,_,k1) (_,_,_,k2) = k1 - k2 in
   fun oc ->
   let abbrev (t,t',_,_) =
+    let n, tvs =
+      match t' with
+      | Var(n,b) | Const(n,b) -> n, tyvars b
+      | _ -> assert false
+    in
+    update_tvs_map n tvs;
     string oc "symbol "; raw_term oc t'; string oc " ≔ "; raw_term oc t;
     string oc ";\n"
   in

@@ -1172,6 +1172,23 @@ and command = function
 
   | "thms"::_ -> wrong_nb_args()
 
+  (* Merge all tvs files in a single one. *)
+  | ["tvs";b] ->
+    let map = ref MapStr.empty and n = b^".tvs" in
+    let read_tvs_file f =
+      if String.ends_with ~suffix:".tvs" f && f <> n then
+        MapStr.iter (fun s x -> map := MapStr.add s x !map) (read_val f);
+    in
+    Array.iter read_tvs_file (Sys.readdir ".");
+    write_val n !map
+
+  | "tvs"::_ -> wrong_nb_args()
+
+  (* Print the contents of the file b^".tvs" for debug *)
+  | ["print";"tvs";b] ->
+     MapStr.iter (out stdout "%s %d\n") (read_val (b^".tvs"))
+  | "print"::"tvs"::_ -> wrong_nb_args()
+
   (* Merge all maps in typ files into a single map, give a unique
      index to every entry in the obtained map, generate
      b^"_type_abbrevs.lp" and a sed file for every typ file. *)
