@@ -599,19 +599,19 @@ let definition_of n =
   in List.find_map f !the_definitions
 ;;
 
-let decl_sym oc (n0,b) =
-  let n = lp_name n0 in
+let decl_sym oc (hollight_name,b) =
+  let n = lp_name hollight_name in
   let tvsb = tyvars b in
   update_tvs_map n tvsb;
-  match definition_of n0 with
+  match definition_of hollight_name with
   | None ->
      string oc "symbol "; string oc n; typ_vars oc tvsb;
      string oc " : El "; raw_typ oc b; string oc ";\n"
   | Some (t,r) ->
      let tvst = type_vars_in_term t in
-     let rmap = renaming_map tvst [] in
      update_tvs_map (n^"_def") tvst;
-     match n with
+     let rmap = renaming_map tvst [] in
+     match hollight_name with
      |"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T" ->
        (* symbols already declared in theory_hol.lp *)
        string oc "symbol "; string oc n; string oc "_def"; typ_vars oc tvst;
