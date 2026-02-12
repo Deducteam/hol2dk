@@ -882,7 +882,7 @@ and command = function
          Xlp.export_types b;
          Xlp.export_terms b;
          Xlp.export_axioms b;
-         write_val (b^".tvs") !Xlp.tvs_map
+         write_val (b^"_terms.tvs") !Xlp.tvs_map
        end
 
   | "sig"::_ -> wrong_nb_args()
