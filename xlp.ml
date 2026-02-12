@@ -633,7 +633,6 @@ let decl_sym oc (hollight_name,b) =
 ;;
 
 let decl_axioms oc ths =
-  tvs_map := MapStr.empty;
   let axiom i th =
     let t = concl th in (* axioms have no assumptions *)
     let tvs = type_vars_in_term t in
@@ -870,8 +869,7 @@ let export_proofs_in_interval n x y =
       if get_use !i >= 0 then size := !size + size_proof_at !i;
       incr i
     done;
-    proof_part_max_idx := !i - 2;
-    tvs_map := MapStr.empty
+    proof_part_max_idx := !i - 2
   in
   let end_part() =
     close_out !cur_oc;
@@ -1132,13 +1130,11 @@ let constants() =
 
 let export_terms b =
   let n = b^"_terms" in
-  tvs_map := MapStr.empty;
   export n [b^"_types"] (fun oc -> list decl_sym oc (constants()))
 ;;
 
 let export_axioms b =
   let n = b^"_axioms" in
-  tvs_map := MapStr.empty;
   export n [b^"_types"; b^"_terms"]
     (fun oc -> decl_axioms oc !the_axioms)
 ;;
