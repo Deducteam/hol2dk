@@ -228,7 +228,7 @@ let make nb_proofs dg b =
   let dump_file = b^".mk" in
   log_gen dump_file;
   let oc = open_out dump_file in
-  out oc "# file generated with: hol2dk mk %s\n" b;
+  out oc "# file generated with: hol2dk mkfile %s\n" b;
   out oc "\nNB_PARTS := %d\n" nb_parts;
   out oc "\ninclude part.mk\n\n";
   let cmd i x y =
