@@ -64,6 +64,8 @@ parse_args() {
                 if test -z "$libname" 
                 then
                     libname=$1
+                    shift
+                    parse_args $*
                 else
                     error "unexpected argument $1"
                 fi;;
