@@ -1240,15 +1240,6 @@ and command = function
 
   | "abbrev"::_ -> wrong_nb_args()
 
-  (* generate file to check mappings *)
-  | "check-mappings"::b::e::rn::m::rq ->
-    Xmapcheck.base := b ;
-    Xmapcheck.set_renaming rn ;
-    Xmapcheck.set_encoding e ;
-    Xmapcheck.set_mapping m ;
-    Xmapcheck.requiring := String.concat " " rq ;
-    Xmapcheck.generate_check_file()
-
   | "check-mappings"::_ -> wrong_nb_args()
 
   | "translate-to-classes"::args -> call_script "translate_to_classes" args

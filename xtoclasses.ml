@@ -30,7 +30,7 @@ let read_line ic = Option.map
 
 let remake l = String.concat " " l
 
-let write_line oc s = Out_channel.output_string oc (s ^ "\n")
+let write_line oc s = output_string oc (s ^ "\n")
 
 let rewrite oc l = write_line oc (remake l)
 
@@ -64,23 +64,22 @@ let get_axioms pat =
   in
     get_axioms_rec (read_file "axioms") []
 
-let create_Class oc name type_container field_list =
-  let write_field l tail =
+let first_field = ref true
+
+let create_object oc name type_container field_list =
+  let write_field l =
     let rec until_type l = match l with
       | [s] -> [String.sub s 0 (String.length s -1)]
       | [] -> []
       | s0::l0 -> if s0 = ":=" then [] else s0::(until_type l0)
     in
-      write_line oc ("  " ^ (remake (until_type l)) ^ tail)
+      let prefix = if !first_field
+        then (first_field := false ; "\n  ")
+        else " ;\n  "
+      in
+        output_string oc (prefix ^ (remake (until_type l)))
   in
-    let rec list_fields l = match l with
-      | [f] -> write_field f " }."
-      | [] -> ()
-      | f::l' -> write_field f ";" ; list_fields l'
-    in
-      write_line oc ("Class " ^ name ^ "_Class := {") ;
-      list_fields ((name::type_container)::field_list) ;
-      write_line oc ("Context {" ^ name ^ "_var : " ^ name ^ "_Class}.")
+      List.iter write_field ((name::type_container)::field_list)
 
 let translate_theory_to oc =
   let rec translate_opam_file ic oc =
@@ -95,22 +94,25 @@ let translate_theory_to oc =
       in
         match read_line ic with
         | Some ("Require"::l) -> rewrite oc ("Require"::l) ;
-        ( match read_line ic, read_line ic with
-          |_ -> write_line oc "Section theory." ; nextline() )
+          begin match read_line ic, read_line ic with
+            |_ -> output_string oc "Class HOL_Light_theory := {" ; nextline()
+          end
         | Some ("Proof."::_) -> nextline()
         | Some ("Definition"::name::l) -> 
           ( match read_line ic with
           | Some ("Lemma"::l') ->
-            create_Class oc name l [l'] ; nextline()
+            create_object oc name l [l'] ; nextline()
           | _ -> raise Exit )
         | Some ("Axiom"::proj::l) ->
           let name,l_type = get_type l in
           ( match read_line ic with
           | Some ("Axiom"::l') ->
-            create_Class oc name l_type ((proj::l)::l'::(get_axioms proj)) ;
+            create_object oc name l_type ((proj::l)::l'::(get_axioms proj)) ;
             nextline()
           | _ -> raise Exit )
-        | None -> In_channel.close ic ; translate_opam_file (read_file "opam") oc
+        | None -> In_channel.close ic ;
+          output_string oc "\n}.\nSection theory.\nContext {HOL_Light_context : HOL_Light_theory}.\nExisting Instance HOL_Light_context.\n" ;
+          translate_opam_file (read_file "opam") oc
         | Some l -> print_endline (remake l) ; raise Exit
       in translate_terms_file (read_file "terms") oc
 
