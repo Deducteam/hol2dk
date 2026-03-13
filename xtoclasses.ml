@@ -1,5 +1,6 @@
 let theoryfile = ref ""
 let outputpath = "output/"
+let libname = ref "" 
 let originalfilename = ref ""
 let file name = outputpath ^ !originalfilename ^ "_" ^ name ^ ".v"
 let read_file name = In_channel.open_text (file name)
@@ -111,7 +112,10 @@ let translate_theory_to oc =
             nextline()
           | _ -> raise Exit )
         | None -> In_channel.close ic ;
-          output_string oc "\n}.\nSection theory.\nContext {HOL_Light_context : HOL_Light_theory}.\nExisting Instance HOL_Light_context.\n" ;
+          output_string oc "\n}." ;
+          Out_channel.close oc ;
+          let oc = Out_channel.open_text (!theoryfile) in
+          output_string oc ("Require Import " ^ !libname ^ ".context.\nSection theory.\nContext {HOL_Light_context : HOL_Light_theory}.\nExisting Instance HOL_Light_context.\n") ;
           translate_opam_file (read_file "opam") oc
         | Some l -> print_endline (remake l) ; raise Exit
       in translate_terms_file (read_file "terms") oc

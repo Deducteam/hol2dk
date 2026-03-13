@@ -104,10 +104,13 @@ make opam
 echo translate to classes ...
 filenoml=`basename $hollight_file .ml`
 cd ..
-hol2dk to-classes $output_file $filenoml
+hol2dk to-classes $output_file $filenoml $libname
 
 echo compile HOL_Light.v ...
 rocq compile -q -no-glob -w none -R . $libname HOL_Light.v
+
+echo compile context.v ...
+rocq compile -q -no-glob -w none -R . $libname context.v
 
 echo compile theory file ...
 rocq compile -q -no-glob -w none -R . $libname $output_file

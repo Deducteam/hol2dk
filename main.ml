@@ -1244,9 +1244,10 @@ and command = function
 
   | "translate-to-classes"::args -> call_script "translate_to_classes" args
 
-  | ["to-classes";f;n] ->
+  | ["to-classes";f;n;b] ->
     Xtoclasses.theoryfile := f;
     Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
     Xtoclasses.get_theory_file()
   
   | "to-classes"::_ -> wrong_nb_args()
