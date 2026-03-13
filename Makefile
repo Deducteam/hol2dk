@@ -261,9 +261,8 @@ endif
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-	@sed -i -e "s/Require Import .*_theory_hol./Require Import \1_context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_Theory}.\nExisting Instance HOL_Light_Context./"
-		-e "s/Require Import .*_(axioms\|terms\|types).\n//" $@
-	@echo end HOL_Light. >> $@
+	@sed -i -z -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*axioms\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_Theory}.\nExisting Instance HOL_Light_Context./" -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*types\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_Theory}.\nExisting Instance HOL_Light_Context./" $@
+	@echo End HOL_Light. >> $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
