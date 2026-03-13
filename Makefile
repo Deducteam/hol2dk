@@ -4,7 +4,7 @@ BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
-VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
+VOFILES := "HOL_Light.vo context.vo"
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
@@ -256,7 +256,12 @@ check-mappings: get-check-mappings $(VOFILES)
 v: $(LP_FILES:%.lp=%.v)
 ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
+else
+	rm -f $(BASE)_axioms.v $(BASE)_opam.v $(BASE)_terms.v $(BASE)_types.v theory_hol.v
 endif
+
+context.v:
+	cp ../context.v .
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
@@ -300,14 +305,17 @@ endif
 .PHONY: dep
 ifeq ($(INCLUDE_LPO_MK),1)
 dep vo.mk &: lpo.mk
-	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > vo.mk
+	@echo create vo.mk ...
+	@sed -e "s/.lp/.v/g" -e "s/^theory_hol.vo://" -e "s/^$(BASE)_\(terms\|types\|axioms\).vo:.*$//" -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_\(terms\|types\|axioms\).vo//" lpo.mk > vo.mk
+	@echo context.vo: HOL_Light.vo >> vo.mk
+	@echo HOL_Light.vo: >> vo.mk
 else
 dep vo.mk &:
 	$(MAKE) INCLUDE_LPO_MK=1 dep
 endif
 
 .PHONY: vo
-vo: $(V_FILES:%.v=%.vo)
+vo: $(V_FILES:%.v=%.vo) context.vo
 ifeq ($(PROGRESS),1)
 	-rm -f .finished
 	$(HOL2DK_DIR)/progress &
