@@ -285,7 +285,7 @@ $(BASE)_types.v: $(BASE)_types.lp
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-	@sed -i -z -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*\(axioms\|terms\|types\)\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context./" $@
+	@sed -i -z -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*\(axioms\|terms\|types\)\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context./" -e "s/@//g" -e "s/\( \|(\)\(ex\|ex1\|ε\|COND\|REP_prod\|ABS_prod\|pair\|mk_pair\|fst\|snd\|ONTO\|ONE_ONE\|eq\)\( \|)\)/\1@\2\3/g" -e "s/ {\(\(\w \)*\): Type'} / (\1: Type') /g" $@
 	@echo End HOL_Light. >> $@
 
 .PHONY: clean-v
