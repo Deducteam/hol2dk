@@ -115,9 +115,10 @@ let translate_theory_to oc =
           output_string oc "\n}." ;
           Out_channel.close oc ;
           let oc = Out_channel.open_text (!theoryfile) in
-          output_string oc ("Require Import " ^ !libname ^ ".context.\nSection theory.\nContext {HOL_Light_context : HOL_Light_theory}.\nExisting Instance HOL_Light_context.\n") ;
+          output_string oc ("Require Import mathcomp.classical.classical_sets " ^ !libname ^ ".HOL_Light " ^ !libname ^
+            ".context.\nSection theory.\nContext {HOL_Light_context : HOL_Light_theory}.\nExisting Instance HOL_Light_context.\n") ;
           translate_opam_file (read_file "opam") oc
         | Some l -> print_endline (remake l) ; raise Exit
       in translate_terms_file (read_file "terms") oc
 
-let get_theory_file() = translate_theory_to (Out_channel.open_text (!theoryfile))
+let get_theory_file() = translate_theory_to (Out_channel.open_text "context.v")

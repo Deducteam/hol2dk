@@ -253,7 +253,7 @@ check-mappings: get-check-mappings $(VOFILES)
 	@-rm -f $(BASE)_checkmappings.vos
 
 .PHONY: v
-v: $(LP_FILES:%.lp=%.v)
+v: $(LP_FILES:%.lp=%.v) context.v HOL_Light.v
 ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 else
@@ -263,10 +263,29 @@ endif
 context.v:
 	cp ../context.v .
 
+HOL_Light.v:
+	cp ../HOL_Light.v .
+
+$(BASE)_terms.v: $(BASE)_terms.lp
+	@echo lambdapi export -o stt_coq $<
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+
+$(BASE)_opam.v: $(BASE)_opam.lp
+	@echo lambdapi export -o stt_coq $<
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+
+$(BASE)_axioms.v: $(BASE)_axioms.lp
+	@echo lambdapi export -o stt_coq $<
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+
+$(BASE)_types.v: $(BASE)_types.lp
+	@echo lambdapi export -o stt_coq $<
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-	@sed -i -z -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*axioms\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_Theory}.\nExisting Instance HOL_Light_Context./" -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*types\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_Theory}.\nExisting Instance HOL_Light_Context./" $@
+	@sed -i -z -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*\(axioms\|terms\|types\)\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context./" $@
 	@echo End HOL_Light. >> $@
 
 .PHONY: clean-v
@@ -306,7 +325,7 @@ endif
 ifeq ($(INCLUDE_LPO_MK),1)
 dep vo.mk &: lpo.mk
 	@echo create vo.mk ...
-	@sed -e "s/.lp/.v/g" -e "s/^theory_hol.vo://" -e "s/^$(BASE)_\(terms\|types\|axioms\).vo:.*$//" -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_\(terms\|types\|axioms\).vo//" lpo.mk > vo.mk
+	@sed -e "s/.lp/.v/g" -e "s/^theory_hol.vo://" -e "s/^$(BASE)_\(terms\|types\|axioms\).vo:.*//" -e "s/ theory_hol.vo/ HOL_Light.vo context.vo/" -e "s/ $(BASE)_\(terms\|types\|axioms\).vo//g" lpo.mk > vo.mk
 	@echo context.vo: HOL_Light.vo >> vo.mk
 	@echo HOL_Light.vo: >> vo.mk
 else
@@ -315,7 +334,7 @@ dep vo.mk &:
 endif
 
 .PHONY: vo
-vo: $(V_FILES:%.v=%.vo) context.vo
+vo: $(V_FILES:%.v=%.vo)
 ifeq ($(PROGRESS),1)
 	-rm -f .finished
 	$(HOL2DK_DIR)/progress &
