@@ -282,11 +282,16 @@ $(BASE)_types.v: $(BASE)_types.lp
 	@echo lambdapi export -o stt_coq $<
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
 
+%_spec.v: %_spec.lp
+	@echo lambdapi export -o stt_coq $<
+	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+	@if test -n "$(findstring _part_,$*)"; then sed -i -z -e "s/\n\([^R]\)/\nRequire Import $(ROOT_PATH).context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context.\n\1/" -e "s/Require Import \w*\.\w*\(theory_hol\|axioms\|terms\|types\)\.\n//g" -e "s/@\(point\|eq\|imp_def\|all\|all_def\|ex\|ex_def\|ex1\|ex1_def\|conj\|proj1\|proj2\|or_intro1\|or_intror\|or_elim\|ex_intro\|ex_elim\|REFL\|EQ_MP\|MK_COMB\|ssrfun.etrans\|ssrfun.esym\|ε\|axiom_0\|axiom_1\|funext\|prop_ext\|COND\|COND_def\|mk_pair\|mk_pair_def\|ABS_prod\|REP_prod\|axiom_4\|axiom_5\|pair\|pair_def\|fst\|FST_def\|snd\|SND_def\|ONE_ONE\|ONE_ONE_def\|ONTO\|ONTO_def\)\( \|)\)/@ \1\2/g" -e "s/@\(\w\)/\1/g" -e "s/@ /@/g" -e "s/ {\(\(\(\w\|'\)\+ \)*\): Type'}/ (\1: Type')/g" $@; sed -e "s/^Section HOL_Light\.$$/!/" -e "/[^!]/d" -e "s/!/End HOL_Light./" $@ >> $@; fi
+
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
 	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-	@sed -i -z -e "s/Require Import \(\w*\)\.theory_hol.* Import \w*\.\w*\(axioms\|terms\|types\)\./Require Import \1.context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context./" -e "s/@//g" -e "s/\( \|(\)\(ex\|ex1\|ε\|COND\|REP_prod\|ABS_prod\|pair\|mk_pair\|fst\|snd\|ONTO\|ONE_ONE\|eq\)\( \|)\)/\1@\2\3/g" -e "s/ {\(\(\w \)*\): Type'} / (\1: Type') /g" $@
-	@echo End HOL_Light. >> $@
+	@sed -i -z -e "s/\n\([^R]\)/\nRequire Import $(ROOT_PATH).context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context.\n\1/" -e "s/Require Import \w*\.\w*\(theory_hol\|axioms\|terms\|types\)\.\n//g" -e "s/@\(point\|eq\|imp_def\|all\|all_def\|ex\|ex_def\|ex1\|ex1_def\|conj\|proj1\|proj2\|or_intro1\|or_intror\|or_elim\|ex_intro\|ex_elim\|REFL\|EQ_MP\|MK_COMB\|ssrfun.etrans\|ssrfun.esym\|ε\|axiom_0\|axiom_1\|funext\|prop_ext\|COND\|COND_def\|mk_pair\|mk_pair_def\|ABS_prod\|REP_prod\|axiom_4\|axiom_5\|pair\|pair_def\|fst\|FST_def\|snd\|SND_def\|ONE_ONE\|ONE_ONE_def\|ONTO\|ONTO_def\)\( \|)\)/@ \1\2/g" -e "s/@\(\w\)/\1/g" -e "s/@ /@/g" -e "s/ {\(\(\(\w\|'\)\+ \)*\): Type'}/ (\1: Type')/g" $@
+	@sed -e "s/^Section HOL_Light\.$$/!/" -e "/[^!]/d" -e "s/!/End HOL_Light./" $@ >> $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo

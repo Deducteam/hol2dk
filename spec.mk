@@ -39,7 +39,7 @@ update-vfiles: $(FILES:%=%.update)
 update-vo-mk: vo.mk
 	@echo update vo.mk ...
 	@sed -e 's/\([^ ]*_part_[^ ]*_spec\).vo/\1_.vo/g' -e "s/ [^ ]*_spec.vo/ $(BASE)_spec.vo/g" -e 's/_spec_.vo/_spec.vo/g' -e ':a; s/\([^ \.]\+\.vo\) \1/\1/g;ta' vo.mk > new-vo.mk
-	@echo "$(BASE)_spec.vo: theory_hol.vo $(BASE)_types.vo $(BASE)_terms.vo" >> new-vo.mk
+	@echo "$(BASE)_spec.vo: context.vo" >> new-vo.mk
 	@touch -r vo.mk new-vo.mk
 	@cp -p new-vo.mk vo.mk
 	@rm -f new-vo.mk
@@ -53,10 +53,12 @@ gen-base-spec: $(BASE)_spec.v
 $(BASE)_spec.v:
 	@echo generate $@ ...
 	@echo Require Import $(REQUIRING). > $@
-	@echo Require Import $(ROOT_PATH).theory_hol. >> $@
-	@echo Require Import $(ROOT_PATH).$(BASE)_types. >> $@
-	@echo Require Import $(ROOT_PATH).$(BASE)_terms. >> $@
-	@find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^Require /d' -e 's/^Lemma /Axiom /' -e '/^Proof\./d' >> $@
+	@echo Require Import $(ROOT_PATH).context. >> $@
+	@echo Section HOL_Light. >> $@
+	@echo Context {HOL_Light_Context : HOL_Light_theory}. >> $@
+	@echo Existing Instance HOL_Light_Context. >> $@
+	@find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^Require /d' -e 's/^Lemma /Axiom /' -e '/^Proof\./d' -e "s/@\(point\|eq\|imp_def\|all\|all_def\|ex\|ex_def\|ex1\|ex1_def\|conj\|proj1\|proj2\|or_intro1\|or_intror\|or_elim\|ex_intro\|ex_elim\|REFL\|EQ_MP\|MK_COMB\|ssrfun.etrans\|ssrfun.esym\|ε\|axiom_0\|axiom_1\|funext\|prop_ext\|COND\|COND_def\|mk_pair\|mk_pair_def\|ABS_prod\|REP_prod\|axiom_4\|axiom_5\|pair\|pair_def\|fst\|FST_def\|snd\|SND_def\|ONE_ONE\|ONE_ONE_def\|ONTO\|ONTO_def\)\( \|)\)/@ \1\2/g" -e "s/@\(\w\)/\1/g" -e "s/@ /@/g" -e "s/ {\(\(\(\w\|'\)\+ \)*\): Type'}/ (\1: Type')/g" >> $@
+	@sed -e "s/^Section HOL_Light\.$$/!/" -e "/[^!]/d" -e "s/!/End HOL_Light./" $@ >> $@
 
 .PHONY: rm-spec-files
 rm-spec-files:
