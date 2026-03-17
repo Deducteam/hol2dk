@@ -1,43 +1,23 @@
-Require Import mathcomp.classical.classical_sets.
-Import ssreflect ssrnat ssrfun eqtype choice ssrbool boolp HB.structures.
+From HB Require Import structures.
+From mathcomp Require Export ssreflect ssrfun ssrbool eqtype choice.
+
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(****************************************************************************)
-(* Type of non-empty types, used to interpret HOL-Light types types. *)
-(****************************************************************************)
+(* Copy paste what is needed from mathcomp.boolp *)
 
-(* Exact same as isPointed, but we will derive choice and decidable
-   equality for it, which could be bad for types that have
-   their own choice/eq defined in ssreflect (like nat) if it were derived
-   from isPointed directly, because it has an instance of isPointed,
-   which would make it so it has two defined equalities.
 
-   This should only be used for types without a predefined decidable equality *)
+Axiom functional_extensionality_dep :
+       forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+       (forall x : A, f x = g x) -> f = g.
+Axiom propositional_extensionality :
+       forall P Q : Prop, P <-> Q -> P = Q.
 
-HB.factory Record HOL_isPointed T := {point : T}.
-
-Notation is_Type' := (HOL_isPointed.Build _).
-
-(* in classical context, is a factory for pointedType *)
-HB.builders Context T of HOL_isPointed T.
-
-HB.instance Definition _ := isPointed.Build _ point.
-
-HB.instance Definition _ := gen_eqMixin T.
-
-HB.instance Definition _ := gen_choiceMixin T.
-
-HB.end.
-
-Notation Type' := pointedType.
-
-(* Type' is the type of Types of HOL-Light (HOL-Light considers pointed types) *)
-(* To define an instance of Type' for a non-empty type [T], use :
-   [HB.instance Definition _ := is_Type' a] for some [a : T] *)
-
-(* The most important types and type constructors already have an instance as Type' *)
+Axiom constructive_indefinite_description :
+  forall (A : Type) (P : A -> Prop),
+  (exists x : A, P x) -> {x : A | P x}.
+Notation cid := constructive_indefinite_description.
 
 (****************************************************************************)
 (* Extensionalities *)
@@ -49,7 +29,7 @@ Notation Type' := pointedType.
 (* Axiom propext : forall P Q, P <-> Q -> P = Q *)
 Lemma prop_ext : forall P Q : Prop, (P -> Q) -> (Q -> P) -> P = Q.
 Proof.
-  by move=> *; eqProp.
+  by move=> * ; apply propositional_extensionality. 
 Qed.
 
 (* Axiom functional_extensionality_dep :
@@ -59,20 +39,20 @@ Notation funext := functional_extensionality_dep.
 (* applies them to all arguments and propositions at once *)
 Tactic Notation "ext" :=
   let rec ext' := (let H := fresh in
-    first [apply funext | eqProp]=> H ; try ext' ; move:H)
+    first [apply funext | apply prop_ext]=> H ; try ext' ; move:H)
   in ext'.
 
 (* with a counter added to the context to apply it for exactly n arguments/propositions *)
 Variant internal_witness : forall A, A -> Type :=
   w0 A : forall a : A, internal_witness a.
 
-Definition addone : forall n, internal_witness n -> internal_witness n.+1 :=
-  fun n _ => w0 n.+1.
+Definition addone : forall n, internal_witness n -> internal_witness (S n) :=
+  fun n _ => w0 (S n).
 
 Ltac typecheck A a := assert_succeeds let s:=fresh in set (s := a : A).
 
 Tactic Notation "ext" integer(n) :=
-  let ext0 x w := (first [apply funext | eqProp]=>x ; set (w := w0 x))
+  let ext0 x w := (first [apply funext | apply prop_ext]=>x ; set (w := w0 x))
    (* choosing the fresh variables inside ext0 fails to create new variable names. *)
   in do n (let x := fresh in let w := fresh in ext0 x w) ;
   repeat match goal with | x : _ |- _  =>
@@ -93,6 +73,122 @@ Qed. *)
    Print test.
 
    This means that ext should be prefered to ext n if possible. *)
+(**** BACK TO MATHCOMP ****)
+
+Lemma predeqE {T} (P Q : T -> Prop) : (P = Q) = (forall x, P x <-> Q x).
+Proof.
+  ext => [->||] ; firstorder.
+Qed.
+
+Lemma propT {P : Prop} : P -> P = True.
+Proof. by move=> ? ; ext. Qed.
+
+Lemma propF (P : Prop) : ~ P -> P = False.
+Proof. by move=> p; ext. Qed.
+
+Lemma proof_irrelevance (P : Prop) (x y : P) : x = y.
+Proof. by move: x (x) y => /propT-> [] []. Qed.
+
+(* Diaconescu Theorem *)
+Theorem EM P : P \/ ~ P.
+Proof.
+pose U val := fun Q : bool => Q = val \/ P.
+have Uex val : exists b, U val b by exists val; left.
+pose f val := projT1 (cid (Uex val)).
+pose Uf val : U val (f val) := projT2 (cid (Uex val)).
+have : f true != f false \/ P.
+  have [] := (Uf true, Uf false); rewrite /U.
+  by move=> [->|?] [->|?] ; do ?[by right]; left.
+move=> [/eqP fTFN|]; [right=> p|by left]; apply: fTFN.
+have UTF : U true = U false by rewrite predeqE /U => b; split=> _; right.
+rewrite /f; move: (Uex true) (Uex false); rewrite UTF => p1 p2.
+congr (projT1 (cid _)) ; exact:proof_irrelevance.
+Qed.
+
+Lemma pselect (P : Prop): {P} + {~P}.
+Proof.
+have : exists b, if b then P else ~ P.
+  by case: (EM P); [exists true|exists false].
+by move=> /cid [[]]; [left|right].
+Qed.
+
+Lemma gen_choiceMixin (T : Type) : hasChoice T.
+Proof.
+  exists (fun (P : pred T) (n : nat) =>
+  if pselect (exists x, P x) isn't left ex then None
+  else Some (projT1 (cid ex)))
+  => [P n x|P [x Px]|].
+  by case: pselect => // ex [<- ]; case: cid.
+  by exists 0; case: pselect => // -[]; exists x.
+  by move=> P Q H ; move:(funext H) => -> //.
+Qed.
+
+Definition asbool (P : Prop) := if pselect P then true else false.
+
+Notation "`[< P >]" := (asbool P) : bool_scope.
+
+Lemma asboolE (P : Prop) : `[<P>] = P :> Prop.
+Proof. by ext ; rewrite/asbool ; case: pselect. Qed.
+
+Lemma asboolP (P : Prop) : reflect P `[<P>].
+Proof. by apply: (equivP idP) ; rewrite asboolE. Qed.
+
+Definition gen_eq (T : Type) (u v : T) := `[<u = v>].
+
+Lemma gen_eqP (T : Type) : Equality.axiom (@gen_eq T).
+Proof.
+  move=> x y ; rewrite/gen_eq/asbool.
+  by case:(pselect (x = y)) ; constructor.
+Qed.
+Definition gen_eqMixin (T : Type) : hasDecEq T :=
+  hasDecEq.Build T (@gen_eqP T).
+
+Module Export def_Type'.
+HB.mixin Record isPointed T := { point : T }.
+
+#[short(type=Type')]
+HB.structure Definition Pointed := {T of isPointed T & Choice T}.
+End def_Type'.
+
+(****************************************************************************)
+(* Type of non-empty types, used to interpret HOL-Light types types. *)
+(****************************************************************************)
+
+(* Exact same as isPointed, but we will derive choice and decidable
+   equality for it, which could be bad for types that have
+   their own choice/eq defined in ssreflect (like nat) if it were derived
+   from isPointed directly, because it has an instance of isPointed,
+   which would make it so it has two defined equalities.
+
+   This should only be used for types without a predefined decidable equality *)
+
+HB.factory Record HOL_isPointed T := {point : T}.
+
+Notation is_Type' := (HOL_isPointed.Build _).
+
+(* in classical context, is a factory for pointedType *)
+HB.builders Context T of HOL_isPointed T.
+
+HB.instance Definition _ := gen_eqMixin T.
+
+HB.instance Definition _ := gen_choiceMixin T.
+
+HB.instance Definition _ := isPointed.Build _ point.
+
+HB.end.
+
+HB.instance Definition _ := isPointed.Build _ tt.
+HB.instance Definition _ := isPointed.Build _ true.
+HB.instance Definition _ := isPointed.Build _ 0.
+HB.instance Definition _ := is_Type' True.
+HB.instance Definition _ (A B : Type') :=
+  isPointed.Build (A*B)%type (point,point).
+HB.instance Definition _ T (T' : T -> Type') :=
+  HOL_isPointed.Build (forall t, T' t) (fun=> point).
+
+(* Type' is the type of Types of HOL-Light (HOL-Light considers pointed types) *)
+(* To define an instance of Type' for a non-empty type [T], use :
+   [HB.instance Definition _ := is_Type' a] for some [a : T] *)
 
 (****************************************************************************)
 (* Repeating exists. *)
@@ -115,15 +211,6 @@ Tactic Notation "exist" uconstr(x1) uconstr(x2) uconstr(x3) uconstr(x4) uconstr(
 (****************************************************************************)
 
 Coercion asbool : Sortclass >-> bool.
-
-Ltac booleqsimp := rewrite ?eqb_id ?eqbF_neg.
-
-Lemma bool_eq_decompP : forall a b : bool, is_true (a==b) = (is_true a = is_true b).
-Proof.
-  by move=> [] [] ; ext ; booleqsimp ; rewrite //= ; first (move <-) ; last (move ->).
-Qed.
-
-Ltac AllProp := rewrite -?eq_opE ?bool_eq_decompP ?asboolE.
 
 (* Check and : bool -> bool -> bool. *)
 
@@ -186,9 +273,30 @@ Proof. exact (@ex_ind a p r h2 h1). Qed.
 (* Hilbert's ε operator. *)
 (****************************************************************************)
 
-Definition ε (A : Type') (P : A -> Prop) := get P.
+Definition xget {T : choiceType} x0 (P : T -> Prop) : T :=
+  if pselect (exists x : T, `[<P x>]) isn't left exP then x0
+  else projT1 (sigW exP).
 
-Definition ε_spec {A : Type'} {P : A -> Prop} : (exists x, P x) -> P (ε P) := @getPex _ P.
+Definition ε (A : Type') (P : A -> Prop) := xget point P.
+
+CoInductive xget_spec {T : choiceType} x0 (P : T -> Prop) : T -> Prop -> Type :=
+| XGetSome x of x = xget x0 P & P x : xget_spec x0 P x True
+| XGetNone of (forall x, ~ P x) : xget_spec x0 P x0 False.
+
+Lemma xgetP {T : choiceType} x0 (P : T -> Prop) :
+  xget_spec x0 P (xget x0 P) (P (xget x0 P)).
+Proof.
+move: (erefl (xget x0 P)); set y := {2}(xget x0 P).
+rewrite /xget; case: pselect => /= [?|neqP _].
+  by case: sigW => x /= /asboolP Px; rewrite [P x]propT //; constructor.
+suff NP x : ~ P x by rewrite [P x0]propF //; constructor.
+by apply: contra_not neqP => Px; exists x; apply/asboolP.
+Qed.
+
+Lemma xgetPex {T : choiceType} x0 (P : T -> Prop) : (exists x, P x) -> P (xget x0 P).
+Proof. by case: xgetP=> // NP [x /NP]. Qed.
+
+Definition ε_spec {A : Type'} {P : A -> Prop} : (exists x, P x) -> P (ε P) := @xgetPex _ _ P.
 
 Lemma align_ε (A : Type') (P : A -> Prop) a : P a -> (forall x, P a -> P x -> a = x) -> a = ε P.
 Proof. 
@@ -279,7 +387,7 @@ Qed.
 
 Lemma F_def : False = (forall p : Prop, p).
 Proof.
-  by eqProp=>H ; first destruct H ; apply H.
+  by ext=>H ; first destruct H ; apply H.
 Qed.
 
 Lemma not_def : not = (fun p : Prop => p -> False).
@@ -469,14 +577,10 @@ Definition ONE_ONE A B := @injective B A.
 Lemma ONE_ONE_def {A B : Type'} : (@ONE_ONE A B) = (fun _2064 : A -> B => forall x1 : A, forall x2 : A, ((_2064 x1) = (_2064 x2)) -> x1 = x2).
 Proof. exact erefl. Qed.
 
-Require Import mathcomp.classical.functions. 
-Definition ONTO {A B : Type'} (f : A -> B) := set_surj setT setT f.
+Definition ONTO {A B : Type'} (f : A -> B) := forall y, exists x, y = f x.
 
 Lemma ONTO_def {A B : Type'} : (@ONTO A B) = (fun _2069 : A -> B => forall y : B, exists x : A, y = (_2069 x)).
-Proof.
-  ext=>f H x ; last by case:(H x)=>x0 eq_fx0_x _ ; exists x0.
-  by case: (H x Logic.I)=>x0 _ eq_fx0_x ; exists x0.
-Qed.
+Proof. by []. Qed.
 
 Lemma axiom_6 : exists f : ind -> ind, (@ONE_ONE ind ind f) /\ (~ (@ONTO ind ind f)).
 Proof.
