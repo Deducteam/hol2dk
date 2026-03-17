@@ -95,7 +95,7 @@ mkdir -p output
 
 echo  configure output directory ...
 cd output
-hol2dk config $hollight_file $libname ../HOL_Light.lp ../HOL_Light.v mathcomp.classical.classical_sets
+hol2dk config $hollight_file $libname ../HOL_Light.lp ../HOL_Light.v
 
 echo translate theorems ...
 make clean-v

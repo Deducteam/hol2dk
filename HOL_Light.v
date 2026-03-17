@@ -1,5 +1,5 @@
 From HB Require Import structures.
-From mathcomp Require Export ssreflect ssrfun ssrbool eqtype choice.
+From mathcomp Require Import ssreflect ssrfun ssrbool eqtype choice.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
