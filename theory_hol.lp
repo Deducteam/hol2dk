@@ -9,7 +9,6 @@ injective symbol Prf : El bool → TYPE;
 /* HOL-Light primitive constants, axioms and rules */
 constant symbol = [A] : El (fun A (fun A bool));
 symbol el [A] : El A;
-symbol ε [A] : El (fun (fun A bool) A);
 symbol fun_ext [a b] [f g : El (fun a b)] :
   (Π x, Prf (= (f x) (g x))) → Prf (= f g);
 symbol prop_ext [p q : El bool] : (Prf p → Prf q) → (Prf q → Prf p) → Prf (= p q);
