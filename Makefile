@@ -1,10 +1,11 @@
 .SUFFIXES:
 
 BASE := $(shell if test -f BASE; then cat BASE; fi)
+KIND := $(shell if test -f KIND; then cat KIND; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
-VOFILES := "HOL_Light.vo context.vo"
+VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
@@ -59,7 +60,7 @@ $(BASE)_opam.lp:
 	$(HOL2DK) axm $(BASE).lp
 
 .PHONY: opam
-opam: $(BASE_FILES:%=%.v) $(BASE)_opam.v
+theory: context.v theory.v
 
 .PHONY: clean-opam
 clean-opam:
@@ -236,62 +237,23 @@ clean-lpo: rm-lpo
 rm-lpo:
 	-find . -maxdepth 1 -name '*.lpo' -delete
 
-.PHONY: get-check-mappings
-get-check-mappings:
-	@echo generate mappings-checking file ...
-	@hol2dk check-mappings $(BASE) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $(REQUIRING)
-
-ROCQ_OPTIONS = -q -no-glob -w none
-.PHONY: check-get-mappings
-check-mappings: get-check-mappings $(VOFILES)
-	@echo start checking ...
-	@rocq compile $(ROCQ_OPTIONS) -R . $(ROOT_PATH) $(BASE)_checkmappings.v
-	@echo clean files ...
-	@-rm -f $(BASE)_checkmappings.v
-	@-rm -f $(BASE)_checkmappings.vo
-	@-rm -f $(BASE)_checkmappings.vok
-	@-rm -f $(BASE)_checkmappings.vos
-
 .PHONY: v
-v: $(LP_FILES:%.lp=%.v) context.v HOL_Light.v
+v: $(filter-out theory_hol.v $(BASE)_types.v $(BASE)_axioms.v $(BASE)_terms.v,$(LP_FILES:%.lp=%.v))
 ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
-else
-	rm -f $(BASE)_axioms.v $(BASE)_opam.v $(BASE)_terms.v $(BASE)_types.v theory_hol.v
 endif
 
-context.v:
-	cp ../context.v .
+context.v: theory_hol.lp $(BASE)_terms.lp $(BASE)_types.lp $(BASE)_axioms.lp
+	@echo hol2dk obtain-context-with $(KIND)
+	@hol2dk obtain-context-with $(KIND) $(BASE) $(ROOT_PATH) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) > context.v
 
-HOL_Light.v:
-	cp ../HOL_Light.v .
-
-$(BASE)_terms.v: $(BASE)_terms.lp
-	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-
-$(BASE)_opam.v: $(BASE)_opam.lp
-	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-
-$(BASE)_axioms.v: $(BASE)_axioms.lp
-	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-
-$(BASE)_types.v: $(BASE)_types.lp
-	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-
-%_spec.v: %_spec.lp
-	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-	@if test -n "$(findstring _part_,$*)"; then sed -i -z -e "s/\n\([^R]\)/\nRequire Import $(ROOT_PATH).context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context.\n\1/" -e "s/Require Import \w*\.\w*\(theory_hol\|axioms\|terms\|types\)\.\n//g" -e "s/@\(point\|eq\|imp_def\|all\|all_def\|ex\|ex_def\|ex1\|ex1_def\|conj\|proj1\|proj2\|or_intro1\|or_intror\|or_elim\|ex_intro\|ex_elim\|REFL\|EQ_MP\|MK_COMB\|ssrfun.etrans\|ssrfun.esym\|ε\|axiom_0\|axiom_1\|funext\|prop_ext\|COND\|COND_def\|mk_pair\|mk_pair_def\|ABS_prod\|REP_prod\|axiom_4\|axiom_5\|pair\|pair_def\|fst\|FST_def\|snd\|SND_def\|ONE_ONE\|ONE_ONE_def\|ONTO\|ONTO_def\)\( \|)\)/@ \1\2/g" -e "s/@\(\w\)/\1/g" -e "s/@ /@/g" -e "s/ {\(\(\(\w\|'\)\+ \)*\): Type'}/ (\1: Type')/g" $@; sed -e "s/^Section HOL_Light\.$$/!/" -e "/[^!]/d" -e "s/!/End HOL_Light./" $@ >> $@; fi
+theory.v: $(BASE)_opam.lp
+	@echo hol2dk export-with $(KIND) $<
+	@hol2dk export-with $(KIND) $(BASE) $(ROOT_PATH) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $< > $@
 
 %.v: %.lp
-	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
-	@sed -i -z -e "s/\n\([^R]\)/\nRequire Import $(ROOT_PATH).context.\nSection HOL_Light.\nContext {HOL_Light_Context : HOL_Light_theory}.\nExisting Instance HOL_Light_Context.\n\1/" -e "s/Require Import \w*\.\w*\(theory_hol\|axioms\|terms\|types\)\.\n//g" -e "s/@\(point\|eq\|imp_def\|all\|all_def\|ex\|ex_def\|ex1\|ex1_def\|conj\|proj1\|proj2\|or_intro1\|or_intror\|or_elim\|ex_intro\|ex_elim\|REFL\|EQ_MP\|MK_COMB\|ssrfun.etrans\|ssrfun.esym\|ε\|axiom_0\|axiom_1\|funext\|prop_ext\|COND\|COND_def\|mk_pair\|mk_pair_def\|ABS_prod\|REP_prod\|axiom_4\|axiom_5\|pair\|pair_def\|fst\|FST_def\|snd\|SND_def\|ONE_ONE\|ONE_ONE_def\|ONTO\|ONTO_def\)\( \|)\)/@ \1\2/g" -e "s/@\(\w\)/\1/g" -e "s/@ /@/g" -e "s/ {\(\(\(\w\|'\)\+ \)*\): Type'}/ (\1: Type')/g" $@
-	@sed -e "s/^Section HOL_Light\.$$/!/" -e "/[^!]/d" -e "s/!/End HOL_Light./" $@ >> $@
+	@echo hol2dk export-with $(KIND) $<
+	@hol2dk export-with $(KIND) $(BASE) $(ROOT_PATH) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
@@ -300,18 +262,6 @@ clean-v: rm-v clean-vo
 .PHONY: rm-v
 rm-v:
 	-find . -maxdepth 1 -name '*.v' $(VOFILES:%.vo=-a ! -name %.v) -delete
-
-.PHONY: rm-empty-deps
-rm-empty-deps: $(V_FILES:%=%.rm)
-ifneq ($(SET_V_FILES),1)
-	$(MAKE) SET_V_FILES=1 $@
-else
-	@echo update vo.mk ...
-	@sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
-	@touch -r vo.mk new-vo.mk
-	@cp -p new-vo.mk vo.mk
-	@-rm -f new-vo.mk
-endif
 
 %.v.rm: %.v
 	@echo update $<
@@ -330,9 +280,9 @@ endif
 ifeq ($(INCLUDE_LPO_MK),1)
 dep vo.mk &: lpo.mk
 	@echo create vo.mk ...
-	@sed -e "s/.lp/.v/g" -e "s/^theory_hol.vo://" -e "s/^$(BASE)_\(terms\|types\|axioms\).vo:.*//" -e "s/ theory_hol.vo/ HOL_Light.vo context.vo/" -e "s/ $(BASE)_\(terms\|types\|axioms\).vo//g" lpo.mk > vo.mk
-	@echo context.vo: HOL_Light.vo >> vo.mk
-	@echo HOL_Light.vo: >> vo.mk
+	@sed -e 's/\.lp/.v/g' -e "/^\(theory_hol\|$(BASE)_\(types\|axioms\|terms\)\).vo:/d" -e "s/ theory_hol.vo/ context.vo/" -e "s/ $(BASE)_\(types\|axioms\|terms\).vo//g" lpo.mk > vo.mk
+	@echo context.vo: $(VOFILES) >> vo.mk
+	@echo theory.vo: context.vo >> vo.mk
 else
 dep vo.mk &:
 	$(MAKE) INCLUDE_LPO_MK=1 dep

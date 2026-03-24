@@ -440,7 +440,7 @@ and command = function
   | ["unpatch" as s] -> call_script s []
   | "unpatch"::_ -> wrong_nb_args()
 
-  | "config"::args -> call_script "config" args
+  | "config-with"::args -> call_script "config-with" args
 
   | ["dump";f] -> dump true f (basename_ml f)
   | "dump"::_ -> wrong_nb_args()
@@ -1240,17 +1240,37 @@ and command = function
 
   | "abbrev"::_ -> wrong_nb_args()
 
-  | "check-mappings"::_ -> wrong_nb_args()
+  | "translate-with"::args -> call_script "translate-with" args
 
-  | "translate-to-classes"::args -> call_script "translate_to_classes" args
-
-  | ["to-classes";f;n;b] ->
-    Xtoclasses.theoryfile := f;
+  | ["export-with";kind;n;b;e;r;m;f] ->
+    (if kind = "modules"
+    then Xtoclasses.to_classes := false
+    else if kind <> "classes"
+    then (err "expected \"export-with classes\" or \"export-with modules\"\n"; exit 1));
     Xtoclasses.originalfilename := n;
     Xtoclasses.libname := b;
-    Xtoclasses.get_theory_file()
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.translate f
+    
+  | "export-with"::_ -> wrong_nb_args()
+
+  | ["obtain-context-with";kind;n;b;e;r;m] ->
+    (if kind = "modules"
+    then Xtoclasses.to_classes := false
+    else if kind <> "classes"
+    then (err "expected \"export-with classes\" or \"export-with modules\"\n"; exit 1));
+    Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.get_context()
   
-  | "to-classes"::_ -> wrong_nb_args()
+  | "obtain-context-with"::_ -> wrong_nb_args()
 
   (* Single file generation (used neither in b.mk nor in Makefile). *)
   | f::args ->

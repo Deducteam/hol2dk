@@ -1,5 +1,6 @@
 .SUFFIXES:
 
+KIND := $(shell if test -f KIND; then cat KIND; fi)
 BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
@@ -31,15 +32,15 @@ update-vfiles: $(FILES:%=%.update)
 # https://stackoverflow.com/questions/71744922/how-do-i-remove-duplicate-lines-using-sed-without-sorting
 %.update:
 	@echo update $*
-	@sed -i -e 's/^\(Require .*_part_.*_spec\)\.$$/\1_./g' -e "s/^Require .*_spec\.$$/Require Import $(ROOT_PATH).$(BASE)_spec./" -e 's/^\(Require .*_part_.*_spec\)_\.$$/\1./' $*
-	@sed -i -e '$$!N; /^\(Require .*\)\n\1$$/!P; D' $*
+	@sed -i -e 's/^\(\(Require\|Include\) .*_part_.*_spec\(\.content(HOL_Light_Context)\|\)\)\.$$/\1_./g' -e "s/^Require .*_spec\.$$/Require Import $(ROOT_PATH).$(BASE)_spec./" -e "s/^Include .*_spec\.content(HOL_Light_Context)\.$$/Include $(ROOT_PATH).$(BASE)_spec.content(HOL_Light_Context)./" -e 's/^\(\(Require\|Include\) .*_part_.*_spec\(\|.content(HOL_Light_Context)\)\)_\.$$/\1./' $*
+	@sed -i -e '$$!N; /^\(\(Require\|Include\) .*\)\n\1$$/!P; D' $*
 
 # https://www.linuxquestions.org/questions/programming-9/how-to-check-duplicate-word-in-line-with-sed-935605/
 .PHONY: update-vo-mk
 update-vo-mk: vo.mk
 	@echo update vo.mk ...
 	@sed -e 's/\([^ ]*_part_[^ ]*_spec\).vo/\1_.vo/g' -e "s/ [^ ]*_spec.vo/ $(BASE)_spec.vo/g" -e 's/_spec_.vo/_spec.vo/g' -e ':a; s/\([^ \.]\+\.vo\) \1/\1/g;ta' vo.mk > new-vo.mk
-	@echo "$(BASE)_spec.vo: context.vo" >> new-vo.mk
+	@echo $(BASE)_spec.vo: context.vo >> new-vo.mk
 	@touch -r vo.mk new-vo.mk
 	@cp -p new-vo.mk vo.mk
 	@rm -f new-vo.mk
@@ -52,13 +53,15 @@ gen-base-spec: $(BASE)_spec.v
 
 $(BASE)_spec.v:
 	@echo generate $@ ...
-	@echo Require Import $(REQUIRING). > $@
-	@echo Require Import $(ROOT_PATH).context. >> $@
-	@echo Section HOL_Light. >> $@
-	@echo Context {HOL_Light_Context : HOL_Light_theory}. >> $@
-	@echo Existing Instance HOL_Light_Context. >> $@
-	@find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^Require /d' -e 's/^Lemma /Axiom /' -e '/^Proof\./d' -e "s/@\(point\|eq\|imp_def\|all\|all_def\|ex\|ex_def\|ex1\|ex1_def\|conj\|proj1\|proj2\|or_intro1\|or_intror\|or_elim\|ex_intro\|ex_elim\|REFL\|EQ_MP\|MK_COMB\|ssrfun.etrans\|ssrfun.esym\|ε\|axiom_0\|axiom_1\|funext\|prop_ext\|COND\|COND_def\|mk_pair\|mk_pair_def\|ABS_prod\|REP_prod\|axiom_4\|axiom_5\|pair\|pair_def\|fst\|FST_def\|snd\|SND_def\|ONE_ONE\|ONE_ONE_def\|ONTO\|ONTO_def\)\( \|)\)/@ \1\2/g" -e "s/@\(\w\)/\1/g" -e "s/@ /@/g" -e "s/ {\(\(\(\w\|'\)\+ \)*\): Type'}/ (\1: Type')/g" >> $@
-	@sed -e "s/^Section HOL_Light\.$$/!/" -e "/[^!]/d" -e "s/!/End HOL_Light./" $@ >> $@
+	@echo Require Import $(ROOT_PATH).context. > $@
+ifeq ($(KIND),modules)
+	@echo Module content\(HOL_Light_Context : HOL_Light_Theory\). >> $@
+	@echo Import HOL_Light_Context. >> $@
+endif
+	@find . -maxdepth 1 -name '*_spec.v' -a ! -name $@ -a ! -name '*_part_*_spec.v' | xargs cat | sed -e '/^\(Require\|Proof\|Section\|End\|Module\|Include\|Context\)/d' -e 's/^Lemma \(\w*\) \(\((\|{\).*\()\|}\)\) :/Axiom \1 : forall \2,/' -e 's/^Lemma /Axiom /' >> $@
+ifeq ($(KIND),modules)
+	@echo End content. >> $@
+endif
 
 .PHONY: rm-spec-files
 rm-spec-files:
