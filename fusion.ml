@@ -743,9 +743,9 @@ module Hol : Hol_kernel = struct
 
   let MP (Sequent(asl1,c1,k1)) (Sequent(asl2,c2,k2)) =
     match head_args c1 with
-    | Const("==>",_), [_;c] ->
-      new_theorem (term_union asl1 asl2) c (Pmp(k1,k2))
-    | _ -> failwith "MP"
+    | Const("==>",_), [l;r] when alphaorder l c2 = 0 ->
+      new_theorem (term_union asl1 asl2) r (Pmp(k1,k2))
+    | _ -> failwith "MP: theorems do not agree"
   ;;
 
   let DISCH a (Sequent(asl,c,k)) =
