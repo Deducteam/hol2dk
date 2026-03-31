@@ -865,7 +865,7 @@ let rec holterm oc t =
   match t with
   | Var(n,_) -> string oc ("?" ^ n)
   | Const(c,_) -> string oc c
-  | Comb(t1,t2) -> string oc "Comb (" ; holterm oc t1 ; string oc ") (" ;
+  | Comb(t1,t2) -> char oc '(' ; holterm oc t1 ; string oc ") (" ;
     holterm oc t2 ; char oc ')'
   | Abs(t1,t2) -> string oc "Abs " ; holterm oc t1 ; string oc " |=> " ; holterm oc t2
 
