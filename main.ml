@@ -20,13 +20,13 @@ hol2dk options command arguments
 Options
 -------
 
---root-path MODNAME: set lambdapi and coq's root_path (default is HOLLight)
+--root-path MODNAME: set lambdapi and coq's root_path (default to HOLLight)
 
 --max-dup INT: maximum number of theorem duplications
 
---max-proof-size INT: maximum size of proof files (default is 500_000)
+--max-proof-size INT: maximum size of proof files (default to 500_000)
 
---max-abbrev-size INT: maximum size of term abbreviation files (default is 2_000_000)
+--max-abbrev-size INT: maximum size of term abbreviation files (default to 2_000_000)
 
 --use-sharing: define term abbreviations using let's
 
@@ -95,9 +95,9 @@ hol2dk split $base
 
 hol2dk unsplit $base $module ...
   for each file $module, generate the files $module.sti, $module.pos,
-  $module.use and $module.nbp for all the theorems $thm proved in
-  $HOLLIGHT_DIR/$module.ml, remove all the files $thm.sti,
-  $thm.pos, $thm.use and $thm.nbp, and update $base.thm
+  $module.use, $module.nbp and, for each theorem $thm proved in
+  $HOLLIGHT_DIR/$module.ml, remove the files $thm.sti, $thm.pos, $thm.use and
+  $thm.nbp, and update $base.thp
 
 hol2dk theorem $base $thm.lp
   generate the lp proof of the theorem $thm
@@ -114,6 +114,9 @@ hol2dk abbrev $base ${thm}_term_abbrevs_part_$k.lp
 
 hol2dk type_abbrevs $base
   generate ${file}_type_abbrevs.lp
+
+hol2dk tvs $base
+  generate $base.tvs
 
 Multi-threaded dk/lp file generation by splitting proofs in $n parts
 --------------------------------------------------------------------
@@ -159,8 +162,11 @@ hol2dk proof $base $x [$y]
 hol2dk print use $base $x
   print the contents of $base.use for theorem index $x
 
-hol2dk print $base.thm
-  print the contents of $base.thm (named theorems with their indexes)
+hol2dk print $file.tvs
+  print the contents of $file.tvs (number of type parameters of each symbol)
+
+hol2dk print $file.thm
+  print the contents of $file.thm (named theorems with their indexes)
 
 hol2dk thms $base [$path/]$file.(ml|hl)
   print the list of theorems (named or not) proved in [$path/]$file.(ml|hl)
@@ -226,7 +232,7 @@ let make nb_proofs dg b =
   let dump_file = b^".mk" in
   log_gen dump_file;
   let oc = open_out dump_file in
-  out oc "# file generated with: hol2dk mk %s\n" b;
+  out oc "# file generated with: hol2dk mkfile %s\n" b;
   out oc "\nNB_PARTS := %d\n" nb_parts;
   out oc "\ninclude part.mk\n\n";
   let cmd i x y =
@@ -797,16 +803,15 @@ and command = function
      read_use b;
      log "%d\n" (Array.get !Xproof.last_use k)
 
-  | "print"::"use"::_ -> wrong_nb_args()
-
   | ["print";f] ->
      begin
        match Filename.extension f with
-       | ".thm"  ->
-          let b = Filename.chop_extension f in
-          MapInt.iter (log "%d %s\n") (read_val (b^".thm"))
-       | _ -> err "\"%s\" does not end with \".thm\"\n" f; exit 1
+       | ".thm" -> MapInt.iter (log "%d %s\n") (read_val f)
+       | ".tvs" -> MapStr.iter (log "%s %d\n") (read_val f)
+       | _ -> err "\"%s\" does not end with \".thm\" or \".tvs\"\n" f; exit 1
      end
+
+  | "print"::_ -> wrong_nb_args()
 
   (* Create b.mk. *)
   | ["mkfile";b] ->
@@ -880,7 +885,8 @@ and command = function
        begin
          Xlp.export_types b;
          Xlp.export_terms b;
-         Xlp.export_axioms b
+         Xlp.export_axioms b;
+         write_val (b^"_terms.tvs") !Xlp.tvs_map
        end
 
   | "sig"::_ -> wrong_nb_args()
@@ -1121,8 +1127,8 @@ and command = function
   | "thmsplit"::_ -> wrong_nb_args()
 
   (* Called in Makefile with f=n_part_k when n is in BIG_FILES to
-     create the files f.lp, f_spec.lp, f.typ, f.brv, f.brp and
-     f_term_abbrevs_part_i.min. *)
+     create the files f.lp, f_spec.lp, f.typ, f.brv, f.brp,
+     f_term_abbrevs_part_i.min and f_term_abbrevs_part_i.max. *)
   | ["thmpart";b;f] ->
      begin
        let dk = is_dk f in
@@ -1137,13 +1143,14 @@ and command = function
           read_use n;
           the_start_idx := read_val (n^".sti");
           init_proof_reading b;
-          if dk then (err "dk output not available for this command\n"; exit 1)
-          else Xlp.export_theorem_proof_part b n k
+          if dk then (err "dk output not available for this command\n"; exit 1);
+          Xlp.export_theorem_proof_part b n k;
+          write_val (n^part(k)^".tvs") !Xlp.tvs_map
      end
 
   | "thmpart"::_ -> wrong_nb_args()
 
-  (* Called in Makefile to create n.lp when n is not in BIG_FILES. *)
+  (* Called in Makefile to create n.lp when n is NOT in BIG_FILES. *)
   | ["theorem";b;f] ->
      read_sig b;
      map_thid_pos := read_val (b^".thp");
@@ -1158,7 +1165,8 @@ and command = function
          Xlp.export_theorem_proof b n;
          close_in !Xproof.ic_prf;
          Xlp.export_term_abbrevs_in_one_file b n;
-         Xlp.export_theorem_deps b n
+         Xlp.export_theorem_deps b n;
+         write_val (n^".tvs") !Xlp.tvs_map
        end
 
   | "theorem"::_ -> wrong_nb_args()
@@ -1172,6 +1180,18 @@ and command = function
      MapInt.iter (fun k _ -> log "%s\n" (thm_name map_thid_name k)) map
 
   | "thms"::_ -> wrong_nb_args()
+
+  (* Merge all tvs files in a single one. *)
+  | ["tvs";b] ->
+    let map = ref MapStr.empty and n = b^".tvs" in
+    let read_tvs_file f =
+      if String.ends_with ~suffix:".tvs" f && f <> n then
+        MapStr.iter (fun s x -> map := MapStr.add s x !map) (read_val f);
+    in
+    Array.iter read_tvs_file (Sys.readdir ".");
+    write_val n !map
+
+  | "tvs"::_ -> wrong_nb_args()
 
   (* Merge all maps in typ files into a single map, give a unique
      index to every entry in the obtained map, generate
@@ -1229,13 +1249,11 @@ and command = function
        | None -> err "\"%s\" does not end with \"_term_abbrevs_part_\"\
                       followed by an integer\n" f; exit 1
        | Some(n,k) ->
-         if dk then (err "dk output not available for this command\n"; exit 1)
-         else
-           begin
-             read_sig b;
-             map_thid_pos := read_val (b^".thp");
-             Xlp.export_theorem_term_abbrevs_part b n k
-           end
+         if dk then (err "dk output not available for this command\n"; exit 1);
+         read_sig b;
+         map_thid_pos := read_val (b^".thp");
+         Xlp.export_theorem_term_abbrevs_part b n k;
+         write_val (n^"_term_abbrevs"^part(k)^".tvs") !Xlp.tvs_map
      end
 
   | "abbrev"::_ -> wrong_nb_args()

@@ -374,7 +374,7 @@ thmsize f n.lp: reads f.prf, n.use, n.pos, n.sti, and generates n.siz
 
 thmsplit f n.lp: reads f.sig, f.thp, f.prf, n.use, n.sti, n.siz, n.pos, and generates the files `n_part_k.idx`, n.max and n.lp
 
-thmpart f `n_part_k.lp`: reads f.sig, f.thp, f.prf, n.pos, n.use, n.sti, n.max, `n_part_k.idx`, and generates `n_part_k.lp`, `n_part_k.brv`, `n_part_k.brp`, `n_part_k_term_abbrevs_part_i.min`, `n_part_k_subterms.lp`
+thmpart f `n_part_k.lp`: reads f.sig, f.thp, f.prf, n.pos, n.use, n.sti, n.max, `n_part_k.idx`, and generates `n_part_k.lp`, `n_part_k.brv`, `n_part_k.brp`, `n_part_k_term_abbrevs_part_i.min`, `n_part_k_term_abbrevs_part_i.max`, `n_part_k_subterms.lp`
 
 theorem f n.lp: reads f.sig, f.thp, f.prf, n.pos, n.use, n.sti, and generates the files `n_part_k_proofs.lp`, `n_proofs.lp`, `n.typ`, `n_term_abbrevs.lp`, `n_subterm_abbrevs.lp`, `n_term_abbrevs.typ`, `n_part_k_deps.lp`, `n_part_k.lp`.
 

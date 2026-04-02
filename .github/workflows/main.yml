@@ -23,6 +23,7 @@ jobs:
         hol-light-commit: [37af947]
         lambdapi-version: [master] # >= 3.0.0
         dedukti-version: [2.7]
+        rocq-version: [9.0.0]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -90,6 +91,9 @@ jobs:
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
           make -j3 -f test.mk test3
+      - name: Install rocq
+        run: |
+          opam install -y rocq-prover.${{ matrix.rocq-version }}
       - name: Test multi-threaded lp output with mk
         run: |
           eval `opam env`

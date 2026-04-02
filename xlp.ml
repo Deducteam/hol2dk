@@ -12,7 +12,7 @@ open Xproof
 (****************************************************************************)
 
 (* Rename HOL-Light names to valid (and sometimes nicer) identifiers. *)
-let name =
+let lp_name =
   let prefixes = (* the order is important *)
     [ "|----", "vdash4"
     ; "|---", "vdash3"
@@ -21,9 +21,8 @@ let name =
     ; "|-", "vdash"
     ; "|=>", "bar_imp"]
   in
-  fun oc n ->
-  string oc
-    begin match n with
+  fun n ->
+  match n with
     | "" -> assert false
     | "," -> "̦‚" (* 201A *)
     | "@" -> "ε"
@@ -57,10 +56,9 @@ let name =
     (* for Coq *)
     | "%" -> n
     | _ -> Xlib.change_prefixes prefixes (Xlib.replace '%' '_' n)
-    end
 ;;
 
-let cst_name = name;;
+let name oc n = string oc (lp_name n);;
 
 (****************************************************************************)
 (* Translation of types. *)
@@ -184,9 +182,9 @@ let rec raw_term oc t =
   | Var(n,_) -> name oc n
   | Const(n,b) ->
      begin match const_typ_vars_pos n with
-     | [] -> cst_name oc n
+     | [] -> name oc n
      | ps ->
-        string oc "(@"; cst_name oc n;
+        string oc "(@"; name oc n;
         List.iter (fun p -> char oc ' '; raw_typ oc (subtyp b p)) ps;
         char oc ')'
      end
@@ -195,7 +193,7 @@ let rec raw_term oc t =
      begin match h, ts with
      | Const("=" as n,_), [_;_]
      | Const(("!"|"?") as n,_), [_] ->
-       char oc '('; cst_name oc n; list_prefix " " raw_term oc ts; char oc ')'
+       char oc '('; name oc n; list_prefix " " raw_term oc ts; char oc ')'
      | _ ->
        char oc '('; raw_term oc h; list_prefix " " raw_term oc ts; char oc ')'
      end
@@ -223,7 +221,7 @@ let unabbrev_term =
      begin match h, ts with
      | Const("=" as n,_), [_;_]
      | Const(("!"|"?") as n,_), [_] ->
-       char oc '('; cst_name oc n; list_prefix " " (term rmap) oc ts;
+       char oc '('; name oc n; list_prefix " " (term rmap) oc ts;
        char oc ')'
      | _ ->
        char oc '('; term rmap oc h; list_prefix " " (term rmap) oc ts;
@@ -361,13 +359,22 @@ let export n deps = export_iter n (fun f -> List.iter f deps);;
 (* Translation of term abbreviations. *)
 (****************************************************************************)
 
+(* map recording the number of type variables of each symbol *)
+let tvs_map = ref MapStr.empty;;
+let raw_update_tvs_map n k = tvs_map := MapStr.add n k !tvs_map;;
+let update_tvs_map n tvs =
+  if tvs <> [] then raw_update_tvs_map n (List.length tvs)
+
 let print_let oc (t,t',_,_) =
   string oc "\n  let "; raw_term oc t'; string oc " ≔ "; raw_term oc t;
-  string oc " in";;
+  string oc " in"
+;;
 
-let decl_term_abbrev oc t (k,n,bs) =
-  string oc "symbol term"; int oc k;
-  for i=0 to n-1 do string oc " a"; int oc i done;
+let decl_term_abbrev oc t (k,ntvs,bs) =
+  let n = "term"^string_of_int k in
+  if ntvs > 0 then raw_update_tvs_map n ntvs;
+  string oc "symbol "; string oc n;
+  for i=0 to ntvs-1 do string oc " a"; int oc i done;
   let decl_var i b =
     string oc " (x"; int oc i; string oc ": El "; abbrev_typ oc b; char oc ')'
   in
@@ -375,7 +382,8 @@ let decl_term_abbrev oc t (k,n,bs) =
   if !use_sharing then
     begin
       let t', l = shared t in
-      string oc " ≔"; list print_let oc l; char oc ' '; raw_term oc t'; string oc ";\n"
+      string oc " ≔"; list print_let oc l; char oc ' '; raw_term oc t';
+      string oc ";\n"
     end
   else
     begin
@@ -395,6 +403,12 @@ let decl_subterm_abbrevs =
   and cmp (_,_,_,k1) (_,_,_,k2) = k1 - k2 in
   fun oc ->
   let abbrev (t,t',_,_) =
+    let n, tvs =
+      match t' with
+      | Var(n,b) | Const(n,b) -> n, tyvars b
+      | _ -> assert false
+    in
+    update_tvs_map n tvs;
     string oc "symbol "; raw_term oc t'; string oc " ≔ "; raw_term oc t;
     string oc ";\n"
   in
@@ -502,7 +516,7 @@ let proof tvs rmap =
       list_prefix " " typ oc (type_vars_in_term t);
       list_prefix " " term oc (frees t)
     | Pdef(t,n,_) ->
-       char oc '@'; cst_name oc n; string oc "_def";
+       char oc '@'; name oc n; string oc "_def";
        list_prefix " " typ oc (type_vars_in_term t)
     | Pdeft(_,t,_,_) ->
       string oc "@axiom_";
@@ -585,36 +599,37 @@ let definition_of n =
   in List.find_map f !the_definitions
 ;;
 
-let decl_sym oc (n,b) =
-  match definition_of n with
+let decl_sym oc (hollight_name,b) =
+  let n = lp_name hollight_name in
+  let tvsb = tyvars b in
+  update_tvs_map n tvsb;
+  match definition_of hollight_name with
   | None ->
-    string oc "symbol "; cst_name oc n; typ_vars oc (tyvars b);
-    string oc " : El "; raw_typ oc b; string oc ";\n"
+     string oc "symbol "; string oc n; typ_vars oc tvsb;
+     string oc " : El "; raw_typ oc b; string oc ";\n"
   | Some (t,r) ->
      let tvst = type_vars_in_term t in
+     update_tvs_map (n^"_def") tvst;
      let rmap = renaming_map tvst [] in
-     match n with
+     match hollight_name with
      |"@"|"\\/"|"/\\"|"==>"|"!"|"?"|"?!"|"~"|"F"|"T" ->
-       string oc "symbol "; cst_name oc n; string oc "_def"; typ_vars oc tvst;
+       (* symbols already declared in theory_hol.lp *)
+       string oc "symbol "; string oc n; string oc "_def"; typ_vars oc tvst;
        string oc " : Prf "; unabbrev_term rmap oc t; string oc ";\n"
      | _ ->
-        let tvsb = tyvars b in
-        string oc "symbol "; cst_name oc n; typ_vars oc tvsb;
+        string oc "symbol "; string oc n; typ_vars oc tvsb;
         string oc " : El "; raw_typ oc b; string oc " ≔ ";
         unabbrev_term rmap oc r; string oc ";\n";
-        if tvsb = [] then
-          begin
-            string oc "opaque symbol "; cst_name oc n; string oc "_def";
-            typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
-            string oc " ≔ REFL "; cst_name oc n; string oc ";\n"
-          end
-        else
-          begin
-            string oc "opaque symbol "; cst_name oc n; string oc "_def";
-            typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
-            string oc " ≔ REFL (@"; cst_name oc n; char oc ' ';
-            typ_params oc tvsb; string oc ");\n"
-          end
+        match tvsb with
+        | [] ->
+           string oc "opaque symbol "; string oc n; string oc "_def";
+           typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
+           string oc " ≔ REFL "; string oc n; string oc ";\n"
+        | _ ->
+           string oc "opaque symbol "; string oc n; string oc "_def";
+           typ_vars oc tvst; string oc " : Prf "; unabbrev_term rmap oc t;
+           string oc " ≔ REFL (@"; string oc n; char oc ' ';
+           typ_params oc tvsb; string oc ");\n"
 ;;
 
 let decl_axioms oc ths =
@@ -623,7 +638,9 @@ let decl_axioms oc ths =
     let tvs = type_vars_in_term t in
     let xs = frees t in
     let rmap = renaming_map tvs xs in
-    string oc "symbol axiom_"; int oc i; typ_vars oc (type_vars_in_term t);
+    let n = "axiom_"^string_of_int i in
+    update_tvs_map n tvs;
+    string oc "symbol "; string oc n; typ_vars oc tvs;
     list (unabbrev_decl_param rmap) oc xs; string oc " : Prf ";
     unabbrev_term rmap oc t; string oc ";\n"
   in
@@ -657,26 +674,30 @@ let decl_theorem oc k p d =
   let decl_hyps term = List.iteri (decl_hyp term) in
   match d with
   | DefThmIdProof ->
+    let n = "lem"^string_of_int k in
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let extras = extra_type_vars_in_proof_content proof_at pc in
     let rmap = renaming_map (extras @ tvs) xs in
     let term = term rmap in
     let prv = let l = get_use k in l > 0 && l <= !proof_part_max_idx in
     string oc (if prv then "private" else "opaque");
-    string oc " symbol lem"; int oc k; typ_vars oc tvs;
+    string oc " symbol "; string oc n; typ_vars oc tvs;
     list (decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t;
     string oc " ≔ "; proof tvs rmap oc p; string oc ";\n";
   | DeclThmId abbrev ->
+    let n = "lem"^string_of_int k in
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let rmap = renaming_map tvs xs in
     let term = if abbrev then term rmap else unabbrev_term rmap in
-    string oc "symbol lem"; int oc k;
-    typ_vars oc tvs; list (unabbrev_decl_param rmap) oc xs;
-    decl_hyps term ts;
+    string oc "symbol "; string oc n; typ_vars oc tvs;
+    list (unabbrev_decl_param rmap) oc xs; decl_hyps term ts;
     string oc " : Prf "; term oc t; string oc ";\n"
   | DefThmNameAsThmId n ->
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let rmap = renaming_map tvs xs in
     let term = unabbrev_term rmap in
     string oc "opaque symbol "; string oc n; string oc " : ";
@@ -691,6 +712,7 @@ let decl_theorem oc k p d =
     string oc " ≔ @lem"; int oc k; string oc ";\n"
   | DeclThmName n ->
     let tvs = type_vars_in_thm thm in
+    update_tvs_map n tvs;
     let rmap = renaming_map tvs xs in
     let term = unabbrev_term rmap in
     string oc "symbol "; string oc n;
@@ -748,7 +770,7 @@ let export_subterm_abbrevs b n =
     decl_subterm_abbrevs
 ;;
 
-(* 2nd step in command "theorem" when n is not in BIG_FILES.
+(* 2nd step in command "theorem" when n is NOT in BIG_FILES.
    [export_term_abbrevs_in_one_file b n] generates
    [n^"_term_abbrevs.lp"] and [n^"_term_abbrevs.typ"]. *)
 let export_term_abbrevs_in_one_file b n =
@@ -826,7 +848,7 @@ let proof_part_of = Hashtbl.find htbl_thm_part;;
 let proof_deps = ref SetInt.empty;;
 
 (* Used in [export_theorem_proof],
-   1st step in command "theorem" when n is not in BIG_FILES.
+   1st step in command "theorem" when n is NOT in BIG_FILES.
    [export_proofs_in_interval n x y] generates the proof steps of
    index between [x] and [y] in the files [n^part(k)^"_proofs.lp"]. *)
 let export_proofs_in_interval n x y =
@@ -880,7 +902,7 @@ let export_proofs_in_interval n x y =
   Hashtbl.add htbl_abbrev_part_max !abbrev_part !cur_abbrev
 ;;
 
-(* 1st step in command "theorem" when n is not in BIG_FILES.
+(* 1st step in command "theorem" when n is NOT in BIG_FILES.
   [export_theorem_proof b n] generates the files
   [n^part(k)^"_proofs.lp"] for [1<=k<!proof_part], [n^"_proofs.lp"],
   [n^".typ"] and [n^"_spec.lp"]. *)
@@ -897,7 +919,7 @@ let export_theorem_proof b n =
       done)
 ;;
 
-(* 3rd step in command "theorem" when n is not in BIG_FILES.
+(* 3rd step in command "theorem" when n is NOT in BIG_FILES.
    [export_theorem_deps b n] generates for [1<=i<=!proof_part] the
    files [n^part(i)^"_deps.lp"] and [n^part(i)^".lp"] assuming that
    the files [n^part(i)^"_proofs.lp"] are already generated. *)
@@ -967,10 +989,11 @@ let split_theorem_proof b n =
   export_iter (n^"_spec") iter_deps (fun oc -> decl_theorem oc max p t)
 ;;
 
-(* Called in [export_theorem_proof_part] which is
-   called by command "thmpart" in Makefile when n is in BIG_FILES.
+(* Called in [export_theorem_proof_part] which is called by command
+   "thmpart" in Makefile when n is in BIG_FILES.
    [split_theorem_abbrevs n] generates the files [n^".brv"],
-   [n^".brp"] and [n^"_term_abbrevs"^part(k)^".min"]. *)
+   [n^".brp"], [n^"_term_abbrevs"^part(k)^".min"] and
+   [n^"_term_abbrevs"^part(k)^".max"]. *)
 let split_theorem_abbrevs n =
   (* generate the file [n^".brv"]. *)
   let l = TrmHashtbl.fold (fun t x acc -> (t,x)::acc) htbl_term_abbrev [] in
@@ -1106,11 +1129,13 @@ let constants() =
 ;;
 
 let export_terms b =
-  export (b^"_terms") [b^"_types"] (fun oc -> list decl_sym oc (constants()))
+  let n = b^"_terms" in
+  export n [b^"_types"] (fun oc -> list decl_sym oc (constants()))
 ;;
 
 let export_axioms b =
-  export (b^"_axioms") [b^"_types"; b^"_terms"]
+  let n = b^"_axioms" in
+  export n [b^"_types"; b^"_terms"]
     (fun oc -> decl_axioms oc !the_axioms)
 ;;
 

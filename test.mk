@@ -1,14 +1,18 @@
 .SUFFIXES:
 
-.PHONY: default
-default: test1 test2 test3 test4 test5
+TESTS := test1 test2 test3 test4 test5
 
-test%:
-	mkdir -p output$*
+.PHONY: default
+default: $(TESTS)
+
+test%: output%
 	$(MAKE) -C output$* -f ../test.mk do-test$*
 
+output%:
+	mkdir -p output$*
+
 clean:
-	-rm -rf output1 output2 output3 output4 output5
+	-rm -rf $(TESTS:test%=output%)
 
 .PHONY: config
 config:
@@ -16,21 +20,18 @@ config:
 
 # single dk
 
-.PHONY: test1 do-test1
 do-test1: config
 	hol2dk hol_upto_arith.dk
 	dk check hol_upto_arith.dk
 
 # single lp
 
-.PHONY: test2 do-test2
 do-test2: config
 	hol2dk hol_upto_arith.lp
 	lambdapi check -v0 -w -c hol_upto_arith.lp
 
 # multi dk
 
-.PHONY: test3 do-test3
 do-test3: config
 	hol2dk mk 3 hol_upto_arith
 	$(MAKE) -f hol_upto_arith.mk dk
@@ -38,7 +39,6 @@ do-test3: config
 
 # multi lp with mk
 
-.PHONY: test4 do-test4
 do-test4: config
 	hol2dk mk 3 hol_upto_arith
 	$(MAKE) -f hol_upto_arith.mk lp
@@ -48,7 +48,6 @@ do-test4: config
 
 # multi lp with split
 
-.PHONY: test5 do-test5
 do-test5: config
 	$(MAKE) split
 	$(MAKE) lp
