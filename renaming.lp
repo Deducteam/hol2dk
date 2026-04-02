@@ -1,5 +1,36 @@
 // map for renaming dk/lp identifiers (on the right)
 // to Coq expressions (on the left)
+builtin "heq" ≔ =;
+builtin "hex1" ≔ ∃₁;
+builtin "hex1_def" ≔ ∃₁_def;
+builtin "hfalse" ≔ ⊥;
+builtin "hfalse_def" ≔ ⊥_def;
+builtin "hor" ≔ ∨;
+builtin "hor_def" ≔ ∨_def;
+builtin "hex" ≔ ∃;
+builtin "hex_def" ≔ ∃_def;
+builtin "hforall" ≔ ∀;
+builtin "hforall_def" ≔ ∀_def;
+builtin "himp" ≔ ⇒;
+builtin "himp_def" ≔ ⇒_def;
+builtin "hand" ≔ ∧;
+builtin "hand_def" ≔ ∧_def;
+builtin "htrue" ≔ ⊤;
+builtin "htrue_def" ≔ ⊤_def;
+builtin "htrue_i" ≔ ⊤ᵢ;
+builtin "hand_i" ≔ ∧ᵢ;
+builtin "hand_e1" ≔ ∧ₑ₁;
+builtin "hand_e2" ≔ ∧ₑ₂;
+builtin "hex_i" ≔ ∃ᵢ;
+builtin "hex_e" ≔ ∃ₑ;
+builtin "hor_i1" ≔ ∨ᵢ₁;
+builtin "hor_i2" ≔ ∨ᵢ₂;
+builtin "hor_e" ≔ ∨ₑ;
+
+builtin "hunit" ≔ unit;
+builtin "hlist" ≔ list;
+builtin "hprod" ≔ prod;
+builtin "hoption" ≔ option;
 
 builtin "minus" ≔ -;
 builtin "minus_def" ≔ -_def;
@@ -27,8 +58,8 @@ builtin "add" ≔ +;
 builtin "add_def" ≔ +_def;
 builtin "add'" ≔ +';
 
-builtin "pair" ≔ ̦‚;
-builtin "pair_def" ≔ ̦‚_def;
+builtin "hpair" ≔ ̦‚;
+builtin "hpair_def" ≔ ̦‚_def;
 
 builtin "gt_c" ≔ >_c;
 builtin "gt_c_def" ≔ >_c_def;

@@ -22,6 +22,7 @@
  (depends
   dune
   (ocaml (>= 4.13))
+  (lambdapi (= 3.0.0))
  )
 )
 

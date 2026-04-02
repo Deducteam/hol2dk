@@ -14,9 +14,10 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` \$hollight_file.ml \$root_path [rocq_file_or_module] ... [\$mapping.mk] [\$mapping.lp]
+usage: `basename $0` (classes|modules) \$hollight_file.ml \$root_path [rocq_file_or_module] ... [\$mapping.mk] [\$mapping.lp]
 
 arguments:
+  (classes|modules) the kind of object used to represent the full context of HOL Light axioms.
   \$hollight_file.ml: path to an ml file relative to \$HOLLIGHT_DIR
   \$root_path: name of the generated library
   rocq_file_or_module: rocq module that needs to be imported in generated files
@@ -25,6 +26,7 @@ arguments:
 
 effect in the current directory:
 - create a file CONFIG containing the command used to create links
+- create a file KIND containing the kind of object used to represent HOL Light axioms
 - create a file BASE containing the base name of \$hollight_file.ml
 - create a file ROOT_PATH containing \$root_path
 - create a file lambdapi.pkg
@@ -97,6 +99,14 @@ parse_args() {
     fi
 }
 
+kind=$1
+case $kind in
+    classes|modules)
+        ;;
+    *)
+        error "first argument should be classes or modules";;
+esac
+shift
 parse_args $*
 if test -z "$root_path"
 then
@@ -105,8 +115,11 @@ fi
 
 echo create CONFIG ...
 echo '#!/bin/sh' > CONFIG
-echo hol2dk config $* >> CONFIG
+echo hol2dk config-with $kind $* >> CONFIG
 chmod a+x CONFIG
+
+echo create KIND ...
+echo $kind > KIND
 
 echo create BASE ...
 echo `basename $hollight_file .ml` > BASE

@@ -1,6 +1,7 @@
 .SUFFIXES:
 
 BASE := $(shell if test -f BASE; then cat BASE; fi)
+KIND := $(shell if test -f KIND; then cat KIND; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
@@ -63,7 +64,7 @@ $(BASE)_opam.lp:
 	$(HOL2DK) axm $(BASE).lp
 
 .PHONY: opam
-opam: $(BASE_FILES:%=%.v) $(BASE)_opam.v
+theory: context.v theory.v
 
 .PHONY: clean-opam
 clean-opam:
@@ -245,14 +246,22 @@ rm-lpo:
 	-find . -maxdepth 1 -name '*.lpo' -delete
 
 .PHONY: v
-v: $(LP_FILES:%.lp=%.v)
+v: $(filter-out theory_hol.v $(BASE)_types.v $(BASE)_axioms.v $(BASE)_terms.v,$(LP_FILES:%.lp=%.v))
 ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
+context.v: theory_hol.lp $(BASE)_terms.lp $(BASE)_types.lp $(BASE)_axioms.lp
+	@echo hol2dk obtain-context-with $(KIND)
+	@hol2dk obtain-context-with $(KIND) $(BASE) $(ROOT_PATH) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) > context.v
+
+theory.v: $(BASE)_opam.lp
+	@echo hol2dk export-with $(KIND) $<
+	@hol2dk export-with $(KIND) $(BASE) $(ROOT_PATH) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $< > $@
+
 %.v: %.lp
-	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+	@echo hol2dk export-with $(KIND) $<
+	@hol2dk export-with $(KIND) $(BASE) $(ROOT_PATH) $(HOL2DK_DIR)/encoding.lp $(HOL2DK_DIR)/renaming.lp $(MAPPING) $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
@@ -261,18 +270,6 @@ clean-v: rm-v clean-vo
 .PHONY: rm-v
 rm-v:
 	-find . -maxdepth 1 -name '*.v' $(VOFILES:%.vo=-a ! -name %.v) -delete
-
-.PHONY: rm-empty-deps
-rm-empty-deps: $(V_FILES:%=%.rm)
-ifneq ($(SET_V_FILES),1)
-	$(MAKE) SET_V_FILES=1 $@
-else
-	@echo update vo.mk ...
-	@sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
-	@touch -r vo.mk new-vo.mk
-	@cp -p new-vo.mk vo.mk
-	@-rm -f new-vo.mk
-endif
 
 %.v.rm: %.v
 	@echo update $<
@@ -290,7 +287,10 @@ endif
 .PHONY: dep
 ifeq ($(INCLUDE_LPO_MK),1)
 dep vo.mk &: lpo.mk
-	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > vo.mk
+	@echo create vo.mk ...
+	@sed -e 's/\.lp/.v/g' -e "/^\(theory_hol\|$(BASE)_\(types\|axioms\|terms\)\).vo:/d" -e "s/ theory_hol.vo/ context.vo/" -e "s/ $(BASE)_\(types\|axioms\|terms\).vo//g" lpo.mk > vo.mk
+	@echo context.vo: $(VOFILES) >> vo.mk
+	@echo theory.vo: context.vo >> vo.mk
 else
 dep vo.mk &:
 	$(MAKE) INCLUDE_LPO_MK=1 dep

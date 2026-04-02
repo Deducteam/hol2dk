@@ -146,6 +146,10 @@ hol2dk files [$path/]$base.(dk|lp)
   for each HOL-Light file required by $HOLLIGHT_DIR/$path/$base.ml, generate
   a (dk|lp) file with the statements of the theorems proved in that file
 
+hol2dk check-mappings $base $requiring
+  generates a file $base.checkappings.v that can be used to check the types of
+  every mapped term.
+
 hol2dk env
   print the values of $HOL2DK_DIR and $HOLLIGHT_DIR
 
@@ -442,7 +446,7 @@ and command = function
   | ["unpatch" as s] -> call_script s []
   | "unpatch"::_ -> wrong_nb_args()
 
-  | "config"::args -> call_script "config" args
+  | "config-with"::args -> call_script "config-with" args
 
   | ["dump";f] -> dump true f (basename_ml f)
   | "dump"::_ -> wrong_nb_args()
@@ -1253,6 +1257,60 @@ and command = function
      end
 
   | "abbrev"::_ -> wrong_nb_args()
+
+  | "translate-with"::args -> call_script "translate-with" args
+
+  | ["export-with";kind;n;b;e;r;m;f] ->
+    (if kind = "modules"
+    then Xtoclasses.to_classes := false
+    else if kind <> "classes"
+    then (err "expected \"export-with classes\" or \"export-with modules\"\n"; exit 1));
+    Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.translate f
+    
+  | "export-with"::_ -> wrong_nb_args()
+
+  | ["derive-with-modules";n;b;e;r;m] ->
+    Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.derive_with_modules()
+    
+  | "derive-with-modules"::_ -> wrong_nb_args()
+
+  | ["get-alignments";n;b;e;r;m] ->
+    Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.get_alignments()
+    
+  | "get-alignments"::_ -> wrong_nb_args()
+
+  | ["obtain-context-with";kind;n;b;e;r;m] ->
+    (if kind = "modules"
+    then Xtoclasses.to_classes := false
+    else if kind <> "classes"
+    then (err "expected \"export-with classes\" or \"export-with modules\"\n"; exit 1));
+    Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.get_context()
+  
+  | "obtain-context-with"::_ -> wrong_nb_args()
 
   (* Single file generation (used neither in b.mk nor in Makefile). *)
   | f::args ->

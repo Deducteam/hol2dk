@@ -861,10 +861,18 @@ let size_abbrev (t,(_,ltvs,bs)) =
   1 + 2*nb_type_vars + 2*nb_term_vars*typ + size_term t
 ;;
 
+let rec holterm oc t =
+  match t with
+  | Var(n,_) -> string oc ("?" ^ n)
+  | Const(c,_) -> string oc c
+  | Comb(t1,t2) -> char oc '(' ; holterm oc t1 ; string oc ") (" ;
+    holterm oc t2 ; char oc ')'
+  | Abs(t1,t2) -> string oc "Abs " ; holterm oc t1 ; string oc " |=> " ; holterm oc t2
+
 (* [proof oc p] prints the proof [p] on out_channel [oc] in a user
    readable format. *)
-let proof oc (Proof(_,c)) =
-  match c with
+let proof oc (Proof(thm,c)) =
+  begin match c with
   | Prefl _ -> out oc "refl"
   | Ptrans(i,j) -> out oc "trans %d %d" i j
   | Pmkcomb(i,j) -> out oc "mkcomb %d %d" i j
@@ -891,7 +899,13 @@ let proof oc (Proof(_,c)) =
   | Pdisj2(_,i) -> out oc "disj2 %d" i
   | Pdisj_cases(i,j,k) -> out oc "disj_cases %d %d %d" i j k
   | Pchoose(_,i,j) -> out oc "choose %d %d" i j
-  | Psym i -> out oc "sym %d" i
+  | Psym i -> out oc "sym %d" i end;
+  out oc "\nProving:  " ; let (hyps,concl) = dest_thm thm in
+    let hyp oc h = string oc "; " ; holterm oc h ; char oc ' ' in
+    begin match hyps with
+    | [] -> ()
+    | h::rest -> holterm oc h ; char oc ' ' ; list hyp oc rest
+    end ; string oc "|- " ; holterm oc concl
 ;;
 
 (* [get_eq_typ p] returns the type [b] of the terms t and u of the

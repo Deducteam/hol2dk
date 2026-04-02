@@ -1,0 +1,119 @@
+#!/bin/sh
+
+if test -z "$HOL2DK_DIR"
+then
+    echo "HOL2DK_DIR is not set"
+    exit 1
+fi
+
+if test -z "$HOLLIGHT_DIR"
+then
+    echo "HOLLIGHT_DIR is not set"
+    exit 1
+fi
+
+usage() {
+    cat <<__EOF__
+usage: `basename $0` (classes|modules) \$libname \$hollight_file.ml [\$target.v]
+
+arguments: 
+  (classes|modules) the kind of object used to represent the full context of HOL Light axioms.
+  \$libname : desired name for the rocq library
+  \$hollight_file.ml: path to an ml file relative to \$HOLLIGHT_DIR
+  \$target.v: desired path for the output (default:theory.v)
+
+the order of arguments doesn't matter.
+
+effect in the current directory:
+- create a file _CoqProject
+- copy files HOL_Light.lp and HOL_Light.v from the hol2dk repository and compile the latter.
+- create a subdirectory named output in which the library will be translated
+- run hol2dk config and then make opam in this subdirectory
+- copy the result into the current directory, a translation where the context of all HOL Light axioms
+  is stored in a typeclass (if classes was chosen) or a module type (if modules was chosen).
+__EOF__
+}
+
+error() {
+    echo error: $1
+    echo
+    usage
+    exit 1
+}
+
+parse_args() {
+    if test $# -ne 0; then
+        case $1 in
+            *.ml)
+                if test -z "$hollight_file"
+                then
+                    hollight_file=$1
+                    shift
+                    parse_args $*
+                else
+                    error 'too many ml files'
+                fi;;
+            *)
+                if test -z "$libname" 
+                then
+                    libname=$1
+                    shift
+                    parse_args $*
+                else
+                    error "unexpected argument $1"
+                fi;;
+        esac
+    fi
+}
+
+kind=$1
+case $kind in
+    classes|modules)
+        ;;
+    *)
+        error "first argument should be classes or modules";;
+esac
+shift
+parse_args $*
+if test -z "$hollight_file"
+then
+    error 'missing base hol light file'
+fi
+base=`basename $hollight_file .ml`
+
+echo create _CoqProject ...
+echo "-R . $libname ." > _CoqProject
+
+echo copy definition of HOL_Light types ...
+cp -f -t . $HOL2DK_DIR/HOL_Light.v $HOL2DK_DIR/HOL_Light.lp
+
+echo create output directory ...
+mkdir -p output
+
+echo configure output directory ...
+cd output
+hol2dk config-with $kind $hollight_file $libname ../HOL_Light.lp ../HOL_Light.v
+
+echo translate with $kind ...
+make clean-v
+make theory
+
+echo copy result ...
+cp context.v theory.v ..
+
+echo derive to modules ...
+hol2dk derive-with-modules $base $libname $HOL2DK_DIR/encoding.lp $HOL2DK_DIR/renaming.lp ../HOL_Light.lp > ../modules_theory.v
+hol2dk get-alignments $base $libname $HOL2DK_DIR/encoding.lp $HOL2DK_DIR/renaming.lp ../HOL_Light.lp > ../alignments.v
+cd ..
+
+echo compile HOL_Light.v ...
+rocq compile -q -no-glob -R . $libname HOL_Light.v
+
+echo compile context.v ...
+rocq compile -q -no-glob -R . $libname context.v
+
+echo compile theory.v ...
+rocq compile -q -no-glob -R . $libname theory.v
+
+echo compile modules_theory.v ...
+rocq compile -q -no-glob -R . $libname modules_theory.v
