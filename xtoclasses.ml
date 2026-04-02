@@ -9,8 +9,10 @@ let to_classes = ref true
 let libname = ref ""
 (* The name of the HOL Light file being translated *)
 let originalfilename = ref ""
-(* True when writing file context.v*)
-let context = ref false
+(* The name of the terms/types/... lp file *)
+let file name = !originalfilename ^ "_" ^ name ^ ".lp"
+(* True to not add a "Ctx" argument to every defined object. *)
+let no_class_dep = ref false
 
 let bind_params bound ((idos,_,_) : p_params) = List.fold_left (fun s ido ->
     Option.fold (fun s {elt;_} -> StrSet.add elt s) s ido
@@ -30,7 +32,7 @@ let rec term bound oc t =
   | P_Iden(qid,b) ->
       if b then char oc '@';
       qident oc qid;
-      if not (!context || StrSet.mem (snd qid.elt) bound)
+      if not (!no_class_dep || StrSet.mem (snd qid.elt) bound)
       then string oc " Ctx"
   | P_Arro(u,v) -> arrow bound oc u v
   | P_Abst(xs,u) -> abst bound oc xs u
@@ -70,7 +72,7 @@ and paren bound oc t =
           match builtin, ts with
           | (El|Prf), [u] -> paren bound oc u
           | _ -> default())
-  | P_Iden (qid,_) when not (!context || StrSet.mem (snd qid.elt) bound) -> default()
+  | P_Iden (qid,_) when not (!no_class_dep || StrSet.mem (snd qid.elt) bound) -> default()
   | _ -> term bound oc t
 
 and raw_params bound oc (ids,t,_) = param_ids oc ids; typopt bound oc t
@@ -202,16 +204,16 @@ let regular_file_header oc modules =
 let context_header oc (_ : string list loc list) =
   string oc (if !to_classes
     then "Record HOL_Light_Theory := {\n"
-    else "Module Type HOL_Light_Theory.\n"
+    else "Module Type Mappings.\n"
   )
 
 let get_context() =
-  context := true;
+  no_class_dep := true;
   let oc = stdout in
   string oc ("Require Export " ^ !libname ^ ".HOL_Light.\n");
   let (prefix,suffix) = if !to_classes then ("  "," ;\n") else ("Parameter ",".\n") in
   let andthen name =
-    let filename = !originalfilename ^ "_" ^ name ^ ".lp" in
+    let filename = file name in
     let ast = Parser.parse_file filename in
     Stream.iter (symbol_command (symbol_decl prefix suffix) oc) ast
   in
@@ -222,6 +224,91 @@ let get_context() =
       then "}."
       else "End HOL_Light_Theory."
     )
+
+let derive_with_modules() =
+  (* The file starts exactly like context.v for modules. *)
+  no_class_dep := true;
+  to_classes := false;
+  let oc = stdout in
+  string oc ("Require Import "^ !libname ^ ".context " ^ !libname ^ ".theory.\n" );
+  let (prefix,suffix) = ("Parameter ",".\n") in
+  let andthen name =
+    let filename = file name in
+    let ast = Parser.parse_file filename in
+    Stream.iter (symbol_command (symbol_decl prefix suffix) oc) ast
+  in
+    let ast = Parser.parse_file ("theory_hol.lp") in
+    Stream.iter (command context_header (symbol_decl prefix suffix) oc) ast;
+    andthen "types"; andthen "terms"; andthen "axioms";
+    string oc "End Mappings.\nModule Theory (M : Mappings).\nDefinition Ctx_of_M := {|\n";
+    (* Now, from this a module of type HOL_Light_Theory, get the corresponding record instance. *)
+    let copy_fields_from filename =
+      let copy_field oc {p_sym_nam; _} (_ : popt) =
+        string oc "  " ; ident oc p_sym_nam ; string oc " := @M." ;
+        ident oc p_sym_nam ; string oc " ;\n"
+      in 
+        let ast = Parser.parse_file filename in
+        Stream.iter (symbol_command copy_field oc) ast
+    in
+      List.iter copy_fields_from ["theory_hol.lp" ; file "types" ; file "terms" ; file "axioms"];
+      string oc "|}.\nImport M.\n" ;
+      let copy_thm oc {p_sym_nam;p_sym_arg;p_sym_typ;_} pos =
+        let bound = StrSet.empty in
+        match p_sym_typ with
+        | Some t -> string oc "Lemma "; ident oc p_sym_nam ; let _ = params_list bound oc p_sym_arg in
+          string oc " : "; term bound oc t; string oc ".\nProof. solve [apply (";
+          ident oc p_sym_nam ; string oc " Ctx_of_M)]. Qed.\n"
+        | _ -> wrn pos "Command not translated."
+      in
+        let ast = Parser.parse_file (file "opam") in
+        Stream.iter (symbol_command copy_thm oc) ast;
+        string oc "End Theory."
+
+let get_alignments() =
+  no_class_dep := true;
+  (* Export all default mappings in a module named Alignments. *)
+  let oc = stdout in
+  string oc ("From " ^ !libname ^ " Require Import HOL_Light modules_theory.\nModule Export Alignments <: Mappings.\n");
+  let default_export_symbols filename =
+    let ast = Parser.parse_file filename in
+    let original_symbol_command oc sym pos = Export.Coq.command oc {elt=P_symbol sym; pos} in
+    Stream.iter (symbol_command original_symbol_command oc) ast
+  in
+    List.iter default_export_symbols ["theory_hol.lp" ; file "types" ; file "terms" ; file "axioms"];
+  string oc "End Alignments.\nModule Export P'.\nModule Import P := Theory(Alignments).\n";
+  (* We obtained all theorems for the alignments module, but we must now unfold all the alignments. *)
+  string oc "Local Notation \"'simplify' T\" := ltac:(let res := eval unfold ";
+  let names = ref [] in
+  let addname {elt;_} =
+    if not (StrSet.mem elt !erase || String.ends_with ~suffix:"_def" elt || String.starts_with ~prefix:"axiom" elt)
+    then names := translate_ident elt :: !names
+  in
+    let get_names_of filename =
+      let get_name {elt;_} = match elt with
+        | P_symbol {p_sym_nam;_} -> addname p_sym_nam
+        | _ -> ()
+      in
+        let ast = Parser.parse_file filename in
+        Stream.iter get_name ast
+    in
+      List.iter get_names_of ["theory_hol.lp" ; file "types" ; file "terms" ; file "axioms"];
+      list string ", " oc !names;
+      string oc " in T in exact res) (at level 0).\n";
+    (* Prove the theorems with unfolded alignments. *)
+    let symbol_simptype oc {p_sym_nam; p_sym_arg; p_sym_typ; _} pos =
+      let bound = StrSet.empty in
+      match p_sym_arg, p_sym_typ with
+      | [], Some typ -> string oc "Lemma "; ident oc p_sym_nam; string oc " : simplify (";
+        term bound oc typ ; string oc ").\nProof. exact ";
+        ident oc p_sym_nam; string oc ". Qed.\n"
+      | _, Some typ -> string oc "Lemma "; ident oc p_sym_nam; string oc " : simplify (forall ";
+        let _ = params_list bound oc p_sym_arg in string oc ", "; term bound oc typ ;
+        string oc ").\nProof. exact @"; ident oc p_sym_nam; string oc ". Qed.\n"
+      | _ -> wrn pos "command not translated"
+    in
+      let ast = Parser.parse_file (file "opam") in
+      Stream.iter (symbol_command symbol_simptype oc) ast;
+      string oc "End P'."
 
 let translate file =
   erase := StrSet.add "HOL_Light_Theory" !erase;

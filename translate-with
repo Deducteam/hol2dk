@@ -53,15 +53,6 @@ parse_args() {
                 else
                     error 'too many ml files'
                 fi;;
-            *.v)
-                if test -z "$output_file"
-                then
-                    output_file=$1
-                    shift
-                    parse_args $*
-                else
-                    error 'too many v files'
-                fi;;
             *)
                 if test -z "$libname" 
                 then
@@ -88,11 +79,7 @@ if test -z "$hollight_file"
 then
     error 'missing base hol light file'
 fi
-
-if test -z "$output_file"
-then 
-    output_file="theory.v"
-fi
+base=`basename $hollight_file .ml`
 
 echo create _CoqProject ...
 echo "-R . $libname ." > _CoqProject
@@ -111,9 +98,12 @@ echo translate with $kind ...
 make clean-v
 make theory
 
-echo copy result
-cp context.v ..
-cp theory.v ../$output_file
+echo copy result ...
+cp context.v theory.v ..
+
+echo derive to modules ...
+hol2dk derive-with-modules $base $libname $HOL2DK_DIR/encoding.lp $HOL2DK_DIR/renaming.lp ../HOL_Light.lp > ../modules_theory.v
+hol2dk get-alignments $base $libname $HOL2DK_DIR/encoding.lp $HOL2DK_DIR/renaming.lp ../HOL_Light.lp > ../alignments.v
 cd ..
 
 echo compile HOL_Light.v ...
@@ -122,5 +112,8 @@ rocq compile -q -no-glob -R . $libname HOL_Light.v
 echo compile context.v ...
 rocq compile -q -no-glob -R . $libname context.v
 
-echo compile theory file ...
-rocq compile -q -no-glob -R . $libname $output_file
+echo compile theory.v ...
+rocq compile -q -no-glob -R . $libname theory.v
+
+echo compile modules_theory.v ...
+rocq compile -q -no-glob -R . $libname modules_theory.v

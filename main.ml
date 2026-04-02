@@ -1275,6 +1275,28 @@ and command = function
     
   | "export-with"::_ -> wrong_nb_args()
 
+  | ["derive-with-modules";n;b;e;r;m] ->
+    Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.derive_with_modules()
+    
+  | "derive-with-modules"::_ -> wrong_nb_args()
+
+  | ["get-alignments";n;b;e;r;m] ->
+    Xtoclasses.originalfilename := n;
+    Xtoclasses.libname := b;
+    Export.Coq.stt := true;
+    Export.Coq.set_encoding e;
+    Export.Coq.set_renaming r;
+    Export.Coq.set_mapping m;
+    Xtoclasses.get_alignments()
+    
+  | "get-alignments"::_ -> wrong_nb_args()
+
   | ["obtain-context-with";kind;n;b;e;r;m] ->
     (if kind = "modules"
     then Xtoclasses.to_classes := false
