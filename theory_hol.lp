@@ -45,4 +45,4 @@ symbol ∃ₑ [a] [p : El a → El bool] : Prf (∃ (λ x, p x)) → Π [r : El 
 symbol ∨ᵢ₁ [p : El bool] : Prf p → Π q : El bool, Prf (∨ p q);
 symbol ∨ᵢ₂ (p : El bool) [q : El bool] : Prf q → Prf (∨ p q);
 symbol ∨ₑ [p q : El bool] :
-  Prf (∨ p q) → Π [r], (Prf p → Prf r) → (Prf q → Prf r) → Prf r;
+  Prf (∨ p q) → Π [r : El bool], (Prf p → Prf r) → (Prf q → Prf r) → Prf r;
