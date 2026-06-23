@@ -7,7 +7,7 @@ MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
 RENAMING := $(shell if test -f RENAMING; then cat RENAMING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
 LEANFILES := $(shell if test -f LEANFILES; then cat LEANFILES; fi)
-VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
+ROCQFILES := $(shell if test -f ROCQFILES; then cat ROCQFILES; fi)
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
@@ -266,7 +266,7 @@ clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	-find . -maxdepth 1 -name '*.v' $(VOFILES:%.vo=-a ! -name %.v) -delete
+	-find . -maxdepth 1 -name '*.v' $(ROCQFILES:%=-a ! -name %) -delete
 
 .PHONY: rm-empty-deps
 rm-empty-deps: $(V_FILES:%=%.rm)
@@ -274,7 +274,7 @@ ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
 else
 	@echo update vo.mk ...
-	@sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
+	@sed -e "s/ theory_hol.vo/ $(ROCQFILES:%=%o)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
 	@touch -r vo.mk new-vo.mk
 	@cp -p new-vo.mk vo.mk
 	@-rm -f new-vo.mk
@@ -296,7 +296,7 @@ endif
 .PHONY: dep
 ifeq ($(INCLUDE_LPO_MK),1)
 dep vo.mk &: lpo.mk
-	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > vo.mk
+	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(ROCQFILES:%=%o) /" lpo.mk > vo.mk
 else
 dep vo.mk &:
 	$(MAKE) INCLUDE_LPO_MK=1 dep

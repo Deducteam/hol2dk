@@ -31,8 +31,9 @@ effect in the current directory:
 - create a file MAPPING containing \$mapping.lp
 - create a file RENAMING containing \$renaming.lp
 - create a file REQUIRING containing the list of Rocq module names that need to be imported (in the same order as they are given in the command)
-- create a file VOFILES containing the list of Rocq module names corresponding to the Rocq files given in arguments with file extension ".vo"
-- add links to \$file.mk, the Rocq files given in argument and other files in \$HOL2DK_DIR and \$HOLLIGHT_DIR for translating and checking the proofs of \$hollight_file.ml
+- create a file ROCQFILES containing the list of Rocq files given in argument
+- create a file LEANFILES containing the list of Lean files given in argument
+- add links to \$mapping.mk, the Rocq files given in argument and other files in \$HOL2DK_DIR and \$HOLLIGHT_DIR for translating and checking the proofs of \$hollight_file.ml
 __EOF__
 }
 
@@ -84,7 +85,7 @@ parse_args() {
                     error 'the root_path must be given before'
                 else
                     rocq_files="$rocq_files $1"
-                    vo_files="$vo_files `basename $1`o"
+                    rocqfiles="$rocqfiles `basename $1`o"
                     requiring="$requiring $root_path.`basename $1 .v`"
                     shift
                     parse_args $*
@@ -94,7 +95,7 @@ parse_args() {
                 then
                     error 'the root_path must be given before'
                 else
-                    lean_files="$lean_files $1"
+                    leanfiles="$leanfiles $1"
                     requiring="$requiring $root_path.`basename $1 .lean`"
                     shift
                     parse_args $*
@@ -155,16 +156,16 @@ echo $renaming > RENAMING
 echo create REQUIRING ...
 echo $requiring > REQUIRING
 
-echo create VOFILES ...
-echo $vo_files > VOFILES
+echo create ROCQFILES ...
+echo $rocqfiles > ROCQFILES
 
 echo create LEANFILES ...
-echo $lean_files > LEANFILES
+echo $leanfiles > LEANFILES
 
 if test -z "$mk_file"
 then
     echo create deps.mk ...
-    echo $vo_files: > deps.mk
+    echo $rocqfiles: > deps.mk
 else
     echo ln -f -s $mk_file deps.mk
     ln -f -s $mk_file deps.mk
