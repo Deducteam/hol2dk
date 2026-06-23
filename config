@@ -14,13 +14,13 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` \$hollight_file.ml \$root_path [--mapping \$mapping.lp] [--renaming \$renaming.lp] [rocq_or_lean_file_or_module] ... [\$mapping.mk] [\$mapping.lp]
+usage: `basename $0` \$hollight_file.ml \$root_path [--mapping \$mapping.lp] [--renaming \$renaming.lp] [rocq_or_lean_file_or_module] ... [\$deps.mk]
 
 arguments:
   \$hollight_file.ml: path to an ml file relative to \$HOLLIGHT_DIR
   \$root_path: name of the generated library
   file_or_module: modules that need to be imported in generated files
-  \$mapping.mk: dependencies of vo files given in arguments
+  \$deps.mk: dependencies of Rocq files given in arguments
 
 effect in the current directory:
 - create a file CONFIG containing the command used to create links
