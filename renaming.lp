@@ -48,7 +48,6 @@ builtin "le_c_def" ≔ <=_c_def;
 builtin "eq2" ≔ ==;
 builtin "eq2_def" ≔ ==_def;
 
-builtin "ltle" ≔ <<=;
 builtin "ltle'" ≔ <<=';
 
 builtin "lt2" ≔ <<;

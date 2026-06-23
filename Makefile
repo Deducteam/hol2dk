@@ -86,7 +86,7 @@ SET_LP_FILES=1
 endif
 
 ifeq ($(SET_LP_FILES),1)
-LP_FILES := $(wildcard *.lp)
+LP_FILES := $(shell find . -maxdepth 1 -name '*.lp' -a ! -name $(MAPPING) -a ! -name $(RENAMING))
 endif
 
 ifeq ($(SET_V_FILES),1)
@@ -170,11 +170,11 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz rm-rename-abbrevs rm-tvs clean-lpo clean-v clean-lean
 	-rm -f lpo.mk
 
-KEEP_LP_FILES := theory_hol.lp $(MAPPING) $(RENAMING)
+EXCEPT := theory_hol.lp $(MAPPING) $(RENAMING)
 
 .PHONY: rm-lp
 rm-lp:
-	-find . -maxdepth 1 -name '*.lp' $(KEEP_LP_FILES:%=-a ! -name %) -delete
+	-find . -maxdepth 1 -name '*.lp' $(EXCEPT:%=-a ! -name %) -delete
 
 .PHONY: rm-lpo-mk
 rm-lpo-mk:
@@ -391,8 +391,6 @@ lean: $(ROOT_PATH).lean $(LP_FILES:%.lp=$(ROOT_PATH)/%.lean)
 ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
-
-$(LEANFILES:%=$(ROOT_PATH)/%):
 
 $(ROOT_PATH)/%.lean: %.lp
 	@echo lambdapi export -o stt_lean $<
