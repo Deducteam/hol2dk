@@ -127,7 +127,6 @@ lp: $(BASE_FILES:%=%.lp) $(BASE)_opam.lp $(BIG_FILES:%=%.max)
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 	$(MAKE) $(BASE)_type_abbrevs.lp
 	$(MAKE) SET_SED_FILES=1 rename-abbrevs
-	$(MAKE) $(BASE).tvs
 
 $(BASE)_type_abbrevs.lp:
 	$(HOL2DK) type_abbrevs $(BASE)
@@ -383,11 +382,18 @@ clean-votodo: votodo
 lpsize:
 	find . -maxdepth 1 -name '*.lp' -print0 | du --files0-from=- --total -s -h | tail -1
 
+.PHONY: tvs
+tvs: $(BASE).tvs
+
 $(BASE).tvs:
 	hol2dk tvs $(BASE)
 
 .PHONY: lean
-lean: $(ROOT_PATH).lean $(LP_FILES:%.lp=$(ROOT_PATH)/%.lean)
+lean: tvs
+	$(MAKE) SET_LP_FILES=1 lean-files
+
+.PHONY: lean-files
+lean-files: $(ROOT_PATH).lean $(LP_FILES:%.lp=$(ROOT_PATH)/%.lean)
 ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif

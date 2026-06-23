@@ -40,12 +40,11 @@ effect in the current directory:
 __EOF__
 }
 
-error() {
-    echo error: $1
-    echo
-    usage
-    exit 1
-}
+error() { echo error: $1; echo; usage; exit 1; }
+
+invalid_arg() { error invalid argument \"$1\"; }
+
+if test $# -eq 0; then usage; exit 0; fi
 
 parse_args() {
     if test $# -ne 0; then
@@ -134,8 +133,8 @@ echo create ROOT_PATH ...
 echo $root_path > ROOT_PATH
 
 echo create lambdapi.pkg ...
-echo "package_name = $root_path" > lambdapi.pkg
-echo "root_path = $root_path" >> lambdapi.pkg
+echo package_name = $root_path > lambdapi.pkg
+echo root_path = $root_path >> lambdapi.pkg
 
 echo create _CoqProject ...
 echo "-R . $root_path ." > _CoqProject
@@ -197,3 +196,15 @@ do
     echo ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
     ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
 done
+
+if test -n "$leanfiles" -a ! -d .lake
+then
+    echo lake init $root_path math
+    lake init $root_path math
+    rm -f $root_path.lean $root_path/Basic.lean
+    for f in $leanfiles
+    do
+        echo cp -f $f $root_path
+        cp -f $f $root_path
+    done
+fi
