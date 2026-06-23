@@ -14,7 +14,7 @@ fi
 
 usage() {
     cat <<__EOF__
-usage: `basename $0` \$hollight_file.ml \$root_path [--encoding \$encoding.lp] [--mapping \$mapping.lp] [--renaming \$renaming.lp] [rocq_or_lean_file_or_module] ... [\$mapping.mk] [\$mapping.lp]
+usage: `basename $0` \$hollight_file.ml \$root_path [--mapping \$mapping.lp] [--renaming \$renaming.lp] [rocq_or_lean_file_or_module] ... [\$mapping.mk] [\$mapping.lp]
 
 arguments:
   \$hollight_file.ml: path to an ml file relative to \$HOLLIGHT_DIR
