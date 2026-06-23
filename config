@@ -33,7 +33,10 @@ effect in the current directory:
 - create a file REQUIRING containing the list of Rocq module names that need to be imported (in the same order as they are given in the command)
 - create a file ROCQFILES containing the list of Rocq files given in argument
 - create a file LEANFILES containing the list of Lean files given in argument
-- add links to \$mapping.mk, the Rocq files given in argument and other files in \$HOL2DK_DIR and \$HOLLIGHT_DIR for translating and checking the proofs of \$hollight_file.ml
+- copy \$deps.mk and the Rocq files given in argument
+- copy theory_hol.dk and theory_hol.lp from \$HOL2DK_DIR
+- add links to Makefile, BIG_FILES, part.mk and spec.mk from \$HOL2DK_DIR
+- add links to \$hollight_file.prf, \$hollight_file.nbp, \$hollight_file.sig, \$hollight_file.thm, \$hollight_file.pos, and \$hollight_file.use files in \$HOLLIGHT_DIR
 __EOF__
 }
 
