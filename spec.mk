@@ -1,3 +1,5 @@
+# auxiliary mk file used in Makefile to merge all spec files in a single one
+
 .SUFFIXES:
 
 BASE := $(shell if test -f BASE; then cat BASE; fi)

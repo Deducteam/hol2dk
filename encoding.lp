@@ -2,8 +2,6 @@
 
 builtin "El" ≔ El;
 builtin "Prf" ≔ Prf;
-
-// symbols with special notations in Coq
 builtin "Set" ≔ Set;
 builtin "prop" ≔ bool;
 builtin "arr" ≔ fun;

@@ -1,9 +1,12 @@
 .SUFFIXES:
 
+HOLLIGHT_FILE := $(shell if test -f HOLLIGHT_FILE; then cat HOLLIGHT_FILE; fi)
 BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
+RENAMING := $(shell if test -f RENAMING; then cat RENAMING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
+LEANFILES := $(shell if test -f LEANFILES; then cat LEANFILES; fi)
 VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
 
 MAX_PROOF = 500_000
@@ -17,15 +20,13 @@ default: help
 .PHONY: help
 help:
 	@echo "usage: make TARGET [VAR=VAL ...]"
-	@echo "targets: split lp lpo v merge-spec-files rm-empty-deps vo opam clean-<target> clean-all"
+	@echo "base targets: split lp lpo clean-<target> clean-all"
+	@echo "rocq targets: v merge-spec-files rm-empty-deps vo opam"
+	@echo "lean targets: lean"
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
 	@echo "  EXTRA_ROCQ_OPTIONS: additional options for rocq compile (empty by default)"
-
-.PHONY: tvs
-tvs:
-	hol2dk tvs $(BASE)
 
 .PHONY: split
 split:
@@ -121,11 +122,12 @@ find-big-files:
 	@sort -u /tmp/big-files
 
 .PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
+lp: $(BASE_FILES:%=%.lp) $(BASE)_opam.lp $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 	$(MAKE) $(BASE)_type_abbrevs.lp
 	$(MAKE) SET_SED_FILES=1 rename-abbrevs
+	$(MAKE) $(BASE).tvs
 
 $(BASE)_type_abbrevs.lp:
 	$(HOL2DK) type_abbrevs $(BASE)
@@ -165,12 +167,14 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 	$(HOL2DK) abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz rm-rename-abbrevs rm-tvs clean-lpo clean-v
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz rm-rename-abbrevs rm-tvs clean-lpo clean-v clean-lean
 	-rm -f lpo.mk
+
+KEEP_LP_FILES := theory_hol.lp $(MAPPING) $(RENAMING)
 
 .PHONY: rm-lp
 rm-lp:
-	-find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+	-find . -maxdepth 1 -name '*.lp' $(KEEP_LP_FILES:%=-a ! -name %) -delete
 
 .PHONY: rm-lpo-mk
 rm-lpo-mk:
@@ -214,7 +218,7 @@ rm-siz:
 
 .PHONY: rm-tvs
 rm-tvs:
-	find . -maxdepth 1 -name '*.tvs' -delete
+	-find . -maxdepth 1 -name '*.tvs' -delete
 
 ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
@@ -250,9 +254,11 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
+LP_EXPORT := lambdapi export --encoding $(HOL2DK_DIR)/encoding.lp --mapping $(MAPPING) --renaming $(RENAMING) --requiring "$(REQUIRING)" --use-notations
+
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+	@$(LP_EXPORT) -o stt_coq $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
@@ -376,3 +382,33 @@ clean-votodo: votodo
 .PHONY: lpsize
 lpsize:
 	find . -maxdepth 1 -name '*.lp' -print0 | du --files0-from=- --total -s -h | tail -1
+
+$(BASE).tvs:
+	hol2dk tvs $(BASE)
+
+.PHONY: lean
+lean: $(ROOT_PATH).lean $(LP_FILES:%.lp=$(ROOT_PATH)/%.lean)
+ifneq ($(SET_LP_FILES),1)
+	$(MAKE) SET_LP_FILES=1 $@
+endif
+
+$(LEANFILES:%=$(ROOT_PATH)/%):
+
+$(ROOT_PATH)/%.lean: %.lp
+	@echo lambdapi export -o stt_lean $<
+	@$(LP_EXPORT) -o stt_lean --arities $(BASE).tvs $< > $@
+
+.PHONY: clean-lean
+clean-lean: rm-lean
+
+.PHONY: rm-lean
+rm-lean:
+	find $(ROOT_PATH) -maxdepth 1 -name '*.lean' $(LEANFILES:%=-a ! -name %) -delete
+
+$(ROOT_PATH).lean:
+ifneq ($(SET_STI_FILES),1)
+	$(MAKE) SET_STI_FILES=1 $@
+else
+	-rm -f $@
+	for f in $(STI_FILES:%.sti=%); do echo "import $(ROOT_PATH).$$f" >> $@; done
+endif
