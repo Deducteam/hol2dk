@@ -197,11 +197,14 @@ do
     ln -f -s $HOLLIGHT_DIR/${hollight_file%.ml}.$ext
 done
 
-if test -n "$leanfiles" -a ! -d .lake
+if test -n "$leanfiles"
 then
-    echo lake init $root_path math
-    lake init $root_path math
-    rm -f $root_path.lean $root_path/Basic.lean
+    if test ! -d .lake
+    then
+       echo lake init $root_path math
+       lake init $root_path math
+       rm -f $root_path.lean $root_path/Basic.lean
+    fi
     for f in $leanfiles
     do
         echo cp -f $f $root_path

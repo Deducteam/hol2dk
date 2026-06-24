@@ -21,8 +21,8 @@ default: help
 help:
 	@echo "usage: make TARGET [VAR=VAL ...]"
 	@echo "base targets: split lp lpo clean-<target> clean-all"
-	@echo "rocq targets: v merge-spec-files rm-empty-deps vo opam"
-	@echo "lean targets: lean"
+	@echo "rocq targets: v merge-spec-files rm-empty-deps vo"
+	@echo "lean targets: lean olean"
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
@@ -416,3 +416,7 @@ else
 	-rm -f $@
 	for f in $(STI_FILES:%.sti=%); do echo "import $(ROOT_PATH).$$f" >> $@; done
 endif
+
+.PHONY: olean
+olean:
+	LEAN_STACK_SIZE_KB=0 lake build
