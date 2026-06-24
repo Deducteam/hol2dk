@@ -37,19 +37,19 @@ clean-split: rm-sti rm-nbp rm-pos rm-use rm-thp
 
 .PHONY: rm-sti
 rm-sti:
-	find . -maxdepth 1 -name '*.sti' -delete
+	-find . -maxdepth 1 -name '*.sti' -delete
 
 .PHONY: rm-nbp
 rm-nbp:
-	find . -maxdepth 1 -name '*.nbp' -a ! -name $(BASE).nbp -delete
+	-find . -maxdepth 1 -name '*.nbp' -a ! -name $(BASE).nbp -delete
 
 .PHONY: rm-pos
 rm-pos:
-	find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
+	-find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
 
 .PHONY: rm-use
 rm-use:
-	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
+	-find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
 
 .PHONY: rm-thp
 rm-thp:
@@ -140,7 +140,7 @@ rename-abbrevs: $(SED_FILES:%.sed=%.lp.rename-abbrevs)
 
 .PHONY: rm-rename-abbrevs
 rm-rename-abbrevs:
-	find . -maxdepth 1 -name '*.rename-abbrevs' -delete
+	-find . -maxdepth 1 -name '*.rename-abbrevs' -delete
 
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
@@ -364,7 +364,7 @@ votodo:
 	find . -maxdepth 1 -name '*.v' | sort > /tmp/vfiles
 	find . -maxdepth 1 -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
 	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > votodo
-	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -maxdepth 1 -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
+	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -maxdepth 1 -name '*.v' | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
 
 .PHONY: lptodo
 lptodo: votodo
@@ -407,7 +407,7 @@ clean-lean: rm-lean
 
 .PHONY: rm-lean
 rm-lean:
-	find $(ROOT_PATH) -maxdepth 1 -name '*.lean' $(LEANFILES:%=-a ! -name %) -delete
+	if test -d $(ROOT_PATH); then find $(ROOT_PATH) -maxdepth 1 -name '*.lean' $(LEANFILES:%=-a ! -name $(ROOT_PATH)/%) -delete; fi
 
 $(ROOT_PATH).lean:
 ifneq ($(SET_STI_FILES),1)
