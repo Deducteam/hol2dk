@@ -6,7 +6,7 @@ TESTS := test1 test2 test3 test4 test5
 default: $(TESTS)
 
 test%: output%
-	$(MAKE) -C output$* -f test.mk do-test$*
+	$(MAKE) -C output$* -f ../test/test.mk do-test$*
 
 output%:
 	mkdir -p output$*
