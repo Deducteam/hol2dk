@@ -129,7 +129,7 @@ theory_hol.lpo.mk: theory_hol.lp
 v: $(LP_FILES:%.lp=%.v)
 
 %.v: %.lp
-	lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+	lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(RENAMING) --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
 
 # vo file generation
 
