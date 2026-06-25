@@ -580,7 +580,7 @@ let decl_def oc th =
   | Comb(Comb(Const("=",_),Const(n,_)),_) ->
      let tvs = type_vars_in_term t in
      name oc (n^"_def"); string oc " : "; list (decl_typ_param tvs) oc tvs;
-     string oc "Prf "; unabbrev_term tvs rmap oc t; string oc ".\n"
+     string oc " Prf "; unabbrev_term tvs rmap oc t; string oc ".\n"
   | _ -> assert false
 ;;
 
@@ -593,7 +593,7 @@ let decl_axioms oc ths =
     string oc "def axiom_"; int oc i; string oc " : ";
     list (decl_typ_param tvs) oc tvs;
     list (unabbrev_decl_param tvs rmap) oc xs;
-    string oc "Prf "; unabbrev_term tvs rmap oc t; string oc ".\n"
+    string oc " Prf "; unabbrev_term tvs rmap oc t; string oc ".\n"
   in
   List.iteri axiom ths
 ;;
