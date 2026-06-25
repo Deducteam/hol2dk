@@ -1,10 +1,13 @@
 .SUFFIXES:
 
+HOLLIGHT_FILE := $(shell if test -f HOLLIGHT_FILE; then cat HOLLIGHT_FILE; fi)
 BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
+RENAMING := $(shell if test -f RENAMING; then cat RENAMING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
-VOFILES := $(shell if test -f VOFILES; then cat VOFILES; fi)
+LEANFILES := $(shell if test -f LEANFILES; then cat LEANFILES; fi)
+ROCQFILES := $(shell if test -f ROCQFILES; then cat ROCQFILES; fi)
 
 MAX_PROOF = 500_000
 MAX_ABBREV = 2_000_000
@@ -17,15 +20,13 @@ default: help
 .PHONY: help
 help:
 	@echo "usage: make TARGET [VAR=VAL ...]"
-	@echo "targets: split lp lpo v merge-spec-files rm-empty-deps vo opam clean-<target> clean-all"
+	@echo "base targets: split lp lpo clean-<target> clean-all"
+	@echo "rocq targets: v merge-spec-files rm-empty-deps vo"
+	@echo "lean targets: lean olean"
 	@echo "variables:"
 	@echo "  MAX_PROOF: hol2dk max proof size (default is $(MAX_PROOF))"
 	@echo "  MAX_ABBREV: hol2dk max abbrev size (default is $(MAX_ABBREV))"
 	@echo "  EXTRA_ROCQ_OPTIONS: additional options for rocq compile (empty by default)"
-
-.PHONY: tvs
-tvs:
-	hol2dk tvs $(BASE)
 
 .PHONY: split
 split:
@@ -36,19 +37,19 @@ clean-split: rm-sti rm-nbp rm-pos rm-use rm-thp
 
 .PHONY: rm-sti
 rm-sti:
-	find . -maxdepth 1 -name '*.sti' -delete
+	-find . -maxdepth 1 -name '*.sti' -delete
 
 .PHONY: rm-nbp
 rm-nbp:
-	find . -maxdepth 1 -name '*.nbp' -a ! -name $(BASE).nbp -delete
+	-find . -maxdepth 1 -name '*.nbp' -a ! -name $(BASE).nbp -delete
 
 .PHONY: rm-pos
 rm-pos:
-	find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
+	-find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
 
 .PHONY: rm-use
 rm-use:
-	find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
+	-find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
 
 .PHONY: rm-thp
 rm-thp:
@@ -85,7 +86,7 @@ SET_LP_FILES=1
 endif
 
 ifeq ($(SET_LP_FILES),1)
-LP_FILES := $(wildcard *.lp)
+LP_FILES := $(shell find . -maxdepth 1 -name '*.lp' -a ! -name $(MAPPING) -a ! -name $(RENAMING))
 endif
 
 ifeq ($(SET_V_FILES),1)
@@ -121,7 +122,7 @@ find-big-files:
 	@sort -u /tmp/big-files
 
 .PHONY: lp
-lp: $(BASE_FILES:%=%.lp) $(BIG_FILES:%=%.max)
+lp: $(BASE_FILES:%=%.lp) $(BASE)_opam.lp $(BIG_FILES:%=%.max)
 	$(MAKE) SET_STI_FILES=1 SET_IDX_FILES=1 lp-proofs
 	$(MAKE) SET_MIN_FILES=1 lp-abbrevs
 	$(MAKE) $(BASE)_type_abbrevs.lp
@@ -139,7 +140,7 @@ rename-abbrevs: $(SED_FILES:%.sed=%.lp.rename-abbrevs)
 
 .PHONY: rm-rename-abbrevs
 rm-rename-abbrevs:
-	find . -maxdepth 1 -name '*.rename-abbrevs' -delete
+	-find . -maxdepth 1 -name '*.rename-abbrevs' -delete
 
 .PHONY: lp-proofs
 lp-proofs: $(STI_FILES:%.sti=%.lp) $(IDX_FILES:%.idx=%.lp)
@@ -165,12 +166,14 @@ lp-abbrevs: $(MIN_FILES:%.min=%.lp)
 	$(HOL2DK) abbrev $(BASE) $*.lp
 
 .PHONY: clean-lp
-clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz rm-rename-abbrevs rm-tvs clean-lpo clean-v
+clean-lp: rm-lp rm-lpo-mk rm-mk rm-min rm-max rm-idx rm-brv rm-brp rm-typ rm-sed rm-lpo rm-siz rm-rename-abbrevs rm-tvs clean-lpo clean-v clean-lean
 	-rm -f lpo.mk
+
+EXCEPT := theory_hol.lp $(MAPPING) $(RENAMING)
 
 .PHONY: rm-lp
 rm-lp:
-	-find . -maxdepth 1 -name '*.lp' -a ! -name theory_hol.lp -delete
+	-find . -maxdepth 1 -name '*.lp' $(EXCEPT:%=-a ! -name %) -delete
 
 .PHONY: rm-lpo-mk
 rm-lpo-mk:
@@ -214,7 +217,7 @@ rm-siz:
 
 .PHONY: rm-tvs
 rm-tvs:
-	find . -maxdepth 1 -name '*.tvs' -delete
+	-find . -maxdepth 1 -name '*.tvs' -delete
 
 ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
@@ -250,9 +253,11 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
+LP_EXPORT := lambdapi export --encoding $(HOL2DK_DIR)/encoding.lp --mapping $(MAPPING) --renaming $(RENAMING) --requiring "$(REQUIRING)" --use-notations
+
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@lambdapi export -o stt_coq --encoding $(HOL2DK_DIR)/encoding.lp --renaming $(HOL2DK_DIR)/renaming.lp --mapping $(MAPPING) --use-notations --requiring "$(REQUIRING)" $< > $@
+	@$(LP_EXPORT) -o stt_coq $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
@@ -260,7 +265,7 @@ clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	-find . -maxdepth 1 -name '*.v' $(VOFILES:%.vo=-a ! -name %.v) -delete
+	-find . -maxdepth 1 -name '*.v' $(ROCQFILES:%=-a ! -name %) -delete
 
 .PHONY: rm-empty-deps
 rm-empty-deps: $(V_FILES:%=%.rm)
@@ -268,7 +273,7 @@ ifneq ($(SET_V_FILES),1)
 	$(MAKE) SET_V_FILES=1 $@
 else
 	@echo update vo.mk ...
-	@sed -e "s/ theory_hol.vo/ $(VOFILES)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
+	@sed -e "s/ theory_hol.vo/ $(ROCQFILES:%=%o)/" -e "s/ $(BASE)_types.vo//" -e "s/ $(BASE)_axioms.vo//" vo.mk > new-vo.mk
 	@touch -r vo.mk new-vo.mk
 	@cp -p new-vo.mk vo.mk
 	@-rm -f new-vo.mk
@@ -290,7 +295,7 @@ endif
 .PHONY: dep
 ifeq ($(INCLUDE_LPO_MK),1)
 dep vo.mk &: lpo.mk
-	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(VOFILES) /" lpo.mk > vo.mk
+	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(ROCQFILES:%=%o) /" lpo.mk > vo.mk
 else
 dep vo.mk &:
 	$(MAKE) INCLUDE_LPO_MK=1 dep
@@ -308,12 +313,11 @@ ifneq ($(INCLUDE_VO_MK),1)
 endif
 
 BASE_ROCQ_OPTIONS := -q -no-glob -R . $(ROOT_PATH)
-# User specifiable rocq options
 EXTRA_ROCQ_OPTIONS ?=
 ROCQ_OPTIONS := $(BASE_ROCQ_OPTIONS) $(EXTRA_ROCQ_OPTIONS)
 
 %.vo: %.v
-	@echo rocq $<
+	@echo rocq compile $<
 	@rocq compile $(ROCQ_OPTIONS) $<
 
 .PHONY: clean-vo
@@ -359,7 +363,7 @@ votodo:
 	find . -maxdepth 1 -name '*.v' | sort > /tmp/vfiles
 	find . -maxdepth 1 -name '*.vo' | sed -e 's/\.vo$$/.v/' | sort > /tmp/vofiles
 	diff /tmp/vofiles /tmp/vfiles | sed -e '/^[^>]/d' -e 's/^> .\///' > votodo
-	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -maxdepth 1 -name \*.v | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
+	@export v=`wc -l votodo | sed -e 's/ votodo//'`; export n=`find . -maxdepth 1 -name '*.v' | wc -l`; echo remains $$v/$$n=`expr $${v}00 / $$n`\% 
 
 .PHONY: lptodo
 lptodo: votodo
@@ -376,3 +380,42 @@ clean-votodo: votodo
 .PHONY: lpsize
 lpsize:
 	find . -maxdepth 1 -name '*.lp' -print0 | du --files0-from=- --total -s -h | tail -1
+
+.PHONY: tvs
+tvs: $(BASE).tvs
+
+$(BASE).tvs:
+	hol2dk tvs $(BASE)
+
+.PHONY: lean
+lean: tvs
+	$(MAKE) SET_LP_FILES=1 lean-files
+
+.PHONY: lean-files
+lean-files: $(ROOT_PATH).lean $(LP_FILES:%.lp=$(ROOT_PATH)/%.lean)
+ifneq ($(SET_LP_FILES),1)
+	$(MAKE) SET_LP_FILES=1 $@
+endif
+
+$(ROOT_PATH)/%.lean: %.lp
+	@echo lambdapi export -o stt_lean $<
+	@$(LP_EXPORT) -o stt_lean --arities $(BASE).tvs $< > $@
+
+.PHONY: clean-lean
+clean-lean: rm-lean
+
+.PHONY: rm-lean
+rm-lean:
+	if test -d $(ROOT_PATH); then find $(ROOT_PATH) -maxdepth 1 -name '*.lean' $(LEANFILES:%=-a ! -name $(ROOT_PATH)/%) -delete; fi
+
+$(ROOT_PATH).lean:
+ifneq ($(SET_STI_FILES),1)
+	$(MAKE) SET_STI_FILES=1 $@
+else
+	-rm -f $@
+	for f in $(STI_FILES:%.sti=%); do echo "import $(ROOT_PATH).$$f" >> $@; done
+endif
+
+.PHONY: olean
+olean:
+	LEAN_STACK_SIZE_KB=0 lake build
