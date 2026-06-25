@@ -616,7 +616,7 @@ let decl_theorem oc k p d =
     char oc 'h'; int oc (i+1); string oc " : Prf "; term oc t; string oc " => "
   in
   let hyp_typ term i t =
-    char oc 'h'; int oc (i+1); string oc " : Prf "; term oc t; string oc " ->"
+    char oc 'h'; int oc (i+1); string oc " : Prf "; term oc t; string oc " -> "
   in
   match d with
   | Xlp.DefThmIdProof ->
