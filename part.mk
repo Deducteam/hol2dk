@@ -3,6 +3,7 @@
 BASE := $(shell if test -f BASE; then cat BASE; fi)
 ROOT_PATH := $(shell if test -f ROOT_PATH; then cat ROOT_PATH; fi)
 MAPPING := $(shell if test -f MAPPING; then cat MAPPING; fi)
+RENAMING := $(shell if test -f RENAMING; then cat RENAMING; fi)
 REQUIRING := $(shell if test -f REQUIRING; then cat REQUIRING; fi)
 ROCQFILES := $(shell if test -f ROCQFILES; then cat ROCQFILES; fi)
 

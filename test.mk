@@ -16,7 +16,7 @@ clean:
 
 .PHONY: config
 config:
-	hol2dk config hol_upto_arith.ml HOLLight Stdlib.NArith.BinNat ../test/type.v ../test/mappings_N.v ../test/mappings_N.mk ../test/mappings_N.lp
+	hol2dk config hol_upto_arith.ml HOLLight Stdlib.NArith.BinNat ../test/type.v ../test/mappings_N.v ../test/mappings_N.mk --mapping ../test/mappings_N.lp --renaming ../test/renaming.lp
 
 # single dk
 
