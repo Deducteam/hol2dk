@@ -626,7 +626,7 @@ let decl_theorem oc k p d =
      let term = term tvs rmap in
      string oc "thm lem"; int oc k; string oc " : ";
      list (decl_typ_param tvs) oc tvs; list (decl_param tvs rmap) oc xs;
-     List.iteri (hyp_typ term) ts; string oc "Prf "; term oc t;
+     List.iteri (hyp_typ term) ts; string oc " Prf "; term oc t;
      string oc " := "; list (typ_param tvs) oc tvs;
      list (param tvs rmap) oc xs; List.iteri (hyp term) ts;
      proof tvs rmap oc p; string oc ".\n"
@@ -637,7 +637,7 @@ let decl_theorem oc k p d =
      string oc "lem"; int oc k; string oc " : ";
      list (decl_typ_param tvs) oc tvs;
      list (decl_param tvs rmap) oc xs; List.iteri (hyp_typ term) ts;
-     string oc "Prf "; term oc t; string oc ".\n"
+     string oc " Prf "; term oc t; string oc ".\n"
   | DefThmNameAsThmId n ->
      let tvs = type_vars_in_thm thm in
      let rmap = renaming_map tvs xs in
@@ -645,7 +645,7 @@ let decl_theorem oc k p d =
      string oc "thm lem"; string oc n; string oc " : ";
      list (decl_typ_param tvs) oc tvs;
      list (unabbrev_decl_param tvs rmap) oc xs;
-     List.iteri (hyp_typ term) ts; string oc "Prf "; term oc t;
+     List.iteri (hyp_typ term) ts; string oc " Prf "; term oc t;
      string oc " := lem"; int oc k; string oc ".\n"
   | DeclThmName n ->
      let tvs = type_vars_in_thm thm in
@@ -654,7 +654,7 @@ let decl_theorem oc k p d =
      string oc "def thm_"; string oc n; string oc " : ";
      list (decl_typ_param tvs) oc tvs;
      list (unabbrev_decl_param tvs rmap) oc xs;
-     List.iteri (hyp_typ term) ts; string oc "Prf "; term oc t;
+     List.iteri (hyp_typ term) ts; string oc " Prf "; term oc t;
      string oc ".\n"
 ;;
 

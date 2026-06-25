@@ -578,12 +578,6 @@ let decl_typ oc (n,k) =
 let typ_vars oc ts =
   match ts with
   | [] -> ()
-  | ts -> string oc " ["; list_sep " " typ oc ts; char oc ']'
-;;
-
-let typ_vars_set oc ts =
-  match ts with
-  | [] -> ()
   | ts -> string oc " ["; list_sep " " typ oc ts; string oc " : Set]"
 ;;
 
@@ -704,7 +698,7 @@ let decl_theorem oc k p d =
     if tvs <> [] || xs <> [] || ts <> [] then
       begin
         string oc "Π ";
-        typ_vars_set oc tvs; list (unabbrev_decl_param rmap) oc xs;
+        typ_vars oc tvs; list (unabbrev_decl_param rmap) oc xs;
         decl_hyps term ts;
         string oc ", ";
       end;
