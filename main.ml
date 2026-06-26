@@ -1225,8 +1225,8 @@ and command = function
     Array.iter gen_sed_file files;
     (* generate [b^"_type_abbrevs.lp"] *)
     let decl_type_abbrevs oc =
-      let abbrev s (k,(_,n)) =
-        string oc "symbol type"; int oc k;
+      let abbrev s (idx,(_d,n)) =
+        string oc "symbol type"; int oc idx;
         if n > 0 then begin
           string oc " (a0";
           for i=1 to n-1 do string oc " a"; int oc i done;
