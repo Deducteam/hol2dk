@@ -1227,7 +1227,11 @@ and command = function
     let decl_type_abbrevs oc =
       let abbrev s (idx,(_d,n)) =
         string oc "symbol type"; int oc idx;
-        for i=0 to n-1 do string oc " a"; int oc i done;
+        if n > 0 then begin
+          string oc " (a0";
+          for i=1 to n-1 do string oc " a"; int oc i done;
+          string oc " : Set)"
+        end;
         string oc " ≔ "; string oc s; string oc ";\n"
       in
       MapStr.iter abbrev map
