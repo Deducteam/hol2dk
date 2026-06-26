@@ -1225,14 +1225,8 @@ and command = function
     Array.iter gen_sed_file files;
     (* generate [b^"_type_abbrevs.lp"] *)
     let decl_type_abbrevs oc =
-      let abbrev s (idx,(_d,n)) =
-        string oc "symbol type"; int oc idx;
-        for i=0 to n-1 do string oc " a"; int oc i done;
-        string oc " ≔ "; string oc s; string oc ";\n"
-      in
-      MapStr.iter abbrev map
-    in
-    Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
+      MapStr.iter (Xlp.decl_type_abbrev int oc) map
+    in Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 
   | "type_abbrevs"::_ -> wrong_nb_args()
 

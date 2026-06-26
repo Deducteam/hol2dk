@@ -115,18 +115,18 @@ let abbrev_typ oc b =
 
 let typ = abbrev_typ;;
 
-(* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
+let decl_type_abbrev f oc s (k,n) =
+  string oc "symbol type"; f oc k;
+  if n > 0 then begin
+    string oc " (a0";
+    for i=1 to n-1 do string oc " a"; int oc i done;
+    string oc " : Set)"
+  end;
+  string oc " ≔ "; string oc s; string oc ";\n"
+
+(* [decl_type_abbrevs oc] outputs on [oc] all the type abbreviations. *)
 let decl_type_abbrevs oc =
-  let abbrev s (k,n) =
-    string oc "symbol type"; digest oc k;
-    if n > 0 then begin
-      string oc " (a0";
-      for i=1 to n-1 do string oc " a"; int oc i done;
-      string oc " : Set)"
-    end;
-    string oc " ≔ "; string oc s; string oc ";\n"
-  in
-  MapStr.iter abbrev !map_typ_abbrev
+  MapStr.iter (decl_type_abbrev digest oc) !map_typ_abbrev
 ;;
 
 (****************************************************************************)
