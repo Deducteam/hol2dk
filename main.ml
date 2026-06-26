@@ -1226,7 +1226,8 @@ and command = function
     (* generate [b^"_type_abbrevs.lp"] *)
     let decl_type_abbrevs oc =
       MapStr.iter (Xlp.decl_type_abbrev int oc) map
-    in Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
+    in
+    Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 
   | "type_abbrevs"::_ -> wrong_nb_args()
 
