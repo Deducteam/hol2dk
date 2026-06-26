@@ -1224,8 +1224,7 @@ and command = function
     in
     Array.iter gen_sed_file files;
     (* generate [b^"_type_abbrevs.lp"] *)
-    let decl_type_abbrevs oc =
-      let abbrev s (idx,(_d,n)) =
+      let abbrev oc s (idx,(_d,n)) =
         string oc "symbol type"; int oc idx;
         if n > 0 then begin
           string oc " (a0";
@@ -1234,7 +1233,8 @@ and command = function
         end;
         string oc " ≔ "; string oc s; string oc ";\n"
       in
-      MapStr.iter abbrev map
+    let decl_type_abbrevs oc =
+      MapStr.iter (abbrev oc) map
     in
     Xlp.export (b^"_type_abbrevs") [b^"_types"] decl_type_abbrevs
 
