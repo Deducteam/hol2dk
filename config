@@ -170,9 +170,9 @@ then
     echo create deps.mk ...
     rm -f deps.mk
     touch deps.mk
-    set $base_rocqfiles
-    if test $# -gt 0
+    if test -n "$base_rocqfiles"
     then
+        set $base_rocqfiles
         echo -n ${1}o >> deps.mk
         shift
         for f in $*

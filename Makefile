@@ -406,7 +406,7 @@ clean-lean: rm-lean
 
 .PHONY: rm-lean
 rm-lean:
-	if test -d $(ROOT_PATH); then find $(ROOT_PATH) -maxdepth 1 -name '*.lean' $(LEANFILES:%=-a ! -name $(ROOT_PATH)/%) -delete; fi
+	if test -d $(ROOT_PATH); then find $(ROOT_PATH) -maxdepth 1 -name '*.lean' $(LEANFILES:%=-a ! -path $(ROOT_PATH)/%) -delete; fi
 
 $(ROOT_PATH).lean:
 ifneq ($(SET_STI_FILES),1)
