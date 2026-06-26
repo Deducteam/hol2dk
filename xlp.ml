@@ -115,6 +115,16 @@ let abbrev_typ oc b =
 
 let typ = abbrev_typ;;
 
+let decl_type_abbrev f oc s (idx,(_d,n)) =
+  string oc "symbol type"; f oc idx;
+  if n > 0 then begin
+    string oc " (a0";
+    for i=1 to n-1 do string oc " a"; int oc i done;
+    string oc " : Set)"
+  end;
+  string oc " ≔ "; string oc s; string oc ";\n"
+;;
+
 (* [decl_type_abbrevs oc] outputs on [oc] the type abbreviations. *)
 let decl_type_abbrevs oc =
   let abbrev s (k,n) =
