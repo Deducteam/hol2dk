@@ -119,8 +119,10 @@ let typ = abbrev_typ;;
 let decl_type_abbrevs oc =
   let abbrev s (k,n) =
     string oc "symbol type"; digest oc k;
-    for i=0 to n-1 do string oc " a"; int oc i done;
-    (* We can use [raw_typ] here since [b] is canonical. *)
+    if n > 0 then begin
+      string oc " (a0"; for i=1 to n-1 do string oc " a"; int oc i done;
+      string oc " : Set)"
+    end;
     string oc " ≔ "; string oc s; string oc ";\n"
   in
   MapStr.iter abbrev !map_typ_abbrev
