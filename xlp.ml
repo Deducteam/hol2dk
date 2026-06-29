@@ -378,10 +378,10 @@ let decl_term_abbrev oc t (k,ntvs,bs) =
   string oc "symbol "; string oc n;
   if ntvs > 0 then
     begin
-    raw_update_tvs_map n ntvs; 
-    string oc " (a0";
-    for i=1 to ntvs-1 do string oc " a"; int oc i done;
-    string oc " : Set)"
+      raw_update_tvs_map n ntvs; 
+      string oc " (a0";
+      for i=1 to ntvs-1 do string oc " a"; int oc i done;
+      string oc " : Set)"
     end;
   let decl_var i b =
     string oc " (x"; int oc i; string oc ": El "; abbrev_typ oc b; char oc ')'
