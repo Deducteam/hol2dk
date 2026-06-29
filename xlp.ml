@@ -120,7 +120,8 @@ let decl_type_abbrevs oc =
   let abbrev s (k,n) =
     string oc "symbol type"; digest oc k;
     if n > 0 then begin
-      string oc " (a0"; for i=1 to n-1 do string oc " a"; int oc i done;
+      string oc " (a0";
+      for i=1 to n-1 do string oc " a"; int oc i done;
       string oc " : Set)"
     end;
     string oc " ≔ "; string oc s; string oc ";\n"
@@ -374,9 +375,14 @@ let print_let oc (t,t',_,_) =
 
 let decl_term_abbrev oc t (k,ntvs,bs) =
   let n = "term"^string_of_int k in
-  if ntvs > 0 then raw_update_tvs_map n ntvs;
   string oc "symbol "; string oc n;
-  for i=0 to ntvs-1 do string oc " a"; int oc i done;
+  if ntvs > 0 then
+    begin
+    raw_update_tvs_map n ntvs; 
+    string oc " (a0";
+    for i=1 to ntvs-1 do string oc " a"; int oc i done;
+    string oc " : Set)"
+    end;
   let decl_var i b =
     string oc " (x"; int oc i; string oc ": El "; abbrev_typ oc b; char oc ')'
   in
