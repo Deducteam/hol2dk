@@ -632,8 +632,7 @@ let update_reserved =
   let add_name s (n,_) = SetStr.add n s in
   fun () ->
   reserved :=
-    let s = SetStr.add "el" SetStr.empty in
-    let s = List.fold_left add_name s !the_type_constants in
+    let s = List.fold_left add_name SetStr.empty !the_type_constants in
     List.fold_left add_name s (!the_term_constants)
 ;;
 

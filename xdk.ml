@@ -758,15 +758,6 @@ let export_theorems f map_thid_name cond with_proof =
       out_map_thid_name map_thid_name cond with_proof oc)
 ;;
 
-let export_theory b map_thid_name =
-  export (b^"_theory")
-    (fun oc ->
-       list decl_typ oc (types());
-       list decl_sym oc (constants());
-       decl_axioms oc !the_axioms;
-       out_map_thid_name map_thid_name (fun _ _ -> true) false oc)
-;;
-
 let export_proofs_part b k x y =
   cur_part := Some k;
   export (b^part k) (fun oc -> proofs_in_interval oc x y)
@@ -786,6 +777,14 @@ let theory oc =
   list decl_sym oc (constants());
   string oc "\n(; axioms ;)\n";
   decl_axioms oc !the_axioms
+;;
+
+let export_theory b map_thid_name =
+  export (b^"_theory")
+    (fun oc ->
+       theory oc;
+       string oc "\n(; theorems ;)\n";
+       out_map_thid_name map_thid_name (fun _ _ -> true) false oc)
 ;;
 
 (* [export_to_dk_file_no_abbrev f r] creates a file of name [f.dk] and
