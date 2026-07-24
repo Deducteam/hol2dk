@@ -9,6 +9,18 @@ REMOVE*)
 open Xprelude
 open Fusion
 
+(* HOL-Light types minus those defined in theory_hol.lp *)
+let types() =
+  let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
+  List.filter f (Fusion.types())
+;;
+
+(* HOL-Light constants minus those defined in theory_hol.lp *)
+let constants() =
+  let f (n,_) = match n with "=" | "@" | "el" -> false | _ -> true in
+  List.filter f (Fusion.constants())
+;;
+
 (****************************************************************************)
 (* Ranges of proof indexes. *)
 (****************************************************************************)

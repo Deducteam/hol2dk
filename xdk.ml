@@ -781,9 +781,9 @@ let export_proofs_part b k x y =
 let theory oc =
   string oc (string_of_file "theory_hol.dk");
   string oc "\n(; type constructors ;)\n";
-  list decl_typ oc (Xlp.types());
+  list decl_typ oc (types());
   string oc "\n(; constants ;)\n";
-  list decl_sym oc (Xlp.constants());
+  list decl_sym oc (constants());
   string oc "\n(; axioms ;)\n";
   decl_axioms oc !the_axioms
 ;;
