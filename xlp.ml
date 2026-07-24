@@ -1116,6 +1116,7 @@ let export_theorem_proof_part b n k =
 (* Functions called in single file generation and by the command "sig"
    in b.mk and Makefile. *)
 
+(* HOL-Light types minus those defined in theory_hol.lp *)
 let types() =
   let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
   List.filter f (types())
@@ -1125,8 +1126,9 @@ let export_types b =
   export (b^"_types") [] (fun oc -> list decl_typ oc (types()))
 ;;
 
+(* HOL-Light constants minus those defined in theory_hol.lp *)
 let constants() =
-  let f (n,_) = match n with "=" | "el" -> false | _ -> true in
+  let f (n,_) = match n with "=" | "@" -> false | _ -> true in
   List.filter f (constants())
 ;;
 
@@ -1186,15 +1188,14 @@ let export_theorems f b map_thid_name cond =
    with, for a type declaration for each type, axiom and named theorem. *)
 let export_theory b map_thid_name =
   let oc = log_open_out (b^"_theory.lp") in
-  let ic = open_in "theory_hol.lp" in
-  begin
-    try while true do string oc (input_line ic ^ "\n") done
-    with End_of_file -> ()
-  end;
-  close_in ic;
+  string oc (string_of_file "theory_hol.lp");
+  string oc "\n/* type constructors */\n\n";
   list decl_typ oc (types());
+  string oc "\n/* constants */\n\n";
   list decl_sym oc (constants());
+  string oc "\n/* axioms */\n\n";
   decl_axioms oc !the_axioms;
+  string oc "\n/* theorems */\n\n";
   out_map_thid_name map_thid_name (fun _ _ -> true) false oc;
   close_out oc
 ;;

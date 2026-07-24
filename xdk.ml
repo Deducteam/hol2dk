@@ -685,66 +685,6 @@ let proofs_in_range oc = function
 ;;
 
 (****************************************************************************)
-(* Generation of encoding symbols. *)
-(****************************************************************************)
-
-(*let qualify_types s =
-  let re = Str.regexp "\\(Set\\|bool\\)" in
-  let r = !basename ^ "_types.\1" in
-  let s = Str.global_replace re r s in
-  let re = Str.regexp "fun\\([^_]\\)" in
-  let r = !basename ^ "_types.fun\1" in
-  Str.global_replace re r s
-;;
-
-let qualify_terms s =
-  let re = Str.regexp "\\(El\\|eq\\)" in
-  let r = !basename ^ "_terms.\1" in
-  Str.global_replace re r (qualify_types s)
-;;*)
-
-let decl_Prf = (*qualify_terms*) "injective Prf : El bool -> Type.";;
-
-let decl_El = (*qualify_types*)
-"injective El : Set -> Type.
-[a, b] El (fun a b) --> El a -> El b.";;
-
-let decl_rules = (*qualify_terms*)
-"def fun_ext : a : Set -> b : Set -> f : El (fun a b) -> g : El (fun a b) ->
-  (x : El a -> Prf (eq b (f x) (g x))) -> Prf (eq (fun a b) f g).
-def prop_ext : p : El bool -> q : El bool ->
-  (Prf p -> Prf q) -> (Prf q -> Prf p) -> Prf (eq bool p q).
-def REFL : a : Set -> t : El a -> Prf (eq a t t).
-def MK_COMB : a : Set -> b : Set -> s : El (fun a b) -> t : El (fun a b) ->
-  u : El a -> v : El a -> Prf(eq (fun a b) s t) -> Prf(eq a u v) ->
-  Prf (eq b (s u) (t v)).
-def EQ_MP : p : El bool -> q : El bool -> Prf(eq bool p q) -> Prf p -> Prf q.
-thm TRANS : a : Set -> x : El a -> y : El a -> z : El a ->
-  Prf (eq a x y) -> Prf (eq a y z) -> Prf (eq a x z) :=
-  a: Set => x: El a => y: El a => z: El a =>
-  xy: Prf (eq a x y) => yz: Prf (eq a y z) =>
-  EQ_MP (eq a x y) (eq a x z)
-    (MK_COMB a bool (eq a x) (eq a x) y z
-      (REFL (fun a bool) (eq a x)) yz) xy.
-
-(; natural deduction rules ;)
-[p, q] Prf (imp p q) --> Prf p -> Prf q.
-[a, p] Prf (all a p) --> x : El a -> Prf (p x).
-def top : Prf T.
-def and_intro : p : El bool -> Prf p -> q : El bool -> Prf q -> Prf (and p q).
-def and_elim1 : p : El bool -> q : El bool -> Prf (and p q) -> Prf p.
-def and_elim2 : p : El bool -> q : El bool -> Prf (and p q) -> Prf q.
-def ex_intro :
-  a : Set -> p : (El a -> El bool) -> t : El a -> Prf (p t) -> Prf (ex a p).
-def ex_elim : a : Set -> p : (El a -> El bool) -> Prf (ex a p)
-  -> r : El bool -> (x : El a -> Prf (p x) -> Prf r) -> Prf r.
-def or_intro1 : p : El bool -> Prf p -> q : El bool -> Prf (or p q).
-def or_intro2 : p : El bool -> q : El bool -> Prf q -> Prf (or p q).
-def or_elim : p : El bool -> q : El bool -> Prf (or p q)
-  -> r : El bool -> (Prf p -> Prf r) -> (Prf q -> Prf r) -> Prf r.
-";;
-
-(****************************************************************************)
 (* Dedukti file generation with type and term abbreviations. *)
 (****************************************************************************)
 
@@ -839,32 +779,13 @@ let export_proofs_part b k x y =
 (* [theory oc] outputs on [oc] all types, constants and axioms used in
    proofs. *)
 let theory oc =
-  let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
-  let types = List.filter f (types()) in
-  let f (n,_) = match n with "=" | "el" -> false | _ -> true in
-  let constants = List.filter f (constants()) in
-  string oc
-"(; Encoding of simple type theory ;)
-Set : Type.
-bool : Set.
-fun : Set -> Set -> Set.
-injective El : Set -> Type.
-[a, b] El (fun a b) --> El a -> El b.
-injective Prf : El bool -> Type.
-
-(; HOL-Light axioms and rules ;)
-el : a : Set -> El a.
-eq : a : Set -> El a -> El a -> El bool.\n";
-  string oc decl_rules;
+  string oc (string_of_file "theory_hol.dk");
   string oc "\n(; type constructors ;)\n";
-  list decl_typ oc types;
+  list decl_typ oc (Xlp.types());
   string oc "\n(; constants ;)\n";
-  list decl_sym oc constants;
+  list decl_sym oc (Xlp.constants());
   string oc "\n(; axioms ;)\n";
-  decl_axioms oc !the_axioms;
-  string oc "\n(; definitions ;)\n";
-  list decl_def oc !the_definitions;
-  string oc "\n"
+  decl_axioms oc !the_axioms
 ;;
 
 (* [export_to_dk_file_no_abbrev f r] creates a file of name [f.dk] and
@@ -877,7 +798,9 @@ let export_to_dk_file_no_abbrev f r =
   log "generate %s ...\n%!" filename;
   let oc = open_out filename in
   theory oc;
-  string oc "(; theorems ;)\n";
+  string oc "\n(; definitions ;)\n";
+  list decl_def oc !the_definitions;
+  string oc "\n(; theorems ;)\n";
   proofs_in_range oc r;
   close_out oc
 ;;
