@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         dune-version: [3.23.1]
-        ocaml-version: [5.3.0]
-        camlp5-version: [8.03.06]
+        ocaml-version: [5.4.1]
+        camlp5-version: [8.05.01]
         hol-light-version: [3.1.0]
         hol-light-commit: [37af947]
         lambdapi-version: [master]
