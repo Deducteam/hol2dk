@@ -1,6 +1,9 @@
 .SUFFIXES:
 
-TESTS := test1 test2 test3 test4 test5
+NB_TESTS := 5
+
+TESTS := $(shell seq -f "test%g" $(NB_TESTS))
+DIRS := $(TESTS:test%=output%)
 
 .PHONY: default
 default: $(TESTS)
@@ -8,11 +11,13 @@ default: $(TESTS)
 test%: output%
 	$(MAKE) -C output$* -f ../test/test.mk do-test$*
 
+.PRECIOUS: $(DIRS)
+
 output%:
 	mkdir -p output$*
 
 clean:
-	-rm -rf $(TESTS:test%=output%)
+	-rm -rf $(DIRS)
 
 .PHONY: config
 config:

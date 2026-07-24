@@ -160,7 +160,7 @@ Proof.
     + exact h.
 Qed.
 
-Lemma is_False P : (P = False) = ~ P.
+Lemma is_False P : (P = False) = (~ P).
 Proof.
   apply prop_ext; intro h.
   - rewrite h.
@@ -972,7 +972,7 @@ Qed.
 Lemma mk_num_prop i : NUM_REP i -> dest_num (mk_num i) = i.
 Proof. intro hi. symmetry. apply (ε_spec (mk_num_ex i hi)). Qed.
 
-Notation dest_num_mk_num := mk_num_prop.
+Abbreviation dest_num_mk_num := mk_num_prop.
 
 Lemma mk_num_dest_num k : mk_num (dest_num k) = k.
 Proof. apply dest_num_inj. apply dest_num_mk_num. apply NUM_REP_dest_num. Qed.
@@ -1337,7 +1337,7 @@ Proof. intros n; apply N.even_spec; exists n; reflexivity. Qed.
 Lemma odd_even : forall n, N.odd (2 * n) = false.
 Proof. intros n; rewrite <- N.negb_even, even_even; reflexivity. Qed.
 
-Lemma NEvenS: forall n: N, N.Even (N.succ n) = ~ N.Even n.
+Lemma NEvenS: forall n: N, N.Even (N.succ n) = (~ N.Even n).
 Proof.
   intro n.
   rewrite (prop_ext_eq (N.Even_succ n)).

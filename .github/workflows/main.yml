@@ -23,7 +23,7 @@ jobs:
         hol-light-commit: [37af947]
         lambdapi-version: [master]
         dedukti-version: [2.7]
-        rocq-version: [meta.1]
+        rocq-version: [9.2.0]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -93,7 +93,7 @@ jobs:
           make -j3 -f test/test.mk test3
       - name: Install rocq
         run: |
-          opam install -y rocq-prover.${{ matrix.rocq-version }}
+          opam install -y rocq-prover rocq-core=${{ matrix.rocq-version }}
       - name: Test 4 multi-threaded lp output with mk
         run: |
           eval `opam env`
