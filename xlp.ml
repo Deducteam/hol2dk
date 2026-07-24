@@ -1161,10 +1161,10 @@ let export_proofs b r =
 let out_map_thid_name map_thid_name cond with_proof oc =
   MapInt.iter
     (fun k n ->
-      if cond k n
-      then if with_proof then
-             decl_theorem oc k (proof_at k) (DefThmNameAsThmId ("thm_"^n))
-           else decl_theorem oc k (proof_at k) (DeclThmName ("thm_"^n)))
+       if cond k n then
+         decl_theorem oc k (proof_at k)
+           (if with_proof then DefThmNameAsThmId ("thm_"^n)
+            else DeclThmName ("thm_"^n)))
     map_thid_name
 ;;
 
@@ -1175,11 +1175,22 @@ let single_export_theorems f b map_thid_name =
     (out_map_thid_name map_thid_name (fun _ _ -> true) true)
 ;;
 
-(* Called in Makefile by the command "axm". Generate f.lp with, for
+(* Called in Makefile by the command "opam". Generate f.lp with, for
    each named theorem name, a declaration "symbol thm_name : type". *)
 let export_theorems f b map_thid_name cond =
   export f [b^"_types";b^"_terms"]
     (out_map_thid_name map_thid_name cond false)
+;;
+
+(* Called in Makefile by the command "theory". Generate b_theory.lp
+   with, for a type declaration for each type, axiom and named theorem. *)
+let export_theory b map_thid_name =
+  export (b^"_theory") []
+    (fun oc ->
+       list decl_typ oc (types());
+       list decl_sym oc (constants());
+       decl_axioms oc !the_axioms;
+       out_map_thid_name map_thid_name (fun _ _ -> true) false oc)
 ;;
 
 (* Called in b.mk by the command "part" to create b_part_k and the

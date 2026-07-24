@@ -802,17 +802,29 @@ let export_proofs b r =
   export (b^"_proofs")
     (fun oc -> string oc "\n(; theorems ;)\n"; proofs_in_range oc r);;
 
+let out_map_thid_name map_thid_name cond with_proof oc =
+  MapInt.iter
+    (fun k n ->
+       if cond k n then
+         decl_theorem oc k (proof_at k)
+           (if with_proof then DefThmNameAsThmId ("thm_"^n)
+            else DeclThmName ("thm_"^n)))
+    map_thid_name
+;;
+
 let export_theorems f map_thid_name cond with_proof =
   export f
+    (fun oc -> string oc "\n(; named theorems ;)\n";
+      out_map_thid_name map_thid_name cond with_proof oc)
+;;
+
+let export_theory b map_thid_name =
+  export (b^"_theory")
     (fun oc ->
-      string oc "\n(; named theorems ;)\n";
-      MapInt.iter
-        (fun k n ->
-          if cond k n then
-            if with_proof then
-              decl_theorem oc k (proof_at k) (Xlp.DefThmNameAsThmId n)
-            else decl_theorem oc k (proof_at k) (Xlp.DeclThmName n))
-        map_thid_name)
+       list decl_typ oc (types());
+       list decl_sym oc (constants());
+       decl_axioms oc !the_axioms;
+       out_map_thid_name map_thid_name (fun _ _ -> true) false oc)
 ;;
 
 let export_proofs_part b k x y =

@@ -61,7 +61,7 @@ $(BASE_FILES:%=%.lp) &:
 	$(HOL2DK) sig $(BASE).lp
 
 $(BASE)_opam.lp:
-	$(HOL2DK) axm $(BASE).lp
+	$(HOL2DK) opam $(BASE).lp
 
 .PHONY: opam
 opam: $(BASE_FILES:%=%.v) $(BASE)_opam.v

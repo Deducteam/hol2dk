@@ -138,7 +138,7 @@ hol2dk thm $base.(dk|lp)
 Other commands
 --------------
 
-hol2dk axm $base.(dk|lp)
+hol2dk opam $base.(dk|lp)
   generate ${base}_opam.(dk|lp) with all the statements of all the theorems
   but without proofs
 
@@ -944,7 +944,7 @@ and command = function
 
   (* Called in Makefile to generate b_opam.lp with, for each named
      theorem, a declaration "symbol thm_name : type". *)
-  | ["axm";f] ->
+  | ["opam";f] ->
      let dk = is_dk f in
      let b = Filename.chop_extension f in
      read_sig b;
@@ -958,11 +958,28 @@ and command = function
      end;
      close_in !Xproof.ic_prf
 
-  | "axm"::_ -> wrong_nb_args()
+  | "opam"::_ -> wrong_nb_args()
 
-  (* Called in Makefile to generate, for each file n required by f, a
-     file n.lp with a declaration "symbol thm_name : type" for each
-     named theorem in n.ml. *)
+  (* To generate b_theory.lp with a symbol declaration for each type,
+     axiom and named theorem. *)
+  | ["theory";f] ->
+     let dk = is_dk f in
+     let b = Filename.chop_extension f in
+     read_sig b;
+     let map_thid_name = read_val (b^".thm") in
+     read_pos b;
+     init_proof_reading b;
+     begin
+       if dk then Xdk.export_theory b map_thid_name
+       else Xlp.export_theory b map_thid_name
+     end;
+     close_in !Xproof.ic_prf
+
+  | "theory"::_ -> wrong_nb_args()
+
+  (* Called in Makefile to generate, for each file g.ml required by
+     f.ml, a file g.lp with a declaration "symbol thm_name : type" for
+     each named theorem in g.ml. *)
   | ["files";f] ->
      let dk = is_dk f in
      let f = Filename.chop_extension f in
@@ -976,12 +993,12 @@ and command = function
          let d = Sys.getenv "HOLLIGHT_DIR" in
          let dg = dep_graph d (files d) in
          let files = trans_file_deps dg [f^".ml"] in
-         let gen file =
-           let thm_names = thms_of_file (Filename.concat d file) in
+         let gen g =
+           let thm_names = thms_of_file (Filename.concat d g) in
            let cond _ n = List.mem n thm_names in
-           let f = Filename.chop_extension file in
-           if dk then Xdk.export_theorems f map_thid_name cond false
-           else Xlp.export_theorems f b map_thid_name cond
+           let g = Filename.chop_extension g in
+           if dk then Xdk.export_theorems g map_thid_name cond false
+           else Xlp.export_theorems g b map_thid_name cond
          in
          List.iter gen files;
          close_in !Xproof.ic_prf
