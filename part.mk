@@ -183,7 +183,7 @@ $(BASE).lp: $(BASE).sig $(BASE).thm $(BASE).pos $(BASE).prf
 	hol2dk thm $(BASE).lp
 
 $(BASE)_opam.lp: $(BASE).sig $(BASE).thm $(BASE).pos $(BASE).prf
-	hol2dk axm $(BASE).lp
+	hol2dk opam $(BASE).lp
 
 $(BASE)_type_abbrevs.lp:
 	hol2dk type_abbrevs $(BASE)

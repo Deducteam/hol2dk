@@ -16,14 +16,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dune-version: [3.20.2]
-        ocaml-version: [5.3.0]
+        dune-version: [3.23.1]
+        ocaml-version: [5.5.0]
         camlp5-version: [8.03.06]
         hol-light-version: [3.1.0]
         hol-light-commit: [37af947]
-        lambdapi-version: [master] # >= 3.0.0
+        lambdapi-version: [master]
         dedukti-version: [2.7]
-        rocq-version: [9.0.0]
+        rocq-version: [9.2.0]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
@@ -73,19 +73,19 @@ jobs:
           cp test/hol_upto_arith.ml test/hol_lib_upto_arith.ml hol-light/
           cd hol-light
           hol2dk dump-simp-before-hol hol_upto_arith.ml
-      - name: Test single-threaded dk output
+      - name: Test 1 single-threaded dk output
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
           make -f test/test.mk test1
-      - name: Test single-threaded lp output
+      - name: Test 2 single-threaded lp output
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
           make -f test/test.mk test2
-      - name: Test multi-threaded dk output with mk
+      - name: Test 3 multi-threaded dk output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
@@ -94,13 +94,13 @@ jobs:
       - name: Install rocq
         run: |
           opam install -y rocq-prover.${{ matrix.rocq-version }}
-      - name: Test multi-threaded lp output with mk
+      - name: Test 4 multi-threaded lp output with mk
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
           export HOLLIGHT_DIR=`pwd`/hol-light
           make -j3 -f test/test.mk test4
-      - name: Test multi-threaded lp output with split
+      - name: Test 5 multi-threaded lp output with split
         run: |
           eval `opam env`
           export HOL2DK_DIR=`pwd`
