@@ -23,7 +23,7 @@ jobs:
         hol-light-commit: [37af947]
         lambdapi-version: [master]
         dedukti-version: [2.7]
-        rocq-version: [9.2.0]
+        rocq-version: [meta.1]
     runs-on: ubuntu-latest
     steps:
     # actions/checkout must be done BEFORE avsm/setup-ocaml
