@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - command tvs to generate in a .tvs file the type arity of constants
 - Makefile targets for translating lp files to lean
 - command theory to generate a file base_theory.(lp|dk) containing theory_hol, the types, constants, axioms and theorem statements
+- rename command axm into opam
 
 ## 2.1.0 (2025-11-20)
 
