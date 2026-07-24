@@ -1188,7 +1188,7 @@ let export_theory b map_thid_name =
   let oc = log_open_out (b^"_theory.lp") in
   let ic = open_in "theory_hol.lp" in
   begin
-    try while true do string oc (input_line ic) done
+    try while true do string oc (input_line ic ^ "\n") done
     with End_of_file -> ()
   end;
   close_in ic;
