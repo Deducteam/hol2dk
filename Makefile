@@ -70,6 +70,16 @@ opam: $(BASE_FILES:%=%.v) $(BASE)_opam.v
 clean-opam:
 	-rm -f $(BASE)_opam.*
 
+.PHONY: theory
+theory: $(BASE)_theory.v
+
+$(BASE)_theory.lp:
+	$(HOL2DK) theory $(BASE).lp
+
+.PHONY: clean-theory
+clean-theory:
+	-rm -f $(BASE)_theory.*
+
 .PHONY: single
 single: $(BASE).lp
 

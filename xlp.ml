@@ -378,7 +378,7 @@ let decl_term_abbrev oc t (k,ntvs,bs) =
   string oc "symbol "; string oc n;
   if ntvs > 0 then
     begin
-      raw_update_tvs_map n ntvs; 
+      raw_update_tvs_map n ntvs;
       string oc " (a0";
       for i=1 to ntvs-1 do string oc " a"; int oc i done;
       string oc " : Set)"
@@ -1185,12 +1185,18 @@ let export_theorems f b map_thid_name cond =
 (* Called in Makefile by the command "theory". Generate b_theory.lp
    with, for a type declaration for each type, axiom and named theorem. *)
 let export_theory b map_thid_name =
-  export (b^"_theory") []
-    (fun oc ->
-       list decl_typ oc (types());
-       list decl_sym oc (constants());
-       decl_axioms oc !the_axioms;
-       out_map_thid_name map_thid_name (fun _ _ -> true) false oc)
+  let oc = log_open_out (b^"_theory.lp") in
+  let ic = open_in "theory_hol.lp" in
+  begin
+    try while true do string oc (input_line ic) done
+    with End_of_file -> ()
+  end;
+  close_in ic;
+  list decl_typ oc (types());
+  list decl_sym oc (constants());
+  decl_axioms oc !the_axioms;
+  out_map_thid_name map_thid_name (fun _ _ -> true) false oc;
+  close_out oc
 ;;
 
 (* Called in b.mk by the command "part" to create b_part_k and the
