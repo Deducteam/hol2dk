@@ -972,7 +972,7 @@ Qed.
 Lemma mk_num_prop i : NUM_REP i -> dest_num (mk_num i) = i.
 Proof. intro hi. symmetry. apply (ε_spec (mk_num_ex i hi)). Qed.
 
-Abbreviation dest_num_mk_num := mk_num_prop.
+Notation dest_num_mk_num := mk_num_prop.
 
 Lemma mk_num_dest_num k : mk_num (dest_num k) = k.
 Proof. apply dest_num_inj. apply dest_num_mk_num. apply NUM_REP_dest_num. Qed.
@@ -1352,7 +1352,7 @@ Proof.
       + trivial.
 Qed.
 
-Lemma NOddS: forall n: N, N.Odd (N.succ n) = ~ N.Odd n.
+Lemma NOddS: forall n: N, N.Odd (N.succ n) = (~ N.Odd n).
 Proof.
   intro n.
   rewrite (prop_ext_eq (N.Odd_succ n)).
