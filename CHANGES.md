@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- command tvs to generate in a .tvs file the type arity of constants
+- Makefile targets for translating lp files to lean
+- command theory to generate a file base_theory.(lp|dk) containing theory_hol, the types, constants, axioms and theorem statements
+
 ## 2.1.0 (2025-11-20)
 
 ### Added
