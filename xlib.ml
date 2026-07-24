@@ -12,13 +12,13 @@ open Fusion
 (* HOL-Light types minus those defined in theory_hol.lp *)
 let types() =
   let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
-  List.filter f (Fusion.types())
+  List.filter f (!the_type_constants)
 ;;
 
 (* HOL-Light constants minus those defined in theory_hol.lp *)
 let constants() =
   let f (n,_) = match n with "=" | "@" | "el" -> false | _ -> true in
-  List.filter f (Fusion.constants())
+  List.filter f (!the_term_constants)
 ;;
 
 (****************************************************************************)
@@ -1093,7 +1093,7 @@ let update_map_const_typ_vars_pos() =
             (tyvars b)
         in
         MapStr.add n ps map)
-      MapStr.empty (constants())
+      MapStr.empty (!the_term_constants)
 ;;
 
 let typ_var_pos_list = list_sep "; " (list_sep "," int);;

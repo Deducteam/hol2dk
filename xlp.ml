@@ -1121,13 +1121,11 @@ let export_types b =
 ;;
 
 let export_terms b =
-  let n = b^"_terms" in
-  export n [b^"_types"] (fun oc -> list decl_sym oc (constants()))
+  export (b^"_terms") [b^"_types"] (fun oc -> list decl_sym oc (constants()))
 ;;
 
 let export_axioms b =
-  let n = b^"_axioms" in
-  export n [b^"_types"; b^"_terms"]
+  export (b^"_axioms") [b^"_types"; b^"_terms"]
     (fun oc -> decl_axioms oc !the_axioms)
 ;;
 
