@@ -139,8 +139,11 @@ Other commands
 --------------
 
 hol2dk opam $base.(dk|lp)
-  generate ${base}_opam.(dk|lp) with all the statements of all the theorems
-  but without proofs
+  generate ${base}_opam.(dk|lp) with all the theorem statements but no proof
+
+hol2dk theory $base.(dk|lp)
+  generate ${base}_theory.(dk|lp) with all the types, constants, axioms and
+  theorem statements
 
 hol2dk files [$path/]$base.(dk|lp)
   for each HOL-Light file required by $HOLLIGHT_DIR/$path/$base.ml, generate
