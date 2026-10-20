@@ -33,7 +33,7 @@ do-test1: config
 
 do-test2: config
 	hol2dk hol_upto_arith.lp
-	lambdapi check -v0 -w -c hol_upto_arith.lp
+	lambdapi check -v 0 -w -c hol_upto_arith.lp
 
 # multi dk
 
