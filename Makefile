@@ -248,7 +248,7 @@ ifneq ($(INCLUDE_LPO_MK),1)
 endif
 
 %.lpo: %.lp
-	lambdapi check -c -w -v0 $<
+	lambdapi check -c -w -v 0 $<
 
 .PHONY: clean-lpo
 clean-lpo: rm-lpo
@@ -263,11 +263,11 @@ ifneq ($(SET_LP_FILES),1)
 	$(MAKE) SET_LP_FILES=1 $@
 endif
 
-LP_EXPORT = lambdapi export -o $(1) --encoding $(HOL2DK_DIR)/encoding.lp --mapping $(MAPPING) --renaming $(RENAMING) --requiring "$(REQUIRING)" --use-notations
+EXPORT_OPTIONS := --encoding $(HOL2DK_DIR)/encoding.lp --mapping $(MAPPING) --renaming $(RENAMING) --requiring "$(REQUIRING)" --use-notations
 
 %.v: %.lp
 	@echo lambdapi export -o stt_coq $<
-	@$(call LP_EXPORT,stt_coq) $< > $@
+	@lambdapi export -o stt_coq $(EXPORT_OPTIONS) $< > $@
 
 .PHONY: clean-v
 clean-v: rm-v clean-vo
@@ -409,7 +409,7 @@ endif
 
 $(ROOT_PATH)/%.lean: %.lp
 	@echo lambdapi export -o stt_lean $<
-	@$(call LP_EXPORT,stt_lean) --arities $(BASE).tvs $< > $@
+	@lambdapi export -o stt_lean $(EXPORT_OPTIONS) --arities $(BASE).tvs $< > $@
 
 .PHONY: clean-lean
 clean-lean: rm-lean
