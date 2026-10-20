@@ -111,7 +111,7 @@ LP_FILES := $(wildcard *.lp)
 lpo: $(LP_FILES:%.lp=%.lpo)
 
 %.lpo: %.lp
-	lambdapi check -v0 -w -c $<
+	lambdapi check -v 0 -w -c $<
 
 include lpo.mk
 
