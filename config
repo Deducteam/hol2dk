@@ -79,7 +79,7 @@ parse_args() {
                     shift
                     parse_args $*
                 else
-                    error 'too many make files'
+                    error 'too many mk files'
                 fi;;
             *.v)
                 if test -z "$root_path"
