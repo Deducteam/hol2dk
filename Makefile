@@ -41,15 +41,15 @@ rm-sti:
 
 .PHONY: rm-nbp
 rm-nbp:
-	-find . -maxdepth 1 -name '*.nbp' -a ! -name $(BASE).nbp -delete
+	-find . -maxdepth 1 -name '*.nbp' -a ! -wholename $(BASE).nbp -delete
 
 .PHONY: rm-pos
 rm-pos:
-	-find . -maxdepth 1 -name '*.pos' -a ! -name $(BASE).pos -delete
+	-find . -maxdepth 1 -name '*.pos' -a ! -wholename $(BASE).pos -delete
 
 .PHONY: rm-use
 rm-use:
-	-find . -maxdepth 1 -name '*.use' -a ! -name $(BASE).use -delete
+	-find . -maxdepth 1 -name '*.use' -a ! -wholename $(BASE).use -delete
 
 .PHONY: rm-thp
 rm-thp:
@@ -96,7 +96,7 @@ SET_LP_FILES=1
 endif
 
 ifeq ($(SET_LP_FILES),1)
-LP_FILES := $(shell find . -maxdepth 1 -name '*.lp' -a ! -name $(MAPPING) -a ! -name $(RENAMING))
+LP_FILES := $(shell find . -maxdepth 1 -name '*.lp' -a ! -wholename $(MAPPING) -a ! -wholename $(RENAMING))
 endif
 
 ifeq ($(SET_V_FILES),1)
@@ -183,7 +183,7 @@ EXCEPT := theory_hol.lp $(MAPPING) $(RENAMING)
 
 .PHONY: rm-lp
 rm-lp:
-	-find . -maxdepth 1 -name '*.lp' $(EXCEPT:%=-a ! -name %) -delete
+	-find . -maxdepth 1 -name '*.lp' $(EXCEPT:%=-a ! -wholename %) -delete
 
 .PHONY: rm-lpo-mk
 rm-lpo-mk:
@@ -275,7 +275,7 @@ clean-v: rm-v clean-vo
 
 .PHONY: rm-v
 rm-v:
-	-find . -maxdepth 1 -name '*.v' $(ROCQFILES:%=-a ! -name %) -delete
+	-find . -maxdepth 1 -name '*.v' $(ROCQFILES:%=-a ! -wholename %) -delete
 
 .PHONY: rm-empty-deps
 rm-empty-deps: $(V_FILES:%=%.rm)
