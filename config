@@ -30,7 +30,7 @@ effect in the current directory:
 - create a file _CoqProject
 - create a file MAPPING containing \$mapping.lp
 - create a file RENAMING containing \$renaming.lp
-- create a file REQUIRING containing the list of Rocq module names that need to be imported (in the same order as they are given in the command)
+- create a file REQUIRING containing the list of module names that need to be imported (in the same order as they are given in the command)
 - create a file ROCQFILES containing the list of Rocq files given in argument
 - create a file LEANFILES containing the list of Lean files given in argument
 - copy \$deps.mk and the Rocq files given in argument
