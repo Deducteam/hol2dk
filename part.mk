@@ -14,8 +14,7 @@ default:
 	@echo "usage: make TARGET [VAR=VAL ...]"
 	@echo "targets: lp lpo v vo opam clean-<target> clean-all"
 
-.PHONY: part
-part $(BASE).dg &:
+$(BASE).dg:
 	hol2dk mk $(NB_PARTS) $(BASE)
 
 $(BASE).mk: $(BASE).dg
