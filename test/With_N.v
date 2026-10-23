@@ -785,7 +785,7 @@ Proof.
     apply prove_COND.
     - intros ->. cbn. split.
       + reflexivity.
-      + apply Zdiv.Zmod_0_r.
+      + apply Z.mod_0_r.
     - intros hnz.
       assert (han : (0 < Z.abs n)%Z).
       { pose proof (Z.abs_nonneg n). lia. }
@@ -813,7 +813,7 @@ Proof.
     apply prove_COND.
     - intros ->. cbn. split.
       + reflexivity.
-      + apply Zdiv.Zmod_0_r.
+      + apply Z.mod_0_r.
     - cbn. intros hnz.
       assert (han : (0 < Z.abs n)%Z).
       { pose proof (Z.abs_nonneg n). lia. }
@@ -826,7 +826,7 @@ Proof.
   ext m n. specialize (h m n).
   eapply COND_elim with (1 := h) ; clear.
   - unfold Zdiv, Zrem. intros -> [e ->].
-    cbn. apply Zdiv.Zmod_0_r.
+    cbn. apply Z.mod_0_r.
   - unfold Zdiv, Zrem. intros hnz [h1 [h2 h3]].
     pose proof (Z.div_mod m (Z.abs n)) as e.
     rewrite <- Z.sgn_abs in e at 1.
@@ -864,7 +864,7 @@ Lemma int_divides_def :
 Proof.
   ext a b. apply prop_ext.
   - apply divide_alt.
-  - intros [c e]. eapply Znumtheory.Zdivide_intro with c. lia.
+  - intros [c e]. eapply ex_intro with c. lia.
 Qed.
 
 Definition int_coprime '(a,b) := exists x y, (a * x + b * y = 1)%Z.
@@ -915,7 +915,7 @@ Proof.
       lia.
     }
     assert (hmab : (Z.abs (a * b) mod m)%Z = 0%Z).
-    { apply Znumtheory.Zdivide_mod.
+    { apply Zdivisibility.Z.mod0_divide.
       rewrite Z.divide_abs_r.
       apply Z.lcm_least.
       - apply Z.divide_mul_l. reflexivity.
@@ -974,7 +974,7 @@ Proof.
           rewrite Z.mul_comm.
           replace ((m / n) * n)%Z with (n * (m / n))%Z by lia.
           rewrite <- Zdiv.Z_div_exact_full_2. 2: assumption.
-          2:{ apply Znumtheory.Zdivide_mod. assumption. }
+          2:{ apply Zdivisibility.Z.mod0_divide. assumption. }
           lia.
         }
         apply Z.mul_divide_mono_r.
@@ -989,7 +989,7 @@ Proof.
           2:{
             rewrite Z.divide_div_mul_exact. 2,3: assumption.
             rewrite <- Zdiv.Z_div_exact_full_2. 2: assumption.
-            2:{ apply Znumtheory.Zdivide_mod. assumption. }
+            2:{ apply Zdivisibility.Z.mod0_divide. assumption. }
             reflexivity.
           }
           apply Z.divide_div. 1: assumption.
@@ -1002,7 +1002,7 @@ Proof.
           2:{
             rewrite Z.divide_div_mul_exact. 2,3: assumption.
             rewrite <- Zdiv.Z_div_exact_full_2. 2: assumption.
-            2:{ apply Znumtheory.Zdivide_mod. assumption. }
+            2:{ apply Zdivisibility.Z.mod0_divide. assumption. }
             reflexivity.
           }
           apply Z.divide_div. 1: assumption.
