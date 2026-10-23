@@ -972,7 +972,7 @@ Qed.
 Lemma mk_num_prop i : NUM_REP i -> dest_num (mk_num i) = i.
 Proof. intro hi. symmetry. apply (ε_spec (mk_num_ex i hi)). Qed.
 
-Notation dest_num_mk_num := mk_num_prop.
+Abbreviation dest_num_mk_num := mk_num_prop.
 
 Lemma mk_num_dest_num k : mk_num (dest_num k) = k.
 Proof. apply dest_num_inj. apply dest_num_mk_num. apply NUM_REP_dest_num. Qed.
