@@ -976,7 +976,8 @@ and command = function
        if dk then Xdk.export_theory b map_thid_name
        else Xlp.export_theory b map_thid_name
      end;
-     close_in !Xproof.ic_prf
+     close_in !Xproof.ic_prf;
+     write_val (b^"_theory.tvs") !Xlp.tvs_map
 
   | "theory"::_ -> wrong_nb_args()
 
