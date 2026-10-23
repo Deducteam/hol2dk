@@ -87,7 +87,6 @@ $(BASE).lp:
 	$(HOL2DK) $(BASE).lp
 
 ifeq ($(INCLUDE_VO_MK),1)
-INCLUDE_LPO_MK=1
 SET_V_FILES=1
 endif
 
@@ -233,13 +232,13 @@ ifeq ($(INCLUDE_LPO_MK),1)
 include lpo.mk
 
 LPO_MK_FILES := theory_hol.lpo.mk $(wildcard *.lpo.mk)
+endif
 
 lpo.mk: $(LPO_MK_FILES)
 	-find . -maxdepth 1 -name '*.lpo.mk' | xargs cat > $@
 
 theory_hol.lpo.mk: theory_hol.lp
 	echo 'theory_hol.lpo:' > $@
-endif
 
 .PHONY: lpo
 lpo: $(LP_FILES:%.lp=%.lpo)
@@ -302,13 +301,12 @@ include vo.mk
 include deps.mk
 endif
 
-.PHONY: dep
 ifeq ($(INCLUDE_LPO_MK),1)
-dep vo.mk &: lpo.mk
+vo.mk: lpo.mk
 	sed -e 's/\.lp/.v/g' -e "s/^theory_hol.vo:/theory_hol.vo: $(ROCQFILES:%=%o) /" lpo.mk > vo.mk
 else
-dep vo.mk &:
-	$(MAKE) INCLUDE_LPO_MK=1 dep
+vo.mk:
+	$(MAKE) INCLUDE_LPO_MK=1 $@
 endif
 
 .PHONY: vo
