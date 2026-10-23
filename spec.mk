@@ -47,7 +47,7 @@ update-vo-mk: vo.mk
 	@rm -f new-vo.mk
 
 vo.mk:
-	$(MAKE) dep
+	$(MAKE) $@
 
 .PHONY: gen-base-spec
 gen-base-spec: $(BASE)_spec.v
