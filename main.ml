@@ -1205,7 +1205,7 @@ and command = function
         MapStr.iter (fun s x -> map := MapStr.add s x !map) (read_val f);
     in
     Array.iter read_tvs_file (Sys.readdir ".");
-    write_val n !map
+    write_val n (MapStr.add "el" 1 !map)
 
   | "tvs"::_ -> wrong_nb_args()
 
