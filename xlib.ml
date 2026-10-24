@@ -16,6 +16,7 @@ let types_notin_theory_hol() =
 ;;
 
 (* HOL-Light constants minus those defined in theory_hol.lp *)
+let theory_hol_constants = ["=",1; "@",1; "el",1];;
 let constants_notin_theory_hol() =
   let f (n,_) = match n with "=" | "@" | "el" -> false | _ -> true in
   List.filter f (!the_term_constants)

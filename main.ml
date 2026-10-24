@@ -885,7 +885,9 @@ and command = function
          Xlp.export_types b;
          Xlp.export_terms b;
          Xlp.export_axioms b;
-         write_val (b^"_terms.tvs") !Xlp.tvs_map
+         write_val (b^"_terms.tvs")
+           (List.fold_left (fun map (n,k) -> MapStr.add n k map)
+              !Xlp.tvs_map Xlib.theory_hol_constants)
        end
 
   | "sig"::_ -> wrong_nb_args()

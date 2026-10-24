@@ -390,9 +390,7 @@ lpsize:
 	find . -maxdepth 1 -name '*.lp' -print0 | du --files0-from=- --total -s -h | tail -1
 
 .PHONY: tvs
-tvs: $(BASE).tvs
-
-$(BASE).tvs:
+tvs:
 	hol2dk tvs $(BASE)
 
 .PHONY: lean
