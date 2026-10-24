@@ -416,14 +416,15 @@ clean-lean: rm-lean
 rm-lean:
 	if test -d $(ROOT_PATH); then find $(ROOT_PATH) -maxdepth 1 -name '*.lean' $(LEANFILES:%=-a ! -path $(ROOT_PATH)/%) -delete; fi
 
-$(ROOT_PATH).lean:
+$(ROOT_PATH).lean::
 ifneq ($(SET_STI_FILES),1)
 	$(MAKE) SET_STI_FILES=1 $@
 else
-	-rm -f $@
-	for f in $(STI_FILES:%.sti=%); do echo "import $(ROOT_PATH).$$f" >> $@; done
+	@-rm -f $@
+	@for f in $(STI_FILES:%.sti=%); do echo "import $(ROOT_PATH).$$f" >> $@; done
 endif
 
 .PHONY: olean
 olean:
+	lake update
 	LEAN_STACK_SIZE_KB=0 lake build

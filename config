@@ -212,12 +212,15 @@ done
 
 if test -n "$leanfiles"
 then
-    if test ! -d .lake
-    then
-       echo lake init $root_path math
-       lake init $root_path math
-       rm -f $root_path.lean $root_path/Basic.lean
-    fi
+    echo create $root_path/
+    mkdir -p $root_path
+    echo create lakefile.toml
+    cat > lakefile.toml <<__EOF__
+name = "$root_path"
+defaultTargets = ["$root_path"]
+[[lean_lib]]
+name = "$root_path"
+__EOF__
     for f in $leanfiles
     do
         echo cp -f $f $root_path
