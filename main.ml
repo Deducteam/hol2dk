@@ -885,9 +885,7 @@ and command = function
          Xlp.export_types b;
          Xlp.export_terms b;
          Xlp.export_axioms b;
-         write_val (b^"_terms.tvs")
-           (MapStr.fold (fun n -> MapStr.add (Xlp.lp_name n))
-              Xlib.constants_in_theory_hol !Xlp.tvs_map)
+         write_val (b^"_terms.tvs") !Xlp.tvs_map
        end
 
   | "sig"::_ -> wrong_nb_args()
@@ -1208,7 +1206,7 @@ and command = function
         MapStr.iter (fun s x -> map := MapStr.add s x !map) (read_val f);
     in
     Array.iter read_tvs_file (Sys.readdir ".");
-    write_val n (MapStr.add "el" 1 !map)
+    write_val n (MapStr.add "el" 1 (MapStr.add (Xlp.lp_name "@") 1 !map))
 
   | "tvs"::_ -> wrong_nb_args()
 
