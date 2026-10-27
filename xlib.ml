@@ -10,14 +10,19 @@ open Xprelude
 open Fusion
 
 (* HOL-Light types minus those defined in theory_hol.lp *)
-let types() =
+let types_notin_theory_hol() =
   let f (n,_) = match n with "bool" | "fun" -> false | _ -> true in
   List.filter f (!the_type_constants)
 ;;
 
+(* HOL-Light constants already defined in theory_hol.lp *)
+let constants_in_theory_hol =
+  MapStr.add "=" 1 (MapStr.add "@" 1 (MapStr.add "el" 1 MapStr.empty))
+;;
+
 (* HOL-Light constants minus those defined in theory_hol.lp *)
-let constants() =
-  let f (n,_) = match n with "=" | "@" | "el" -> false | _ -> true in
+let constants_notin_theory_hol() =
+  let f (n,_) = not (MapStr.mem n constants_in_theory_hol) in
   List.filter f (!the_term_constants)
 ;;
 

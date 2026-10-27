@@ -1117,11 +1117,13 @@ let export_theorem_proof_part b n k =
    in b.mk and Makefile. *)
 
 let export_types b =
-  export (b^"_types") [] (fun oc -> list decl_typ oc (types()))
+  export (b^"_types") []
+    (fun oc -> list decl_typ oc (types_notin_theory_hol()))
 ;;
 
 let export_terms b =
-  export (b^"_terms") [b^"_types"] (fun oc -> list decl_sym oc (constants()))
+  export (b^"_terms") [b^"_types"]
+    (fun oc -> list decl_sym oc (constants_notin_theory_hol()))
 ;;
 
 let export_axioms b =
@@ -1176,9 +1178,9 @@ let export_theory b map_thid_name =
   let oc = log_open_out (b^"_theory.lp") in
   string oc (string_of_file "theory_hol.lp");
   string oc "\n/* type constructors */\n";
-  list decl_typ oc (types());
+  list decl_typ oc !the_type_constants;
   string oc "\n/* constants */\n";
-  list decl_sym oc (constants());
+  list decl_sym oc !the_term_constants;
   string oc "\n/* axioms */\n";
   decl_axioms oc !the_axioms;
   string oc "\n/* theorems */\n";
