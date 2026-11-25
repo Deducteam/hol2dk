@@ -48,13 +48,13 @@ jobs:
       - name: Install lambdapi
         run: |
           opam pin lambdapi ${{ matrix.lambdapi-version }}
-        if: matrix.lambdapi-version != master
+        if: matrix.lambdapi-version != 'master'
       - name: Install lambdapi
         run: |
           git clone --depth 1 https://github.com/Deducteam/lambdapi
           cd lambdapi
           opam install -y .
-        if: matrix.lambdapi-version == master
+        if: matrix.lambdapi-version == 'master'
       - name: Install camlp5
         run: |
           opam pin camlp5 ${{ matrix.camlp5-version }}
