@@ -1,3 +1,5 @@
+MAKEFLAGS += -r -j$(shell nproc)
+
 .SUFFIXES:
 
 HOLLIGHT_FILE := $(shell if test -f HOLLIGHT_FILE; then cat HOLLIGHT_FILE; fi)
@@ -424,5 +426,4 @@ endif
 
 .PHONY: olean
 olean:
-	lake update
-	LEAN_STACK_SIZE_KB=0 lake build
+	lake build

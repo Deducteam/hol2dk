@@ -21,7 +21,7 @@ jobs:
         camlp5-version: [8.03.06]
         hol-light-version: [3.1.0]
         hol-light-commit: [37af947]
-        lambdapi-version: [master]
+        lambdapi-version: [3.0.0, 4.0.0, master]
         dedukti-version: [2.7]
         rocq-core-version: [9.3.0]
         rocq-stdlib-version: [9.2.0]

@@ -191,12 +191,12 @@ Do `hol2dk config` to get more details.
 - You can then do in order:
   * `make` to get the list of targets and variables
   * `make split` to generate a file for each theorem
-  * `make -j$jobs lp` to translate HOL-Light proofs to Lambdapi
-  * `make -j$jobs lpo` to check Lambdapi files (optional)
-  * `make -j$jobs v` to translate Lambdapi files to Rocq files
-  * `make -j$jobs merge-spec-files` to merge all small spec files into a single one
-  * `make -j$jobs rm-empty-deps` to remove `theory_hol.v`, `${base}_types.v` and `${base}_axioms.v` (to use when these files are empty only)
-  * `make -j$jobs vo` to check Rocq files
+  * `make lp` to translate HOL-Light proofs to Lambdapi
+  * `make lpo` to check Lambdapi files (optional)
+  * `make v` to translate Lambdapi files to Rocq files
+  * `make merge-spec-files` to merge all small spec files into a single one
+  * `make rm-empty-deps` to remove `theory_hol.v`, `${base}_types.v` and `${base}_axioms.v` (to use when these files are empty only)
+  * `make vo` to check Rocq files
 
 To speed up lp file generation for some theorems with very big proofs, you can write in a file named `BIG_FILES` a list of theorem names (lines starting with `#` are ignored). See for instance [BIG_FILES](https://github.com/Deducteam/hol2dk/blob/main/BIG_FILES). You can also change the default values of the options `--max-proof-size` and `--max-abbrev-size` by writing `make MAX_PROOF=500_000 MAX_ABBREV=2_000_000`.
 
@@ -223,7 +223,7 @@ The Makefile commands above are not implemented for Dedukti yet. It is however p
 
 ```
 hol2dk mk $nb_parts $base
-make -f $base.mk -j$jobs dk
+make -f $base.mk dk
 ```
 where `$base` is the base name of the library, e.g. `make` for `$HOLLIGHT_DIR/Logic/make`, which is also written in the file named `BASE` that is created when you do `hol2dk link Logic/make`.
 
