@@ -3,6 +3,7 @@ on:
     types: [opened, synchronize, reopened]
   push:
     paths:
+      - '.github/workflows/main.yml'
       - '*.ml'
       - 'Makefile'
       - 'dune'
