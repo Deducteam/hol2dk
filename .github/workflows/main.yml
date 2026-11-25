@@ -46,10 +46,12 @@ jobs:
           opam install -y dedukti.${{ matrix.dedukti-version }}
       - name: Install lambdapi
         run: |
-          git clone --depth 1 -b ${{ matrix.lambdapi-version }} https://github.com/Deducteam/lambdapi
-          sudo apt-get install -y libev-dev
-          opam pin lambdapi lambdapi
-          opam install -y lambdapi
+          git clone --depth 1 https://github.com/Deducteam/lambdapi
+          cd lambdapi
+          git checkout ${{ matrix.lambdapi-version }}
+          # patch for lambdapi 3.0.0
+          sed -i 's/"cmdliner" {>= "1.1"}/"cmdliner" {>= "1.1" \& < "2.0.0"}/' lambdapi.opam
+          opam install -y .
       - name: Install camlp5
         run: |
           opam pin camlp5 ${{ matrix.camlp5-version }}
