@@ -233,6 +233,7 @@ let make nb_proofs dg b =
   log_gen dump_file;
   let oc = open_out dump_file in
   out oc "# file generated with: hol2dk mkfile %s\n" b;
+  out oc "MAKEFLAGS += -r -j$(shell nproc)\n";
   out oc "\nNB_PARTS := %d\n" nb_parts;
   out oc "\ninclude part.mk\n\n";
   let cmd i x y =
